@@ -361,16 +361,33 @@ app.post('/api/request-register-otp', (req, res) => {
 
 app.post('/api/verify-and-create-shop', (req, res) => {
   const { password, shopName, email, phone } = req.body; 
-  db.get(`SELECT id FROM tenants WHERE LOWER(email)=LOWER(?) OR phone=?`, [email, phone], (err, row) => {
-    if (row) return res.json({ status: "error", message: "Email หรือ เบอร์โทรศัพท์ นี้มีในระบบแล้ว" });
+  
+  if (!password || !shopName || !email || !phone) {
+    return res.json({ status: "error", message: "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง" });
+  }
+
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPhone = String(phone).trim();
+
+  db.get(`SELECT id FROM tenants WHERE LOWER(email) = ? OR phone = ?`, [cleanEmail, cleanPhone], (err, row) => {
+    if (err) return res.json({ status: "error", message: "เกิดข้อผิดพลาดกับฐานข้อมูล: " + err.message });
+    if (row) return res.json({ status: "error", message: "อีเมล หรือ เบอร์โทรศัพท์นี้ถูกใช้งานไปแล้ว" });
+
     const sheetId = "SHOP_" + Date.now();
-    const expDate = new Date(); expDate.setDate(expDate.getDate() + 30);
+    const expDate = new Date(); 
+    expDate.setDate(expDate.getDate() + 30); 
     const expStr = expDate.toISOString().split('T')[0];
+
     db.run(`INSERT INTO tenants (user, password, shop_name, email, phone, sheet_id, status, expire_date) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
-      [email, password, shopName, email, phone, sheetId, expStr], (err) => {
-        if (err) return res.json({ status: "error", message: err.message });
-        sendAdminAlert(`🎉 <b>มีร้านค้าสมัครใหม่!</b>\nอีเมล: ${escapeHtml(email)}\nร้าน: ${escapeHtml(shopName)}\nเบอร์: ${escapeHtml(phone)}`);
-        res.json({ status: "success", expireDate: `${padStr(expDate.getDate())}/${padStr(expDate.getMonth()+1)}/${expDate.getFullYear()}` });
+      [cleanEmail, password.trim(), shopName.trim(), cleanEmail, cleanPhone, sheetId, expStr], (err) => {
+        if (err) return res.json({ status: "error", message: "ไม่สามารถสร้างบัญชีได้: " + err.message });
+        
+        sendAdminAlert(`🎉 <b>มีคลินิกสมัครใหม่!</b>\nอีเมล: ${escapeHtml(cleanEmail)}\nชื่อคลินิก: ${escapeHtml(shopName)}\nเบอร์โทร: ${escapeHtml(cleanPhone)}`);
+        
+        res.json({ 
+          status: "success", 
+          expireDate: `${padStr(expDate.getDate())}/${padStr(expDate.getMonth()+1)}/${expDate.getFullYear()}` 
+        });
       });
   });
 });
@@ -737,3 +754,6 @@ io.on('connection', (socket) => {
 
 // 🚀 เปลี่ยน Port กลับให้ถูกต้อง
 server.listen(3001, () => console.log('🚀 Clinic Application Server running on http://localhost:3001'));
+}
+}
+}
