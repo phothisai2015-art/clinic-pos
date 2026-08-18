@@ -6,13 +6,14 @@ const dbPath = path.join(__dirname, 'clinic_pos.db');
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-  // 1. ตารางพนักงานและแพทย์ (Users)
+  // 1. ตารางพนักงาน (Users) เพิ่ม pin TEXT
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
     password TEXT,
+    pin TEXT, 
     name TEXT,
-    role TEXT -- 'admin', 'doctor', 'nurse', 'cashier'
+    role TEXT
   )`);
 
   // 2. ตารางประวัติคนไข้ (Patients)
@@ -32,7 +33,7 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS queue (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patient_id INTEGER,
-    status TEXT, -- 'รอซักประวัติ', 'รอตรวจ', 'กำลังตรวจ', 'รอชำระเงิน', 'เสร็จสิ้น'
+    status TEXT,
     created_at TEXT
   )`);
 
@@ -41,23 +42,23 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patient_id INTEGER,
     doctor_id INTEGER,
-    symptoms TEXT, -- อาการเบื้องต้น (CC)
-    diagnosis TEXT, -- การวินิจฉัย (Dx)
-    prescriptions TEXT, -- ยาที่สั่ง (JSON)
+    symptoms TEXT,
+    diagnosis TEXT,
+    prescriptions TEXT,
     created_at TEXT
   )`);
 
-  // 5. ตารางคลังยาและบริการ (Products & Services)
+  // 5. ตารางคลังยาและบริการ (Products)
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
     name TEXT,
-    type TEXT, -- 'medicine', 'service'
+    type TEXT,
     price REAL,
     stock INTEGER,
     unit TEXT
   )`);
 
-  // 6. ตารางประวัติการชำระเงิน (Sales/Billing)
+  // 6. ตารางประวัติการชำระเงิน (Sales)
   db.run(`CREATE TABLE IF NOT EXISTS sales (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     receipt_no TEXT UNIQUE,
@@ -68,8 +69,8 @@ db.serialize(() => {
     created_at TEXT
   )`);
 
-  // สร้าง Admin เริ่มต้น (admin / 1234)
-  db.run(`INSERT OR IGNORE INTO users (username, password, name, role) VALUES ('admin', '1234', 'Super Admin', 'admin')`);
+  // สร้าง Admin เริ่มต้น (username: admin / pass: 1234 / pin: 1234)
+  db.run(`INSERT OR IGNORE INTO users (username, password, pin, name, role) VALUES ('admin', '1234', '1234', 'Doctor Admin', 'admin')`);
 });
 
 module.exports = db;

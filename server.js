@@ -17,6 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ==========================================
 // 1. Routing หน้าเว็บ HTML ทั้ง 9 หน้า
 // ==========================================
+app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop_clinic_menu.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html'))); // หน้าเข้าสู่ระบบ
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html'))); // แดชบอร์ด
 app.get('/patients', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patients.html'))); // ประวัติคนไข้
@@ -26,6 +27,15 @@ app.get('/pos', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pos.h
 app.get('/inventory', (req, res) => res.sendFile(path.join(__dirname, 'public', 'inventory.html'))); // คลังยา
 app.get('/reports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reports.html'))); // รายงาน
 app.get('/settings', (req, res) => res.sendFile(path.join(__dirname, 'public', 'settings.html'))); // ตั้งค่า
+
+app.post('/api/login-pin', (req, res) => {
+  const { pin } = req.body;
+  db.get(`SELECT id, name, role FROM users WHERE pin = ?`, [pin], (err, row) => {
+    if (err) return res.json({ status: 'error', message: err.message });
+    if (row) return res.json({ status: 'success', user: row });
+    res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
+  });
+});
 
 // ==========================================
 // 2. API พื้นฐาน (Authentication)
