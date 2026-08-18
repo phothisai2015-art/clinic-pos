@@ -107,11 +107,18 @@
     
     <div class="text-center mt-5">
       <button class="btn btn-outline-danger rounded-pill px-4" onclick="lockScreen()"><i class="fa-solid fa-lock me-2"></i>ล็อกหน้าจอ</button>
-      <button class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="window.location.href='/'"><i class="fa-solid fa-right-from-bracket me-2"></i>ออกจากระบบ</button>
+      <button class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="logoutSystem()"><i class="fa-solid fa-right-from-bracket me-2"></i>ออกจากระบบ</button>
     </div>
   </div>
 
   <script>
+  
+  // 🔒 เช็กสิทธิ์ทันทีที่โหลดหน้าเว็บ: ถ้าไม่ได้ Login ให้เตะกลับหน้าแรก
+    if (!sessionStorage.getItem('user_name')) {
+      window.location.replace('/');
+    }
+
+	
     let currentPin = "";
     let isCheckingPin = false;
 
@@ -173,6 +180,15 @@
       document.getElementById('lock-screen').style.display = 'flex';
       setTimeout(() => { document.getElementById('lock-screen').style.opacity = '1'; }, 10);
     }
+	
+	// ฟังก์ชันออกจากระบบ
+    function logoutSystem() {
+      // ล้างข้อมูลการเข้าสู่ระบบทั้งหมด
+      sessionStorage.clear();
+      // เตะกลับไปหน้าแรก
+      window.location.replace('/');
+    }
+
   </script>
 </body>
 </html>
