@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ==========================================
 // 1. Routing หน้าเว็บ HTML ทั้ง 9 หน้า
 // ==========================================
-app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop_clinic_menu.html')));
+app.get('/menu', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop_clinic_menu.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html'))); // หน้าเข้าสู่ระบบ
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html'))); // แดชบอร์ด
 app.get('/patients', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patients.html'))); // ประวัติคนไข้
