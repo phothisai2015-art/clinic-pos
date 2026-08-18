@@ -36,6 +36,10 @@
     .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: 0.3s; }
     
     .theme-toggle-btn { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; border: none; box-shadow: 0 10px 25px rgba(59,130,246,0.4); z-index: 10000; cursor: pointer; font-size: 20px; }
+
+    /* 🌟 เพิ่ม Class สำหรับเปลี่ยนสี Version เป็นสีดำในโหมดสว่าง และสีขาวในโหมดมืด */
+    .version-text { color: #000000; }
+    body.dark-theme .version-text { color: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -119,16 +123,15 @@
         </button>
       </div>
     </div>
-    
-    <!-- 🌟 แก้ไขปุ่มล็อกหน้าจอให้อยู่ด้านล่างและเพิ่ม Version -->
-    <div class="d-flex justify-content-center align-items-center mt-5 pt-3">
-      <span class="fw-bold" style="color: #60a5fa;">Version 1.0.0</span>
-      <span class="mx-3 text-muted opacity-50">|</span>
-      <button class="btn btn-link text-danger fw-bold p-0 text-decoration-none" onclick="lockSystem()" style="font-size: 1.05rem;">
-        <i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ
-      </button>
-    </div>
+  </div>
 
+  <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
+  <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
+    <span class="fw-bold version-text">Version 1.0.0</span>
+    <span class="mx-3 text-muted opacity-50">|</span>
+    <button class="btn btn-link text-danger fw-bold p-0 text-decoration-none" onclick="lockSystem()" style="font-size: 1.05rem;">
+      <i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ
+    </button>
   </div>
 
   <!-- Container สำหรับโหลดหน้าต่างๆ (Module) -->
@@ -164,6 +167,7 @@
             // สลับหน้าจอ
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('footer-menu').style.display = 'flex'; // แสดงแถบด้านล่าง
             
             // นำสิทธิ์การใช้งาน (Permissions) ไปปลดล็อกปุ่มเมนู
             applyPermissions(data.user.permissions);
@@ -181,6 +185,11 @@
         });
       }
     }
+
+    // ซ่อนแถบเมนูด้านล่างตอนอยู่หน้า Lock Screen ตั้งแต่เริ่ม
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('footer-menu').style.display = 'none';
+    });
 
     // ฟังก์ชันเปิด/ปิดปุ่มตามสิทธิ์ (Role-based Access)
     function applyPermissions(perms) {
@@ -220,6 +229,7 @@
 
     function lockSystem() {
       document.getElementById('main-menu').style.display = 'none';
+      document.getElementById('footer-menu').style.display = 'none'; // ซ่อนแถบด้านล่างตอนล็อกหน้าจอ
       document.getElementById('lock-screen').style.display = 'flex';
     }
 
