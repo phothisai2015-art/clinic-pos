@@ -7,6 +7,8 @@
   body.dark-theme .allergy-alert-box { background: #4c0519; color: #fecdd3; border-color: #f43f5e; }
   .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
   #faceCanvas { border-radius: 12px; cursor: crosshair; background-color: #ffffff; touch-action: none; }
+  .photo-card { transition: all 0.2s ease; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+  .photo-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px;">
@@ -28,7 +30,7 @@
     </div>
   </div>
 
-  <!-- Alert การแพ้ยา/สารเคมี -->
+  <!-- Alert การแพ้ยา -->
   <div id="allergyAlert" class="allergy-alert-box align-items-center justify-content-between mb-4 shadow-sm">
     <div class="d-flex align-items-center">
       <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
@@ -40,7 +42,7 @@
     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-virus me-1"></i> โปรดระวังรุนแรง</span>
   </div>
 
-  <!-- Tabs Navigation (ใช้ปุ่มคลิกสลับด้วย JS) -->
+  <!-- Tabs Navigation -->
   <ul class="nav nav-pills clinic-nav-pills mb-4">
     <li class="nav-item">
       <button class="nav-link active" id="btn-tab-reg" onclick="switchPatientTab('reg')"><i class="fa-solid fa-user-plus me-1"></i> ประวัติส่วนตัว (Profile)</button>
@@ -136,15 +138,15 @@
       </div>
     </div>
 
-    <!-- Tab 3: Photo Gallery (Before & After + Canvas Draw) -->
+    <!-- Tab 3: Photo Gallery -->
     <div class="tab-pane-custom" id="gallery-content" style="display: none;">
-      <div class="bg-white p-4 rounded-4 shadow-sm border">
+      <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-camera me-2"></i> เปรียบเทียบภาพและมาร์กจุดใบหน้า</h5>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearCanvas()"><i class="fa-solid fa-eraser me-1"></i> ล้างรอยวาด</button>
-            <button class="btn btn-sm btn-success rounded-pill px-3" onclick="saveMarkedPhoto()"><i class="fa-solid fa-download me-1"></i> บันทึกรูปมาร์กจุด</button>
+          <div>
+            <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-camera me-2"></i> บันทึกและเปรียบเทียบภาพ</h5>
+            <small id="photoCurrentPatient" class="text-muted fw-bold">เลือกคนไข้ก่อนบันทึกภาพ...</small>
           </div>
+          <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearCanvas()"><i class="fa-solid fa-eraser me-1"></i> ล้างรอยวาด</button>
         </div>
 
         <div class="row g-4 text-center">
@@ -154,8 +156,11 @@
             <div class="canvas-container p-2">
               <img id="beforeImgPreview" src="https://via.placeholder.com/400x350/e2e8f0/475569?text=Before+Photo" class="img-fluid rounded-3" style="max-height: 350px; object-fit: contain;">
             </div>
-            <input type="file" id="beforeFileInput" class="d-none" accept="image/*" onchange="previewImage(this, 'beforeImgPreview')">
-            <button class="btn btn-sm btn-outline-primary rounded-pill mt-3" onclick="document.getElementById('beforeFileInput').click()"><i class="fa-solid fa-upload me-1"></i> อัปโหลดภาพ Before</button>
+            <div class="d-flex justify-content-center gap-2 mt-3">
+              <input type="file" id="beforeFileInput" class="d-none" accept="image/*" onchange="previewImage(this, 'beforeImgPreview')">
+              <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('beforeFileInput').click()"><i class="fa-solid fa-upload me-1"></i> เลือกรูป Before</button>
+              <button class="btn btn-sm btn-primary rounded-pill" onclick="savePhotoToServer('BEFORE')"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกรูป Before เข้าประวัติ</button>
+            </div>
           </div>
 
           <!-- ภาพ Canvas Marking -->
@@ -166,10 +171,19 @@
             </div>
             <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
               <input type="file" id="canvasFileInput" class="d-none" accept="image/*" onchange="loadCanvasBg(this)">
-              <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('canvasFileInput').click()"><i class="fa-solid fa-image me-1"></i> อัปโหลดรูปใส่ Canvas</button>
+              <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('canvasFileInput').click()"><i class="fa-solid fa-image me-1"></i> โหลดรูปใส่ Canvas</button>
               <input type="color" id="drawColor" value="#e11d48" class="form-control form-control-color rounded-circle" style="width: 32px; height: 32px; padding: 2px;" title="เลือกสีปากกา">
+              <button class="btn btn-sm btn-success rounded-pill" onclick="savePhotoToServer('MARKING')"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกภาพมาร์กจุดเข้าประวัติ</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 🖼️ คลังภาพย้อนหลังของคนไข้รายนี้ -->
+      <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <h5 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-photo-film me-2"></i> คลังภาพย้อนหลังในระบบ</h5>
+        <div class="row g-3" id="patientPhotoGrid">
+          <div class="text-center py-4 text-muted">กรุณาเลือกคนไข้เพื่อดูคลังภาพย้อนหลัง...</div>
         </div>
       </div>
     </div>
@@ -181,9 +195,6 @@
   let currentHN = '';
   let canvas, ctx, isDrawing = false;
 
-  // ==========================================
-  // 🔄 ระบบสลับแท็บแบบ Pure JS (แก้ปัญหากดไม่ได้)
-  // ==========================================
   function switchPatientTab(tabName) {
     ['reg', 'emr', 'gallery'].forEach(t => {
       document.getElementById(`btn-tab-${t}`).classList.remove('active');
@@ -260,7 +271,10 @@
     }
 
     document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
+    document.getElementById('photoCurrentPatient').innerHTML = `คนไข้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
+    
     loadEMRHistory(p.id);
+    loadPatientPhotos(p.id);
 
     Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
   }
@@ -358,7 +372,9 @@
     document.getElementById('p_hn').value = '';
     document.getElementById('allergyAlert').style.display = 'none';
     document.getElementById('emrCurrentPatient').innerHTML = 'กรุณาเลือกหรือบันทึกคนไข้ก่อน...';
+    document.getElementById('photoCurrentPatient').innerHTML = 'เลือกคนไข้ก่อนบันทึกภาพ...';
     document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">กรุณาค้นหาคนไข้เพื่อดูประวัติ...</div>';
+    document.getElementById('patientPhotoGrid').innerHTML = '<div class="text-center py-4 text-muted">กรุณาเลือกคนไข้เพื่อดูคลังภาพย้อนหลัง...</div>';
   }
 
   function readSmartCard() {
@@ -374,17 +390,15 @@
   }
 
   // ==========================================
-  // 🎨 Canvas & Photo Gallery System
+  // 📸 ระบบบันทึกและโหลดคลังภาพคนไข้
   // ==========================================
   function initCanvas() {
     canvas = document.getElementById('faceCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
 
-    // ล้างรอยวาดตั้งต้น
     clearCanvas();
 
-    // Event วาดรูป
     canvas.onmousedown = startDrawing;
     canvas.onmousemove = draw;
     canvas.onmouseup = stopDrawing;
@@ -442,11 +456,81 @@
     }
   }
 
-  function saveMarkedPhoto() {
-    if(!canvas) return;
-    const link = document.createElement('a');
-    link.download = `marked_${currentHN || 'patient'}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
+  // บันทึกรูปเข้า Server
+  async function savePhotoToServer(type) {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อนทำการบันทึกภาพ', 'warning');
+
+    let base64Data = '';
+    if (type === 'BEFORE') {
+      base64Data = document.getElementById('beforeImgPreview').src;
+      if (base64Data.includes('placeholder')) {
+        return Swal.fire('แจ้งเตือน', 'กรุณาอัปโหลดรูปภาพ Before ก่อนบันทึก', 'warning');
+      }
+    } else {
+      base64Data = canvas.toDataURL('image/png');
+    }
+
+    Swal.fire({ title: 'กำลังบันทึกรูปภาพ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+      const res = await fetch('/api/patients/photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: currentHN,
+          photo_type: type,
+          image_data: base64Data
+        })
+      });
+
+      const data = await res.json();
+      if (data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกรูปภาพเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        loadPatientPhotos(currentHN); // โหลดคลังภาพอัปเดตใหม่
+      } else {
+        Swal.fire('Error', data.message, 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'ไม่สามารถบันทึกรูปภาพได้', 'error');
+    }
+  }
+
+  // โหลดคลังภาพย้อนหลังของคนไข้
+  async function loadPatientPhotos(hn) {
+    const grid = document.getElementById('patientPhotoGrid');
+    grid.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+
+    try {
+      const res = await fetch(`/api/patients/${hn}/photos`);
+      const data = await res.json();
+
+      if (data.data.length === 0) {
+        grid.innerHTML = '<div class="text-center py-4 text-muted">ยังไม่มีรูปภาพประวัติของคนไข้รายนี้</div>';
+        return;
+      }
+
+      let html = '';
+      data.data.forEach(p => {
+        const dateObj = new Date(p.created_at);
+        const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const typeBadge = p.photo_type === 'BEFORE' 
+          ? '<span class="badge bg-secondary me-1">BEFORE</span>' 
+          : '<span class="badge bg-primary me-1">MARKING</span>';
+
+        html += `
+          <div class="col-md-3 col-6">
+            <div class="photo-card bg-light p-2 text-center">
+              <img src="${p.image_path}" class="img-fluid rounded-3 mb-2" style="height: 180px; object-fit: cover; width: 100%; cursor: pointer;" onclick="window.open('${p.image_path}', '_blank')">
+              <div class="d-flex justify-content-between align-items-center px-1">
+                ${typeBadge}
+                <small class="text-muted" style="font-size: 0.75rem;">${dateStr}</small>
+              </div>
+            </div>
+          </div>`;
+      });
+      grid.innerHTML = html;
+    } catch (err) {
+      grid.innerHTML = '<div class="text-center py-4 text-danger">ไม่สามารถโหลดคลังภาพได้</div>';
+    }
   }
 </script>
