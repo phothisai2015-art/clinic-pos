@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Download POS App Official</title>
+<link rel="icon" href="/downloads/icon_POS.png">
+<!-- ใช้ Bootstrap และ FontAwesome เพื่อความสวยงามและแสดงไอคอน -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Sarabun', sans-serif;
+    /* สีพื้นหลังเริ่มต้นกรณีไม่มีรูปภาพ */
+    background-color: #0f172a; 
+    
+    /* 💡 ถ้าคุณมีภาพพื้นหลัง ให้ลบเครื่องหมาย / * * / ออกแล้วใส่ลิงก์รูปครับ */
+    /* background-image: url('https://your-image-link-here.jpg'); */
+    
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 0;
+  }
+
+  /* เลเยอร์สีดำไล่ระดับแบบในภาพ (เพื่อให้ฝั่งซ้ายมืดสนิทและข้อความเด่นขึ้น) */
+  .bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(15,23,42,1) 0%, rgba(15,23,42,0.9) 40%, rgba(15,23,42,0.4) 100%);
+    z-index: -1;
+  }
+
+  /* ส่วนโลโก้มุมซ้ายบน */
+  .navbar-custom {
+    padding: 30px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ปรับแต่งกล่องโลโก้ใหม่สำหรับใส่รูปภาพ */
+  .logo-icon-box {
+    height: 165px; /* ปรับขนาดความสูงของโลโก้ได้ที่นี่ */
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-icon-box img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* ส่วนเนื้อหาตรงกลาง */
+  .content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    padding-bottom: 50px;
+  }
+
+  .main-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+  }
+  .title-blue { color: #3b82f6; }
+  .title-red { color: #ef4444; }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: #e2e8f0;
+    margin-bottom: 50px;
+    font-weight: 400;
+  }
+
+  /* ปุ่มกดสไตล์ Vanced (ฟ้าเรืองแสง) */
+  .btn-install {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    color: white;
+    border: none;
+    padding: 16px 60px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+    display: inline-block;
+  }
+  .btn-install:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(59, 130, 246, 0.8);
+    color: white;
+  }
+
+  .description {
+    max-width: 600px;
+    color: #94a3b8;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 60px;
+  }
+
+  /* ส่วนลิงก์ด้านล่าง */
+  .footer-links {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+  .footer-links a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  .copyright {
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+
+  /* การแสดงผลบนมือถือ */
+  @media (max-width: 768px) {
+    .main-title { font-size: 2.8rem; }
+    .subtitle { font-size: 1rem; }
+    .btn-install { font-size: 1.2rem; padding: 14px 40px; }
+    .description { font-size: 0.95rem; padding: 0 15px; }
+    .navbar-custom { padding: 20px; }
+    .logo-icon-box { height: 135px; } /* บนมือถือปรับโลโก้ให้เล็กลงนิดนึง */
+  }
+</style>
+</head>
+<body>
+
+<!-- แผ่นฟิล์มดำบังพื้นหลัง -->
+<div class="bg-overlay"></div>
+
+<!-- โลโก้มุมซ้ายบน (เปลี่ยนเป็นรูปภาพแล้ว) -->
+<div class="navbar-custom">
+  <div class="logo-icon-box">
+    <!-- ชี้ path ไปที่ไฟล์รูปโลโก้ของคุณใน public/downloads -->
+    <img src="/downloads/icon_POS.png" alt="POS Logo">
+  </div>
+</div>
+
+<!-- เนื้อหากลางจอ -->
+<div class="content-wrapper">
+  
+  <h1 class="main-title">
+    <span class="title-blue">POS</span> <span class="title-red">Official</span>
+  </h1>
+  
+  <div class="subtitle">Enjoy Unlimited Store Management without limits!</div>
+
+  <!-- ปุ่มดาวน์โหลดแอป -->
+  <a href="/downloads/my-pos.apk" download class="btn-install">
+    DOWNLOAD NOW
+  </a>
+
+  <!-- คำอธิบายแอปพลิเคชันและวิธีติดตั้ง -->
+  <div class="description">
+    POS Official is a powerful store management system that includes various improvements, such as full point-of-sale functionality, real-time dashboard, inventory tracking, mobile receipt printing, and more.<br><br>
+    <span class="text-white fw-bold"><i class="fa-solid fa-circle-info text-primary"></i> Note:</span> After downloading, please allow "Install from Unknown Sources" in your device settings to complete the installation.
+  </div>
+
+  <!-- ลิงก์ด้านล่างสุด -->
+  <div class="footer-links">
+    <a href="/">Back to Home</a>
+    <a href="#">Privacy</a>
+    <a href="#">Tutorial</a>
+  </div>
+  
+  <div class="copyright">
+    Copyright @2026 POS System Official
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -6,6 +6,7 @@
 <link rel="icon" href="https://static.vecteezy.com/system/resources/previews/020/446/804/non_2x/pos-letter-logo-design-on-white-background-pos-creative-circle-letter-logo-concept-pos-letter-design-pos-letter-logo-design-on-white-background-pos-c-vector.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+<!-- Libraries เดิมของคุณทั้งหมด (ห้ามตกหล่น) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -16,11 +17,12 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<!-- แปะไว้บนสุดก่อนแท็ก <style> เลยครับ -->
 <script src="lang.js"></script>
 
 <script>
 // ==========================================
-// 🔗 ระบบเชื่อมต่อ API หลัก
+// 🔗 ระบบเชื่อมต่อ API หลัก (จากโค้ดเดิมของคุณ)
 // ==========================================
 (function() {
   function callServerApi(prop, args, successCb, failureCb) {
@@ -50,18 +52,6 @@
 	  case 'getPackagePrices': url = '/api/package-prices'; break;
       case 'importExcelData': url = '/api/import-excel'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], payload: args[1] }); break;
       case 'clearRenewNotify': url = '/api/clear-renew-notify'; options.method = 'POST'; options.body = JSON.stringify({ sheetId: args[0] }); break;
-      
-      // --- 🏥 คลินิก API ---
-      case 'getPatients': url = '/api/patients/' + args[0]; break;
-      case 'addPatient': url = '/api/patients/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], patient: args[1] }); break;
-      case 'getAppointments': url = '/api/appointments/' + args[0]; break;
-      case 'addAppointment': url = '/api/appointments/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], appointment: args[1] }); break;
-      case 'getEMR': url = `/api/emr/${args[0]}/${args[1]}`; break;
-      case 'addEMR': url = '/api/emr/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], record: args[1] }); break;
-      case 'getCourses': url = `/api/courses/${args[0]}/${args[1]}`; break;
-      case 'getAllCourses': url = '/api/courses/all/' + args[0]; break;
-      case 'deductCourse': url = '/api/courses/deduct'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], courseId: args[1], deductQty: args[2] }); break;
-	  case 'updateAppointmentStatus': url = '/api/appointments/update-status'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], id: args[1], status: args[2] }); break;
       default: if (successCb) successCb({ status: 'success' }); return;
     }
     fetch(url, options).then(res => res.json()).then(data => { if (successCb) successCb(data); }).catch(err => { if (failureCb) failureCb(err); });
@@ -79,7 +69,9 @@
   window.google = { script: { get run() { return createGasRunner(); } } };
 })();
 </script>
+
 <style>
+/* CSS หลักของแอปพลิเคชัน (ดึงจากโค้ดเดิมทั้งหมด) */
 body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow: hidden; transition: background-color 0.3s ease, color 0.3s ease; }
 .swal2-container { z-index: 999999 !important; }
 button, a, input, select, textarea, .num-btn, .pkg-card { touch-action: manipulation !important; }
@@ -113,6 +105,7 @@ body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b,
   .panel-cat { display: none !important; }
 }
 
+/* อนิเมชั่นและการตกแต่งอื่นๆ (ปุ่มลบ, หูแมว ฯลฯ) จากโค้ดเดิม */
 .detailed-cat { position: absolute; width: 95px; height: 70px; z-index: 1; cursor: grab; will-change: top, left, transform; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
 .detailed-cat:active { cursor: grabbing; }
 .cat-black-coat { --coat: #1e293b; --coat-dark: #0f172a; --collar: #ef4444; } .cat-white-coat { --coat: #ffffff; --coat-dark: #e2e8f0; --collar: #3b82f6; } .cat-orange-coat { --coat: #f97316; --coat-dark: #ea580c; --collar: #10b981; }
@@ -142,6 +135,12 @@ body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b,
 @keyframes bellJingle { 0% { transform: rotate(-20deg); } 100% { transform: rotate(20deg); } }
 @keyframes whiskerTwitch { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
 @keyframes catBlinking { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+.route-cat-black { animation: pathTimelineBlack 35s linear infinite; }
+.route-cat-white { animation: pathTimelineWhite 39s linear infinite; animation-delay: -8s; }
+.route-cat-orange { animation: pathTimelineOrange 45s linear infinite; animation-delay: -18s; }
+@keyframes pathTimelineBlack { 0% { top: 70%; left: -15%; transform: scaleX(1); } 25% { top: 20%; left: 35%; transform: scaleX(1); } 45% { top: 60%; left: 75%; transform: scaleX(1); } 52% { top: 35%; left: 105%; transform: scaleX(1); } 54% { top: 35%; left: 105%; transform: scaleX(-1); } 70% { top: 78%; left: 60%; transform: scaleX(-1); } 88% { top: 15%; left: 20%; transform: scaleX(-1); } 98% { top: 70%; left: -5%; transform: scaleX(-1); } 100% { top: 70%; left: -15%; transform: scaleX(1); } }
+@keyframes pathTimelineWhite { 0% { top: 15%; left: 105%; transform: scaleX(-1); } 30% { top: 65%; left: 55%; transform: scaleX(-1); } 48% { top: 25%; left: -15%; transform: scaleX(-1); } 50% { top: 25%; left: -15%; transform: scaleX(1); } 72% { top: 75%; left: 45%; transform: scaleX(1); } 95% { top: 15%; left: 95%; transform: scaleX(1); } 100% { top: 15%; left: 105%; transform: scaleX(-1); } }
+@keyframes pathTimelineOrange { 0% { top: 80%; left: 45%; transform: scaleX(1); } 35% { top: 40%; left: 105%; transform: scaleX(1); } 37% { top: 40%; left: 105%; transform: scaleX(-1); } 68% { top: 75%; left: -15%; transform: scaleX(-1); } 70% { top: 75%; left: -15%; transform: scaleX(1); } 100% { top: 80%; left: 45%; transform: scaleX(1); } }
 .panel-cat { position: absolute; width: 58px; height: 50px; top: -43px; z-index: 12; pointer-events: none; will-change: transform; animation: catPanelPeekLook 3.5s ease-in-out infinite alternate; }
 .cat-orange-peeking { --pcoat: #f97316; --pcoat-dark: #ea580c; --peye: #22c55e; }
 .pcat-head { position: absolute; width: 48px; height: 44px; background: var(--pcoat); border-radius: 24px 24px 18px 18px; bottom: 0; left: 5px; box-shadow: 0 5px 12px rgba(15, 23, 42, 0.05), inset -2px -3px 0 rgba(0,0,0,0.1); }
@@ -157,12 +156,55 @@ body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b,
 .pcat-paw.paw-l { left: 10px; } .pcat-paw.paw-r { right: 10px; }
 @keyframes catPanelPeekLook { 0% { transform: translateY(0) rotate(0deg); } 35% { transform: translateY(-4px) rotate(3deg); } 70% { transform: translateY(1px) rotate(-3deg); } 100% { transform: translateY(-1px) rotate(1deg); } }
 
-.detailed-cat.cat-resting { animation: none !important; }
-.detailed-cat.cat-resting .cat-wrapper { animation: catSleeping 1.5s ease-in-out infinite alternate !important; }
-.detailed-cat.cat-resting .cat-body-main { transform: translateY(6px) scaleY(0.85); transition: transform 0.5s ease; }
-.detailed-cat.cat-resting .cat-head-main { transform: translateY(8px) translateX(-3px); transition: transform 0.5s ease; }
-.detailed-cat.cat-resting .cat-leg-detailed { height: 6px !important; top: 42px !important; animation: none !important; transition: all 0.5s ease; }
-@keyframes catSleeping { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(2px) scale(0.98, 1.02); } }
+.numpad-container { background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(25px) saturate(120%) !important; -webkit-backdrop-filter: blur(25px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.8) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important; border-radius: 40px !important; padding: 40px 30px 45px 30px !important; }
+body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; }
+.numpad-header-wrap { text-align: center; }
+@keyframes popIn { 0% { opacity: 0; transform: translateY(30px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+.error-shake { animation: shakeError 0.4s ease-in-out; }
+@keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+.pin-display { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 35px; height: 50px; }
+.pin-dot { width: 18px !important; height: 18px !important; border-radius: 50% !important; background: rgba(0, 0, 0, 0.08) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
+body.dark-theme .pin-dot { background: rgba(255, 255, 255, 0.1) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important; }
+.pin-dot.filled { background: #3b82f6 !important; transform: scale(1.3) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+body.dark-theme .pin-dot.filled { background: #60a5fa !important; box-shadow: 0 0 15px rgba(96, 165, 250, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+.numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.num-btn { background: rgba(255, 255, 255, 0.85) !important; border: 1px solid rgba(255, 255, 255, 0.5) !important; border-radius: 20px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; width: 100%; height: 75px; font-size: 26px !important; font-weight: 800 !important; color: #334155 !important; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.num-btn:hover { transform: translateY(-4px) scale(1.02) !important; background: #ffffff !important; box-shadow: 0 12px 20px rgba(59, 130, 246, 0.15) !important; border-color: #3b82f6 !important; color: #3b82f6 !important; }
+.num-btn:active { transform: translateY(2px) scale(0.95) !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+.num-btn-del { color: #ef4444 !important; background: rgba(254, 242, 242, 0.8) !important; }
+.num-btn-del:hover { background: #fef2f2 !important; border-color: #ef4444 !important; box-shadow: 0 12px 20px rgba(239, 68, 68, 0.15) !important; }
+body.dark-theme .num-btn { background: rgba(30, 41, 59, 0.8) !important; border-color: rgba(255, 255, 255, 0.05) !important; color: #f1f5f9 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; }
+body.dark-theme .num-btn:hover { background: #1e293b !important; border-color: #60a5fa !important; color: #60a5fa !important; box-shadow: 0 12px 20px rgba(96, 165, 250, 0.2) !important; }
+body.dark-theme .num-btn-del { color: #f87171 !important; background: rgba(69, 10, 10, 0.4) !important; }
+body.dark-theme .num-btn-del:hover { border-color: #f87171 !important; box-shadow: 0 12px 20px rgba(248, 113, 113, 0.2) !important; }
+
+.main-container { max-width: 600px; margin: 0 auto; padding: 40px 20px; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+.menu-btn { display: flex; align-items: center; justify-content: flex-start; padding: 20px; margin-bottom: 15px; border-radius: 20px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+.menu-btn i { font-size: 26px; margin-right: 20px; width: 35px; text-align: center; }
+.menu-btn:hover:not(:disabled) { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+.menu-btn:disabled { background: #e2e8f0; color: #94a3b8 !important; cursor: not-allowed; border-left: 6px solid #cbd5e1 !important; opacity: 0.7;}
+.btn-pos { color: #1d4ed8; border-left: 6px solid #3b82f6; }
+.btn-products { color: #b45309; border-left: 6px solid #f59e0b; }
+.btn-dash { color: #15803d; border-left: 6px solid #22c55e; }
+.btn-settings { color: #b91c1c; border-left: 6px solid #ef4444; }
+
+.logout-shop-btn { position: fixed; bottom: 25px; left: 25px; z-index: 10000; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); border-color: #fca5a5; color: #ef4444; font-weight: bold; border-radius: 20px; padding: 10px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.2s; }
+.logout-shop-btn:hover { background: #fef2f2; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+body.dark-theme .logout-shop-btn { background: rgba(30, 41, 59, 0.8); border-color: #7f1d1d; color: #f87171; }
+body.dark-theme .logout-shop-btn:hover { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
+
+.menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+.menu-card-btn:active:not(:disabled) { transform: translateY(-2px); }
+.menu-card-btn:disabled { background: #f8fafc; opacity: 0.6; cursor: not-allowed; filter: grayscale(100%); }
+.menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: transform 0.3s ease; }
+.menu-card-btn:hover:not(:disabled) .menu-icon-wrap { transform: scale(1.1) rotate(5deg); }
+body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; }
+body.dark-theme .menu-card-btn:hover:not(:disabled) { border-color: #475569; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
+@keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+
 </style>
 </head>
 <body>
@@ -171,206 +213,89 @@ body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b,
   <i id="theme-icon" class="fa-solid fa-moon"></i>
 </button>
 
+<!-- 🌟 กล่องสำหรับโหลด 6 ไฟล์ .html ย่อย -->
 <div id="app-container"></div>
 
 <script>
-  // 🌟 ใช้ตัวแปร Global เพื่อให้แชร์ข้อมูลคนไข้กันได้ทุกหน้า (POS, EMR, Booking)
-  window.clinicPatientsList = [];
-  let currentSelectedPatient = null;
-  window.currentTenantSheetId = localStorage.getItem('saas_tenant_id');
+// ==========================================
+// 🚀 ระบบโหลดหน้าเว็บย่อย (Modular Loader) 
+// ==========================================
+// 🚀 ระบบโหลดหน้าเว็บย่อย (Modular Loader) แบบโหลดพร้อมกัน
+async function loadShopComponents() {
+  const components = [
+    '/shop/menu',
+	'/shop/booking',
+    '/shop/pos',
+    '/shop/receipt',
+    '/shop/products',
+    '/shop/dashboard',
+    '/shop/settings'
+  ];
 
-  // ตรวจสอบว่าล็อกอินจริงไหม ถ้าไม่ให้เด้งกลับไปหน้าแรก
-  if (!window.currentTenantSheetId) {
-      window.location.href = '/';
+  const container = document.getElementById('app-container');
+
+  try {
+    // 🌟 เปลี่ยนมาใช้ Promise.all เพื่อยิง Request โหลดไฟล์ทั้ง 6 ตัวพร้อมกัน
+    const fetchPromises = components.map(url => fetch(url).then(res => res.text()));
+    const htmlResults = await Promise.all(fetchPromises);
+
+    // นำ HTML ที่โหลดเสร็จแล้วทั้งหมดมาต่อกัน และนำไปใส่ใน container
+    container.innerHTML = htmlResults.join('');
+    
+  } catch (error) {
+    console.error("Error loading components:", error);
   }
 
-  // ==========================================
-  // 🌟 โหลด Components ทั้งหมดเข้ามาในหน้าเดียว (SPA)
-  // ==========================================
-  document.addEventListener("DOMContentLoaded", async () => {
-      const appContainer = document.getElementById('app-container');
-      
-      // รายชื่อหน้าต่างย่อยทั้งหมดที่ต้องโหลด
-      const pages = [
-          '/shop/menu',
-          '/shop/pos',
-          '/shop/receipt',
-          '/shop/products',
-          '/shop/dashboard',
-          '/shop/settings',
-          '/shop/booking',
-          '/shop/emr',
-          '/shop/hr'
-      ];
+  // 🌟 [สำคัญมาก] สั่งให้ Javascript ที่อยู่ใน HTML ที่ดึงมา ทำงานได้จริง
+  executeScripts(container);
 
-      try {
-          Swal.fire({ title: 'กำลังดึงข้อมูลระบบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-          let combinedHtml = "";
-          for (const page of pages) {
-              const response = await fetch(page);
-              if (response.ok) {
-                  combinedHtml += await response.text();
-              }
-          }
-
-          // ใช้ createContextualFragment เพื่อแทรก HTML และให้ <script> ด้านในทำงานได้
-          const range = document.createRange();
-          range.selectNode(document.body);
-          const documentFragment = range.createContextualFragment(combinedHtml);
-          appContainer.appendChild(documentFragment);
-
-          Swal.close();
-
-          // เรียกฟังก์ชันหน้าจอ Lock Screen หรือ Numpad (ซึ่งอยู่ใน shop_menu.html)
-          if (typeof checkInitialSetup === 'function') {
-              checkInitialSetup();
-          } else if (document.getElementById('lock-screen')) {
-              document.getElementById('lock-screen').style.display = 'flex';
-          }
-
-      } catch (error) {
-          console.error('Failed to load components:', error);
-          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดโครงสร้างระบบได้ กรุณารีเฟรช', 'error');
-      }
-  });
-
-  // ==========================================
-  // ฟังก์ชันควบคุมการนำทางระหว่างหน้า (จากโค้ดเดิม)
-  // ==========================================
-  function openHRPage() { 
-    document.getElementById('page-hr').style.display = 'block'; 
-    sessionStorage.setItem('pos_current_page', 'page-hr');
-  }
-  
-  function openBookingPage() { 
-    document.getElementById('page-booking').style.display = 'block'; 
-    sessionStorage.setItem('pos_current_page', 'page-booking');
-    if(typeof fetchAppointments === 'function') fetchAppointments(); 
-  }
-  
-  function openEMRPage() { 
-    document.getElementById('page-emr').style.display = 'block'; 
-    sessionStorage.setItem('pos_current_page', 'page-emr');
-    fetchPatients(); 
-  }
-
-  function closePage(pageId) {
-    document.getElementById(pageId).style.display = 'none';
-    sessionStorage.setItem('pos_current_page', 'main-menu');
-  }
-
-  function openNewPatientModal() {
-    new bootstrap.Modal(document.getElementById('modal-new-patient')).show();
-  }
-
-  function saveNewPatient() {
-    const patientData = {
-      id_card: document.getElementById('pat-idcard').value,
-      prefix: document.getElementById('pat-prefix').value,
-      first_name: document.getElementById('pat-fname').value,
-      last_name: document.getElementById('pat-lname').value,
-      phone: document.getElementById('pat-phone').value,
-      birthdate: document.getElementById('pat-dob').value,
-      gender: document.getElementById('pat-gender').value,
-      allergy: document.getElementById('pat-allergy').value,
-      congenital_disease: document.getElementById('pat-disease').value
-    };
-    if(!patientData.first_name || !patientData.last_name || !patientData.phone) {
-      return Swal.fire('ผิดพลาด', 'กรุณากรอก ชื่อ, นามสกุล และเบอร์โทรศัพท์ ให้ครบถ้วน', 'warning');
+  // เริ่มการทำงานระบบหลังจากโหลดเสร็จ
+  setTimeout(() => {
+    if (typeof initShopMenuScripts === 'function') {
+      initShopMenuScripts();
     }
-    google.script.run.withSuccessHandler((data) => {
-      if(data.status === 'success') {
-        Swal.fire('สำเร็จ', 'สร้างเวชระเบียนใหม่เรียบร้อย (HN: ' + data.hn_code + ')', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('modal-new-patient')).hide();
-        fetchPatients(); 
-      } else {
-        Swal.fire('ผิดพลาด', data.message, 'error');
-      }
-    }).addPatient(currentTenantSheetId, patientData);
-  }
+  }, 300);
+}
 
-  // 🌟 ดึงข้อมูลคนไข้เก็บไว้ในระบบส่วนกลาง
-  function fetchPatients() {
-    google.script.run.withSuccessHandler((data) => {
-      window.clinicPatientsList = data || [];
-      // ถ้ากำลังเปิดหน้า EMR อยู่ ให้สั่งรีเฟรชรายชื่อด้วย
-      if (typeof filterEMRPatients === 'function') {
-         filterEMRPatients();
-      }
-    }).getPatients(currentTenantSheetId);
-  }
+// ฟังก์ชันแปลงสคริปต์ที่ถูกแทรกผ่าน innerHTML ให้บราวเซอร์รัน
+function executeScripts(container) {
+  const scripts = container.querySelectorAll("script");
+  scripts.forEach(oldScript => {
+    const newScript = document.createElement("script");
+    // คัดลอก Attributes ทั้งหมด
+    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+    // ใส่เนื้อหาโค้ดด้านใน
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+    // แทนที่สคริปต์เก่าด้วยสคริปต์ใหม่ที่ถูกสร้างขึ้น (ทำให้บราวเซอร์รันโค้ด)
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+}
 
-  // 🌟 ระบบค้นหาคนไข้ของจริง (สำหรับหน้า POS)
-  function openSelectPatientModal() {
-    if(!window.clinicPatientsList || window.clinicPatientsList.length === 0) fetchPatients();
-    
-    Swal.fire({
-      title: 'ค้นหาคนไข้',
-      input: 'text',
-      inputPlaceholder: 'กรอก HN, เบอร์โทร หรือชื่อ...',
-      showCancelButton: true,
-      confirmButtonText: '<i class="fa-solid fa-search"></i> ค้นหา',
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        let kw = result.value.toLowerCase().trim();
-        let found = window.clinicPatientsList.find(p => p.hn_code.toLowerCase().includes(kw) || p.phone.includes(kw) || p.first_name.toLowerCase().includes(kw));
-        
-        if(found) {
-          currentSelectedPatient = { id: found.id, name: `${found.first_name} ${found.last_name}`, hn: found.hn_code };
-          let patientBox = document.getElementById('pos-selected-patient');
-          if(patientBox) patientBox.innerHTML = `<h5 class="m-0 fw-bold text-primary">${currentSelectedPatient.name} <span class="badge bg-info">${currentSelectedPatient.hn}</span></h5>`;
-          let custNameInput = document.getElementById('pos-cust-name');
-          if(custNameInput) custNameInput.value = currentSelectedPatient.name;
-        } else {
-          Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา', 'error');
-        }
-      }
-    });
-  }
-
-  function openDeductCourseModal() {
-    if(!currentSelectedPatient) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ที่หน้า POS ก่อน', 'warning');
-    document.getElementById('course-patient-name').innerText = currentSelectedPatient.name;
-    
-    google.script.run.withSuccessHandler((courses) => {
-      const container = document.getElementById('course-list-container');
-      container.innerHTML = '';
-      if(!courses || courses.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted p-3">ไม่มีคอร์สคงเหลือ</div>';
-      } else {
-        courses.forEach(c => {
-          container.innerHTML += `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="mb-0 fw-bold">${c.course_name}</h6>
-                <small class="text-muted">เหลือ: <b class="text-danger">${c.remain_qty} ครั้ง</b></small>
-              </div>
-              <button class="btn btn-sm btn-warning fw-bold" onclick="executeDeductCourse(${c.id})">ตัด 1 ครั้ง</button>
-            </div>
-          `;
-        });
-      }
-      new bootstrap.Modal(document.getElementById('modal-deduct-course')).show();
-    }).getCourses(currentTenantSheetId, currentSelectedPatient.id);
-  }
-
-  function executeDeductCourse(courseId) {
-    Swal.fire({ title: 'ยืนยันตัดคอร์ส?', text: "ต้องการตัดคอร์สจำนวน 1 ครั้ง ใช่หรือไม่?", icon: 'question', showCancelButton: true, confirmButtonColor: '#f59e0b', confirmButtonText: 'ยืนยันตัดคอร์ส'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        google.script.run.withSuccessHandler((data) => {
-          if(data.status === 'success') {
-            Swal.fire('สำเร็จ', 'ตัดคอร์สเรียบร้อยแล้ว (เหลือ ' + data.remain + ' ครั้ง)', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('modal-deduct-course')).hide();
-            google.script.run.logAction(currentTenantSheetId, currentStaff.name, "ตัดคอร์ส", "คนไข้ " + currentSelectedPatient.name);
-          } else {
-            Swal.fire('ผิดพลาด', data.message, 'error');
-          }
-        }).deductCourse(currentTenantSheetId, courseId, 1);
-      }
-    });
-  }
+// สั่งทำงานทันทีเมื่อเปิดหน้า
+// สั่งทำงานทันทีเมื่อเปิดหน้า
+document.addEventListener("DOMContentLoaded", () => {
+  // 🌟 เด้งหน้าโหลดทันทีเสี้ยววินาทีแรกที่เข้าเว็บ ป้องกันจอขาว!
+  Swal.fire({
+    title: 'กำลังเตรียมระบบ...',
+    html: 'ดาวน์โหลดโครงสร้างหน้าจอ... <b id="sys-load-percent" class="text-primary fs-3">0%</b>',
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+      let p = 0;
+      window.sysLoadInterval = setInterval(() => {
+        p += Math.floor(Math.random() * 5) + 2;
+        if (p > 90) p = 90; // ค้างที่ 90 รอข้อมูลจากเซิร์ฟเวอร์
+        let el = document.getElementById('sys-load-percent');
+        if (el) el.innerText = p + '%';
+      }, 30);
+    }
+  });
+  
+  // โหลดหน้าจอต่างๆ ตามหลัง (คนจะไม่เห็นจอขาวแล้ว)
+  loadShopComponents();
+});
 </script>
+
 </body>
 </html>

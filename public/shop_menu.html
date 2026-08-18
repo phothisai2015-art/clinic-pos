@@ -1,5 +1,6 @@
+<!-- 🌟 สไตล์เฉพาะของหน้าเมนูและ Numpad -->
 <style>
-/* Numpad Glassmorphism และ Layout (เหมือนเดิม) */
+/* Numpad Glassmorphism และ Layout */
 .numpad-container { position: relative; z-index: 10; width: 90%; max-width: 380px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(25px) saturate(120%) !important; -webkit-backdrop-filter: blur(25px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.8) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important; border-radius: 40px !important; padding: 40px 30px 45px 30px !important; }
 body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; }
 .numpad-header-wrap { text-align: center; }
@@ -7,97 +8,1142 @@ body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65) !importan
 .error-shake { animation: shakeError 0.4s ease-in-out; }
 @keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
-/* โครงสร้างเมนูหลัก (ปรับความกว้างให้รองรับ 6 ปุ่มสวยๆ) */
-.main-container { max-width: 900px; margin: 0 auto; padding: 40px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+/* จุดแสดงรหัส PIN */
+.pin-display { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 35px; height: 50px; }
+.pin-dot { width: 18px !important; height: 18px !important; border-radius: 50% !important; background: rgba(0, 0, 0, 0.08) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
+body.dark-theme .pin-dot { background: rgba(255, 255, 255, 0.1) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important; }
+.pin-dot.filled { background: #3b82f6 !important; transform: scale(1.3) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+body.dark-theme .pin-dot.filled { background: #60a5fa !important; box-shadow: 0 0 15px rgba(96, 165, 250, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+
+/* ปุ่มกดตัวเลข */
+/* ปุ่มกดตัวเลข */
+.numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.num-btn { background: rgba(255, 255, 255, 0.85) !important; border: 1px solid rgba(255, 255, 255, 0.5) !important; border-radius: 20px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; width: 100%; height: 75px; font-size: 26px !important; font-weight: 800 !important; color: #334155 !important; cursor: pointer; display: flex; justify-content: center; align-items: center; -webkit-tap-highlight-color: transparent; user-select: none; }
+.num-btn:active { transform: translateY(2px) scale(0.95) !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+.num-btn-del { color: #ef4444 !important; background: rgba(254, 242, 242, 0.8) !important; }
+body.dark-theme .num-btn { background: rgba(30, 41, 59, 0.8) !important; border-color: rgba(255, 255, 255, 0.05) !important; color: #f1f5f9 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; }
+body.dark-theme .num-btn-del { color: #f87171 !important; background: rgba(69, 10, 10, 0.4) !important; }
+
+/* 🌟 ซ่อน Hover Effect บนมือถือ ป้องกันปุ่มค้าง (อ่านเฉพาะอุปกรณ์ที่มีเมาส์) */
+@media (hover: hover) and (pointer: fine) {
+  .num-btn:hover { transform: translateY(-4px) scale(1.02) !important; background: #ffffff !important; box-shadow: 0 12px 20px rgba(59, 130, 246, 0.15) !important; border-color: #3b82f6 !important; color: #3b82f6 !important; }
+  .num-btn-del:hover { background: #fef2f2 !important; border-color: #ef4444 !important; box-shadow: 0 12px 20px rgba(239, 68, 68, 0.15) !important; }
+  body.dark-theme .num-btn:hover { background: #1e293b !important; border-color: #60a5fa !important; color: #60a5fa !important; box-shadow: 0 12px 20px rgba(96, 165, 250, 0.2) !important; }
+  body.dark-theme .num-btn-del:hover { border-color: #f87171 !important; box-shadow: 0 12px 20px rgba(248, 113, 113, 0.2) !important; }
+}
+/* โครงสร้างเมนูหลัก */
+.main-container { max-width: 600px; margin: 0 auto; padding: 40px 20px; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+.menu-btn { display: flex; align-items: center; justify-content: flex-start; padding: 20px; margin-bottom: 15px; border-radius: 20px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+.menu-btn i { font-size: 26px; margin-right: 20px; width: 35px; text-align: center; }
+.menu-btn:hover:not(:disabled) { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+.menu-btn:disabled { background: #e2e8f0; color: #94a3b8 !important; cursor: not-allowed; border-left: 6px solid #cbd5e1 !important; opacity: 0.7;}
 
 /* ปุ่มออกจากระบบมุมซ้ายล่าง */
 .logout-shop-btn { position: fixed; bottom: 25px; left: 25px; z-index: 10000; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); border-color: #fca5a5; color: #ef4444; font-weight: bold; border-radius: 20px; padding: 10px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.2s; border: 1px solid; }
+.logout-shop-btn:hover { background: #fef2f2; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+body.dark-theme .logout-shop-btn { background: rgba(30, 41, 59, 0.8); border-color: #7f1d1d; color: #f87171; }
+body.dark-theme .logout-shop-btn:hover { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
 
-/* ปุ่มเมนูการ์ด 6 เมนู */
-.menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 25px 15px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; cursor: pointer; height: 100%; }
+/* ปุ่มเมนูการ์ด */
+.menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; cursor: pointer; }
 .menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+.menu-card-btn:active:not(:disabled) { transform: translateY(-2px); }
 .menu-card-btn:disabled { background: #f8fafc; opacity: 0.6; cursor: not-allowed; filter: grayscale(100%); }
-.menu-icon-wrap { width: 65px; height: 65px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 28px; transition: transform 0.3s ease; }
+.menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: transform 0.3s ease; }
 .menu-card-btn:hover:not(:disabled) .menu-icon-wrap { transform: scale(1.1) rotate(5deg); }
 body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; }
 body.dark-theme .menu-card-btn:hover:not(:disabled) { border-color: #475569; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
 
 @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+/* CSS สำหรับ Responsive จอเล็ก */
+@media (max-width: 768px) {
+  .numpad-container { padding: 25px 15px !important; width: 95% !important; max-width: 350px !important; }
+  .num-btn { height: 60px !important; font-size: 24px !important; border-radius: 16px !important; }
+  .panel-cat { display: none !important; }
+}
+
+/* ========================================================= */
+/* 🐾 CSS อนิเมชั่นแมวเดินเล่นหน้าจอ                           */
+/* ========================================================= */
+.detailed-cat { position: absolute; width: 95px; height: 70px; z-index: 1; cursor: grab; will-change: top, left, transform; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+.detailed-cat:active { cursor: grabbing; }
+.cat-black-coat { --coat: #1e293b; --coat-dark: #0f172a; --collar: #ef4444; } .cat-white-coat { --coat: #ffffff; --coat-dark: #e2e8f0; --collar: #3b82f6; } .cat-orange-coat { --coat: #f97316; --coat-dark: #ea580c; --collar: #10b981; }
+.cat-wrapper { position: relative; width: 100%; height: 100%; animation: catBobbing 0.22s ease-in-out infinite alternate; pointer-events: none; }
+.cat-body-main { position: absolute; width: 58px; height: 34px; background: var(--coat); border-radius: 18px; top: 18px; left: 10px; box-shadow: inset -3px -4px 0 rgba(0,0,0,0.12); }
+.cat-head-main { position: absolute; width: 30px; height: 28px; background: var(--coat); border-radius: 50%; top: 6px; left: 55px; box-shadow: inset -1px -2px 0 rgba(0,0,0,0.1); }
+.cat-ear { position: absolute; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--coat); top: -6px; }
+.cat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 2.5px solid transparent; border-right: 2.5px solid transparent; border-bottom: 5px solid #fda4af; left: -2.5px; top: 3px; }
+.ear-l { left: 2px; transform: rotate(-12deg); } .ear-r { right: 2px; transform: rotate(12deg); }
+.cat-eye { position: absolute; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; top: 9px; animation: catBlinking 3.5s infinite; }
+.cat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+.eye-l { left: 8px; } .eye-r { right: 8px; }
+.cat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 14px; left: 13px; }
+.cat-whiskers { position: absolute; width: 14px; height: 1px; background: rgba(71, 85, 105, 0.4); top: 16px; animation: whiskerTwitch 0.5s ease-in-out infinite alternate; }
+.whisker-l { left: -6px; transform: rotate(-5deg); transform-origin: right center; } .whisker-r { right: -6px; transform: rotate(5deg); transform-origin: left center; }
+.cat-collar-line { position: absolute; width: 12px; height: 24px; border-radius: 50%; border-left: 4px solid var(--collar); top: 16px; left: 50px; transform: rotate(-20deg); }
+.cat-gold-bell { position: absolute; width: 7px; height: 7px; background: #f59e0b; border-radius: 50%; top: 32px; left: 54px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transform-origin: top center; animation: bellJingle 0.22s ease-in-out infinite alternate; }
+.cat-tail-soft { position: absolute; width: 7px; height: 30px; background: var(--coat); border-radius: 4px; left: 6px; top: -4px; transform-origin: bottom center; animation: tailWavingSoft 0.45s ease-in-out infinite alternate; box-shadow: inset -1px 0 0 rgba(0,0,0,0.1); }
+.cat-leg-detailed { position: absolute; width: 6px; height: 20px; background: var(--coat); border-radius: 4px; top: 45px; transform-origin: top center; }
+.leg-front-left { left: 52px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate; }
+.leg-front-right { left: 59px; animation: swingLeg 0.22s linear infinite alternate-reverse; }
+.leg-back-left { left: 16px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate-reverse; }
+.leg-back-right { left: 23px; animation: swingLeg 0.22s linear infinite alternate; }
+@keyframes swingLeg { 0% { transform: rotate(-30deg); } 100% { transform: rotate(30deg); } }
+@keyframes tailWavingSoft { 0% { transform: rotate(-40deg); } 100% { transform: rotate(20deg); } }
+@keyframes catBobbing { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+@keyframes bellJingle { 0% { transform: rotate(-20deg); } 100% { transform: rotate(20deg); } }
+@keyframes whiskerTwitch { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
+@keyframes catBlinking { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+.route-cat-black { animation: pathTimelineBlack 35s linear infinite; }
+.route-cat-white { animation: pathTimelineWhite 39s linear infinite; animation-delay: -8s; }
+.route-cat-orange { animation: pathTimelineOrange 45s linear infinite; animation-delay: -18s; }
+@keyframes pathTimelineBlack { 0% { top: 70%; left: -15%; transform: scaleX(1); } 25% { top: 20%; left: 35%; transform: scaleX(1); } 45% { top: 60%; left: 75%; transform: scaleX(1); } 52% { top: 35%; left: 105%; transform: scaleX(1); } 54% { top: 35%; left: 105%; transform: scaleX(-1); } 70% { top: 78%; left: 60%; transform: scaleX(-1); } 88% { top: 15%; left: 20%; transform: scaleX(-1); } 98% { top: 70%; left: -5%; transform: scaleX(-1); } 100% { top: 70%; left: -15%; transform: scaleX(1); } }
+@keyframes pathTimelineWhite { 0% { top: 15%; left: 105%; transform: scaleX(-1); } 30% { top: 65%; left: 55%; transform: scaleX(-1); } 48% { top: 25%; left: -15%; transform: scaleX(-1); } 50% { top: 25%; left: -15%; transform: scaleX(1); } 72% { top: 75%; left: 45%; transform: scaleX(1); } 95% { top: 15%; left: 95%; transform: scaleX(1); } 100% { top: 15%; left: 105%; transform: scaleX(-1); } }
+@keyframes pathTimelineOrange { 0% { top: 80%; left: 45%; transform: scaleX(1); } 35% { top: 40%; left: 105%; transform: scaleX(1); } 37% { top: 40%; left: 105%; transform: scaleX(-1); } 68% { top: 75%; left: -15%; transform: scaleX(-1); } 70% { top: 75%; left: -15%; transform: scaleX(1); } 100% { top: 80%; left: 45%; transform: scaleX(1); } }
+.panel-cat { position: absolute; width: 58px; height: 50px; top: -43px; z-index: 12; pointer-events: none; will-change: transform; animation: catPanelPeekLook 3.5s ease-in-out infinite alternate; }
+.cat-orange-peeking { --pcoat: #f97316; --pcoat-dark: #ea580c; --peye: #22c55e; }
+.pcat-head { position: absolute; width: 48px; height: 44px; background: var(--pcoat); border-radius: 24px 24px 18px 18px; bottom: 0; left: 5px; box-shadow: 0 5px 12px rgba(15, 23, 42, 0.05), inset -2px -3px 0 rgba(0,0,0,0.1); }
+.pcat-ear { position: absolute; width: 0; height: 0; border-left: 6.5px solid transparent; border-right: 6.5px solid transparent; border-bottom: 11px solid var(--pcoat); bottom: 37px; }
+.pcat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-bottom: 6px solid #fda4af; left: -3px; top: 4px; }
+.pcat-ear.ear-l { left: 6px; transform: rotate(-13deg); } .pcat-ear.ear-r { right: 6px; transform: rotate(13deg); }
+.pcat-eye { position: absolute; width: 6px; height: 6px; background: var(--peye); border-radius: 50%; top: 15px; animation: catBlinking 3s infinite; }
+.pcat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+.pcat-eye.eye-l { left: 10px; } .pcat-eye.eye-r { right: 10px; }
+.pcat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 20px; left: 22px; }
+.pcat-paw { position: absolute; width: 13px; height: 13px; background: var(--pcoat); border-radius: 50% 50% 3px 3px; bottom: -6px; z-index: 15; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08); }
+.pcat-paw::after { content: ''; position: absolute; width: 9px; height: 5px; background: #fda4af; border-radius: 50% 50% 2px 2px; top: 2px; left: 2px; }
+.pcat-paw.paw-l { left: 10px; } .pcat-paw.paw-r { right: 10px; }
+@keyframes catPanelPeekLook { 0% { transform: translateY(0) rotate(0deg); } 35% { transform: translateY(-4px) rotate(3deg); } 70% { transform: translateY(1px) rotate(-3deg); } 100% { transform: translateY(-1px) rotate(1deg); } }
+
+/* 🐾 CSS ท่าทางแมวหยุดนอนพัก (ปิด Animation สไลด์หน้าจอทั้งหมด) */
+.detailed-cat.cat-resting {
+  animation: none !important; /* สั่งปิด Route-Cat Animation ไม่ให้สไลด์ไปมา */
+}
+
+.detailed-cat.cat-resting .cat-wrapper {
+  animation: catSleeping 1.5s ease-in-out infinite alternate !important;
+}
+
+/* ย่อตัวลงนอน + พับขา */
+.detailed-cat.cat-resting .cat-body-main {
+  transform: translateY(6px) scaleY(0.85);
+  transition: transform 0.5s ease;
+}
+
+.detailed-cat.cat-resting .cat-head-main {
+  transform: translateY(8px) translateX(-3px);
+  transition: transform 0.5s ease;
+}
+
+/* ซ่อนขาตอนนอนลงพื้น */
+.detailed-cat.cat-resting .cat-leg-detailed {
+  height: 6px !important;
+  top: 42px !important;
+  animation: none !important;
+  transition: all 0.5s ease;
+}
+
+/* จังหวะหายใจตอนหลับ */
+@keyframes catSleeping {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(2px) scale(0.98, 1.02); }
+}
+
+  /* 📱 🌟 ปรับแต่ง Main Menu & Numpad สำหรับ แนวนอน (Landscape) */
+@media (max-height: 820px) and (orientation: landscape) {
+  /* ย่อขนาดการ์ดเมนูหลัก 4 ปุ่ม */
+  .main-container#main-menu {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  .main-container#main-menu .mb-5 {
+    margin-bottom: 15px !important;
+  }
+  .menu-card-btn {
+    padding: 15px 10px !important;
+  }
+  .menu-icon-wrap {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+  }
+
+  /* ย่อแป้นกด PIN นัมแพด ให้กดง่ายไม่ตกขอบ */
+  .numpad-container {
+    padding: 15px 20px !important;
+  }
+  .num-btn {
+    height: 48px !important;
+    font-size: 20px !important;
+  }
+  .pin-display {
+    margin-bottom: 15px !important;
+    height: 30px !important;
+  }
+}
+  
 </style>
 
-<div id="lock-screen">... (ซ่อนไว้เพื่อประหยัดพื้นที่ โค้ดส่วนนี้เหมือนเดิม 100%) ...</div>
-<div id="first-time-setup-modal" style="display:none;">... (ซ่อนไว้ โค้ดส่วนนี้เหมือนเดิม) ...</div>
+<!-- 🌟 หน้าจอล็อกพนักงาน (Numpad & Cats) -->
+<div id="lock-screen">
+  <div style="position: absolute; top: 20px; right: 20px; z-index: 10005;">
+    <select id="lang-selector" onchange="changeLanguage(this.value)" class="form-select form-select-sm shadow-sm border-0 fw-bold text-secondary" style="border-radius: 12px; cursor: pointer; padding: 8px 30px 8px 15px; background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);">
+      <option value="th">🇹🇭 ไทย</option>
+      <option value="en">🇬🇧 ENG</option>
+    </select>
+  </div>
+  <button class="btn logout-shop-btn" onclick="shopLogout()" data-i18n="btn_logout_shop"><i class="fa-solid fa-right-from-bracket me-2"></i>ออกจากสาขา</button>
 
-<div class="main-container" id="main-menu">
-  <div class="text-center mb-4">
+  <div class="detailed-cat cat-black-coat">
+    <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+  </div>
+  <div class="detailed-cat cat-white-coat">
+    <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+  </div>
+  <div class="detailed-cat cat-orange-coat">
+    <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+  </div>
+  
+  <div class="numpad-container" id="numpad-box">
+    <div class="panel-cat cat-orange-peeking" style="right: 40px;">
+      <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
+      <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
+      <div class="pcat-paw paw-l"></div><div class="pcat-paw paw-r"></div>
+    </div>
+    <div class="numpad-header-wrap">
+      <h4 class="fw-bold text-primary mb-2"><i class="fa-solid fa-lock mb-2 fa-2x lock-icon-anim" style="display:inline-block; color:#3b82f6; text-shadow:0 8px 12px rgba(59,130,246,0.25); animation:floatLock 3s ease-in-out infinite;"></i><br> <span data-i18n="numpad_title">กรุณาใส่รหัสพนักงาน</span> </h4>
+      <p class="text-muted small mb-4" data-i18n="numpad_desc"> ระบบถูกล็อกเพื่อความปลอดภัย </p>
+      <div class="pin-display" id="pin-display">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+    </div>
+    <div class="numpad-grid">
+      <button class="num-btn" onclick="pressNum('1')">1</button>
+      <button class="num-btn" onclick="pressNum('2')">2</button>
+      <button class="num-btn" onclick="pressNum('3')">3</button>
+      <button class="num-btn" onclick="pressNum('4')">4</button>
+      <button class="num-btn" onclick="pressNum('5')">5</button>
+      <button class="num-btn" onclick="pressNum('6')">6</button>
+      <button class="num-btn" onclick="pressNum('7')">7</button>
+      <button class="num-btn" onclick="pressNum('8')">8</button>
+      <button class="num-btn" onclick="pressNum('9')">9</button>
+      <button class="num-btn num-btn-del" onclick="pressNum('del')"><i class="fa-solid fa-delete-left"></i></button>
+      <button class="num-btn" onclick="pressNum('0')">0</button>
+      <button class="num-btn" onclick="pressNum('clear')" style="color: #64748b; font-size: 16px;">C</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal การตั้งค่าพนักงานครั้งแรก -->
+<div id="first-time-setup-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); z-index: 1000000; justify-content: center; align-items: center; padding: 20px;">
+  <div class="bg-white p-4 p-md-5 rounded-4 shadow-lg text-center" style="width: 100%; max-width: 450px; animation: popIn 0.5s ease forwards;">
+    <div class="mb-4">
+      <div style="width: 80px; height: 80px; background: #fef08a; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto;">
+        <i class="fa-solid fa-crown fa-3x text-warning"></i>
+      </div>
+      <h3 class="fw-bold text-dark" data-i18n="setup_title">ยินดีต้อนรับสู่ระบบ</h3>
+      <p class="text-muted small" data-i18n="setup_desc">กรุณาตั้งชื่อและรหัสพนักงาน (PIN) สำหรับผู้ดูแลระบบ<br>(คุณคือผู้ดูแลระบบคนแรกและมีสิทธิ์สูงสุด)</p>
+    </div>
+    <div class="mb-3 text-start">
+      <label class="fw-bold text-muted mb-2" data-i18n="setup_name_label">ชื่อผู้ดูแลระบบ (Admin)</label>
+      <input type="text" id="first-admin-name" class="form-control form-control-lg fw-bold bg-light" data-i18n="setup_name_placeholder" placeholder="ระบุชื่อพนักงาน">
+    </div>
+    <div class="mb-4 text-start">
+      <label class="fw-bold text-muted mb-2" data-i18n="setup_pin_label">ตั้งรหัส PIN 4 หลัก (สำหรับเข้าใช้งาน)</label>
+      <input type="number" id="first-admin-pin" class="form-control form-control-lg fw-bold fs-3 text-center text-primary bg-light" placeholder="----" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);" style="letter-spacing: 5px;">
+    </div>
+    <button class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm" id="btn-save-first-admin" onclick="saveFirstAdmin()" data-i18n="btn_save_start">
+      <i class="fa-solid fa-check-circle me-2"></i> บันทึกและเริ่มต้นใช้งาน
+    </button>
+  </div>
+</div>
+
+<!-- 🌟 หน้าเมนูหลัก (Main Menu - Premium UI) -->
+<div class="main-container" id="main-menu" style="max-width: 800px; padding-top: 5vh;">
+  <div class="text-center mb-5">
     <img id="display-shop-logo" src="" style="max-width: 120px; margin-bottom: 20px; border-radius: 24px; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
-    <h2 class="fw-bold text-dark" style="letter-spacing: -0.5px;"><i class="fa-solid fa-hospital text-primary me-2"></i> Clinic Management System </h2>
+    <h2 class="fw-bold text-dark" style="letter-spacing: -0.5px;" data-i18n="menu_title"><i class="fa-solid fa-store text-primary me-2"></i> ระบบจัดการร้านค้า </h2>
     <div class="d-inline-flex align-items-center bg-white px-4 py-2 mt-2 rounded-pill shadow-sm border">
       <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px; animation: pulse 2s infinite;"></div>
-      <span class="text-muted fw-bold small me-2">ผู้ใช้งาน:</span> 
-      <span id="display-staff-name" class="fw-bold text-primary"> กำลังโหลด... </span>
+      <span class="text-muted fw-bold small me-2" data-i18n="menu_staff">พนักงาน:</span> 
+      <span id="display-staff-name" class="fw-bold text-primary" data-i18n="menu_loading"> กำลังโหลด... </span>
+    </div>
+  </div>
+  
+
+
+  <div style="position: relative; width: 100%;">
+    <div class="panel-cat cat-orange-peeking" style="right: 50px; top: -40px;">
+      <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
+      <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
+      <div class="pcat-paw paw-l"></div><div class="pcat-paw paw-r"></div>
     </div>
   </div>
 
-  <div class="row g-4 justify-content-center">
-    
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-booking" onclick="openBookingPage()">
-        <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-calendar-check"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">ตารางนัดหมาย</h5>
-        <span class="small text-muted">ดูคิว & จัดการคิวหน้างาน</span>
-      </button>
-    </div>
-
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-emr" onclick="openEMRPage()">
-        <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-clipboard-user"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">เวชระเบียน (EMR)</h5>
-        <span class="small text-muted">ประวัติคนไข้ & รูป Before-After</span>
-      </button>
-    </div>
-
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-pos" onclick="openPOSPage()">
-        <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">เปิดบิล & ชำระเงิน</h5>
-        <span class="small text-muted">ขายคอร์ส / ตัดคอร์ส / ออกใบเสร็จ</span>
-      </button>
-    </div>
-
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-stock" onclick="openProductsPage()">
-        <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-boxes-packing"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">คลังยา & เวชภัณฑ์</h5>
-        <span class="small text-muted">จัดการสต็อก, Lot, วันหมดอายุ</span>
-      </button>
-    </div>
-
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-hr" onclick="openHRPage()">
-        <div class="menu-icon-wrap" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="fa-solid fa-user-doctor"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">ค่ามือ & คอมมิชชัน</h5>
-        <span class="small text-muted">คำนวณ DF แพทย์ & ยอดเซลล์</span>
-      </button>
-    </div>
-
-    <div class="col-6 col-md-4">
-      <button class="menu-card-btn w-100" id="btn-menu-admin" onclick="openSettingsPage()">
-        <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-chart-line"></i></div>
-        <h5 class="fw-bold mt-3 mb-1">รายงาน & ตั้งค่า</h5>
-        <span class="small text-muted">สรุปยอดขาย & ตั้งค่าคลินิก</span>
-      </button>
-    </div>
-
+  <div class="row g-3 g-md-4">
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-booking" onclick="openBookingPage()" disabled>
+      <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_booking_title">นัดหมาย & คิว</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_booking_desc">ตารางแพทย์และคิวหน้าห้อง</span>
+    </button>
   </div>
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-patient" onclick="openPatientPage()" disabled>
+      <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-id-card-clip"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_patient_title">เวชระเบียน (EMR)</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_patient_desc">ประวัติคนไข้และรูปถ่าย</span>
+    </button>
+  </div>
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-pos" onclick="openPOSPage()" disabled>
+      <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_pos_title">ขาย & ชำระเงิน</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_pos_desc">เปิดบิล ตัดคอร์ส รับเงิน</span>
+    </button>
+  </div>
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-stock" onclick="openProductsPage()" disabled>
+      <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_stock_title">คลังยา (Inventory)</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_stock_desc">สต็อกยา โบท็อกซ์ สินค้า</span>
+    </button>
+  </div>
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-hr" onclick="openHRPage()" disabled>
+      <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-user-doctor"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_hr_title">ค่ามือแพทย์ (DF)</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_hr_desc">จัดการพนักงาน ค่าคอมฯ</span>
+    </button>
+  </div>
+  <div class="col-6 col-md-4">
+    <button class="menu-card-btn w-100 h-100" id="btn-menu-dash" onclick="openDashboardPage()" disabled>
+      <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-chart-line"></i></div>
+      <h6 class="fw-bold mt-3 mb-1" data-i18n="menu_dash_title">รายงาน (Reports)</h6>
+      <span class="small text-muted" style="font-size: 0.75rem;" data-i18n="menu_dash_desc">ยอดขาย สถิติ คอร์สค้าง</span>
+    </button>
+  </div>
+</div>
 
   <div class="text-center mt-5 text-muted fw-bold small d-flex justify-content-center align-items-center gap-3">
-    <span>Version <span id="app-version-text">Clinic v1.0</span></span>
+    <span>Version <span id="app-version-text">Loading...</span></span>
     <span class="text-secondary opacity-25">|</span>
-    <a href="#" onclick="lockScreenManual()" class="text-danger text-decoration-none hover-scale"><i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ </a>
+    <a href="#" onclick="lockScreenManual()" class="text-danger text-decoration-none hover-scale" data-i18n="btn_lock_screen"><i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ </a>
   </div>
 </div>
 
 <script>
-// สคริปต์ Numpad และอื่นๆ รันเหมือนเดิม...
+
+// 🌟 โหลดไฟล์เสียง "ปุ่มเกมส์" มารอไว้เลย (ใช้แค่เสียงเดียว)
+const btnSound = new Audio('/sould/freesound_gamestudio-button-394464.mp3');
+btnSound.volume = 1.0;
+
+function playToneSound() {
+  try {
+    btnSound.currentTime = 0; // กลับไปเริ่มที่ 0 ทันที (แก้ปัญหาเสียงหน่วงเวลากดรัวๆ)
+    btnSound.play().catch(e => console.warn("Audio play blocked:", e));
+  } catch (e) {
+    console.warn("Audio play error:", e);
+  }
+}
+
+
+  
+// ⚙️ Script สำหรับหน้าหลัก การล็อกอิน และแมวเดิน
+let currentTenantSheetId = "";
+let globalUsers = []; let currentStaff = { name: "Unknown", permissions: "" }; let currentPin = "";
+let globalDaysRemaining = null; 
+
+// ========================================================
+// 🌟 ระบบ Real-time: เช็คการอนุมัติแพ็กเกจอัตโนมัติ
+// ========================================================
+let renewPollingInterval = null;
+
+let shopLogoutTimeout;
+
+function forceShopLogout() {
+  localStorage.removeItem('saas_tenant_id'); 
+  localStorage.removeItem('saas_shop_name'); 
+  localStorage.removeItem('pos_lock_time');
+  sessionStorage.removeItem('pos_active_staff');
+  sessionStorage.removeItem('shop_owner_warned');
+  sessionStorage.removeItem('pos_current_page');
+  window.location.href = '/'; 
+}
+
+function checkMaxLockTimeExceeded() {
+  let lockTime = localStorage.getItem('pos_lock_time');
+  if (lockTime) {
+    let diffHours = (Date.now() - parseInt(lockTime)) / (1000 * 60 * 60);
+    if (diffHours >= 6) { 
+      forceShopLogout();
+      return true;
+    }
+  }
+  return false;
+}
+
+// ดักจับเมื่อเปิดจอมือถือ/iPad กลับขึ้นมา หรือสลับ Tab กลับมา
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden) { 
+    checkMaxLockTimeExceeded();
+  }
+});
+// 🌟 ========================================================= 🌟
+
+function startRenewPolling() {
+  if (renewPollingInterval) clearInterval(renewPollingInterval);
+  
+  renewPollingInterval = setInterval(() => {
+    if (!currentTenantSheetId) {
+      clearInterval(renewPollingInterval);
+      return;
+    }
+    google.script.run.withSuccessHandler(function(info) {
+      if (info && !info.error) {
+        globalDaysRemaining = info.daysRemaining;
+        
+        // 🌟 แก้ไขจุดที่หาตัวอักษรไม่เจอ
+        let expDateEl = document.getElementById('setting-exp-date');
+        let renewBtn = document.getElementById('btn-open-renew');
+
+        if (expDateEl) {
+           expDateEl.innerText = info.expireDate;
+           // ค้นหาตำแหน่งบรรทัดแบบใหม่ (หาบรรทัดถัดไปแทน ป้องกันการหาไม่เจอ)
+           let statusP = expDateEl.parentElement.nextElementSibling;
+           if (statusP) {
+              if (info.daysRemaining < 0) {
+                 statusP.innerHTML = i18n[currentLang]['set_status_expired'] || 'หมดอายุแล้ว!';
+              } else if (info.daysRemaining === 0) {
+                 statusP.innerHTML = i18n[currentLang]['set_status_expire_today'] || 'หมดอายุวันนี้!';
+              } else {
+                 let colorClass = info.daysRemaining <= 7 ? 'text-danger' : 'text-warning';
+                 statusP.innerHTML = (i18n[currentLang]['set_pkg_remaining']||'เหลือเวลา: ') + '<span id="setting-exp-days" class="fw-bold ' + colorClass + ' fs-5">' + info.daysRemaining + '</span><span class="ms-1 text-light">' + (i18n[currentLang]['set_pkg_days']||'วัน') + '</span>';
+              }
+           }
+        }
+
+        if (renewBtn) {
+           if (info.renewStatus === 'PENDING') {
+              renewBtn.disabled = true;
+              renewBtn.innerHTML = `<i class="fa-solid fa-hourglass-half text-warning me-1 fa-spin"></i> <span>${i18n[currentLang]['set_renew_checking']||'กำลังตรวจสอบ...'}</span>`;
+              renewBtn.className = "btn btn-outline-warning fw-bold rounded-pill shadow px-4 py-2";
+           } else {
+              renewBtn.disabled = false;
+              renewBtn.innerHTML = `<i class="fa-solid fa-bolt text-danger me-1"></i> <span>${i18n[currentLang]['set_btn_renew_now']||'ต่ออายุทันที'}</span>`;
+              renewBtn.className = "btn btn-warning fw-bold rounded-pill shadow px-4 py-2";
+           }
+        }
+
+        // 🌟 ถ้าระบบไม่ได้เป็น PENDING แล้ว (แปลว่าแอดมินกดอนุมัติแล้ว)
+        if (info.renewStatus !== 'PENDING') {
+          clearInterval(renewPollingInterval); // หยุดเช็ค
+          renewPollingInterval = null;
+
+          // เด้ง Popup แจ้งเตือนทันที!
+          if (info.renewNotified === 0) {
+             Swal.fire({
+                icon: 'success',
+                title: i18n[currentLang]['swal_renew_success_title'] || '🎉 ต่ออายุระบบสำเร็จแล้ว!',
+                html: `<div class="text-center">
+                         <p class="fs-6 text-secondary mb-2">${i18n[currentLang]['swal_renew_success_desc1']||'แอดมินได้ทำการอนุมัติการชำระเงินเรียบร้อยแล้วครับ'}</p>
+                         <div class="bg-light p-3 rounded-4 border my-3">
+                           <div class="text-muted small">${i18n[currentLang]['swal_renew_success_desc2']||'วันหมดอายุใหม่ของคุณคือ'}</div>
+                           <div class="fs-3 fw-bold text-success mt-1">${info.expireDate}</div>
+                           <div class="badge bg-success rounded-pill px-3 py-1 mt-2">${i18n[currentLang]['swal_renew_success_desc3']||'ใช้งานได้อีก'} ${info.daysRemaining} วัน</div>
+                         </div>
+                       </div>`,
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'รับทราบ',
+                allowOutsideClick: false
+             }).then(() => {
+                google.script.run.clearRenewNotify(currentTenantSheetId); // เคลียร์สถานะการแจ้งเตือน
+				// 👇 🌟 เติมโค้ดส่วนนี้เข้าไป เพื่อปลดล็อกปุ่มและรีเฟรชหน้าต่าง 👇
+                globalDaysRemaining = info.daysRemaining; 
+                
+                // 1. ปลดล็อกปุ่มเมนูให้กลับมากดได้ตามสิทธิ์ของพนักงาน
+                if (currentStaff && currentStaff.permissions) {
+                    applyPermissions(currentStaff.permissions);
+                }
+                
+                // 2. ปิดหน้าต่างการตั้งค่า (ถ้าเปิดอยู่) แล้วกลับหน้าหลัก
+                if (typeof closeSettingsPage === 'function') {
+                    closeSettingsPage();
+                }
+                // 👆 ======================================== 👆
+             });
+          }
+        }
+      }
+    }).getTenantInfoBySheetId(currentTenantSheetId);
+  }, 3000); // ⏱️ แอบเช็คทุกๆ 3 วินาที
+}
+
+function toggleThemeMode() {
+  const body = document.body; const icon = document.getElementById('theme-icon');
+  body.classList.toggle('dark-theme');
+  if(body.classList.contains('dark-theme')) { icon.className = 'fa-solid fa-sun'; localStorage.setItem('pos-theme-preference', 'dark'); } 
+  else { icon.className = 'fa-solid fa-moon'; localStorage.setItem('pos-theme-preference', 'light'); }
+}
+
+let idleTimeout;
+function resetIdleTimer() {
+  clearTimeout(idleTimeout);
+  
+  // 🌟 [เพิ่มใหม่] ดึงค่าเวลาจาก Settings (ถ้ายังไม่เคยตั้งค่า ให้ใช้ 5 นาที)
+  let timeoutMinutes = (typeof cachedShopSettings !== 'undefined' && cachedShopSettings.pin_timeout_minutes !== undefined)
+    ? parseFloat(cachedShopSettings.pin_timeout_minutes)
+    : 5;
+    
+  // ถ้าค่าเป็น 0 หรือน้อยกว่า แปลว่า "ปิดใช้งานการล็อกอัตโนมัติ"
+  if (timeoutMinutes <= 0) return; 
+  
+  // แปลงนาที เป็น Milliseconds (1 นาที = 60000 ms)
+  let timeoutMs = timeoutMinutes * 60 * 1000;
+
+  if(document.getElementById('lock-screen') && document.getElementById('lock-screen').style.display === 'none') { 
+    idleTimeout = setTimeout(() => { lockScreenManual(true); }, timeoutMs); 
+  } 
+}
+window.onload = resetIdleTimer; document.onmousemove = resetIdleTimer; document.onkeypress = resetIdleTimer; document.ontouchstart = resetIdleTimer; document.onclick = resetIdleTimer;
+
+// 🌟 ระบบดักจับการรีเฟรช F5 เพื่อจำหน้าล่าสุด
+function hookPageNavigation() {
+  if(typeof window.openPOSPage === 'function' && !window.openPOSPage.isHooked) {
+    const _openPOS = window.openPOSPage;
+    window.openPOSPage = function() { sessionStorage.setItem('pos_current_page', 'page-pos'); _openPOS(); };
+    window.openPOSPage.isHooked = true;
+  }
+  if(typeof window.closePOSPage === 'function' && !window.closePOSPage.isHooked) {
+    const _closePOS = window.closePOSPage;
+    window.closePOSPage = function() { sessionStorage.setItem('pos_current_page', 'main-menu'); _closePOS(); };
+    window.closePOSPage.isHooked = true;
+  }
+  if(typeof window.openProductsPage === 'function' && !window.openProductsPage.isHooked) {
+    const _openProd = window.openProductsPage;
+    window.openProductsPage = function() { sessionStorage.setItem('pos_current_page', 'page-products'); _openProd(); };
+    window.openProductsPage.isHooked = true;
+  }
+  if(typeof window.closeProductsPage === 'function' && !window.closeProductsPage.isHooked) {
+    const _closeProd = window.closeProductsPage;
+    window.closeProductsPage = function() { sessionStorage.setItem('pos_current_page', 'main-menu'); _closeProd(); };
+    window.closeProductsPage.isHooked = true;
+  }
+  if(typeof window.openDashboardPage === 'function' && !window.openDashboardPage.isHooked) {
+    const _openDash = window.openDashboardPage;
+    window.openDashboardPage = function() { sessionStorage.setItem('pos_current_page', 'page-dashboard'); _openDash(); };
+    window.openDashboardPage.isHooked = true;
+  }
+  if(typeof window.closeDashboardPage === 'function' && !window.closeDashboardPage.isHooked) {
+    const _closeDash = window.closeDashboardPage;
+    window.closeDashboardPage = function() { sessionStorage.setItem('pos_current_page', 'main-menu'); _closeDash(); };
+    window.closeDashboardPage.isHooked = true;
+  }
+  if(typeof window.openSettingsPage === 'function' && !window.openSettingsPage.isHooked) {
+    const _openSet = window.openSettingsPage;
+    window.openSettingsPage = function() { sessionStorage.setItem('pos_current_page', 'page-settings'); _openSet(); };
+    window.openSettingsPage.isHooked = true;
+  }
+  if(typeof window.closeSettingsPage === 'function' && !window.closeSettingsPage.isHooked) {
+    const _closeSet = window.closeSettingsPage;
+    window.closeSettingsPage = function() { sessionStorage.setItem('pos_current_page', 'main-menu'); _closeSet(); };
+    window.closeSettingsPage.isHooked = true;
+  }
+}
+
+function initShopMenuScripts() {
+  hookPageNavigation(); 
+
+  
+  if (typeof changeLanguage === 'function') {
+    changeLanguage(currentLang);
+  }
+
+  const savedTheme = localStorage.getItem('pos-theme-preference'); const icon = document.getElementById('theme-icon');
+  if(savedTheme === 'dark') { document.body.classList.add('dark-theme'); if(icon) icon.className = 'fa-solid fa-sun'; }
+
+  google.script.run.withSuccessHandler(function(info) { document.getElementById('app-version-text').innerText = info.version; }).getAppInfo();
+
+  const savedTenantId = localStorage.getItem('saas_tenant_id'); 
+  if (!savedTenantId) {
+      window.location.href = '/';
+      return;
+  }
+
+  // 🌟 ดึงข้อมูลและจัดการสถานะ (ลบป๊อปอัพโหลดดิ้งผีหลอกแล้ว ให้เนียนกริบ)
+  // 🌟 ดึงข้อมูลและจัดการสถานะแพ็กเกจ (เพิ่มระบบ Auto Polling)
+  google.script.run.withSuccessHandler(function(info) {
+        if (info && !info.error) {
+          globalDaysRemaining = info.daysRemaining; 
+
+          // 🌟 ถ้าระบบรออนุมัติ ให้หมุนเช็คเลย! (เผื่อลูกค้ากด F5)
+          if (info.renewStatus === 'PENDING') {
+              startRenewPolling();
+          } else if (info.renewNotified === 0) {
+              startRenewPolling();
+          }
+
+          if (info.daysRemaining < 0) {
+            // แจ้งเตือนโดยใช้คำว่า 'แพ็กเกจ' แทน เพื่อหลบโค้ดปิดโหลดดิ้งอัตโนมัติ
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'แพ็กเกจหมดอายุ', 
+                text: 'กรุณาต่ออายุแพ็กเกจเพื่อกลับมาเปิดใช้งานระบบได้ตามปกติครับ', 
+                confirmButtonText: '<i class="fa-solid fa-bolt"></i> ต่ออายุแพ็กเกจ',
+                confirmButtonColor: '#3b82f6',
+                showCancelButton: true,
+                cancelButtonText: 'ไว้ทีหลัง',
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (typeof openSettingsPage === 'function') openSettingsPage();
+                    if (typeof switchSettingsTab === 'function') switchSettingsTab('tab-package');
+                    if (typeof openQuickRenewModal === 'function') openQuickRenewModal();
+                }
+            });
+
+            // เอาโค้ดโหลดหน้าเว็บมาไว้ในบล็อกเดียวกันเลย (ไม่มีปีกกาคั่น)
+            currentTenantSheetId = savedTenantId;
+            let themeBtn = document.getElementById('main-theme-btn');
+            if(themeBtn) themeBtn.style.display = 'flex';
+            
+            loadShopData(currentTenantSheetId);
+
+          } else {
+            currentTenantSheetId = savedTenantId;
+            let themeBtn = document.getElementById('main-theme-btn');
+            if(themeBtn) themeBtn.style.display = 'flex';
+            
+            loadShopData(currentTenantSheetId);
+			
+			// 👇 🌟 เพิ่มโค้ด Socket รับคำสั่งเตะจาก Super Admin ตรงนี้ 👇
+            try {
+               const adminSocket = io();
+               adminSocket.emit('join_shop_room', currentTenantSheetId);
+               adminSocket.on('force_logout_event', () => {
+                   Swal.fire({
+                       icon: 'warning',
+                       title: 'ถูกตัดการเชื่อมต่อ',
+                       text: 'เซสชันของคุณถูกบังคับให้ออกจากระบบโดยผู้ดูแลระบบ (Super Admin)',
+                       confirmButtonText: 'รับทราบ',
+                       allowOutsideClick: false
+                   }).then(() => {
+                       forceShopLogout();
+                   });
+               });
+            } catch(e) { console.warn("Socket for admin kick failed:", e); }
+            // 👆 ======================================================== 👆
+
+            // แจ้งเตือนเจ้าของร้านใกล้หมดอายุ
+            const hasOwnerWarned = sessionStorage.getItem('shop_owner_warned');
+            if (info.daysRemaining <= 7 && !hasOwnerWarned && info.renewStatus !== 'PENDING') {
+              sessionStorage.setItem('shop_owner_warned', 'true');
+              
+              let warnText = info.daysRemaining === 0 
+                ? i18n[currentLang]['swal_warn_expire_today'] 
+                : (i18n[currentLang]['swal_warn_expire_days1']||'เหลือเวลา ') + info.daysRemaining + (i18n[currentLang]['swal_warn_expire_days2']||' วัน');
+                
+              Swal.fire({
+                  icon: info.daysRemaining === 0 ? 'error' : 'warning',
+                  title: i18n[currentLang]['swal_warn_expire_title'],
+                  text: warnText,
+                  confirmButtonText: i18n[currentLang]['swal_btn_ack'],
+                  confirmButtonColor: '#f59e0b',
+                  allowOutsideClick: false
+              });
+            } else {
+              Swal.close(); 
+            }
+          }
+		  // 👇 โค้ดใหม่: ระบบลาดตระเวน เช็ควันหมดอายุทุก 1 นาที 👇
+          setInterval(() => {
+              if (!currentTenantSheetId) return;
+              google.script.run.withSuccessHandler(function(liveInfo) {
+                  if (liveInfo && !liveInfo.error) {
+                      globalDaysRemaining = liveInfo.daysRemaining;
+                      
+                      let btnPos = document.getElementById('btn-menu-pos');
+                      // ถ้าตรวจพบว่าหมดอายุ (ติดลบ) และปุ่มเมนู POS ยังกดได้อยู่ (แสดงว่าเพิ่งข้ามคืนหมดอายุ)
+                      if (globalDaysRemaining < 0 && btnPos && !btnPos.disabled) {
+                          
+                          // 1. บังคับล็อกปุ่มเมนู 3 อันแรกทันที
+                          if (currentStaff && currentStaff.permissions) {
+                              applyPermissions(currentStaff.permissions);
+                          }
+                          
+                          // 2. ถ้ากำลังเปิดหน้าขายของ หรือหน้าอื่นๆ ค้างไว้ ให้บังคับปิดออกไปหน้าเมนู
+                          let currentPage = sessionStorage.getItem('pos_current_page');
+                          if (currentPage !== 'main-menu' && currentPage !== 'page-settings') {
+                              if (typeof closePOSPage === 'function') closePOSPage();
+                              if (typeof closeProductsPage === 'function') closeProductsPage();
+                              if (typeof closeDashboardPage === 'function') closeDashboardPage();
+                              
+                              sessionStorage.setItem('pos_current_page', 'main-menu');
+                          }
+                          
+                          // 3. เด้งป๊อปอัพแจ้งเตือนตัดจบ
+                          Swal.fire({ 
+                              icon: 'warning', 
+                              title: 'แพ็กเกจหมดอายุ', 
+                              text: 'ขณะนี้แพ็กเกจหมดเวลาใช้งานแล้ว ระบบได้ล็อกเมนูการทำงานอัตโนมัติครับ', 
+                              confirmButtonText: '<i class="fa-solid fa-bolt"></i> ต่ออายุแพ็กเกจ',
+                              confirmButtonColor: '#3b82f6',
+                              showCancelButton: true,
+                              cancelButtonText: 'ปิด',
+                              allowOutsideClick: false  // 👈 เพิ่มบรรทัดนี้เช่นกันครับ
+                          }).then((result) => {
+                              if (result.isConfirmed) {
+                                  if (typeof openSettingsPage === 'function') openSettingsPage();
+                                  if (typeof switchSettingsTab === 'function') switchSettingsTab('tab-package');
+                                  if (typeof openQuickRenewModal === 'function') openQuickRenewModal();
+                              }
+                          });
+                      }
+                  }
+              }).getTenantInfoBySheetId(currentTenantSheetId);
+          }, 60000); // ทำงานเบื้องหลังทุกๆ 60 วินาที
+          // 👆 ========================================= 👆
+        } else { 
+            localStorage.removeItem('saas_tenant_id'); localStorage.removeItem('saas_shop_name'); 
+            sessionStorage.removeItem('pos_active_staff');
+            window.location.href = '/'; 
+        }
+  }).getTenantInfoBySheetId(savedTenantId);
+  
+  initCats();
+}
+
+function loadShopData(tenantId) {
+  if(!tenantId) return;
+  
+  // 🌟 สร้างตัวนับจำนวนคิวโหลดข้อมูล
+  let loadedCount = 0;
+  const targetCount = 5; // เราจะดึงข้อมูล 5 อย่างพร้อมกัน: ตั้งค่า, พนักงาน, สินค้า, บิลขาย, ประวัติการใช้งาน
+
+  // ฟังก์ชันเช็คว่าดึงข้อมูลครบหรือยัง
+  function checkAllLoaded() {
+    loadedCount++;
+    
+    // ดันหลอดโหลดให้วิ่งขึ้นตามข้อมูลที่ดึงเสร็จ (จาก 90% ดันไปเรื่อยๆ)
+    let el = document.getElementById('sys-load-percent');
+    if (el && loadedCount < targetCount) {
+        el.innerText = (85 + Math.floor((loadedCount/targetCount)*10)) + '%';
+    }
+
+    // ถ้าดึงครบทั้ง 5 อย่างแล้ว -> ดันหลอดไป 100% แล้วโชว์หน้าจอ!
+    if (loadedCount >= targetCount) {
+      if (window.sysLoadInterval) clearInterval(window.sysLoadInterval);
+      if (el) el.innerText = '100%';
+
+      setTimeout(() => {
+        if (Swal.isVisible() && Swal.getTitle() && Swal.getTitle().textContent.includes('ระบบ')) {
+           Swal.close();
+        }
+
+        if(globalUsers.length === 0) {
+          document.getElementById('first-time-setup-modal').style.display = 'flex';
+        } else {
+          const savedStaff = sessionStorage.getItem('pos_active_staff');
+          if (savedStaff) {
+            try {
+              let user = JSON.parse(savedStaff);
+              let validUser = globalUsers.find(u => u.pin === user.pin);
+              if (validUser) {
+                currentStaff = validUser; 
+                document.getElementById('display-staff-name').innerText = validUser.name; 
+                document.getElementById('display-staff-name').removeAttribute('data-i18n'); 
+                applyPermissions(validUser.permissions);
+                document.getElementById('lock-screen').style.display = 'none';
+                resetIdleTimer();
+
+                setTimeout(() => {
+                    let lastPage = sessionStorage.getItem('pos_current_page');
+                    
+                    // ถ้าระบบหมดอายุ ห้ามเด้งเปิดหน้าอื่นอัตโนมัติ ยกเว้นหน้าตั้งค่า
+                    if (globalDaysRemaining < 0 && lastPage !== 'page-settings') {
+                        lastPage = 'main-menu';
+                    }
+
+                    if(lastPage === 'page-pos' && validUser.permissions.includes('POS') && typeof openPOSPage === 'function') openPOSPage();
+                    else if(lastPage === 'page-products' && validUser.permissions.includes('STOCK') && typeof openProductsPage === 'function') openProductsPage();
+                    else if(lastPage === 'page-dashboard' && validUser.permissions.includes('DASH') && typeof openDashboardPage === 'function') openDashboardPage();
+                    else if(lastPage === 'page-settings' && validUser.permissions.includes('ADMIN') && typeof openSettingsPage === 'function') openSettingsPage();
+                }, 50);
+              }
+            } catch(e) { sessionStorage.removeItem('pos_active_staff'); }
+          }
+        }
+      }, 300);
+    }
+  }
+
+  // 📥 1. โหลดการตั้งค่าร้าน
+  google.script.run.withSuccessHandler(function(settings) {
+    cachedShopSettings = settings || {}; 
+    if (typeof applyUISettings === 'function') applyUISettings(); 
+    if(settings && settings.shop_logo) { 
+        document.getElementById('display-shop-logo').src = settings.shop_logo; 
+        document.getElementById('display-shop-logo').style.display = 'inline-block'; 
+    }
+    checkAllLoaded();
+  }).getShopSettings(tenantId);
+
+  // 📥 2. โหลดพนักงาน
+  google.script.run.withSuccessHandler(function(users) { 
+    globalUsers = users || []; 
+    checkAllLoaded();
+  }).getUsers(tenantId);
+
+  // 📥 3. โหลดคลังสินค้าทั้งหมด (Preload เตรียมไว้ให้หน้า POS และ Products)
+  google.script.run.withSuccessHandler(function(products) {
+    globalProducts = products || [];
+    window.globalProducts = globalProducts;
+    checkAllLoaded();
+  }).getProducts(tenantId);
+
+  // 📥 4. โหลดประวัติบิล (Preload เตรียมไว้ให้ Dashboard)
+  google.script.run.withSuccessHandler(function(data) {
+    posRawSalesData = data || [];
+    checkAllLoaded();
+  }).getDashboardData(tenantId);
+
+  // 📥 5. โหลดประวัติการใช้งาน (Preload เตรียมไว้ให้หน้า Settings)
+  google.script.run.withSuccessHandler(function(logs) {
+    globalActivityLogs = logs || [];
+    checkAllLoaded();
+  }).getActivityLogs(tenantId);
+}
+
+function saveFirstAdmin() {
+  let name = document.getElementById('first-admin-name').value.trim(); let pin = document.getElementById('first-admin-pin').value.trim();
+  if(name === "" || pin.length !== 4) return Swal.fire(i18n[currentLang]['swal_invalid_info_title'], i18n[currentLang]['swal_req_pin_4'], 'warning'); 
+  let btn = document.getElementById('btn-save-first-admin'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> ' + i18n[currentLang]['swal_saving'];
+  let userData = { pin: pin, name: name, permissions: 'POS,STOCK,DASH,ADMIN' };
+
+  google.script.run.withSuccessHandler(function(res) {
+        if (res === "duplicate") { 
+          Swal.fire(i18n[currentLang]['swal_error_occurred'], i18n[currentLang]['swal_pin_used'], 'error'); 
+          btn.disabled = false; 
+          btn.innerHTML = '<i class="fa-solid fa-check-circle me-2"></i> ' + i18n[currentLang]['btn_save_start']; 
+          return; // 🌟 เติม return; ตรงนี้ เพื่อหยุดการทำงานถ้า PIN ซ้ำครับ
+        }
+        
+        // 🌟 2 บรรทัดที่คุณเพิ่มเข้ามา ถูกต้องสมบูรณ์แล้วครับ
+        clearTimeout(shopLogoutTimeout);
+        localStorage.removeItem('pos_lock_time');
+    // ------------------------------------
+    Swal.fire({ icon: 'success', title: i18n[currentLang]['swal_setup_success'], text: i18n[currentLang]['swal_redirecting'], timer: 1500, showConfirmButton: false });
+    document.getElementById('first-time-setup-modal').style.display = 'none';
+    globalUsers.push(userData); currentStaff = userData; 
+    document.getElementById('display-staff-name').innerText = userData.name; 
+    document.getElementById('display-staff-name').removeAttribute('data-i18n'); // 🌟 จุดแก้ที่ 2
+    applyPermissions(userData.permissions);
+    
+    sessionStorage.setItem('pos_active_staff', JSON.stringify(userData));
+
+    document.getElementById('lock-screen').style.opacity = '0';
+    setTimeout(() => { document.getElementById('lock-screen').style.display = 'none'; document.getElementById('numpad-box').style.animation = 'none'; }, 400);
+    google.script.run.logAction(currentTenantSheetId, userData.name, "เริ่มต้นระบบ", "ตั้งค่า Admin คนแรกสำเร็จ");
+    currentPin = ""; updatePinDisplay(); resetIdleTimer();
+  }).saveUser(currentTenantSheetId, userData); 
+}
+
+// 🌟 เพิ่มตัวแปรกันการกดซ้ำตอนกำลังตรวจรหัส
+let isCheckingPin = false;
+
+function pressNum(val) {
+  if (document.activeElement) document.activeElement.blur(); 
+
+  // 🌟 ถ้าระบบกำลังนับถอยหลังตรวจ PIN อยู่ ให้ข้ามปุ่มที่กดเกินมาทันที
+  if (isCheckingPin) return;
+
+  if (val === 'clear') { 
+    currentPin = ""; 
+  } else if (val === 'del') { 
+    currentPin = currentPin.slice(0, -1); 
+  } else { 
+    if (currentPin.length < 4) currentPin += val; 
+  }
+  
+  updatePinDisplay(); 
+
+  if (currentPin.length === 4) {
+    isCheckingPin = true; // 🌟 ล็อกปุ่มทันที กันตั้ง Timer ซ้ำ
+    setTimeout(() => {
+      checkPinCode(currentPin);
+    }, 150); 
+  }
+}
+
+function updatePinDisplay() {
+  let html = "";
+  for(let i = 0; i < 4; i++) { if (i < currentPin.length) { html += '<div class="pin-dot filled"></div>'; } else { html += '<div class="pin-dot"></div>'; } }
+  document.getElementById('pin-display').innerHTML = html;
+}
+
+function checkPinCode(pin) {
+      // 🌟 บังคับแปลงเป็น String ให้ชัวร์ 100% ป้องกันพิมพ์แล้วข้อมูลไม่ตรง
+      let user = globalUsers.find(u => String(u.pin).trim() === String(pin).trim());
+      
+      if(user) {
+        isCheckingPin = false; 
+        clearTimeout(shopLogoutTimeout);
+        localStorage.removeItem('pos_lock_time');
+        
+        currentStaff = user; 
+        document.getElementById('display-staff-name').innerText = user.name; 
+        document.getElementById('display-staff-name').removeAttribute('data-i18n');
+        applyPermissions(user.permissions);
+        
+        sessionStorage.setItem('pos_active_staff', JSON.stringify(user));
+
+        document.getElementById('lock-screen').style.opacity = '0';
+        setTimeout(() => { document.getElementById('lock-screen').style.display = 'none'; document.getElementById('numpad-box').style.animation = 'none'; }, 400);
+        
+        Swal.fire({ icon: 'success', title: (i18n[currentLang]['swal_welcome'] || 'ยินดีต้อนรับ ') + user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
+
+        google.script.run.logAction(currentTenantSheetId, user.name, "เข้าสู่ระบบ", "ล็อกอินสำเร็จ");
+        currentPin = ""; updatePinDisplay(); resetIdleTimer();
+      } else {
+        // 🌟 รหัสผิด: ลบป๊อปอัพกากบาทออก! เปลี่ยนเป็นแค่จุดสีแดงสั่นๆ จะได้ไม่บล็อกหน้าจอ และพิมพ์ใหม่ได้ทันที
+        let numpad = document.getElementById('numpad-box'); 
+        numpad.classList.add('error-shake'); 
+        
+        // เปลี่ยนจุดเป็นสีแดงเตือนว่าผิด
+        document.getElementById('pin-display').innerHTML = '<div class="pin-dot filled bg-danger" style="box-shadow: 0 0 15px rgba(239,68,68,0.6) !important;"></div>'.repeat(4);
+
+        // ปลดล็อกให้พิมพ์ใหม่ได้ทันทีที่หน้าจอสั่นเสร็จ (400ms)
+        setTimeout(() => { 
+          numpad.classList.remove('error-shake'); 
+          currentPin = ""; 
+          updatePinDisplay(); 
+          isCheckingPin = false; 
+        }, 400);
+      }
+    }
+
+function applyPermissions(perms) {
+  let p = perms.toUpperCase();
+  
+  // ถ้าระบบหมดอายุ บังคับล็อกทุกเมนู (ให้เข้าได้แค่แอดมินหรือหน้าตั้งค่า)
+  if (globalDaysRemaining < 0) {
+    document.getElementById('btn-menu-booking').disabled = true; 
+    document.getElementById('btn-menu-patient').disabled = true; 
+    document.getElementById('btn-menu-pos').disabled = true; 
+    document.getElementById('btn-menu-stock').disabled = true;
+    document.getElementById('btn-menu-hr').disabled = true;
+    document.getElementById('btn-menu-dash').disabled = true; 
+  } else {
+    // กำหนดสิทธิ์: ถ้าเป็น ADMIN จะกดได้ทุกปุ่ม หรือถ้ามีสิทธิ์เฉพาะตัวก็จะกดได้
+    document.getElementById('btn-menu-booking').disabled = !p.includes('BOOKING') && !p.includes('ADMIN'); 
+    document.getElementById('btn-menu-patient').disabled = !p.includes('PATIENT') && !p.includes('ADMIN'); 
+    document.getElementById('btn-menu-pos').disabled = !p.includes('POS') && !p.includes('ADMIN'); 
+    document.getElementById('btn-menu-stock').disabled = !p.includes('STOCK') && !p.includes('ADMIN');
+    document.getElementById('btn-menu-hr').disabled = !p.includes('HR') && !p.includes('ADMIN');
+    document.getElementById('btn-menu-dash').disabled = !p.includes('DASH') && !p.includes('ADMIN'); 
+  }
+}
+
+function lockScreenManual(isAuto = false) {
+  if(typeof closePOSPage === "function") closePOSPage(); if(typeof closeProductsPage === "function") closeProductsPage();
+  if(typeof closeDashboardPage === "function") closeDashboardPage(); if(typeof closeSettingsPage === "function") closeSettingsPage();
+  if(currentStaff && currentStaff.name && currentStaff.name !== "Unknown" && currentStaff.name !== "Locked") {
+    google.script.run.logAction(currentTenantSheetId, currentStaff.name, "ออกจากระบบ", isAuto ? "ระบบล็อกหน้าจออัตโนมัติ (Idle)" : "ผู้ใช้กดล็อกหน้าจอ (Manual)");
+  }
+  
+  sessionStorage.removeItem('pos_active_staff');
+  sessionStorage.setItem('pos_current_page', 'main-menu');
+
+  currentStaff = { name: "Locked", permissions: "" }; currentPin = ""; updatePinDisplay();
+  
+  // 🌟 จุดแก้ที่ 4: คืนค่าแปลภาษา
+  let staffNameEl = document.getElementById('display-staff-name');
+  staffNameEl.setAttribute('data-i18n', 'menu_loading');
+  staffNameEl.innerText = i18n[currentLang]['menu_loading'] || "กำลังโหลด..."; 
+  
+  let numpad = document.getElementById('numpad-box'); numpad.style.animation = 'none'; void numpad.offsetWidth; 
+  numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+  document.getElementById('lock-screen').style.display = 'flex'; setTimeout(() => { document.getElementById('lock-screen').style.opacity = '1'; }, 10);
+  if(isAuto) Swal.fire({ icon: 'info', title: i18n[currentLang]['swal_locked_title'], text: i18n[currentLang]['swal_locked_desc'], toast: true, position: 'top', timer: 3000, showConfirmButton: false });
+  
+  // 🌟 [เพิ่มไว้ท้ายฟังก์ชัน] บันทึกเวลาล็อก และนับถอยหลัง 6 ชม. (21,600,000 ms)
+  localStorage.setItem('pos_lock_time', Date.now().toString());
+  clearTimeout(shopLogoutTimeout);
+  shopLogoutTimeout = setTimeout(() => {
+    forceShopLogout();
+  }, 21600000);
+}
+
+function shopLogout() {
+  Swal.fire({
+    title: i18n[currentLang]['swal_logout_title'], text: i18n[currentLang]['swal_logout_desc'], icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: i18n[currentLang]['swal_btn_logout'], cancelButtonText: i18n[currentLang]['swal_btn_cancel']
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem('saas_tenant_id'); 
+      localStorage.removeItem('saas_shop_name'); 
+      sessionStorage.removeItem('pos_active_staff');
+      sessionStorage.removeItem('shop_owner_warned'); // 🌟 ลบการจำสถานะนี้ เพื่อให้ล็อกอินร้านค้าครั้งหน้ามันจะเตือนใหม่
+      sessionStorage.removeItem('pos_current_page');
+      window.location.href = '/'; 
+    }
+  });
+}
+
+function initCats() {
+  const cats = document.querySelectorAll('.detailed-cat'); 
+  let isDragging = false; 
+  let currentCat = null; 
+  let offsetX = 0, offsetY = 0;
+
+  function startDrag(e, cat) {
+    if (e.type === 'mousedown') e.preventDefault();
+    isDragging = true; 
+    currentCat = cat;
+    
+    if (currentCat.walkInterval) clearInterval(currentCat.walkInterval);
+    if (currentCat.actionTimeout) clearTimeout(currentCat.actionTimeout);
+    currentCat.classList.remove('cat-resting');
+
+    const computed = window.getComputedStyle(currentCat); 
+    const startLeft = parseFloat(computed.left); 
+    const startTop = parseFloat(computed.top);
+    
+    currentCat.style.left = startLeft + 'px'; 
+    currentCat.style.top = startTop + 'px';
+    currentCat.style.animation = 'none'; 
+    currentCat.style.transition = 'none'; 
+    currentCat.style.zIndex = '1000';
+
+    let clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX; 
+    let clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    offsetX = clientX - startLeft; 
+    offsetY = clientY - startTop;
+  }
+
+  function drag(e) {
+    if (!isDragging || !currentCat) return; 
+    e.preventDefault(); 
+    let clientX = e.clientX !== undefined ? e.clientX : (e.touches.length > 0 ? e.touches[0].clientX : 0); 
+    let clientY = e.clientY !== undefined ? e.clientY : (e.touches.length > 0 ? e.touches[0].clientY : 0);
+    currentCat.style.left = (clientX - offsetX) + 'px'; 
+    currentCat.style.top = (clientY - offsetY) + 'px';
+  }
+
+  function endDrag() {
+    if (!currentCat) return;
+    let cat = currentCat; 
+    cat.style.zIndex = '1';
+    isDragging = false; 
+    currentCat = null;
+    
+    startCatBehavior(cat);
+  }
+
+  // 🌟 ระบบสลับพฤติกรรม (เดินทะแยงสุ่มขึ้น-ลง ↔ นอนลงพื้น)
+  function startCatBehavior(cat) {
+    if (cat.walkInterval) clearInterval(cat.walkInterval);
+    if (cat.actionTimeout) clearTimeout(cat.actionTimeout);
+
+    let directionX = cat.dataset.dir ? parseInt(cat.dataset.dir) : 1; 
+    // 🎲 สุ่มทิศทางขึ้น-ลง (ความเร็วขึ้นลงสุ่มสลับระหว่าง -0.8 ถึง 0.8)
+    let directionY = (Math.random() * 1.6 - 0.8); 
+    
+    cat.style.transform = `scaleX(${directionX})`;
+
+    // 🎲 สุ่มระยะเวลาเดิน: 10 ถึง 20 วินาที
+    let walkDuration = Math.floor(Math.random() * 10000) + 10000;
+
+    cat.classList.remove('cat-resting');
+    cat.walkInterval = setInterval(() => {
+      if (document.getElementById('lock-screen') && document.getElementById('lock-screen').style.display === 'none') return;
+      
+      let currentLeft = parseFloat(cat.style.left); 
+      let currentTop = parseFloat(cat.style.top);
+      
+      if (isNaN(currentLeft)) {
+        const computed = window.getComputedStyle(cat);
+        currentLeft = parseFloat(computed.left) || 0;
+        currentTop = parseFloat(computed.top) || 0;
+      }
+      
+      // ขยับแนวนอนและแนวตั้ง
+      currentLeft += directionX * 1.5; 
+      currentTop += directionY;
+
+      // 🛑 คุมไม่ให้เดินหลุดขอบบน-ขอบล่างของหน้าจอเกินไป (ถ้าชนขอบบน/ล่าง ให้ชิ่งกลับ)
+      let minTop = window.innerHeight * 0.08;
+      let maxTop = window.innerHeight * 0.75;
+      if (currentTop < minTop || currentTop > maxTop) {
+        directionY = -directionY; // เด้งสลับทิศทางขึ้นลง
+      }
+
+      cat.style.left = currentLeft + 'px';
+      cat.style.top = currentTop + 'px';
+
+      // 🌟 เดินทะลุขอบจอขวา -> วาร์ปไปแอบฝั่งซ้าย + สุ่มความสูง/สุ่มทิศทางขึ้นลงใหม่
+      if (directionX === 1 && currentLeft > window.innerWidth + 100) { 
+        cat.style.left = '-120px';
+        cat.style.top = (Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.12)) + 'px';
+        directionY = (Math.random() * 1.6 - 0.8);
+      }
+      
+      // 🌟 เดินทะลุขอบจอซ้าย -> วาร์ปไปแอบฝั่งขวา + สุ่มความสูง/สุ่มทิศทางขึ้นลงใหม่
+      if (directionX === -1 && currentLeft < -150) { 
+        cat.style.left = (window.innerWidth + 50) + 'px';
+        cat.style.top = (Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.12)) + 'px';
+        directionY = (Math.random() * 1.6 - 0.8);
+      }
+    }, 30);
+
+    // เมื่อครบกำหนดเวลาเดิน ให้หยุดนอนลงพื้น
+    cat.actionTimeout = setTimeout(() => {
+      clearInterval(cat.walkInterval);
+      cat.classList.add('cat-resting');
+
+      // 🎲 สุ่มระยะเวลานอนพัก: 5 ถึง 20 วินาที
+      let sleepDuration = Math.floor(Math.random() * 15000) + 5000;
+
+      cat.actionTimeout = setTimeout(() => {
+        // เมื่อตื่นมา สุ่มสลับทิศทางหันหน้า
+        if (Math.random() > 0.5) {
+          directionX = directionX * -1;
+          cat.dataset.dir = directionX;
+        }
+        startCatBehavior(cat);
+      }, sleepDuration);
+
+    }, walkDuration);
+  }
+
+  cats.forEach((cat, index) => { 
+    cat.ondragstart = function() { return false; }; 
+    cat.addEventListener('mousedown', (e) => startDrag(e, cat)); 
+    cat.addEventListener('touchstart', (e) => startDrag(e, cat), {passive: false}); 
+    
+    // สุ่มตำแหน่งเริ่มต้นให้อยู่นอกขอบจอ (ซ้าย หรือ ขวา)
+    let startFromLeft = Math.random() > 0.5;
+    let initialLeft = startFromLeft ? -120 : window.innerWidth + 20;
+    let initialTop = Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.15);
+    
+    let initialDir = startFromLeft ? 1 : -1;
+    cat.dataset.dir = initialDir;
+    
+    cat.style.left = initialLeft + 'px';
+    cat.style.top = initialTop + 'px';
+
+    // ทยอยสุ่มเดินเข้าจอทีละตัว
+    setTimeout(() => {
+      startCatBehavior(cat);
+    }, index * 1500 + Math.random() * 1000);
+  });
+
+  document.addEventListener('mousemove', drag); 
+  document.addEventListener('touchmove', drag, {passive: false});
+  document.addEventListener('mouseup', endDrag); 
+  document.addEventListener('touchend', endDrag); 
+  document.addEventListener('mouseleave', endDrag);
+}
 </script>

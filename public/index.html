@@ -704,34 +704,20 @@ function regSendOTP() {
   var shop = document.getElementById('reg-shop').value.trim();
   var email = document.getElementById('reg-email').value.trim();
   var phone = document.getElementById('reg-phone').value.trim();
-  
-  if(!pass || !shop || !email || !phone) {
-    return Swal.fire(i18n[currentLang]['swal_error_title'] || 'ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง', 'warning');
-  }
+  if(!pass || !shop || !email || !phone) return Swal.fire(i18n[currentLang]['swal_error_title'], i18n[currentLang]['swal_fill_all'], 'warning');
+  Swal.fire({ title: i18n[currentLang]['swal_creating_shop'], didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
-  Swal.fire({ 
-    title: i18n[currentLang]['swal_creating_shop'] || 'กำลังสร้างคลินิกใหม่...', 
-    allowOutsideClick: false,
-    didOpen: () => { Swal.showLoading(); }
-  });
-
-  google.script.run
-    .withSuccessHandler(function(res) {
-      if(res.status === 'error') { 
-        Swal.fire(i18n[currentLang]['swal_error_title'] || 'สมัครไม่สำเร็จ', res.message, 'error'); 
-      } else {
-        Swal.close();
-        document.getElementById('reg-step-1').style.display = 'none';
-        document.getElementById('reg-step-success').style.display = 'block';
-        document.getElementById('res-user').innerText = email; 
-        document.getElementById('res-pass').innerText = pass;
-        document.getElementById('res-expire').innerText = res.expireDate;
-      }
-    })
-    .withFailureHandler(function(err) {
-      Swal.fire('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้', 'error');
-    })
-    .verifyAndCreateShop(pass, shop, email, phone, "NO_OTP");
+  google.script.run.withSuccessHandler(function(res) {
+    if(res.status === 'error') { Swal.fire(i18n[currentLang]['swal_error_title'], res.message, 'error'); } 
+    else {
+      Swal.close();
+      document.getElementById('reg-step-1').style.display = 'none';
+      document.getElementById('reg-step-success').style.display = 'block';
+      document.getElementById('res-user').innerText = email; 
+      document.getElementById('res-pass').innerText = pass;
+      document.getElementById('res-expire').innerText = res.expireDate;
+    }
+  }).verifyAndCreateShop(pass, shop, email, phone, "NO_OTP");
 }
 
 // 3. ฟังก์ชัน ต่ออายุ

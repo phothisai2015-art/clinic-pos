@@ -5,7 +5,7 @@ const dbPath = path.join(__dirname, 'pos.db');
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-  // 1. ตาราง Master Tenants (คลินิก/สาขา)[cite: 8]
+  // 1. ตาราง Master Tenants (ร้านค้าทั้งหมด)[cite: 3]
   db.run(`CREATE TABLE IF NOT EXISTS tenants (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user TEXT UNIQUE,
@@ -15,107 +15,38 @@ db.serialize(() => {
     phone TEXT,
     sheet_id TEXT UNIQUE,
     status TEXT DEFAULT 'ACTIVE',
-    expire_date TEXT,
-    renew_status TEXT DEFAULT 'NONE',
-    renew_notified INTEGER DEFAULT 1
+    expire_date TEXT
   )`);
 
-  // 2. ตาราง Users (พนักงาน: แพทย์, แอดมิน, เซลล์, ทรีตเมนต์)[cite: 8]
+  // 2. ตาราง Users (พนักงานประจำร้าน)
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id TEXT,
     pin TEXT,
     name TEXT,
-    role TEXT,
     permissions TEXT
   )`);
 
-  // 3. ตาราง Products & Services (สินค้า, ยา, คอร์ส, หัตถการ) - แก้ไขเพิ่ม lot, expire, type, course_qty[cite: 8]
+  // 3. ตาราง Products (สินค้า)
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id TEXT,
     tenant_id TEXT,
     name TEXT,
-    type TEXT DEFAULT 'PRODUCT', -- 'PRODUCT', 'COURSE', 'SERVICE'
     price REAL,
     image TEXT,
     category TEXT,
     stock TEXT,
     min_stock TEXT,
     unit TEXT,
-    course_qty INTEGER DEFAULT 1,
-    lot TEXT,
-    expire TEXT,
     PRIMARY KEY (tenant_id, id)
   )`);
 
-  // 4. ตาราง Patients (ทะเบียนคนไข้)[cite: 8]
-  db.run(`CREATE TABLE IF NOT EXISTS patients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    hn_code TEXT,
-    id_card TEXT,
-    prefix TEXT,
-    first_name TEXT,
-    last_name TEXT,
-    phone TEXT,
-    birthdate TEXT,
-    gender TEXT,
-    address TEXT,
-    congenital_disease TEXT,
-    allergy TEXT,
-    register_date TEXT,
-    UNIQUE(tenant_id, hn_code)
-  )`);
-
-  // 5. ตาราง Appointments (ตารางนัดหมาย)[cite: 8]
-  db.run(`CREATE TABLE IF NOT EXISTS appointments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    patient_id INTEGER,
-    doctor_id INTEGER,
-    appointment_date TEXT,
-    appointment_time TEXT,
-    room_name TEXT,
-    status TEXT DEFAULT 'WAITING',
-    notes TEXT
-  )`);
-
-  // 6. ตาราง EMR (ประวัติการรักษา/เวชระเบียน)[cite: 8]
-  db.run(`CREATE TABLE IF NOT EXISTS emr_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    patient_id INTEGER,
-    doctor_id INTEGER,
-    visit_date TEXT,
-    symptoms TEXT,
-    diagnosis TEXT,
-    treatment TEXT,
-    images_json TEXT,
-    notes TEXT
-  )`);
-
-  // 7. ตาราง Patient Courses (คอร์สคงเหลือของคนไข้)[cite: 8]
-  db.run(`CREATE TABLE IF NOT EXISTS patient_courses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    patient_id INTEGER,
-    product_id TEXT,
-    course_name TEXT,
-    total_qty INTEGER,
-    used_qty INTEGER DEFAULT 0,
-    remain_qty INTEGER,
-    expire_date TEXT,
-    status TEXT DEFAULT 'ACTIVE'
-  )`);
-
-  // 8. ตาราง Sales Log (ประวัติการขาย/เปิดบิล)[cite: 8]
+  // 4. ตาราง Sales Log (ประวัติการขาย)[cite: 4]
   db.run(`CREATE TABLE IF NOT EXISTS sales_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id TEXT,
     timestamp TEXT,
     receipt_id TEXT,
-    patient_id INTEGER,
-    patient_name TEXT,
     customer_name TEXT,
     items_str TEXT,
     total REAL,
@@ -124,21 +55,7 @@ db.serialize(() => {
     seller TEXT
   )`);
 
-  // 9. ตาราง HR & Commission (ค่ามือแพทย์, ค่าคอมมิชชัน)[cite: 8]
-  db.run(`CREATE TABLE IF NOT EXISTS hr_commissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    receipt_id TEXT,
-    staff_id INTEGER,
-    staff_name TEXT,
-    role TEXT,
-    job_type TEXT,
-    amount REAL,
-    timestamp TEXT,
-    status TEXT DEFAULT 'PENDING'
-  )`);
-
-  // 10. ตาราง Settings (ตั้งค่าคลินิก)[cite: 8]
+  // 5. ตาราง Settings (ตั้งค่าร้าน)[cite: 4]
   db.run(`CREATE TABLE IF NOT EXISTS settings (
     tenant_id TEXT,
     key TEXT,
@@ -146,7 +63,7 @@ db.serialize(() => {
     PRIMARY KEY (tenant_id, key)
   )`);
 
-  // 11. ตาราง Activity Log (ประวัติการใช้งาน)[cite: 8]
+  // 6. ตาราง Activity Log (ประวัติการใช้งาน)[cite: 4]
   db.run(`CREATE TABLE IF NOT EXISTS activity_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id TEXT,
@@ -155,16 +72,82 @@ db.serialize(() => {
     action TEXT,
     detail TEXT
   )`);
-
-  // 12. ตารางประวัติสลิป (Slip Logs)[cite: 8]
+  // 7. ตารางประวัติสลิป (Slip Logs) - สร้างใหม่เพื่อป้องกันสลิปซ้ำ
   db.run(`CREATE TABLE IF NOT EXISTS slip_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ref_no TEXT UNIQUE,
-    email TEXT,
+    ref_no TEXT UNIQUE,        -- เลขอ้างอิงสลิป (ตั้งเป็น UNIQUE เพื่อป้องกันการบันทึกเลขซ้ำเด็ดขาด)
+    email TEXT,                -- อีเมลของร้านค้าที่อัปโหลดสลิป
+    amount REAL,               -- ยอดเงินที่โอน
+    package TEXT,              -- แพ็กเกจที่เลือกต่ออายุ
+    timestamp TEXT,            -- วันเวลาที่อัปโหลด
+    status TEXT DEFAULT 'USED' -- สถานะสลิป (ถูกใช้ไปแล้ว)
+  )`);
+  // ---------------------------------------------------------
+  // 🏥 เพิ่มตารางสำหรับระบบ Clinic Management System
+  // ---------------------------------------------------------
+
+  // 1. ตารางคนไข้ (Patients)
+  db.run(`CREATE TABLE IF NOT EXISTS patients (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT,
+    hn_code TEXT UNIQUE,
+    full_name TEXT,
+    id_card TEXT,
+    phone TEXT,
+    dob TEXT,
+    allergies TEXT,
+    congenital_disease TEXT,
+    created_at TEXT
+  )`);
+
+  // 2. ตารางนัดหมายและคิว (Appointments & Queues)
+  db.run(`CREATE TABLE IF NOT EXISTS appointments (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT,
+    patient_id TEXT,
+    doctor_id TEXT,
+    room_name TEXT,
+    appointment_date TEXT,
+    appointment_time TEXT,
+    status TEXT DEFAULT 'WAITING', -- WAITING, IN_ROOM, DONE, CANCELLED
+    notes TEXT
+  )`);
+
+  // 3. ตารางคอร์สคงเหลือของคนไข้ (Patient Courses)
+  db.run(`CREATE TABLE IF NOT EXISTS patient_courses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT,
+    patient_id TEXT,
+    product_id TEXT,
+    receipt_id TEXT,
+    total_qty INTEGER,
+    used_qty INTEGER DEFAULT 0,
+    expire_date TEXT
+  )`);
+
+  // 4. ตารางบันทึกการรักษา (EMR / Treatment History)
+  db.run(`CREATE TABLE IF NOT EXISTS emr_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT,
+    patient_id TEXT,
+    doctor_id TEXT,
+    visit_date TEXT,
+    symptoms TEXT,
+    diagnosis TEXT,
+    treatment_details TEXT,
+    before_img TEXT,
+    after_img TEXT
+  )`);
+
+  // 5. ตารางค่ามือแพทย์และค่าคอม (Doctor Fee & Commission)
+  db.run(`CREATE TABLE IF NOT EXISTS commissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT,
+    receipt_id TEXT,
+    staff_id TEXT,
+    role_type TEXT, -- DOCTOR, SALES, THERAPIST
     amount REAL,
-    package TEXT,
-    timestamp TEXT,
-    status TEXT DEFAULT 'USED'
+    calculated_date TEXT
   )`);
 });
 
