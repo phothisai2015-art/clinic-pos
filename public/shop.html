@@ -174,143 +174,203 @@ body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b,
 <div id="app-container"></div>
 
 <script>
-    // 🌟 ใช้ตัวแปร Global เพื่อให้แชร์ข้อมูลคนไข้กันได้ทุกหน้า (POS, EMR, Booking)
-    window.clinicPatientsList = [];
-    let currentSelectedPatient = null;
+  // 🌟 ใช้ตัวแปร Global เพื่อให้แชร์ข้อมูลคนไข้กันได้ทุกหน้า (POS, EMR, Booking)
+  window.clinicPatientsList = [];
+  let currentSelectedPatient = null;
+  window.currentTenantSheetId = localStorage.getItem('saas_tenant_id');
 
-    function openHRPage() { 
-      document.getElementById('page-hr').style.display = 'block'; 
-      sessionStorage.setItem('pos_current_page', 'page-hr');
-    }
-    
-    function openBookingPage() { 
-      document.getElementById('page-booking').style.display = 'block'; 
-      sessionStorage.setItem('pos_current_page', 'page-booking');
-      fetchAppointments(); // โหลดคิวทุกครั้งที่เปิด
-    }
-    
-    function openEMRPage() { 
-      document.getElementById('page-emr').style.display = 'block'; 
-      sessionStorage.setItem('pos_current_page', 'page-emr');
-      fetchPatients(); 
-    }
+  // ตรวจสอบว่าล็อกอินจริงไหม ถ้าไม่ให้เด้งกลับไปหน้าแรก
+  if (!window.currentTenantSheetId) {
+      window.location.href = '/';
+  }
 
-    function closePage(pageId) {
-      document.getElementById(pageId).style.display = 'none';
-      sessionStorage.setItem('pos_current_page', 'main-menu');
-    }
-
-    function openNewPatientModal() {
-      new bootstrap.Modal(document.getElementById('modal-new-patient')).show();
-    }
-
-    function saveNewPatient() {
-      const patientData = {
-        id_card: document.getElementById('pat-idcard').value,
-        prefix: document.getElementById('pat-prefix').value,
-        first_name: document.getElementById('pat-fname').value,
-        last_name: document.getElementById('pat-lname').value,
-        phone: document.getElementById('pat-phone').value,
-        birthdate: document.getElementById('pat-dob').value,
-        gender: document.getElementById('pat-gender').value,
-        allergy: document.getElementById('pat-allergy').value,
-        congenital_disease: document.getElementById('pat-disease').value
-      };
-      if(!patientData.first_name || !patientData.last_name || !patientData.phone) {
-        return Swal.fire('ผิดพลาด', 'กรุณากรอก ชื่อ, นามสกุล และเบอร์โทรศัพท์ ให้ครบถ้วน', 'warning');
-      }
-      google.script.run.withSuccessHandler((data) => {
-        if(data.status === 'success') {
-          Swal.fire('สำเร็จ', 'สร้างเวชระเบียนใหม่เรียบร้อย (HN: ' + data.hn_code + ')', 'success');
-          bootstrap.Modal.getInstance(document.getElementById('modal-new-patient')).hide();
-          fetchPatients(); 
-        } else {
-          Swal.fire('ผิดพลาด', data.message, 'error');
-        }
-      }).addPatient(currentTenantSheetId, patientData);
-    }
-
-    // 🌟 ดึงข้อมูลคนไข้เก็บไว้ในระบบส่วนกลาง
-    function fetchPatients() {
-      google.script.run.withSuccessHandler((data) => {
-        window.clinicPatientsList = data || [];
-        // ถ้ากำลังเปิดหน้า EMR อยู่ ให้สั่งรีเฟรชรายชื่อด้วย
-        if (typeof filterEMRPatients === 'function') {
-           filterEMRPatients();
-        }
-      }).getPatients(currentTenantSheetId);
-    }
-
-    // 🌟 ระบบค้นหาคนไข้ของจริง (สำหรับหน้า POS)
-    function openSelectPatientModal() {
-      if(!window.clinicPatientsList || window.clinicPatientsList.length === 0) fetchPatients();
+  // ==========================================
+  // 🌟 โหลด Components ทั้งหมดเข้ามาในหน้าเดียว (SPA)
+  // ==========================================
+  document.addEventListener("DOMContentLoaded", async () => {
+      const appContainer = document.getElementById('app-container');
       
-      Swal.fire({
-        title: 'ค้นหาคนไข้',
-        input: 'text',
-        inputPlaceholder: 'กรอก HN, เบอร์โทร หรือชื่อ...',
-        showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-search"></i> ค้นหา',
-      }).then((result) => {
-        if (result.isConfirmed && result.value) {
-          let kw = result.value.toLowerCase().trim();
-          let found = window.clinicPatientsList.find(p => p.hn_code.toLowerCase().includes(kw) || p.phone.includes(kw) || p.first_name.toLowerCase().includes(kw));
-          
-          if(found) {
-            currentSelectedPatient = { id: found.id, name: `${found.first_name} ${found.last_name}`, hn: found.hn_code };
-            let patientBox = document.getElementById('pos-selected-patient');
-            if(patientBox) patientBox.innerHTML = `<h5 class="m-0 fw-bold text-primary">${currentSelectedPatient.name} <span class="badge bg-info">${currentSelectedPatient.hn}</span></h5>`;
-            let custNameInput = document.getElementById('pos-cust-name');
-            if(custNameInput) custNameInput.value = currentSelectedPatient.name;
-          } else {
-            Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา', 'error');
+      // รายชื่อหน้าต่างย่อยทั้งหมดที่ต้องโหลด
+      const pages = [
+          '/shop/menu',
+          '/shop/pos',
+          '/shop/receipt',
+          '/shop/products',
+          '/shop/dashboard',
+          '/shop/settings',
+          '/shop/booking',
+          '/shop/emr',
+          '/shop/hr'
+      ];
+
+      try {
+          Swal.fire({ title: 'กำลังดึงข้อมูลระบบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+          let combinedHtml = "";
+          for (const page of pages) {
+              const response = await fetch(page);
+              if (response.ok) {
+                  combinedHtml += await response.text();
+              }
           }
-        }
-      });
-    }
 
-    function openDeductCourseModal() {
-      if(!currentSelectedPatient) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ที่หน้า POS ก่อน', 'warning');
-      document.getElementById('course-patient-name').innerText = currentSelectedPatient.name;
-      
-      google.script.run.withSuccessHandler((courses) => {
-        const container = document.getElementById('course-list-container');
-        container.innerHTML = '';
-        if(!courses || courses.length === 0) {
-          container.innerHTML = '<div class="text-center text-muted p-3">ไม่มีคอร์สคงเหลือ</div>';
+          // ใช้ createContextualFragment เพื่อแทรก HTML และให้ <script> ด้านในทำงานได้
+          const range = document.createRange();
+          range.selectNode(document.body);
+          const documentFragment = range.createContextualFragment(combinedHtml);
+          appContainer.appendChild(documentFragment);
+
+          Swal.close();
+
+          // เรียกฟังก์ชันหน้าจอ Lock Screen หรือ Numpad (ซึ่งอยู่ใน shop_menu.html)
+          if (typeof checkInitialSetup === 'function') {
+              checkInitialSetup();
+          } else if (document.getElementById('lock-screen')) {
+              document.getElementById('lock-screen').style.display = 'flex';
+          }
+
+      } catch (error) {
+          console.error('Failed to load components:', error);
+          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดโครงสร้างระบบได้ กรุณารีเฟรช', 'error');
+      }
+  });
+
+  // ==========================================
+  // ฟังก์ชันควบคุมการนำทางระหว่างหน้า (จากโค้ดเดิม)
+  // ==========================================
+  function openHRPage() { 
+    document.getElementById('page-hr').style.display = 'block'; 
+    sessionStorage.setItem('pos_current_page', 'page-hr');
+  }
+  
+  function openBookingPage() { 
+    document.getElementById('page-booking').style.display = 'block'; 
+    sessionStorage.setItem('pos_current_page', 'page-booking');
+    if(typeof fetchAppointments === 'function') fetchAppointments(); 
+  }
+  
+  function openEMRPage() { 
+    document.getElementById('page-emr').style.display = 'block'; 
+    sessionStorage.setItem('pos_current_page', 'page-emr');
+    fetchPatients(); 
+  }
+
+  function closePage(pageId) {
+    document.getElementById(pageId).style.display = 'none';
+    sessionStorage.setItem('pos_current_page', 'main-menu');
+  }
+
+  function openNewPatientModal() {
+    new bootstrap.Modal(document.getElementById('modal-new-patient')).show();
+  }
+
+  function saveNewPatient() {
+    const patientData = {
+      id_card: document.getElementById('pat-idcard').value,
+      prefix: document.getElementById('pat-prefix').value,
+      first_name: document.getElementById('pat-fname').value,
+      last_name: document.getElementById('pat-lname').value,
+      phone: document.getElementById('pat-phone').value,
+      birthdate: document.getElementById('pat-dob').value,
+      gender: document.getElementById('pat-gender').value,
+      allergy: document.getElementById('pat-allergy').value,
+      congenital_disease: document.getElementById('pat-disease').value
+    };
+    if(!patientData.first_name || !patientData.last_name || !patientData.phone) {
+      return Swal.fire('ผิดพลาด', 'กรุณากรอก ชื่อ, นามสกุล และเบอร์โทรศัพท์ ให้ครบถ้วน', 'warning');
+    }
+    google.script.run.withSuccessHandler((data) => {
+      if(data.status === 'success') {
+        Swal.fire('สำเร็จ', 'สร้างเวชระเบียนใหม่เรียบร้อย (HN: ' + data.hn_code + ')', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('modal-new-patient')).hide();
+        fetchPatients(); 
+      } else {
+        Swal.fire('ผิดพลาด', data.message, 'error');
+      }
+    }).addPatient(currentTenantSheetId, patientData);
+  }
+
+  // 🌟 ดึงข้อมูลคนไข้เก็บไว้ในระบบส่วนกลาง
+  function fetchPatients() {
+    google.script.run.withSuccessHandler((data) => {
+      window.clinicPatientsList = data || [];
+      // ถ้ากำลังเปิดหน้า EMR อยู่ ให้สั่งรีเฟรชรายชื่อด้วย
+      if (typeof filterEMRPatients === 'function') {
+         filterEMRPatients();
+      }
+    }).getPatients(currentTenantSheetId);
+  }
+
+  // 🌟 ระบบค้นหาคนไข้ของจริง (สำหรับหน้า POS)
+  function openSelectPatientModal() {
+    if(!window.clinicPatientsList || window.clinicPatientsList.length === 0) fetchPatients();
+    
+    Swal.fire({
+      title: 'ค้นหาคนไข้',
+      input: 'text',
+      inputPlaceholder: 'กรอก HN, เบอร์โทร หรือชื่อ...',
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-search"></i> ค้นหา',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        let kw = result.value.toLowerCase().trim();
+        let found = window.clinicPatientsList.find(p => p.hn_code.toLowerCase().includes(kw) || p.phone.includes(kw) || p.first_name.toLowerCase().includes(kw));
+        
+        if(found) {
+          currentSelectedPatient = { id: found.id, name: `${found.first_name} ${found.last_name}`, hn: found.hn_code };
+          let patientBox = document.getElementById('pos-selected-patient');
+          if(patientBox) patientBox.innerHTML = `<h5 class="m-0 fw-bold text-primary">${currentSelectedPatient.name} <span class="badge bg-info">${currentSelectedPatient.hn}</span></h5>`;
+          let custNameInput = document.getElementById('pos-cust-name');
+          if(custNameInput) custNameInput.value = currentSelectedPatient.name;
         } else {
-          courses.forEach(c => {
-            container.innerHTML += `
-              <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 class="mb-0 fw-bold">${c.course_name}</h6>
-                  <small class="text-muted">เหลือ: <b class="text-danger">${c.remain_qty} ครั้ง</b></small>
-                </div>
-                <button class="btn btn-sm btn-warning fw-bold" onclick="executeDeductCourse(${c.id})">ตัด 1 ครั้ง</button>
-              </div>
-            `;
-          });
+          Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา', 'error');
         }
-        new bootstrap.Modal(document.getElementById('modal-deduct-course')).show();
-      }).getCourses(currentTenantSheetId, currentSelectedPatient.id);
-    }
+      }
+    });
+  }
 
-    function executeDeductCourse(courseId) {
-      Swal.fire({ title: 'ยืนยันตัดคอร์ส?', text: "ต้องการตัดคอร์สจำนวน 1 ครั้ง ใช่หรือไม่?", icon: 'question', showCancelButton: true, confirmButtonColor: '#f59e0b', confirmButtonText: 'ยืนยันตัดคอร์ส'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          google.script.run.withSuccessHandler((data) => {
-            if(data.status === 'success') {
-              Swal.fire('สำเร็จ', 'ตัดคอร์สเรียบร้อยแล้ว (เหลือ ' + data.remain + ' ครั้ง)', 'success');
-              bootstrap.Modal.getInstance(document.getElementById('modal-deduct-course')).hide();
-              google.script.run.logAction(currentTenantSheetId, currentStaff.name, "ตัดคอร์ส", "คนไข้ " + currentSelectedPatient.name);
-            } else {
-              Swal.fire('ผิดพลาด', data.message, 'error');
-            }
-          }).deductCourse(currentTenantSheetId, courseId, 1);
-        }
-      });
-    }
-  </script>
+  function openDeductCourseModal() {
+    if(!currentSelectedPatient) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ที่หน้า POS ก่อน', 'warning');
+    document.getElementById('course-patient-name').innerText = currentSelectedPatient.name;
+    
+    google.script.run.withSuccessHandler((courses) => {
+      const container = document.getElementById('course-list-container');
+      container.innerHTML = '';
+      if(!courses || courses.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted p-3">ไม่มีคอร์สคงเหลือ</div>';
+      } else {
+        courses.forEach(c => {
+          container.innerHTML += `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-0 fw-bold">${c.course_name}</h6>
+                <small class="text-muted">เหลือ: <b class="text-danger">${c.remain_qty} ครั้ง</b></small>
+              </div>
+              <button class="btn btn-sm btn-warning fw-bold" onclick="executeDeductCourse(${c.id})">ตัด 1 ครั้ง</button>
+            </div>
+          `;
+        });
+      }
+      new bootstrap.Modal(document.getElementById('modal-deduct-course')).show();
+    }).getCourses(currentTenantSheetId, currentSelectedPatient.id);
+  }
+
+  function executeDeductCourse(courseId) {
+    Swal.fire({ title: 'ยืนยันตัดคอร์ส?', text: "ต้องการตัดคอร์สจำนวน 1 ครั้ง ใช่หรือไม่?", icon: 'question', showCancelButton: true, confirmButtonColor: '#f59e0b', confirmButtonText: 'ยืนยันตัดคอร์ส'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        google.script.run.withSuccessHandler((data) => {
+          if(data.status === 'success') {
+            Swal.fire('สำเร็จ', 'ตัดคอร์สเรียบร้อยแล้ว (เหลือ ' + data.remain + ' ครั้ง)', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modal-deduct-course')).hide();
+            google.script.run.logAction(currentTenantSheetId, currentStaff.name, "ตัดคอร์ส", "คนไข้ " + currentSelectedPatient.name);
+          } else {
+            Swal.fire('ผิดพลาด', data.message, 'error');
+          }
+        }).deductCourse(currentTenantSheetId, courseId, 1);
+      }
+    });
+  }
+</script>
 </body>
 </html>
