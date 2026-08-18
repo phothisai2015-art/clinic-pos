@@ -125,11 +125,19 @@
                 <label class="form-label fw-bold small text-muted">หัตถการที่ทำ / ยา (Treatment)</label>
                 <textarea id="emr_treatment" class="form-control rounded-3" rows="2"></textarea>
               </div>
-              <!-- 🌟 ช่องเพิ่มใหม่: นัดหมายครั้งถัดไป -->
-              <div class="mb-3">
-                <label class="form-label fw-bold small text-primary"><i class="fa-regular fa-calendar-check me-1"></i> นัดหมายติดตามอาการ / ตรวจครั้งถัดไป</label>
-                <input type="text" id="emr_next_appointment" class="form-control rounded-3" placeholder="เช่น นัดติดตามผล 2 สัปดาห์ (15 ก.ย. 69), นัดเก็บเคส">
+
+              <!-- 🌟 ช่องใหม่: วันนัดหมายติดตามอาการ + หมายเหตุ -->
+              <div class="row g-2 mb-3">
+                <div class="col-md-5">
+                  <label class="form-label fw-bold small text-primary"><i class="fa-regular fa-calendar-check me-1"></i> วันนัดครั้งถัดไป</label>
+                  <input type="date" id="emr_next_appointment_date" class="form-control rounded-3">
+                </div>
+                <div class="col-md-7">
+                  <label class="form-label fw-bold small text-primary"><i class="fa-solid fa-pen-to-square me-1"></i> หมายเหตุนัดหมาย</label>
+                  <input type="text" id="emr_next_appointment_note" class="form-control rounded-3" placeholder="เช่น ติดตามผล Laser, เช็คทรงปาก">
+                </div>
               </div>
+
               <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2 mt-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกประวัติการรักษา</button>
             </form>
           </div>
@@ -331,7 +339,7 @@
     }
   }
 
-  // 🌟 บันทึก EMR ส่งข้อมูล next_appointment
+  // 🌟 ส่งข้อมูลวันนัดหมายแบบ Date และ หมายเหตุ
   async function saveEMR(e) {
     e.preventDefault();
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ก่อนบันทึกรักษา', 'warning');
@@ -341,7 +349,8 @@
       symptoms: document.getElementById('emr_symptoms').value,
       diagnosis: document.getElementById('emr_diagnosis').value,
       treatment_details: document.getElementById('emr_treatment').value,
-      next_appointment: document.getElementById('emr_next_appointment').value
+      next_appointment_date: document.getElementById('emr_next_appointment_date').value,
+      next_appointment_note: document.getElementById('emr_next_appointment_note').value
     };
 
     try {
@@ -357,7 +366,7 @@
     }
   }
 
-  // 🌟 แสดงประวัติการรักษาพร้อมป้ายวันนัดครั้งถัดไป
+  // 🌟 แปลงรูปแบบวันที่และหมายเหตุแสดงบนไทม์ไลน์
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -375,9 +384,17 @@
          const dateObj = new Date(log.visit_date);
          const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
          
-         const apptBadge = log.next_appointment 
-          ? `<div class="mt-2 p-2 rounded-3 bg-primary bg-opacity-10 text-primary small fw-bold"><i class="fa-regular fa-calendar-check me-1"></i> นัดตรวจครั้งถัดไป: ${log.next_appointment}</div>` 
-          : '';
+         // รูปแบบแสดงป้ายวันนัด
+         let apptBadge = '';
+         if (log.next_appointment_date) {
+           const apptDateObj = new Date(log.next_appointment_date);
+           const apptDateStr = apptDateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+           const noteStr = log.next_appointment_note ? ` (${log.next_appointment_note})` : '';
+           
+           apptBadge = `<div class="mt-2 p-2 rounded-3 bg-primary bg-opacity-10 text-primary small fw-bold">
+                          <i class="fa-regular fa-calendar-check me-1"></i> วันนัดครั้งถัดไป: ${apptDateStr}${noteStr}
+                        </div>`;
+         }
 
          html += `
           <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
