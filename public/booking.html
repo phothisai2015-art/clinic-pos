@@ -94,7 +94,8 @@
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
               <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-primary me-2"></i> คิววันที่เลือก</h5>
-              <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">แสดงทั้งหมด</span>
+              <!-- 🌟 ป้ายบอกวันที่ ถูกย้ายมาแสดงวันที่ปัจจุบันแทนคำว่าแสดงทั้งหมด -->
+              <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">กำลังโหลด...</span>
             </div>
             
             <div id="selectedApptList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; max-height: 500px; padding-right: 5px;">
@@ -123,11 +124,14 @@
 </div>
 
 <script>
-  // 🌟 ใช้ var แทน let เพื่อป้องกัน Error "ตัวแปรถูกประกาศซ้ำ" เวลาสลับเมนูไปมาในระบบ SPA
   var clinicAppointments = [];
-  var currentMonth = new Date().getMonth();
-  var currentYear = new Date().getFullYear();
-  var activeSelectedDate = 'ALL';
+  var _todayDate = new Date();
+  var currentMonth = _todayDate.getMonth();
+  var currentYear = _todayDate.getFullYear();
+  
+  // 🌟 ตั้งค่าเริ่มต้นให้ activeSelectedDate เป็น "วันนี้" เสมอ ไม่ใช่ 'ALL'
+  var activeSelectedDate = `${_todayDate.getFullYear()}-${String(_todayDate.getMonth() + 1).padStart(2, '0')}-${String(_todayDate.getDate()).padStart(2, '0')}`;
+  
   var thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
   // เริ่มทำงานทันทีที่เปิดหน้านี้
@@ -165,6 +169,12 @@
       if (data.status === 'success') {
         clinicAppointments = data.data;
         renderCalendar();
+        
+        // เซ็ตป้ายบอกวันที่เป็นวันปัจจุบันทันที
+        const dateObj = new Date(activeSelectedDate);
+        const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+        document.getElementById('selectedDateBadge').innerText = `${thDateStr}`;
+        
         renderApptList(activeSelectedDate, 'selectedApptList');
         renderTomorrowList();
       }
@@ -179,14 +189,13 @@
   function renderCalendar() {
     const daysContainer = document.getElementById('calendarDays');
     const monthYearTitle = document.getElementById('calendarMonthYear');
-    if(!daysContainer) return; // ป้องกัน Error ถ้า DOM ยังโหลดไม่เสร็จ
+    if(!daysContainer) return; 
     
     daysContainer.innerHTML = '';
     monthYearTitle.innerText = `${thaiMonths[currentMonth]} ${currentYear}`;
     
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const today = new Date();
 
     for (let i = 0; i < firstDay; i++) {
       daysContainer.innerHTML += `<div class="calendar-cell empty"></div>`;
@@ -196,11 +205,12 @@
       let checkDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       
       let hasAppt = clinicAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
-      let isToday = (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) ? 'active' : '';
-      let isSelected = (checkDateStr === activeSelectedDate && activeSelectedDate !== 'ALL') ? 'active' : '';
+      
+      // ให้ไฮไลท์สีฟ้าตรงกับวันที่ที่กำลังเลือก (activeSelectedDate) เท่านั้น
+      let isSelected = (checkDateStr === activeSelectedDate) ? 'active' : '';
 
       daysContainer.innerHTML += `
-        <div class="calendar-cell ${isToday || isSelected} ${hasAppt}" onclick="selectDate(this, '${checkDateStr}')">
+        <div class="calendar-cell ${isSelected} ${hasAppt}" onclick="selectDate(this, '${checkDateStr}')">
           <span class="fw-bold">${i}</span>
           <div class="appt-dot"></div>
         </div>
@@ -228,18 +238,15 @@
   }
 
   // =====================================
-  // 📋 Render List (วันที่เลือกในปฏิทิน)
+  // 📋 Render List (วันที่เลือกในปฏิทิน) + ระบบแจ้งเตือนเลยเวลา
   // =====================================
   function renderApptList(filterDate, containerId) {
     const listContainer = document.getElementById(containerId);
     if(!listContainer) return;
     listContainer.innerHTML = '';
 
-    let filtered = filterDate === 'ALL' 
-      ? clinicAppointments 
-      : clinicAppointments.filter(a => a.date === filterDate);
-
-    // เรียงจากใกล้สุดไปไกลสุด
+    // แสดงเฉพาะวันที่เลือกเท่านั้น (ไม่มีคำว่า ALL แล้ว)
+    let filtered = clinicAppointments.filter(a => a.date === filterDate);
     filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     if (filtered.length === 0) {
@@ -248,25 +255,47 @@
     }
 
     let html = '';
+    const now = new Date(); // เวลาปัจจุบัน
+    const nowDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     filtered.forEach(appt => {
       const dObj = new Date(appt.date);
       const dStr = dObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
       const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
-      const statusBadge = appt.status === 'CONFIRMED' 
+      
+      let statusBadge = appt.status === 'CONFIRMED' 
         ? '<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> โทรแล้ว</span>' 
         : '';
-      const cardClass = appt.status === 'CONFIRMED' ? 'confirmed-card' : '';
+      
+      let cardClass = appt.status === 'CONFIRMED' ? 'confirmed-card' : '';
+      let timeBadgeClass = "bg-warning text-dark"; // สีเวลาปกติ
+      let overdueBadge = "";
+
+      // 🌟 คำนวณเช็คเลยเวลา
+      const apptDateTime = new Date(`${appt.date}T${appt.time}`);
+      
+      if (apptDateTime < now) {
+        timeBadgeClass = "bg-danger text-white"; // เปลี่ยนสีป้ายเวลาเป็นสีแดง
+        cardClass += " opacity-75"; // ทำให้การ์ดสีจางลงนิดนึง
+        
+        // เช็คว่าเลยเวลาในวันนี้ หรือเลยมาจากวันอื่น
+        if (appt.date === nowDateStr) {
+          overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-clock-rotate-left"></i> เลยเวลานัด</span>';
+        } else {
+          overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-calendar-xmark"></i> เลยวันนัด</span>';
+        }
+      }
 
       html += `
         <div class="card appt-card ${cardClass} mb-3 shadow-sm border-0 bg-light">
           <div class="card-body p-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge}</h6>
+                <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge} ${overdueBadge}</h6>
                 <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
               </div>
               <div class="text-end">
-                <span class="badge bg-warning text-dark mb-1"><i class="fa-regular fa-clock me-1"></i> ${appt.time} น.</span><br>
+                <span class="badge ${timeBadgeClass} mb-1"><i class="fa-regular fa-clock me-1"></i> ${appt.time} น.</span><br>
                 <small class="text-muted" style="font-size: 0.7rem;">${dStr}</small>
               </div>
             </div>
@@ -288,7 +317,6 @@
     if(!listContainer) return;
     listContainer.innerHTML = '';
 
-    // หาวันที่ของพรุ่งนี้
     const tmr = new Date();
     tmr.setDate(tmr.getDate() + 1);
     const tmrStr = `${tmr.getFullYear()}-${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`;
@@ -296,8 +324,6 @@
     document.getElementById('tomorrowDateBadge').innerText = tmr.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 
     let filtered = clinicAppointments.filter(a => a.date === tmrStr);
-    
-    // อัปเดตตัวเลขแจ้งเตือนบนแท็บ
     document.getElementById('tomorrowCountBadge').innerText = filtered.length;
 
     if (filtered.length === 0) {
@@ -310,7 +336,6 @@
       const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
       const patientPhone = appt.phone ? appt.phone : 'ไม่มีเบอร์โทร';
       
-      // เช็คว่ากดปุ่มโทรหรือยัง
       let actionHtml = '';
       if (appt.status === 'CONFIRMED') {
         actionHtml = `<div class="text-success text-center fw-bold small mt-3 bg-success bg-opacity-10 p-2 rounded"><i class="fa-solid fa-check-circle me-1"></i> โทรยืนยันนัดหมายแล้ว</div>`;
@@ -320,7 +345,6 @@
                       </button>`;
       }
 
-      // แสดงเป็น Grid Card
       html += `
         <div class="col-md-4 col-sm-6">
           <div class="card appt-card shadow-sm border-0 bg-white border-start border-success border-4 h-100">
@@ -361,7 +385,6 @@
       const data = await res.json();
       if (data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'บันทึกสถานะเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-        // โหลดข้อมูลใหม่ทั้งหมดมาแสดง
         fetchAppointments();
       }
     } catch (err) {
