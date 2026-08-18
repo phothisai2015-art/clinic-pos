@@ -3,7 +3,7 @@
   .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
   .calendar-day-name { font-weight: bold; color: #64748b; font-size: 0.85rem; padding-bottom: 10px; }
-  .calendar-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 10px; cursor: pointer; transition: 0.2s; background: #f8fafc; border: 1px solid #e2e8f0; position: relative; }
+  .calendar-cell { aspect-ratio: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 10px; cursor: pointer; transition: 0.2s; background: #f8fafc; border: 1px solid #e2e8f0; position: relative; }
   .calendar-cell:hover { background: #e0f2fe; border-color: #bae6fd; }
   .calendar-cell.empty { background: transparent; border: none; cursor: default; }
   .calendar-cell.active { background: #3b82f6; color: white; border-color: #2563eb; font-weight: bold; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
@@ -61,7 +61,8 @@
           <div class="calendar-day-name">ศ</div>
           <div class="calendar-day-name text-primary">ส</div>
         </div>
-        <div class="calendar-grid flex-grow-1" id="calendarDays">
+        <!-- 🌟 เอา flex-grow-1 ออกจากตรงนี้ เพื่อไม่ให้มันบีบบังคับขนาด -->
+        <div class="calendar-grid" id="calendarDays">
           <!-- JS จะสร้างวันในปฏิทินตรงนี้ -->
         </div>
       </div>
