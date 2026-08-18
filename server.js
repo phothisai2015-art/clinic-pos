@@ -200,6 +200,29 @@ app.delete('/api/patients/photos/:id', (req, res) => {
   });
 });
 
+// ==========================================
+// 🗓️ API ระบบนัดหมาย (Appointments)
+// ==========================================
+app.get('/api/appointments', (req, res) => {
+  // ดึงข้อมูลนัดหมาย พร้อมกับ Join ตาราง patients เพื่อเอาชื่อคนไข้มาแสดง
+  const sql = `
+    SELECT 
+      a.appointment_date as date, 
+      a.appointment_time as time, 
+      a.patient_id as hn, 
+      p.full_name as name, 
+      a.notes as note
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+  `;
+  
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', data: rows });
+  });
+});
+
 // เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`);
