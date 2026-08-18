@@ -1,12 +1,12 @@
 <style>
-  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; }
+  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; cursor: pointer; }
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
   .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; display: none; }
   body.dark-theme .bg-white, body.dark-theme .bg-light { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9; }
   body.dark-theme .allergy-alert-box { background: #4c0519; color: #fecdd3; border-color: #f43f5e; }
-  .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-  #faceCanvas { border-radius: 12px; cursor: crosshair; }
+  .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
+  #faceCanvas { border-radius: 12px; cursor: crosshair; background-color: #ffffff; touch-action: none; }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px;">
@@ -28,28 +28,36 @@
     </div>
   </div>
 
-  <!-- Alert การแพ้ยา/สารเคมี (ซ่อนเป็นค่าเริ่มต้น) -->
+  <!-- Alert การแพ้ยา/สารเคมี -->
   <div id="allergyAlert" class="allergy-alert-box align-items-center justify-content-between mb-4 shadow-sm">
     <div class="d-flex align-items-center">
       <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
       <div>
-        <div class="fw-bold fs-6" id="allergyTitle">⚠️ คำเตือนการแพ้ยา & ข้อควรระวัง</div>
+        <div class="fw-bold fs-6" id="allergyTitle">⚠️ ข้อมูลแพ้ยา & ข้อควรระวัง</div>
         <div class="small text-danger fw-semibold" id="allergyDetails"></div>
       </div>
     </div>
     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-virus me-1"></i> โปรดระวังรุนแรง</span>
   </div>
 
-  <!-- Tabs Navigation -->
-  <ul class="nav nav-pills clinic-nav-pills mb-4" id="patientTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#reg-content" type="button"><i class="fa-solid fa-user-plus me-1"></i> ประวัติส่วนตัว (Profile)</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#emr-content" type="button"><i class="fa-solid fa-notes-medical me-1"></i> ประวัติการรักษา (EMR)</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#gallery-content" type="button"><i class="fa-solid fa-images me-1"></i> รูปภาพ Before & After</button></li>
+  <!-- Tabs Navigation (ใช้ปุ่มคลิกสลับด้วย JS) -->
+  <ul class="nav nav-pills clinic-nav-pills mb-4">
+    <li class="nav-item">
+      <button class="nav-link active" id="btn-tab-reg" onclick="switchPatientTab('reg')"><i class="fa-solid fa-user-plus me-1"></i> ประวัติส่วนตัว (Profile)</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="btn-tab-emr" onclick="switchPatientTab('emr')"><i class="fa-solid fa-notes-medical me-1"></i> ประวัติการรักษา (EMR)</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="btn-tab-gallery" onclick="switchPatientTab('gallery')"><i class="fa-solid fa-images me-1"></i> รูปภาพ Before & After</button>
+    </li>
   </ul>
 
-  <div class="tab-content" id="patientTabsContent">
+  <!-- Tab Contents -->
+  <div class="tab-content">
+    
     <!-- Tab 1: Profile -->
-    <div class="tab-pane fade show active" id="reg-content" role="tabpanel">
+    <div class="tab-pane-custom" id="reg-content" style="display: block;">
       <div class="bg-white p-4 rounded-4 shadow-sm border">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> ข้อมูลคนไข้</h5>
@@ -94,9 +102,8 @@
     </div>
 
     <!-- Tab 2: EMR -->
-    <div class="tab-pane fade" id="emr-content" role="tabpanel">
+    <div class="tab-pane-custom" id="emr-content" style="display: none;">
       <div class="row g-4">
-        <!-- Form -->
         <div class="col-md-5">
           <div class="bg-white p-4 rounded-4 shadow-sm border">
             <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียนใหม่</h5>
@@ -118,7 +125,6 @@
             </form>
           </div>
         </div>
-        <!-- History -->
         <div class="col-md-7">
           <div class="bg-white p-4 rounded-4 shadow-sm border">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> ประวัติการรักษาที่ผ่านมา</h5>
@@ -130,20 +136,70 @@
       </div>
     </div>
 
-    <!-- Tab 3: Gallery (แบบเดิม) -->
-    <div class="tab-pane fade" id="gallery-content" role="tabpanel">
-      <div class="bg-white p-4 rounded-4 shadow-sm border text-center py-5">
-        <h4 class="text-muted">ระบบรูปภาพกำลังพัฒนาต่อในเวอร์ชันถัดไป</h4>
+    <!-- Tab 3: Photo Gallery (Before & After + Canvas Draw) -->
+    <div class="tab-pane-custom" id="gallery-content" style="display: none;">
+      <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-camera me-2"></i> เปรียบเทียบภาพและมาร์กจุดใบหน้า</h5>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearCanvas()"><i class="fa-solid fa-eraser me-1"></i> ล้างรอยวาด</button>
+            <button class="btn btn-sm btn-success rounded-pill px-3" onclick="saveMarkedPhoto()"><i class="fa-solid fa-download me-1"></i> บันทึกรูปมาร์กจุด</button>
+          </div>
+        </div>
+
+        <div class="row g-4 text-center">
+          <!-- ภาพ Before -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted mb-2">ภาพ Before (ก่อนรักษา)</h6>
+            <div class="canvas-container p-2">
+              <img id="beforeImgPreview" src="https://via.placeholder.com/400x350/e2e8f0/475569?text=Before+Photo" class="img-fluid rounded-3" style="max-height: 350px; object-fit: contain;">
+            </div>
+            <input type="file" id="beforeFileInput" class="d-none" accept="image/*" onchange="previewImage(this, 'beforeImgPreview')">
+            <button class="btn btn-sm btn-outline-primary rounded-pill mt-3" onclick="document.getElementById('beforeFileInput').click()"><i class="fa-solid fa-upload me-1"></i> อัปโหลดภาพ Before</button>
+          </div>
+
+          <!-- ภาพ Canvas Marking -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-2">มาร์กจุด / ตำแหน่งหัตถการ (วาดทับได้)</h6>
+            <div class="canvas-container">
+              <canvas id="faceCanvas" width="400" height="350"></canvas>
+            </div>
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
+              <input type="file" id="canvasFileInput" class="d-none" accept="image/*" onchange="loadCanvasBg(this)">
+              <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('canvasFileInput').click()"><i class="fa-solid fa-image me-1"></i> อัปโหลดรูปใส่ Canvas</button>
+              <input type="color" id="drawColor" value="#e11d48" class="form-control form-control-color rounded-circle" style="width: 32px; height: 32px; padding: 2px;" title="เลือกสีปากกา">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
 <script>
-  let currentHN = ''; 
+  let currentHN = '';
+  let canvas, ctx, isDrawing = false;
 
   // ==========================================
-  // 🔍 1. ระบบค้นหาคนไข้
+  // 🔄 ระบบสลับแท็บแบบ Pure JS (แก้ปัญหากดไม่ได้)
+  // ==========================================
+  function switchPatientTab(tabName) {
+    ['reg', 'emr', 'gallery'].forEach(t => {
+      document.getElementById(`btn-tab-${t}`).classList.remove('active');
+      document.getElementById(`${t}-content`).style.display = 'none';
+    });
+
+    document.getElementById(`btn-tab-${tabName}`).classList.add('active');
+    document.getElementById(`${tabName}-content`).style.display = 'block';
+
+    if (tabName === 'gallery') {
+      setTimeout(initCanvas, 100);
+    }
+  }
+
+  // ==========================================
+  // 🔍 ค้นหาคนไข้
   // ==========================================
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
@@ -156,12 +212,11 @@
       const data = await res.json();
       
       if (data.data.length === 0) {
-        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา สามารถเพิ่มเป็นคนไข้ใหม่ได้เลย', 'info');
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ สามารถเพิ่มเป็นคนไข้ใหม่ได้', 'info');
       } else if (data.data.length === 1) {
         Swal.close();
         loadPatientProfile(data.data[0]);
       } else {
-        // กรณีเจอหลายคน ให้แสดง List ให้คลิกเลือก
         let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
         data.data.forEach(p => {
            html += `<button class="list-group-item list-group-item-action py-3" onclick="selectFromList('${p.id}')">
@@ -170,7 +225,6 @@
                     </button>`;
         });
         html += '</div>';
-        
         Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
       }
     } catch (err) {
@@ -178,7 +232,6 @@
     }
   }
 
-  // ดึงข้อมูลรายคนเมื่อกดเลือกจาก List
   async function selectFromList(hn) {
     Swal.showLoading();
     const res = await fetch(`/api/patients/${hn}`);
@@ -187,9 +240,6 @@
     Swal.close();
   }
 
-  // ==========================================
-  // 👤 2. นำข้อมูลใส่หน้าจอ & โชว์ Alert แพ้ยา
-  // ==========================================
   function loadPatientProfile(p) {
     currentHN = p.id;
     document.getElementById('p_hn').value = p.id;
@@ -200,7 +250,6 @@
     document.getElementById('p_disease').value = p.congenital_disease || '';
     document.getElementById('p_allergies').value = p.allergies || '';
 
-    // โชว์ Alert แพ้ยา
     const alertBox = document.getElementById('allergyAlert');
     if (p.allergies && p.allergies.trim() !== '' && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
       alertBox.style.display = 'flex';
@@ -210,15 +259,14 @@
       alertBox.style.display = 'none';
     }
 
-    // เตรียมฟอร์ม EMR
-    document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary">${p.full_name} (${p.id})</span>`;
+    document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
     loadEMRHistory(p.id);
 
     Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
   }
 
   // ==========================================
-  // 💾 3. บันทึก / อัปเดต คนไข้
+  // 💾 บันทึกข้อมูลคนไข้ & EMR
   // ==========================================
   async function savePatient(e) {
     e.preventDefault();
@@ -237,21 +285,14 @@
       const data = await res.json();
       if (data.status === 'success') {
         Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
-        
-        // ถ้าเป็นการสร้างใหม่ ให้โหลด HN ที่ได้จาก Server มาใส่ช่อง HN
-        if(!payload.id) {
-          payload.id = data.patient_id; 
-        }
-        loadPatientProfile(payload); // รีโหลดหน้าจออีกรอบ
+        if(!payload.id) payload.id = data.patient_id; 
+        loadPatientProfile(payload);
       }
     } catch (err) {
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error');
     }
   }
 
-  // ==========================================
-  // 📋 4. ระบบบันทึกเวชระเบียน (EMR)
-  // ==========================================
   async function saveEMR(e) {
     e.preventDefault();
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ก่อนบันทึกรักษา', 'warning');
@@ -276,7 +317,6 @@
     }
   }
 
-  // ดึงประวัติเก่ามาโชว์
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -284,7 +324,6 @@
     try {
       const res = await fetch(`/api/emr/${hn}`);
       const data = await res.json();
-      
       if (data.data.length === 0) {
         timeline.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษาในระบบ</div>';
         return;
@@ -312,7 +351,6 @@
     }
   }
 
-  // เคลียร์ฟอร์มเตรียมรับคนใหม่
   function clearForm() {
     currentHN = '';
     document.getElementById('patientForm').reset();
@@ -323,7 +361,6 @@
     document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">กรุณาค้นหาคนไข้เพื่อดูประวัติ...</div>';
   }
 
-  // ระบบจำลองบัตรประชาชน (จะล้างช่อง HN ออกเพื่อให้เป็นคนใหม่)
   function readSmartCard() {
     Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     setTimeout(() => {
@@ -334,5 +371,82 @@
       document.getElementById('p_dob').value = '1985-10-25';
       Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
     }, 1000);
+  }
+
+  // ==========================================
+  // 🎨 Canvas & Photo Gallery System
+  // ==========================================
+  function initCanvas() {
+    canvas = document.getElementById('faceCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    // ล้างรอยวาดตั้งต้น
+    clearCanvas();
+
+    // Event วาดรูป
+    canvas.onmousedown = startDrawing;
+    canvas.onmousemove = draw;
+    canvas.onmouseup = stopDrawing;
+    canvas.ontouchstart = (e) => { startDrawing(e.touches[0]); };
+    canvas.ontouchmove = (e) => { draw(e.touches[0]); e.preventDefault(); };
+    canvas.ontouchend = stopDrawing;
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.strokeStyle = document.getElementById('drawColor').value;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  function stopDrawing() { isDrawing = false; }
+
+  function clearCanvas() {
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById(previewId).src = e.target.result;
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function loadCanvasBg(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function saveMarkedPhoto() {
+    if(!canvas) return;
+    const link = document.createElement('a');
+    link.download = `marked_${currentHN || 'patient'}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
   }
 </script>
