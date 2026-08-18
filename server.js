@@ -709,12 +709,11 @@ app.post('/api/appointments/add', (req, res) => {
     function(err) { if(!err) io.to(tenantId).emit('refresh_queue'); res.json(err ? { status: "error", message: err.message } : { status: "success" }); }
   );
 });
-// --- วางต่อท้าย app.post('/api/appointments/add', ...) ใน server.js ---
 app.post('/api/appointments/update-status', (req, res) => {
   const { tenantId, id, status } = req.body;
   db.run(`UPDATE appointments SET status = ? WHERE tenant_id = ? AND id = ?`, [status, tenantId, id], function(err) {
     if (err) return res.json({ status: "error", message: err.message });
-    io.to(tenantId).emit('refresh_queue'); // แจ้งเตือนหน้าจออื่นให้รีเฟรชคิว
+    io.to(tenantId).emit('refresh_queue'); 
     res.json({ status: "success" });
   });
 });
@@ -754,6 +753,3 @@ io.on('connection', (socket) => {
 
 // 🚀 เปลี่ยน Port กลับให้ถูกต้อง
 server.listen(3001, () => console.log('🚀 Clinic Application Server running on http://localhost:3001'));
-}
-}
-}
