@@ -42,7 +42,6 @@
     </button>
   </div>
 
-  <!-- 🌟 เปลี่ยนมาใช้ JS สลับแท็บ -->
   <ul class="nav nav-pills clinic-nav-pills mb-4">
     <li class="nav-item">
       <button class="nav-link active" id="btn-tab-queue" onclick="switchBookingTab('queue')"><i class="fa-solid fa-list-ol me-1"></i> จัดการคิวหน้างาน</button>
@@ -99,7 +98,7 @@
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
             <div class="calendar-header">
               <button class="btn btn-light rounded-circle shadow-sm" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-              <h5 class="fw-bold m-0 text-primary" id="calendarMonthYear">สิงหาคม 2026</h5>
+              <h5 class="fw-bold m-0 text-primary" id="calendarMonthYear">กำลังโหลด...</h5>
               <button class="btn btn-light rounded-circle shadow-sm" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             <div class="calendar-grid mt-3">
@@ -121,7 +120,7 @@
         <div class="col-md-5">
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-4">
-              <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-warning me-2"></i> คิวนัดหมายเร็วๆ นี้</h5>
+              <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-warning me-2"></i> คิวนัดหมาย</h5>
               <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">แสดงทั้งหมด</span>
             </div>
             
@@ -152,10 +151,15 @@
 </div>
 
 <script>
+  let clinicAppointments = []; // 🌟 เก็บข้อมูลจริงที่โหลดมาจาก Database
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+  const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+
   // =====================================
   // 🌟 ฟังก์ชันสลับแท็บ
   // =====================================
-  function switchBookingTab(tabName) {
+  async function switchBookingTab(tabName) {
     ['queue', 'calendar', 'dash'].forEach(t => {
       document.getElementById(`btn-tab-${t}`).classList.remove('active');
       document.getElementById(`${t}-content`).style.display = 'none';
@@ -165,6 +169,7 @@
     document.getElementById(`${tabName}-content`).style.display = 'block';
 
     if (tabName === 'calendar') {
+      await fetchAppointments(); // 🌟 โหลดข้อมูลจาก Server ทันทีที่เปิดแท็บปฏิทิน
       renderCalendar();
     } else if (tabName === 'dash') {
       initClinicCharts();
@@ -172,19 +177,23 @@
   }
 
   // =====================================
+  // 🌟 โหลดคิวนัดหมายของจริงจาก Database
+  // =====================================
+  async function fetchAppointments() {
+    try {
+      const res = await fetch('/api/appointments');
+      const data = await res.json();
+      if (data.status === 'success') {
+        clinicAppointments = data.data; // เก็บลงตัวแปรหลัก
+      }
+    } catch (err) {
+      console.error('ไม่สามารถโหลดข้อมูลนัดหมายได้', err);
+    }
+  }
+
+  // =====================================
   // ระบบปฏิทินนัดหมาย (Calendar UI)
   // =====================================
-  let currentMonth = new Date().getMonth();
-  let currentYear = new Date().getFullYear();
-  const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-
-  // ข้อมูลจำลอง (Mock Data)
-  const mockAppointments = [
-    { date: '2026-08-20', time: '10:00', hn: 'HN-10001', name: 'คุณ สมชาย รักชาติ', note: 'นัดติดตามผล Laser' },
-    { date: '2026-08-20', time: '13:30', hn: 'HN-10005', name: 'คุณ มาลี ดีใจ', note: 'ฉีดโบท็อกซ์กราม' },
-    { date: '2026-08-25', time: '11:00', hn: 'HN-10012', name: 'คุณ สมหญิง สวยงาม', note: 'ฉีดฟิลเลอร์ใต้ตา' }
-  ];
-
   function renderCalendar() {
     const daysContainer = document.getElementById('calendarDays');
     const monthYearTitle = document.getElementById('calendarMonthYear');
@@ -204,8 +213,9 @@
     // สร้างวันที่
     for (let i = 1; i <= daysInMonth; i++) {
       let checkDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      let hasAppt = mockAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
       
+      // 🌟 เช็คว่ามีคิวจริงตรงกับวันที่นี้หรือไม่
+      let hasAppt = clinicAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
       let isToday = (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) ? 'active' : '';
 
       daysContainer.innerHTML += `
@@ -242,10 +252,12 @@
     const listContainer = document.getElementById('appointmentList');
     listContainer.innerHTML = '';
 
+    // 🌟 กรองจากข้อมูลจริง
     let filtered = filterDate === 'ALL' 
-      ? mockAppointments 
-      : mockAppointments.filter(a => a.date === filterDate);
+      ? clinicAppointments 
+      : clinicAppointments.filter(a => a.date === filterDate);
 
+    // เรียงจากใกล้สุดไปไกลสุด
     filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     if (filtered.length === 0) {
@@ -257,13 +269,14 @@
     filtered.forEach(appt => {
       const dObj = new Date(appt.date);
       const dStr = dObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+      const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
       
       html += `
         <div class="card appt-card mb-3 shadow-sm border-0 bg-light">
           <div class="card-body p-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <h6 class="fw-bold text-primary m-0 mb-1">${appt.name}</h6>
+                <h6 class="fw-bold text-primary m-0 mb-1">${patientName}</h6>
                 <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
               </div>
               <div class="text-end">
@@ -272,7 +285,7 @@
               </div>
             </div>
             <div class="small fw-bold text-secondary bg-white p-2 rounded border border-light">
-              <i class="fa-solid fa-pen-to-square me-1"></i> ${appt.note}
+              <i class="fa-solid fa-pen-to-square me-1"></i> ${appt.note || 'ไม่มีหมายเหตุ'}
             </div>
           </div>
         </div>
