@@ -1,31 +1,33 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const db = require('./database'); // เรียกใช้ไฟล์ฐานข้อมูล
+const db = require('./database'); // เรียกใช้ไฟล์ฐานข้อมูลที่เราสร้างใหม่
 
 const app = express();
-const PORT = 3001; // 🌟 กำหนด Port 3001 ตามที่คุณระบุ
+const PORT = 3001; 
 
-// Middleware
+// Middleware พื้นฐาน
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // โฟลเดอร์เก็บไฟล์หน้าเว็บ
-app.get('/booking.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'booking.html'));
-});
+app.use(express.static(path.join(__dirname, 'public'))); // เปิดให้เข้าถึงโฟลเดอร์ public
 
-// API ตรวจสอบสถานะเซิร์ฟเวอร์
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'success', message: 'Clinic API is running on port 3001' });
-});
+// ==========================================
+// 🌟 Routing ระบบคลินิก
+// ==========================================
 
-// เปิดหน้าหลัก (เดี๋ยวเราจะมาสร้างไฟล์ index.html ในโฟลเดอร์ public ทีหลัง)
+// หน้าเมนูหลัก (ล็อกอิน & เมนู)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// เริ่มรันเซิร์ฟเวอร์
+// โมดูล 1: ตารางคิวและนัดหมาย
+app.get('/booking.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'booking.html'));
+});
+
+// ==========================================
+
 app.listen(PORT, () => {
-  console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Clinic Application Server running on http://localhost:${PORT}`);
 });
