@@ -1,5 +1,5 @@
 <style>
-  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; }
+  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; cursor: pointer; }
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
   
@@ -42,22 +42,23 @@
     </button>
   </div>
 
-  <ul class="nav nav-pills clinic-nav-pills mb-4" id="bookingTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#queue-content" type="button" role="tab"><i class="fa-solid fa-list-ol me-1"></i> จัดการคิวหน้างาน</button>
+  <!-- 🌟 เปลี่ยนมาใช้ JS สลับแท็บ -->
+  <ul class="nav nav-pills clinic-nav-pills mb-4">
+    <li class="nav-item">
+      <button class="nav-link active" id="btn-tab-queue" onclick="switchBookingTab('queue')"><i class="fa-solid fa-list-ol me-1"></i> จัดการคิวหน้างาน</button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#calendar-content" type="button" role="tab" onclick="renderCalendar()"><i class="fa-regular fa-calendar-days me-1"></i> ตารางนัดหมาย</button>
+    <li class="nav-item">
+      <button class="nav-link" id="btn-tab-calendar" onclick="switchBookingTab('calendar')"><i class="fa-regular fa-calendar-days me-1"></i> ตารางนัดหมาย</button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#dash-content" type="button" role="tab" onclick="initClinicCharts()"><i class="fa-solid fa-chart-pie me-1"></i> แดชบอร์ดสรุปผล</button>
+    <li class="nav-item">
+      <button class="nav-link" id="btn-tab-dash" onclick="switchBookingTab('dash')"><i class="fa-solid fa-chart-pie me-1"></i> แดชบอร์ดสรุปผล</button>
     </li>
   </ul>
 
-  <div class="tab-content" id="bookingTabsContent">
+  <div class="tab-content">
     
     <!-- Tab 1: Queue -->
-    <div class="tab-pane fade show active" id="queue-content" role="tabpanel">
+    <div class="tab-pane-custom" id="queue-content" style="display: block;">
       <div class="bg-white p-4 rounded-4 shadow-sm border">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2 text-primary"></i> รายชื่อคิวปัจจุบัน</h5>
@@ -91,7 +92,7 @@
     </div>
 
     <!-- Tab 2: Calendar & Appointments -->
-    <div class="tab-pane fade" id="calendar-content" role="tabpanel">
+    <div class="tab-pane-custom" id="calendar-content" style="display: none;">
       <div class="row g-4">
         <!-- ฝั่งซ้าย: ปฏิทิน -->
         <div class="col-md-7">
@@ -128,14 +129,13 @@
             <div id="appointmentList" style="overflow-y: auto; flex-grow: 1; max-height: 450px; padding-right: 5px;">
               <div class="text-center py-5 text-muted">กำลังโหลดข้อมูลนัดหมาย...</div>
             </div>
-
           </div>
         </div>
       </div>
     </div>
 
     <!-- Tab 3: Dashboard -->
-    <div class="tab-pane fade" id="dash-content" role="tabpanel">
+    <div class="tab-pane-custom" id="dash-content" style="display: none;">
       <div class="row g-3 mb-4">
         <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #1e40af, #3b82f6);"><div class="small fw-bold mb-1 opacity-75">ผู้เข้ารับบริการวันนี้</div><h3 class="fw-bold m-0">34 <span class="fs-6 opacity-75">คน</span></h3></div></div>
         <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #065f46, #10b981);"><div class="small fw-bold mb-1 opacity-75">เคสใหม่ (New)</div><h3 class="fw-bold m-0">8 <span class="fs-6 opacity-75">คน</span></h3></div></div>
@@ -153,13 +153,32 @@
 
 <script>
   // =====================================
+  // 🌟 ฟังก์ชันสลับแท็บ
+  // =====================================
+  function switchBookingTab(tabName) {
+    ['queue', 'calendar', 'dash'].forEach(t => {
+      document.getElementById(`btn-tab-${t}`).classList.remove('active');
+      document.getElementById(`${t}-content`).style.display = 'none';
+    });
+
+    document.getElementById(`btn-tab-${tabName}`).classList.add('active');
+    document.getElementById(`${tabName}-content`).style.display = 'block';
+
+    if (tabName === 'calendar') {
+      renderCalendar();
+    } else if (tabName === 'dash') {
+      initClinicCharts();
+    }
+  }
+
+  // =====================================
   // ระบบปฏิทินนัดหมาย (Calendar UI)
   // =====================================
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
   const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
-  // ข้อมูลจำลอง (Mock Data) สำหรับโชว์ UI สเต็ปแรก
+  // ข้อมูลจำลอง (Mock Data)
   const mockAppointments = [
     { date: '2026-08-20', time: '10:00', hn: 'HN-10001', name: 'คุณ สมชาย รักชาติ', note: 'นัดติดตามผล Laser' },
     { date: '2026-08-20', time: '13:30', hn: 'HN-10005', name: 'คุณ มาลี ดีใจ', note: 'ฉีดโบท็อกซ์กราม' },
@@ -184,11 +203,9 @@
 
     // สร้างวันที่
     for (let i = 1; i <= daysInMonth; i++) {
-      // เช็คว่าวันไหนมีคิวบ้าง (เอาไว้จุดสีแดง)
       let checkDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       let hasAppt = mockAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
       
-      // เช็คว่าเป็นวันนี้หรือไม่
       let isToday = (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) ? 'active' : '';
 
       daysContainer.innerHTML += `
@@ -211,11 +228,9 @@
   }
 
   function selectDate(element, dateStr) {
-    // เอาสี Active ออกจากวันอื่น แล้วไฮไลท์วันใหม่
     document.querySelectorAll('.calendar-cell').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
     
-    // อัปเดตป้ายบอกวันฝั่งขวา
     const dateObj = new Date(dateStr);
     const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
     document.getElementById('selectedDateBadge').innerText = `คิววันที่ ${thDateStr}`;
@@ -227,16 +242,14 @@
     const listContainer = document.getElementById('appointmentList');
     listContainer.innerHTML = '';
 
-    // กรองคิว (ถ้า 'ALL' ให้โชว์ทั้งหมด, ถ้าเป็นวันที่ ให้โชว์แค่วันนั้น)
     let filtered = filterDate === 'ALL' 
       ? mockAppointments 
       : mockAppointments.filter(a => a.date === filterDate);
 
-    // เรียงจากใกล้สุดไปไกลสุด
     filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     if (filtered.length === 0) {
-      listContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-mug-hot fa-2x mb-3 text-light"></i><br>ไม่มีคิวนัดหมายในวันนี้</div>`;
+      listContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-mug-hot fa-2x mb-3 text-light"></i><br>ไม่มีคิวนัดหมาย</div>`;
       return;
     }
 
