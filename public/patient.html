@@ -2,8 +2,6 @@
   .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; cursor: pointer; }
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active):not(.disabled-tab) { background-color: #f1f5f9; border-color: #cbd5e1; }
-  
-  /* สไตล์ปุ่มแท็บที่โดนล็อก */
   .clinic-nav-pills .nav-link.disabled-tab { opacity: 0.45; cursor: not-allowed !important; background-color: #f1f5f9 !important; color: #94a3b8 !important; box-shadow: none !important; border-color: transparent !important; }
 
   .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; display: none; }
@@ -46,7 +44,7 @@
     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-virus me-1"></i> โปรดระวังรุนแรง</span>
   </div>
 
-  <!-- Tabs Navigation (ตั้งค่าเริ่มต้นให้ล็อกแท็บ 2 และ 3) -->
+  <!-- Tabs Navigation -->
   <ul class="nav nav-pills clinic-nav-pills mb-4">
     <li class="nav-item">
       <button class="nav-link active" id="btn-tab-reg" onclick="switchPatientTab('reg')"><i class="fa-solid fa-user-plus me-1"></i> ประวัติส่วนตัว (Profile)</button>
@@ -125,9 +123,14 @@
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold small text-muted">หัตถการที่ทำ / ยา (Treatment)</label>
-                <textarea id="emr_treatment" class="form-control rounded-3" rows="3"></textarea>
+                <textarea id="emr_treatment" class="form-control rounded-3" rows="2"></textarea>
               </div>
-              <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกประวัติการรักษา</button>
+              <!-- 🌟 ช่องเพิ่มใหม่: นัดหมายครั้งถัดไป -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-primary"><i class="fa-regular fa-calendar-check me-1"></i> นัดหมายติดตามอาการ / ตรวจครั้งถัดไป</label>
+                <input type="text" id="emr_next_appointment" class="form-control rounded-3" placeholder="เช่น นัดติดตามผล 2 สัปดาห์ (15 ก.ย. 69), นัดเก็บเคส">
+              </div>
+              <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2 mt-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกประวัติการรักษา</button>
             </form>
           </div>
         </div>
@@ -154,7 +157,6 @@
         </div>
 
         <div class="row g-4 text-center">
-          <!-- ภาพ Before -->
           <div class="col-md-6">
             <h6 class="fw-bold text-muted mb-2">ภาพ Before (ก่อนรักษา)</h6>
             <div class="canvas-container p-2">
@@ -167,7 +169,6 @@
             </div>
           </div>
 
-          <!-- ภาพ Canvas Marking -->
           <div class="col-md-6">
             <h6 class="fw-bold text-primary mb-2">มาร์กจุด / ตำแหน่งหัตถการ (วาดทับได้)</h6>
             <div class="canvas-container">
@@ -183,7 +184,6 @@
         </div>
       </div>
 
-      <!-- คลังภาพย้อนหลัง -->
       <div class="bg-white p-4 rounded-4 shadow-sm border">
         <h5 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-photo-film me-2"></i> คลังภาพย้อนหลังในระบบ</h5>
         <div class="row g-3" id="patientPhotoGrid">
@@ -199,11 +199,7 @@
   let currentHN = '';
   let canvas, ctx, isDrawing = false;
 
-  // ==========================================
-  // 🔒 1. ระบบจัดการสลับแท็บ และ ล็อกแท็บ
-  // ==========================================
   function switchPatientTab(tabName) {
-    // เช็คว่าถ้ายังไม่มีคนไข้ ห้ามเข้าแท็บ EMR และ Gallery
     if ((tabName === 'emr' || tabName === 'gallery') && !currentHN) {
       Swal.fire({
         icon: 'warning',
@@ -228,7 +224,6 @@
     }
   }
 
-  // ปลดล็อกหรือล็อกแท็บตามสถานะคนไข้
   function updateTabState() {
     const emrBtn = document.getElementById('btn-tab-emr');
     const galleryBtn = document.getElementById('btn-tab-gallery');
@@ -242,9 +237,6 @@
     }
   }
 
-  // ==========================================
-  // 🔍 2. ค้นหาคนไข้
-  // ==========================================
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ชื่อ หรือเบอร์โทรศัพท์เพื่อค้นหา', 'warning');
@@ -306,7 +298,6 @@
     document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
     document.getElementById('photoCurrentPatient').innerHTML = `คนไข้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
     
-    // ปลดล็อกปุ่มแท็บ
     updateTabState();
 
     loadEMRHistory(p.id);
@@ -315,9 +306,6 @@
     Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
   }
 
-  // ==========================================
-  // 💾 3. บันทึกข้อมูลคนไข้ & EMR
-  // ==========================================
   async function savePatient(e) {
     e.preventDefault();
     const payload = {
@@ -343,6 +331,7 @@
     }
   }
 
+  // 🌟 บันทึก EMR ส่งข้อมูล next_appointment
   async function saveEMR(e) {
     e.preventDefault();
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ก่อนบันทึกรักษา', 'warning');
@@ -351,7 +340,8 @@
       patient_id: currentHN,
       symptoms: document.getElementById('emr_symptoms').value,
       diagnosis: document.getElementById('emr_diagnosis').value,
-      treatment_details: document.getElementById('emr_treatment').value
+      treatment_details: document.getElementById('emr_treatment').value,
+      next_appointment: document.getElementById('emr_next_appointment').value
     };
 
     try {
@@ -367,6 +357,7 @@
     }
   }
 
+  // 🌟 แสดงประวัติการรักษาพร้อมป้ายวันนัดครั้งถัดไป
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -384,6 +375,10 @@
          const dateObj = new Date(log.visit_date);
          const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
          
+         const apptBadge = log.next_appointment 
+          ? `<div class="mt-2 p-2 rounded-3 bg-primary bg-opacity-10 text-primary small fw-bold"><i class="fa-regular fa-calendar-check me-1"></i> นัดตรวจครั้งถัดไป: ${log.next_appointment}</div>` 
+          : '';
+
          html += `
           <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -393,6 +388,7 @@
             <div class="fw-bold text-dark mt-2">วินิจฉัย: ${log.diagnosis}</div>
             <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms}</div>
             <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
+            ${apptBadge}
           </div>`;
       });
       timeline.innerHTML = html;
@@ -412,7 +408,6 @@
     document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">กรุณาค้นหาคนไข้เพื่อดูประวัติ...</div>';
     document.getElementById('patientPhotoGrid').innerHTML = '<div class="text-center py-4 text-muted">กรุณาเลือกคนไข้เพื่อดูคลังภาพย้อนหลัง...</div>';
     
-    // สลับกลับแท็บแรก และ ล็อกแท็บ
     switchPatientTab('reg');
     updateTabState();
   }
@@ -429,9 +424,6 @@
     }, 1000);
   }
 
-  // ==========================================
-  // 📸 4. ระบบคลังภาพ & ลบรูปภาพ
-  // ==========================================
   function initCanvas() {
     canvas = document.getElementById('faceCanvas');
     if (!canvas) return;
@@ -496,7 +488,6 @@
     }
   }
 
-  // บันทึกรูปเข้า Server
   async function savePhotoToServer(type) {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อนทำการบันทึกภาพ', 'warning');
 
@@ -535,7 +526,6 @@
     }
   }
 
-  // โหลดคลังภาพย้อนหลัง (พร้อมปุ่มลบรูป)
   async function loadPatientPhotos(hn) {
     const grid = document.getElementById('patientPhotoGrid');
     grid.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -577,7 +567,6 @@
     }
   }
 
-  // 🗑️ ฟังก์ชันสั่งลบรูปภาพ
   async function deletePhoto(photoId) {
     const result = await Swal.fire({
       title: 'ยืนยันการลบรูปภาพ?',
