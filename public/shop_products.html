@@ -1,0 +1,365 @@
+<div id="page-products" style="display: none; background: #f8fafc; height: 100vh; position: absolute; top: 0; left: 0; width: 100%; z-index: 1040; overflow-y: auto;">
+  <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-4">
+    <h3 class="fw-bold text-warning m-0"><i class="fa-solid fa-boxes-packing me-2"></i> คลังยา & เวชภัณฑ์</h3>
+    <div class="d-flex gap-2">
+      <button class="btn btn-warning fw-bold rounded-pill shadow-sm" onclick="openProductForm('add')">
+        <i class="fa-solid fa-plus me-1"></i> เพิ่มรายการใหม่
+      </button>
+      <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeProductsPage()">กลับ</button>
+    </div>
+  </div>
+
+  <div class="container-fluid px-4">
+    <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3">
+          <select class="form-select fw-bold text-primary" id="prod-type-filter" onchange="renderProductsTable()">
+            <option value="all">ทุกประเภท</option>
+            <option value="PRODUCT">สินค้า / ยา (Product)</option>
+            <option value="COURSE">คอร์สรักษา (Course)</option>
+            <option value="SERVICE">หัตถการ (Service)</option>
+          </select>
+        </div>
+        <div class="col-md-9">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 bg-light" placeholder="ค้นหา รหัส, ชื่อยา, เลข Lot..." id="search-product-input" oninput="renderProductsTable()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-3 rounded-4 shadow-sm border" style="max-height: 70vh; overflow-y: auto;">
+      <table class="table table-hover align-middle">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th>รูปภาพ</th>
+            <th>รหัส/ประเภท</th>
+            <th>ชื่อรายการ</th>
+            <th>ราคาขาย</th>
+            <th>สต็อกคงเหลือ</th>
+            <th>เลข Lot / Expire</th>
+            <th class="text-end pe-3">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="product-table-body">
+          <tr><td colspan="7" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-product-form" tabindex="-1" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-warning text-dark rounded-top-4">
+        <h5 class="modal-title fw-bold" id="form-title"><i class="fa-solid fa-box me-2"></i>ข้อมูลสินค้า / คอร์ส</h5>
+        <button type="button" class="btn-close" onclick="closeProductForm()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="prod-old-id">
+        <input type="hidden" id="prod-image-url">
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">ประเภทรายการ</label>
+            <select class="form-select fw-bold" id="prod-type" onchange="toggleCourseQty()">
+              <option value="PRODUCT">ยาสิ้นเปลือง / ผลิตภัณฑ์ (Product)</option>
+              <option value="COURSE">คอร์สรักษา (Course)</option>
+              <option value="SERVICE">หัตถการ (Service)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">รหัส (SKU)</label>
+            <input type="text" class="form-control fw-bold" id="prod-id" placeholder="เช่น BOTOX-01">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">ชื่อรายการ</label>
+            <input type="text" class="form-control" id="prod-name" placeholder="เช่น โบท็อกซ์ (Allergan) 100U">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">หมวดหมู่</label>
+            <input type="text" class="form-control" id="prod-category" placeholder="เช่น โบท็อกซ์, เลเซอร์">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-success">ราคาขาย (บาท)</label>
+            <input type="number" class="form-control fw-bold" id="prod-price">
+          </div>
+          <div class="col-md-4" id="div-course-qty" style="display: none;">
+            <label class="form-label fw-bold text-info">จำนวนครั้ง (คอร์ส)</label>
+            <input type="number" class="form-control fw-bold" id="prod-course-qty" value="1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-primary">สต็อกตั้งต้น / หน่วย</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="prod-stock" placeholder="จำนวน">
+              <input type="text" class="form-control" id="prod-unit" placeholder="หน่วย" value="ชิ้น">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-danger">เตือนสต็อกต่ำ</label>
+            <input type="number" class="form-control" id="prod-min-stock" value="5">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-muted">เลข Lot (ตรวจสอบย้อนหลัง)</label>
+            <input type="text" class="form-control" id="prod-lot" placeholder="เช่น L-2026X">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-muted">วันหมดอายุ (Expire)</label>
+            <input type="date" class="form-control" id="prod-expire">
+          </div>
+          <div class="col-12 mt-3">
+             <label class="form-label fw-bold text-muted"><i class="fa-solid fa-image"></i> อัปโหลดรูปภาพ</label>
+             <div class="d-flex align-items-center gap-2">
+                <input type="file" id="prod-image-file" class="form-control" accept="image/*">
+                <img id="prod-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; display: none; border-radius: 8px;">
+             </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light rounded-bottom-4 d-flex justify-content-between">
+        <button class="btn btn-outline-danger fw-bold" id="btn-delete-product" onclick="confirmDeleteFromModal()" style="display: none;"><i class="fa-solid fa-trash-can"></i> ลบรายการนี้</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary fw-bold" onclick="closeProductForm()">ยกเลิก</button>
+          <button type="button" class="btn btn-primary fw-bold" id="btn-save-product" onclick="submitProductData(this)"><i class="fa-solid fa-save me-1"></i> บันทึกข้อมูล</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let globalProducts = []; 
+  let currentMode = 'add';
+
+  function openProductsPage() { 
+    document.getElementById('page-products').style.display = 'block'; 
+    loadProductsTable(); 
+  }
+
+  function closeProductsPage() { 
+    document.getElementById('page-products').style.display = 'none'; 
+  }
+
+  function loadProductsTable() {
+    document.getElementById('product-table-body').innerHTML = `<tr><td colspan="7" class="text-center py-4">กำลังโหลดข้อมูล...</td></tr>`;
+    google.script.run.withSuccessHandler(function(data) {
+      globalProducts = data; 
+      renderProductsTable();
+    }).getProducts(currentTenantSheetId);
+  }
+
+  function renderProductsTable() {
+    const tbody = document.getElementById('product-table-body'); 
+    tbody.innerHTML = '';
+    
+    let keyword = document.getElementById('search-product-input').value.toLowerCase().trim();
+    let selectedType = document.getElementById('prod-type-filter').value;
+
+    let filtered = globalProducts.filter(p => {
+      let matchKeyword = (p.name && p.name.toLowerCase().includes(keyword)) || (p.id && p.id.toLowerCase().includes(keyword)) || (p.lot && p.lot.toLowerCase().includes(keyword));
+      let matchType = (selectedType === "all") || (p.type === selectedType);
+      return matchKeyword && matchType;
+    });
+
+    if(filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูลสินค้า</td></tr>`; 
+      return;
+    }
+
+    filtered.forEach(p => {
+      let imgTag = p.image ? `<img src="${p.image}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">` : `<div class="bg-light rounded text-center text-muted border" style="width: 45px; height: 45px; line-height: 45px; font-size: 10px;">ไม่มีรูป</div>`;
+      
+      let typeBadge = '';
+      if(p.type === 'PRODUCT') typeBadge = '<span class="badge bg-primary">PRODUCT</span>';
+      else if(p.type === 'COURSE') typeBadge = '<span class="badge bg-warning text-dark">COURSE</span>';
+      else if(p.type === 'SERVICE') typeBadge = '<span class="badge bg-info text-dark">SERVICE</span>';
+
+      let stockDisplay = p.stock === 'ไม่จำกัด' ? 'ไม่จำกัด' : `${p.stock} ${p.unit}`;
+      if(p.type !== 'PRODUCT') stockDisplay = '-'; // คอร์สกับหัตถการไม่เน้นนับสต็อกแบบกล่อง
+
+      let expireDisplay = p.expire ? `<div class="small text-danger"><i class="fa-regular fa-clock"></i> Exp: ${p.expire}</div>` : '';
+      let lotDisplay = p.lot ? `<div class="small fw-bold text-muted">Lot: ${p.lot}</div>` : '-';
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${imgTag}</td>
+          <td><div class="fw-bold">${p.id}</div>${typeBadge}</td>
+          <td><span class="fw-bold text-dark">${p.name}</span><br><small class="text-muted">${p.category || 'ทั่วไป'}</small></td>
+          <td class="text-success fw-bold fs-6">฿${parseFloat(p.price).toLocaleString()}</td>
+          <td><span class="badge bg-light text-dark border px-2 py-1 fs-6">${stockDisplay}</span></td>
+          <td>${lotDisplay}${expireDisplay}</td>
+          <td class="text-end pe-3">
+            <button class="btn btn-sm btn-light border text-warning shadow-sm me-1" onclick="openProductForm('edit', '${p.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-light border text-danger shadow-sm" onclick="confirmDelete('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function toggleCourseQty() {
+    let type = document.getElementById('prod-type').value;
+    if(type === 'COURSE') {
+      document.getElementById('div-course-qty').style.display = 'block';
+    } else {
+      document.getElementById('div-course-qty').style.display = 'none';
+      document.getElementById('prod-course-qty').value = 1;
+    }
+  }
+
+  function openProductForm(mode, id = '') {
+    currentMode = mode;
+    let modalEl = document.getElementById('modal-product-form');
+    // ล้างค่าเก่า
+    document.getElementById('prod-old-id').value = ''; 
+    document.getElementById('prod-image-url').value = '';
+    document.getElementById('prod-id').value = '';
+    document.getElementById('prod-name').value = ''; 
+    document.getElementById('prod-price').value = '';
+    document.getElementById('prod-category').value = ''; 
+    document.getElementById('prod-stock').value = ''; 
+    document.getElementById('prod-min-stock').value = '5';
+    document.getElementById('prod-unit').value = 'ชิ้น'; 
+    document.getElementById('prod-lot').value = ''; 
+    document.getElementById('prod-expire').value = ''; 
+    document.getElementById('prod-image-preview').style.display = 'none';
+    document.getElementById('prod-image-file').value = '';
+    
+    if(mode === 'add') {
+      document.getElementById('btn-delete-product').style.display = 'none'; 
+      document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-box me-2"></i> เพิ่มรายการใหม่';
+      document.getElementById('prod-type').value = 'PRODUCT';
+    } else {
+      document.getElementById('btn-delete-product').style.display = 'block'; 
+      document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen me-2"></i> แก้ไขข้อมูล';
+      
+      let p = globalProducts.find(x => x.id === id);
+      if(p) {
+        document.getElementById('prod-old-id').value = p.id; 
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-name').value = p.name; 
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-category').value = p.category; 
+        document.getElementById('prod-stock').value = p.stock; 
+        document.getElementById('prod-min-stock').value = p.min_stock || '5';
+        document.getElementById('prod-unit').value = p.unit || 'ชิ้น'; 
+        document.getElementById('prod-type').value = p.type || 'PRODUCT'; 
+        document.getElementById('prod-lot').value = p.lot || ''; 
+        document.getElementById('prod-expire').value = p.expire || ''; 
+        document.getElementById('prod-course-qty').value = p.course_qty || 1; 
+        document.getElementById('prod-image-url').value = p.image || '';
+        
+        if(p.image) { 
+          document.getElementById('prod-image-preview').src = p.image; 
+          document.getElementById('prod-image-preview').style.display = 'block'; 
+        }
+      }
+    }
+    toggleCourseQty();
+    
+    // แสดง Modal ด้วย Bootstrap (กรณีใช้ div เฉยๆ ก็จับ display block)
+    modalEl.style.display = 'block';
+    modalEl.classList.add('show');
+  }
+
+  function closeProductForm() { 
+    let modalEl = document.getElementById('modal-product-form');
+    modalEl.style.display = 'none';
+    modalEl.classList.remove('show');
+  }
+
+  function submitProductData(btn) {
+    const data = {
+      oldId: document.getElementById('prod-old-id').value, 
+      id: document.getElementById('prod-id').value.trim(),
+      name: document.getElementById('prod-name').value, 
+      price: document.getElementById('prod-price').value,
+      type: document.getElementById('prod-type').value,
+      category: document.getElementById('prod-category').value.trim(), 
+      stock: document.getElementById('prod-stock').value.trim() || 'ไม่จำกัด',
+      minStock: document.getElementById('prod-min-stock').value.trim() || '5', 
+      unit: document.getElementById('prod-unit').value.trim() || 'ชิ้น',
+      lot: document.getElementById('prod-lot').value.trim(),
+      expire: document.getElementById('prod-expire').value,
+      course_qty: document.getElementById('prod-course-qty').value || 1,
+      image: document.getElementById('prod-image-url').value
+    };
+
+    if(!data.id || !data.name || !data.price) { 
+      Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกรหัส ชื่อ และราคาให้ครบถ้วน', 'warning'); 
+      return; 
+    }
+
+    btn.disabled = true; 
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> บันทึก...';
+    
+    const fileInput = document.getElementById('prod-image-file');
+
+    if(fileInput.files.length > 0) {
+      const file = fileInput.files[0]; 
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        google.script.run.withSuccessHandler(function(url) { 
+          data.image = url; 
+          sendToGoogleScript(btn, data); 
+        }).uploadImageToDrive(currentTenantSheetId, e.target.result, file.name);
+      }; 
+      reader.readAsDataURL(file);
+    } else { 
+      sendToGoogleScript(btn, data); 
+    }
+  }
+
+  function sendToGoogleScript(btn, data) {
+    let action = currentMode === 'add' ? 'addProduct' : 'updateProduct';
+    let logTxt = currentMode === 'add' ? 'เพิ่มรายการใหม่' : 'แก้ไขรายการ';
+    
+    google.script.run.withSuccessHandler((res) => {
+      if (res === "duplicate") {
+         Swal.fire('รหัสซ้ำ', 'รหัสสินค้านี้มีในระบบแล้ว', 'error');
+         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกข้อมูล';
+      } else { 
+         let staff = (typeof currentStaff !== 'undefined') ? currentStaff.name : 'Unknown';
+         google.script.run.logAction(currentTenantSheetId, staff, logTxt, "รหัส: " + data.id); 
+         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกข้อมูล';
+         closeProductForm(); 
+         loadProductsTable(); 
+         Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false }); 
+      }
+    }).withFailureHandler((err) => {
+       Swal.fire('ข้อผิดพลาด', err.message, 'error'); 
+       btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกข้อมูล';
+    })[action](currentTenantSheetId, data);
+  }
+
+  function confirmDelete(id) {
+    Swal.fire({ 
+      title: 'ยืนยันการลบ', 
+      text: "ต้องการลบรายการรหัส " + id + " ใช่หรือไม่?", 
+      icon: 'warning', 
+      showCancelButton: true, 
+      confirmButtonColor: '#ef4444', 
+      confirmButtonText: 'ลบเลย', 
+      cancelButtonText: 'ยกเลิก' 
+    }).then((result) => {
+      if (result.isConfirmed) {
+        google.script.run.withSuccessHandler(() => { 
+          let staff = (typeof currentStaff !== 'undefined') ? currentStaff.name : 'Unknown';
+          google.script.run.logAction(currentTenantSheetId, staff, "ลบรายการ", "รหัส: " + id); 
+          loadProductsTable(); 
+          Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false }); 
+        }).deleteProduct(currentTenantSheetId, id);
+      }
+    });
+  }
+
+  function confirmDeleteFromModal() {
+    let id = document.getElementById('prod-old-id').value;
+    if(id) {
+      closeProductForm();
+      confirmDelete(id);
+    }
+  }
+</script>

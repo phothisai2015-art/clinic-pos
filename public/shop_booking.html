@@ -1,0 +1,185 @@
+<div id="page-booking" style="display: none; background: #f8fafc; height: 100vh; position: absolute; top: 0; left: 0; width: 100%; z-index: 1040; overflow-y: auto;">
+  <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-4">
+    <h3 class="fw-bold text-info m-0"><i class="fa-solid fa-calendar-check me-2"></i> ตารางนัดหมาย & คิว</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closePage('page-booking')">
+      <i class="fa-solid fa-arrow-left me-2"></i> กลับ
+    </button>
+  </div>
+
+  <div class="container-fluid px-4">
+    <div class="row g-3">
+      <div class="col-lg-3">
+        <div class="bg-white p-3 rounded-4 shadow-sm border">
+          <h5 class="fw-bold text-dark mb-3">เพิ่มคิว / นัดหมาย</h5>
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted">เลือกคนไข้</label>
+            <div class="input-group">
+              <input type="hidden" id="book-patient-id">
+              <input type="text" class="form-control fw-bold bg-light" id="book-patient-name" placeholder="คลิกเพื่อเลือกคนไข้..." readonly onclick="openSelectPatientModalForBooking()">
+              <button class="btn btn-outline-primary" onclick="openSelectPatientModalForBooking()"><i class="fa-solid fa-search"></i></button>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted">วันที่นัด</label>
+            <input type="date" class="form-control fw-bold" id="book-date">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted">เวลา</label>
+            <input type="time" class="form-control fw-bold" id="book-time">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted">แพทย์/ห้องหัตถการ</label>
+            <input type="text" class="form-control" id="book-room" placeholder="เช่น ห้องตรวจ 1, ห้องเลเซอร์">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">หมายเหตุ</label>
+            <input type="text" class="form-control" id="book-notes" placeholder="เช่น มาทำเลเซอร์หน้าใส">
+          </div>
+          <button class="btn btn-info w-100 text-white fw-bold rounded-3 py-2" onclick="saveAppointment()">
+            <i class="fa-solid fa-plus me-1"></i> บันทึกนัดหมาย
+          </button>
+        </div>
+      </div>
+
+      <div class="col-lg-9">
+        <div class="row g-3 h-100">
+          <div class="col-md-4">
+            <div class="bg-light p-3 rounded-4 border h-100">
+              <h6 class="fw-bold text-warning mb-3"><i class="fa-solid fa-users me-1"></i> รอตรวจ / รอทำหัตถการ</h6>
+              <div id="queue-WAITING" class="d-flex flex-column gap-2" style="min-height: 50vh;"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="bg-light p-3 rounded-4 border h-100">
+              <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-user-doctor me-1"></i> กำลังตรวจ / ทำหัตถการ</h6>
+              <div id="queue-IN_PROGRESS" class="d-flex flex-column gap-2" style="min-height: 50vh;"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="bg-light p-3 rounded-4 border h-100">
+              <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-check-circle me-1"></i> ตรวจเสร็จสิ้น</h6>
+              <div id="queue-COMPLETED" class="d-flex flex-column gap-2" style="min-height: 50vh;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let clinicAppointments = [];
+
+  function fetchAppointments() {
+    const today = new Date().toISOString().split('T')[0];
+    if(!document.getElementById('book-date').value) {
+       document.getElementById('book-date').value = today;
+    }
+    google.script.run.withSuccessHandler((data) => {
+      clinicAppointments = data || [];
+      renderQueueBoard();
+    }).getAppointments(currentTenantSheetId);
+  }
+
+  function renderQueueBoard() {
+    const today = new Date().toISOString().split('T')[0];
+    const waitingBox = document.getElementById('queue-WAITING');
+    const inProgressBox = document.getElementById('queue-IN_PROGRESS');
+    const completedBox = document.getElementById('queue-COMPLETED');
+    
+    waitingBox.innerHTML = ''; inProgressBox.innerHTML = ''; completedBox.innerHTML = '';
+    const todayQ = clinicAppointments.filter(a => a.appointment_date === today);
+
+    if(todayQ.length === 0) {
+       waitingBox.innerHTML = '<div class="text-center text-muted small mt-4">ยังไม่มีคิววันนี้</div>';
+    }
+
+    todayQ.forEach(q => {
+      let colorClass = 'warning';
+      let nextAction = '';
+      if(q.status === 'WAITING') {
+         colorClass = 'warning';
+         nextAction = `<button class="btn btn-sm btn-primary py-0" onclick="updateQueueStatus(${q.id}, 'IN_PROGRESS')">เรียกเข้าห้อง</button>`;
+      } else if (q.status === 'IN_PROGRESS') {
+         colorClass = 'primary';
+         nextAction = `<button class="btn btn-sm btn-success py-0" onclick="updateQueueStatus(${q.id}, 'COMPLETED')">ตรวจเสร็จสิ้น</button>`;
+      } else if (q.status === 'COMPLETED') {
+         colorClass = 'success';
+         nextAction = `<button class="btn btn-sm btn-outline-secondary py-0" onclick="updateQueueStatus(${q.id}, 'WAITING')"><i class="fa-solid fa-rotate-left"></i></button>`;
+      }
+
+      const cardHtml = `
+        <div class="card border-0 shadow-sm rounded-3 p-2 border-start border-${colorClass} border-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-${colorClass} text-${colorClass === 'warning' ? 'dark' : 'white'}">${q.appointment_time}</span>
+            <span class="fw-bold text-dark small">${q.hn_code || '-'}</span>
+          </div>
+          <div class="fw-bold mt-1 text-truncate">${q.first_name} ${q.last_name}</div>
+          <div class="small text-muted mb-2 text-truncate"><i class="fa-solid fa-door-open"></i> ${q.room_name || '-'} <br><i class="fa-solid fa-note-sticky"></i> ${q.notes || '-'}</div>
+          <div class="text-end mt-auto">${nextAction}</div>
+        </div>
+      `;
+      if(q.status === 'WAITING') waitingBox.innerHTML += cardHtml;
+      else if (q.status === 'IN_PROGRESS') inProgressBox.innerHTML += cardHtml;
+      else if (q.status === 'COMPLETED') completedBox.innerHTML += cardHtml;
+    });
+  }
+
+  // 🌟 ค้นหาคนไข้ของจริงจากระบบ
+  function openSelectPatientModalForBooking() {
+    if(!window.clinicPatientsList || window.clinicPatientsList.length === 0) fetchPatients(); // จาก shop.html
+    
+    Swal.fire({
+      title: 'ค้นหาคนไข้', input: 'text', inputPlaceholder: 'กรอก HN, เบอร์โทร หรือชื่อ...', showCancelButton: true, confirmButtonText: '<i class="fa-solid fa-search"></i> ค้นหา',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        let kw = result.value.toLowerCase().trim();
+        let found = window.clinicPatientsList.find(p => p.hn_code.toLowerCase().includes(kw) || p.phone.includes(kw) || p.first_name.toLowerCase().includes(kw));
+        
+        if(found) {
+          document.getElementById('book-patient-id').value = found.id; 
+          document.getElementById('book-patient-name').value = `${found.first_name} ${found.last_name} (${found.hn_code})`; 
+        } else {
+          Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา', 'error');
+        }
+      }
+    });
+  }
+
+  function saveAppointment() {
+    const apt = {
+      patient_id: document.getElementById('book-patient-id').value,
+      date: document.getElementById('book-date').value,
+      time: document.getElementById('book-time').value,
+      room: document.getElementById('book-room').value,
+      notes: document.getElementById('book-notes').value,
+      doctor_id: 0
+    };
+    if(!apt.patient_id || !apt.date || !apt.time) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกคนไข้ วันที่ และเวลา', 'warning');
+
+    Swal.fire({ title: 'กำลังบันทึกคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    google.script.run.withSuccessHandler((res) => {
+      if(res.status === 'success') {
+        Swal.fire({icon: 'success', title: 'บันทึกนัดหมายสำเร็จ', timer: 1000, showConfirmButton: false});
+        document.getElementById('book-patient-id').value = '';
+        document.getElementById('book-patient-name').value = '';
+        document.getElementById('book-notes').value = '';
+        fetchAppointments(); 
+      } else { Swal.fire('ผิดพลาด', res.message, 'error'); }
+    }).addAppointment(currentTenantSheetId, apt);
+  }
+
+  function updateQueueStatus(id, newStatus) {
+    google.script.run.withSuccessHandler((res) => {
+      if(res.status === 'success') fetchAppointments();
+    }).updateAppointmentStatus(currentTenantSheetId, id, newStatus);
+  }
+
+  if(typeof socket !== 'undefined' && socket) {
+      socket.on('refresh_queue', function() {
+          if (document.getElementById('page-booking').style.display !== 'none') {
+             fetchAppointments();
+          }
+      });
+  }
+</script>

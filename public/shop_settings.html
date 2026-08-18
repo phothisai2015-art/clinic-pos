@@ -1,0 +1,379 @@
+<!-- ========================================================= -->
+<!-- ⚙️ ส่วนที่ 6: รายงาน & การตั้งค่าระบบ (Clinic Settings & Reports) -->
+<!-- ========================================================= -->
+<div id="page-settings" style="display: none; background: #f8fafc; height: 100vh; position: absolute; top: 0; left: 0; width: 100%; z-index: 1040; overflow-y: auto;">
+  <div class="d-flex justify-content-between align-items-center mb-3 mt-2 px-4">
+    <h3 class="fw-bold text-danger m-0"><i class="fa-solid fa-chart-line me-2"></i> รายงาน & การตั้งค่า</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeSettingsPage()">กลับ</button>
+  </div>
+
+  <div class="container-fluid px-4 pb-5">
+    <!-- Nav Tabs -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-pill shadow-sm d-inline-flex" id="settingTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold px-4 rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-reports">📊 รายงานยอดขาย</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold px-4 rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-liabilities" onclick="loadLiabilities()">⚠️ คอร์สค้างส่ง</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold px-4 rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-system" onclick="loadSystemSettings()">⚙️ ตั้งค่าคลินิก</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- ========================================== -->
+      <!-- TAB 1: 📊 รายงานยอดขาย (Reports)               -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade show active" id="tab-reports">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="bg-white p-4 rounded-4 shadow-sm border text-center h-100">
+              <h5 class="fw-bold text-muted mb-2">ยอดขายเดือนนี้</h5>
+              <h2 class="fw-bold text-primary" id="rep-monthly-sales">฿0.00</h2>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="bg-white p-4 rounded-4 shadow-sm border text-center h-100">
+              <h5 class="fw-bold text-muted mb-2">จำนวนบิลทั้งหมด</h5>
+              <h2 class="fw-bold text-success" id="rep-total-bills">0 บิล</h2>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="bg-white p-4 rounded-4 shadow-sm border text-center h-100">
+              <h5 class="fw-bold text-muted mb-2">หัตถการ / คอร์ส ยอดฮิต</h5>
+              <h4 class="fw-bold text-warning" id="rep-top-product">-</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-4 shadow-sm border">
+          <h5 class="fw-bold text-dark mb-3">รายการขายล่าสุด</h5>
+          <div style="max-height: 40vh; overflow-y: auto;">
+            <table class="table table-hover align-middle">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th>วันที่-เวลา</th>
+                  <th>เลขที่บิล</th>
+                  <th>คนไข้</th>
+                  <th class="text-end">ยอดรวม</th>
+                  <th class="text-center">วิธีชำระ</th>
+                  <th>พนักงานขาย</th>
+                </tr>
+              </thead>
+              <tbody id="rep-sales-body">
+                <tr><td colspan="6" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: ⚠️ คอร์สค้างส่ง (Liabilities)         -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="tab-liabilities">
+        <div class="bg-white p-4 rounded-4 shadow-sm border">
+          <h5 class="fw-bold text-danger mb-2"><i class="fa-solid fa-triangle-exclamation"></i> รายงานคอร์สค้างส่ง</h5>
+          <p class="text-muted small mb-3">รายการคอร์สที่คนไข้ซื้อไว้แต่ยังใช้บริการไม่ครบ (ถือเป็นมูลค่าหนี้สินที่คลินิกต้องให้บริการในอนาคต)</p>
+          
+          <div style="max-height: 50vh; overflow-y: auto;">
+            <table class="table table-hover align-middle">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th>รหัส HN / คนไข้</th>
+                  <th>ชื่อคอร์ส</th>
+                  <th class="text-center">ซื้อทั้งหมด (ครั้ง)</th>
+                  <th class="text-center">ใช้ไปแล้ว (ครั้ง)</th>
+                  <th class="text-center text-danger">คงเหลือ (ค้างส่ง)</th>
+                </tr>
+              </thead>
+              <tbody id="rep-liabilities-body">
+                <tr><td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: ⚙️ ตั้งค่าคลินิก (System Settings)      -->
+      <!-- ========================================== -->
+      <div class="tab-pane fade" id="tab-system">
+        <div class="row g-4">
+          
+          <!-- ฟอร์มตั้งค่าข้อมูลคลินิก -->
+          <div class="col-lg-5">
+            <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+              <h5 class="fw-bold text-dark mb-4"><i class="fa-solid fa-store text-primary me-2"></i> ข้อมูลคลินิก & ใบเสร็จ</h5>
+              
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted">ชื่อคลินิก / บริษัท</label>
+                <input type="text" class="form-control fw-bold" id="set-shop-name">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted">เบอร์โทรศัพท์คลินิก</label>
+                <input type="text" class="form-control" id="set-shop-phone">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted">ที่อยู่คลินิก (ออกใบเสร็จ)</label>
+                <textarea class="form-control" id="set-shop-address" rows="3"></textarea>
+              </div>
+              <hr>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted">เบอร์พร้อมเพย์ (รับเงินเข้าคลินิก)</label>
+                <input type="text" class="form-control text-success fw-bold" id="set-shop-promptpay">
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold text-muted">ชื่อบัญชีรับเงิน (แสดงบนจอลูกค้า)</label>
+                <input type="text" class="form-control" id="set-shop-acc-name">
+              </div>
+
+              <button class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm" onclick="saveShopSettings()">
+                <i class="fa-solid fa-save me-1"></i> บันทึกข้อมูลคลินิก
+              </button>
+            </div>
+          </div>
+
+          <!-- จัดการพนักงาน / แพทย์ -->
+          <div class="col-lg-7">
+            <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-users-gear text-warning me-2"></i> พนักงาน & สิทธิ์เข้าถึง</h5>
+                <button class="btn btn-outline-primary fw-bold rounded-pill btn-sm px-3" onclick="openUserForm()">
+                  <i class="fa-solid fa-plus me-1"></i> เพิ่มพนักงาน
+                </button>
+              </div>
+              
+              <div class="flex-grow-1" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th>ชื่อ-นามสกุล</th>
+                      <th>PIN (เข้าสู่ระบบ)</th>
+                      <th>ตำแหน่ง</th>
+                      <th class="text-end">จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="set-users-body">
+                    <tr><td colspan="4" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal เพิ่มพนักงาน -->
+<div class="modal fade" id="modal-user-form" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white rounded-top-4">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-2"></i>จัดการพนักงาน / แพทย์</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-bold">ชื่อพนักงาน / แพทย์</label>
+          <input type="text" class="form-control" id="user-name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">รหัส PIN 4 หลัก (สำหรับล็อคอิน)</label>
+          <input type="text" class="form-control fw-bold text-primary fs-4 text-center" id="user-pin" maxlength="4">
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-bold">ตำแหน่ง (Role)</label>
+          <select class="form-select" id="user-role">
+            <option value="DOCTOR">แพทย์ (Doctor)</option>
+            <option value="ADMIN">ผู้ดูแลคลินิก (Admin)</option>
+            <option value="SALES">พนักงานขาย (Sales)</option>
+            <option value="THERAPIST">พนักงานทรีตเมนต์ (Therapist)</option>
+          </select>
+        </div>
+
+        <label class="form-label fw-bold text-danger">สิทธิ์การใช้งานเมนู (Permissions)</label>
+        <div class="border rounded-3 p-3 bg-light">
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="perm-pos" value="POS">
+            <label class="form-check-label fw-bold">เปิดบิล & รับเงิน (POS)</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="perm-stock" value="STOCK">
+            <label class="form-check-label fw-bold">จัดการคลังยา (Inventory)</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="perm-dash" value="DASH">
+            <label class="form-check-label fw-bold">ดูรายงานยอดขาย (Reports)</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="perm-admin" value="ADMIN">
+            <label class="form-check-label fw-bold text-danger">ตั้งค่าระบบ (Admin)</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light rounded-bottom-4">
+        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-primary fw-bold" onclick="saveUserData()"><i class="fa-solid fa-save me-1"></i> บันทึกข้อมูล</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let cachedReportsData = [];
+
+  // ==========================================
+  // การนำทาง (Navigation)
+  // ==========================================
+  function openSettingsPage() {
+    document.getElementById('page-settings').style.display = 'block';
+    sessionStorage.setItem('pos_current_page', 'page-settings');
+    loadReportsData(); // โหลดหน้าแรกของ Tab
+  }
+
+  function closeSettingsPage() {
+    document.getElementById('page-settings').style.display = 'none';
+    sessionStorage.setItem('pos_current_page', 'main-menu');
+  }
+
+  // ==========================================
+  // TAB 1: ระบบรายงานยอดขาย
+  // ==========================================
+  function loadReportsData() {
+    google.script.run.withSuccessHandler(function(sales) {
+      cachedReportsData = sales || [];
+      renderReports();
+    }).getDashboardData(currentTenantSheetId);
+  }
+
+  function renderReports() {
+    let totalSales = 0; let totalBills = 0; let itemCounts = {};
+    const tbody = document.getElementById('rep-sales-body'); tbody.innerHTML = '';
+
+    cachedReportsData.forEach(sale => {
+      if (sale.receiptId.includes('(ยกเลิก)')) return;
+      totalSales += parseFloat(sale.total || 0); totalBills++;
+
+      sale.items.split(' | ').forEach(str => {
+        if (str.startsWith('[หักส่วนลด') || str.startsWith('[คืนแล้ว]')) return;
+        let match = str.match(/^(.*?)\s*\(x(\d+)/);
+        if (match) { let name = match[1].trim(); let qty = parseInt(match[2]); itemCounts[name] = (itemCounts[name] || 0) + qty; }
+      });
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${sale.dateStr}</td><td class="fw-bold text-primary">${sale.receiptId}</td><td>${sale.customer_name || '-'}</td>
+          <td class="text-end fw-bold text-success">฿${parseFloat(sale.total).toLocaleString()}</td>
+          <td class="text-center"><span class="badge ${sale.method === 'เงินสด' ? 'bg-success' : 'bg-info text-dark'}">${sale.method}</span></td>
+          <td>${sale.seller || '-'}</td>
+        </tr>`;
+    });
+
+    document.getElementById('rep-monthly-sales').innerText = `฿${totalSales.toLocaleString()}`;
+    document.getElementById('rep-total-bills').innerText = `${totalBills} บิล`;
+
+    let topProduct = "-"; let maxQty = 0;
+    for (let key in itemCounts) { if (itemCounts[key] > maxQty) { maxQty = itemCounts[key]; topProduct = key; } }
+    document.getElementById('rep-top-product').innerText = topProduct;
+
+    if(cachedReportsData.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">ยังไม่มีประวัติการขาย</td></tr>`;
+  }
+
+  // ==========================================
+  // TAB 2: ระบบคอร์สค้างส่ง ของจริง
+  // ==========================================
+  function loadLiabilities() {
+    document.getElementById('rep-liabilities-body').innerHTML = `<tr><td colspan="5" class="text-center text-muted">กำลังตรวจสอบยอดหนี้สิน...</td></tr>`;
+    
+    // ดึงข้อมูลคอร์สทั้งหมดที่ยัง ACTIVE จากฐานข้อมูล
+    google.script.run.withSuccessHandler(function(courses) {
+      const tbody = document.getElementById('rep-liabilities-body');
+      tbody.innerHTML = '';
+      
+      if(!courses || courses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">ไม่มีคอร์สค้างส่ง</td></tr>`;
+        return;
+      }
+
+      courses.forEach(item => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="fw-bold text-dark">${item.first_name} ${item.last_name} <br><span class="badge bg-secondary">${item.hn_code}</span></td>
+            <td>${item.course_name}</td>
+            <td class="text-center">${item.total_qty}</td>
+            <td class="text-center text-primary fw-bold">${item.used_qty}</td>
+            <td class="text-center fw-bold text-danger fs-5">${item.remain_qty}</td>
+          </tr>
+        `;
+      });
+    }).getAllCourses(currentTenantSheetId);
+  }
+
+  // ==========================================
+  // TAB 3: ตั้งค่าคลินิก & จัดการพนักงาน
+  // ==========================================
+  function loadSystemSettings() {
+    google.script.run.withSuccessHandler(function(settings) {
+      cachedShopSettings = settings || {};
+      document.getElementById('set-shop-name').value = settings.shop_name || '';
+      document.getElementById('set-shop-phone').value = settings.shop_phone || '';
+      document.getElementById('set-shop-address').value = settings.shop_address || '';
+      document.getElementById('set-shop-promptpay').value = settings.shop_promptpay || '';
+      document.getElementById('set-shop-acc-name').value = settings.shop_account_name || '';
+    }).getShopSettings(currentTenantSheetId);
+    loadUsersTable();
+  }
+
+  function saveShopSettings() {
+    let settings = { shop_name: document.getElementById('set-shop-name').value, shop_phone: document.getElementById('set-shop-phone').value, shop_address: document.getElementById('set-shop-address').value, shop_promptpay: document.getElementById('set-shop-promptpay').value, shop_account_name: document.getElementById('set-shop-acc-name').value };
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    google.script.run.withSuccessHandler(function() { Swal.fire('สำเร็จ', 'บันทึกข้อมูลคลินิกเรียบร้อยแล้ว', 'success'); }).updateShopSettings(currentTenantSheetId, settings);
+  }
+
+  function loadUsersTable() {
+    google.script.run.withSuccessHandler(function(users) {
+      globalUsers = users || []; const tbody = document.getElementById('set-users-body'); tbody.innerHTML = '';
+      if(globalUsers.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">ไม่มีข้อมูลพนักงาน</td></tr>`; return; }
+      globalUsers.forEach(u => {
+        let roleBadge = `<span class="badge bg-secondary">${u.role || 'STAFF'}</span>`;
+        if(u.role === 'DOCTOR') roleBadge = `<span class="badge bg-primary">แพทย์ (DOCTOR)</span>`; else if(u.role === 'ADMIN') roleBadge = `<span class="badge bg-danger">ผู้ดูแล (ADMIN)</span>`;
+        tbody.innerHTML += `<tr><td class="fw-bold">${u.name}</td><td class="text-primary fw-bold">${u.pin}</td><td>${roleBadge}</td><td class="text-end"><button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.pin}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+      });
+    }).getUsers(currentTenantSheetId);
+  }
+
+  function openUserForm() {
+    document.getElementById('user-name').value = ''; document.getElementById('user-pin').value = '';
+    document.getElementById('perm-pos').checked = false; document.getElementById('perm-stock').checked = false;
+    document.getElementById('perm-dash').checked = false; document.getElementById('perm-admin').checked = false;
+    new bootstrap.Modal(document.getElementById('modal-user-form')).show();
+  }
+
+  function saveUserData() {
+    let name = document.getElementById('user-name').value.trim(); let pin = document.getElementById('user-pin').value.trim(); let role = document.getElementById('user-role').value;
+    if(!name || pin.length !== 4) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกชื่อ และตั้ง PIN ให้ครบ 4 หลัก', 'warning');
+    let perms = [];
+    if(document.getElementById('perm-pos').checked) perms.push('POS'); if(document.getElementById('perm-stock').checked) perms.push('STOCK'); if(document.getElementById('perm-dash').checked) perms.push('DASH'); if(document.getElementById('perm-admin').checked) perms.push('ADMIN');
+    let userData = { pin: pin, name: name, role: role, permissions: perms.join(',') };
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    google.script.run.withSuccessHandler(function(res) {
+      if(res === 'duplicate') return Swal.fire('ผิดพลาด', 'รหัส PIN นี้มีผู้ใช้งานแล้ว', 'error');
+      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false });
+      bootstrap.Modal.getInstance(document.getElementById('modal-user-form')).hide(); loadUsersTable();
+    }).saveUser(currentTenantSheetId, userData);
+  }
+
+  function deleteUser(pin) {
+    if(pin === currentStaff.pin) return Swal.fire('ผิดพลาด', 'ไม่สามารถลบตัวเองได้', 'error');
+    Swal.fire({ title: 'ยืนยันการลบ', text: "คุณต้องการลบพนักงานรหัส PIN: " + pin + " ใช่หรือไม่?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบเลย'
+    }).then((result) => {
+      if(result.isConfirmed) { google.script.run.withSuccessHandler(() => { Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1000, showConfirmButton: false }); loadUsersTable(); }).deleteUser(currentTenantSheetId, pin); }
+    });
+  }
+</script>

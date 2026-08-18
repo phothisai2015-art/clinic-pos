@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Shop - POS & E-Receipt System</title>
+<link rel="icon" href="https://static.vecteezy.com/system/resources/previews/020/446/804/non_2x/pos-letter-logo-design-on-white-background-pos-creative-circle-letter-logo-concept-pos-letter-design-pos-letter-logo-design-on-white-background-pos-c-vector.jpg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="lang.js"></script>
+
+<script>
+// ==========================================
+// 🔗 ระบบเชื่อมต่อ API หลัก
+// ==========================================
+(function() {
+  function callServerApi(prop, args, successCb, failureCb) {
+    let url = ''; let options = { method: 'GET', headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }, cache: 'no-store' };
+    switch(prop) {
+      case 'getAppInfo': url = '/api/app-info'; break;
+      case 'getShopSettings': url = '/api/settings/' + args[0]; break;
+      case 'updateShopSettings': url = '/api/settings/update'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], newSettings: args[1] }); break;
+      case 'getUsers': url = '/api/users/' + args[0]; break;
+      case 'saveUser': url = '/api/users/save'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], user: args[1] }); break;
+      case 'deleteUser': url = '/api/users/delete'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], pin: args[1] }); break;
+      case 'getProducts': url = '/api/products/' + args[0] + '?t=' + Date.now(); break;
+      case 'addProduct': url = '/api/products/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], product: args[1] }); break;
+      case 'updateProduct': url = '/api/products/update'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], product: args[1] }); break;
+      case 'deleteProduct': url = '/api/products/delete'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], id: args[1] }); break;
+      case 'uploadImageToDrive': url = '/api/upload-image'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], base64Data: args[1], fileName: args[2] }); break;
+      case 'saveOrder': url = '/api/save-order'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], payload: args[1] }); break;
+      case 'voidOrder': url = '/api/void-order'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], receiptId: args[1] }); break;
+      case 'voidPartialItem': url = '/api/void-partial-item'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], receiptId: args[1], itemIndex: args[2], returnQty: args[3] }); break;
+      case 'getDashboardData': url = '/api/dashboard/' + args[0] + '?t=' + Date.now(); break;
+      case 'updateBulkStock': url = '/api/update-bulk-stock'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], payload: args[1] }); break;
+      case 'deleteTestBills': url = '/api/delete-test-bills'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], receiptIdsArray: args[1] }); break;
+      case 'logAction': url = '/api/log-action'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], staffName: args[1], action: args[2], detail: args[3] }); break;
+      case 'getActivityLogs': url = '/api/activity-logs/' + args[0]; break;
+      case 'getTenantInfoBySheetId': url = '/api/tenant-info/' + args[0]; break;
+      case 'uploadQuickRenewSlip': url = '/api/upload-quick-renew-slip'; options.method = 'POST'; options.body = JSON.stringify({ email: args[0], shopName: args[1], pkgName: args[2], price: args[3], base64Data: args[4] }); break;
+	  case 'getPackagePrices': url = '/api/package-prices'; break;
+      case 'importExcelData': url = '/api/import-excel'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], payload: args[1] }); break;
+      case 'clearRenewNotify': url = '/api/clear-renew-notify'; options.method = 'POST'; options.body = JSON.stringify({ sheetId: args[0] }); break;
+      
+      // --- 🏥 คลินิก API ---
+      case 'getPatients': url = '/api/patients/' + args[0]; break;
+      case 'addPatient': url = '/api/patients/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], patient: args[1] }); break;
+      case 'getAppointments': url = '/api/appointments/' + args[0]; break;
+      case 'addAppointment': url = '/api/appointments/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], appointment: args[1] }); break;
+      case 'getEMR': url = `/api/emr/${args[0]}/${args[1]}`; break;
+      case 'addEMR': url = '/api/emr/add'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], record: args[1] }); break;
+      case 'getCourses': url = `/api/courses/${args[0]}/${args[1]}`; break;
+      case 'getAllCourses': url = '/api/courses/all/' + args[0]; break;
+      case 'deductCourse': url = '/api/courses/deduct'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], courseId: args[1], deductQty: args[2] }); break;
+	  case 'updateAppointmentStatus': url = '/api/appointments/update-status'; options.method = 'POST'; options.body = JSON.stringify({ tenantId: args[0], id: args[1], status: args[2] }); break;
+      default: if (successCb) successCb({ status: 'success' }); return;
+    }
+    fetch(url, options).then(res => res.json()).then(data => { if (successCb) successCb(data); }).catch(err => { if (failureCb) failureCb(err); });
+  }
+  function createGasRunner() {
+    let _success = null; let _failure = null;
+    const handler = {
+      get(target, prop) {
+        if (prop === 'withSuccessHandler') return function(cb) { _success = cb; return new Proxy({}, handler); };
+        if (prop === 'withFailureHandler') return function(cb) { _failure = cb; return new Proxy({}, handler); };
+        return function(...args) { callServerApi(prop, args, _success, _failure); };
+      }
+    }; return new Proxy({}, handler);
+  }
+  window.google = { script: { get run() { return createGasRunner(); } } };
+})();
+</script>
+<style>
+body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow: hidden; transition: background-color 0.3s ease, color 0.3s ease; }
+.swal2-container { z-index: 999999 !important; }
+button, a, input, select, textarea, .num-btn, .pkg-card { touch-action: manipulation !important; }
+#lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.18), transparent 50%), radial-gradient(circle at 10% 80%, rgba(245, 158, 11, 0.15), transparent 50%), linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; overflow: hidden; }
+body.dark-theme { background-color: #0f172a !important; color: #f1f5f9 !important; }
+body.dark-theme #lock-screen { background: radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.25), transparent 50%), radial-gradient(circle at 10% 80%, rgba(245, 158, 11, 0.2), transparent 50%), linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; }
+body.dark-theme #main-menu, body.dark-theme #page-pos, body.dark-theme #page-products, body.dark-theme #page-dashboard, body.dark-theme #page-settings, body.dark-theme .bg-light, body.dark-theme .card { background-color: #0f172a !important; background: #0f172a !important; color: #f1f5f9 !important; }
+body.dark-theme .bg-white, body.dark-theme .numpad-container, body.dark-theme .menu-btn, body.dark-theme .num-btn, body.dark-theme .pos-product-card { background-color: #1e293b !important; background: #1e293b !important; color: #f1f5f9 !important; border-color: #334155 !important; }
+body.dark-theme .modal-content, body.dark-theme #product-form-modal > div, body.dark-theme #user-form-modal > div, body.dark-theme #bulk-stock-modal > div, body.dark-theme #modal-promptpay > div, body.dark-theme #first-time-setup-modal > div { background-color: #1e293b !important; background: #1e293b !important; color: #f1f5f9 !important; border: 1px solid #475569 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; }
+body.dark-theme .swal2-popup { background-color: #1e293b !important; color: #f1f5f9 !important; border: 1px solid #475569 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; }
+body.dark-theme .swal2-title, body.dark-theme h2, body.dark-theme h3, body.dark-theme h4, body.dark-theme h5, body.dark-theme h6, body.dark-theme th, body.dark-theme td, body.dark-theme label, body.dark-theme .text-dark, body.dark-theme .text-muted { color: #cbd5e1 !important; }
+body.dark-theme .form-control, body.dark-theme .form-select, body.dark-theme .input-group-text { background-color: #0f172a !important; color: #f1f5f9 !important; border: 1px solid #475569 !important; }
+body.dark-theme .form-control:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important; }
+body.dark-theme .table, body.dark-theme .table > :not(caption) > * > * { background-color: transparent !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+body.dark-theme .table-light, body.dark-theme .table-light th { background-color: #0f172a !important; color: #94a3b8 !important; }
+body.dark-theme .form-floating > label::after { background-color: #0f172a !important; }
+body.dark-theme .form-floating > .form-control:focus ~ label, body.dark-theme .form-control:not(:placeholder-shown) ~ label { background-color: transparent !important; color: #60a5fa !important; }
+body.dark-theme .pos-card-name { color: #f8fafc !important; }
+.theme-toggle-btn { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #ffffff; border: none; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 100005; display: flex; justify-content: center; align-items: center; font-size: 20px; transition: all 0.3s ease; }
+body.dark-theme .theme-toggle-btn { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4); }
+
+@media (max-width: 768px) {
+  table[style*="min-width"] { min-width: 100% !important; }
+  .table th, .table td { padding: 6px 4px !important; font-size: 11px !important; white-space: normal !important; word-break: break-word; }
+  .table .btn { padding: 4px 6px !important; font-size: 10px !important; }
+  .table .badge { font-size: 9px !important; padding: 3px 5px !important; }
+  .swal2-popup { width: 95% !important; padding: 15px !important; }
+  div[id$="-modal"] > div { max-width: 95% !important; padding: 15px !important; margin: 10px auto !important; max-height: 92vh !important; overflow-y: auto; }
+  .numpad-container { padding: 25px 15px !important; width: 95% !important; max-width: 350px !important; }
+  .num-btn { height: 60px !important; font-size: 24px !important; border-radius: 16px !important; }
+  .panel-cat { display: none !important; }
+}
+
+.detailed-cat { position: absolute; width: 95px; height: 70px; z-index: 1; cursor: grab; will-change: top, left, transform; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+.detailed-cat:active { cursor: grabbing; }
+.cat-black-coat { --coat: #1e293b; --coat-dark: #0f172a; --collar: #ef4444; } .cat-white-coat { --coat: #ffffff; --coat-dark: #e2e8f0; --collar: #3b82f6; } .cat-orange-coat { --coat: #f97316; --coat-dark: #ea580c; --collar: #10b981; }
+.cat-wrapper { position: relative; width: 100%; height: 100%; animation: catBobbing 0.22s ease-in-out infinite alternate; pointer-events: none; }
+.cat-body-main { position: absolute; width: 58px; height: 34px; background: var(--coat); border-radius: 18px; top: 18px; left: 10px; box-shadow: inset -3px -4px 0 rgba(0,0,0,0.12); }
+.cat-head-main { position: absolute; width: 30px; height: 28px; background: var(--coat); border-radius: 50%; top: 6px; left: 55px; box-shadow: inset -1px -2px 0 rgba(0,0,0,0.1); }
+.cat-ear { position: absolute; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--coat); top: -6px; }
+.cat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 2.5px solid transparent; border-right: 2.5px solid transparent; border-bottom: 5px solid #fda4af; left: -2.5px; top: 3px; }
+.ear-l { left: 2px; transform: rotate(-12deg); } .ear-r { right: 2px; transform: rotate(12deg); }
+.cat-eye { position: absolute; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; top: 9px; animation: catBlinking 3.5s infinite; }
+.cat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+.eye-l { left: 8px; } .eye-r { right: 8px; }
+.cat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 14px; left: 13px; }
+.cat-whiskers { position: absolute; width: 14px; height: 1px; background: rgba(71, 85, 105, 0.4); top: 16px; animation: whiskerTwitch 0.5s ease-in-out infinite alternate; }
+.whisker-l { left: -6px; transform: rotate(-5deg); transform-origin: right center; } .whisker-r { right: -6px; transform: rotate(5deg); transform-origin: left center; }
+.cat-collar-line { position: absolute; width: 12px; height: 24px; border-radius: 50%; border-left: 4px solid var(--collar); top: 16px; left: 50px; transform: rotate(-20deg); }
+.cat-gold-bell { position: absolute; width: 7px; height: 7px; background: #f59e0b; border-radius: 50%; top: 32px; left: 54px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transform-origin: top center; animation: bellJingle 0.22s ease-in-out infinite alternate; }
+.cat-tail-soft { position: absolute; width: 7px; height: 30px; background: var(--coat); border-radius: 4px; left: 6px; top: -4px; transform-origin: bottom center; animation: tailWavingSoft 0.45s ease-in-out infinite alternate; box-shadow: inset -1px 0 0 rgba(0,0,0,0.1); }
+.cat-leg-detailed { position: absolute; width: 6px; height: 20px; background: var(--coat); border-radius: 4px; top: 45px; transform-origin: top center; }
+.leg-front-left { left: 52px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate; }
+.leg-front-right { left: 59px; animation: swingLeg 0.22s linear infinite alternate-reverse; }
+.leg-back-left { left: 16px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate-reverse; }
+.leg-back-right { left: 23px; animation: swingLeg 0.22s linear infinite alternate; }
+@keyframes swingLeg { 0% { transform: rotate(-30deg); } 100% { transform: rotate(30deg); } }
+@keyframes tailWavingSoft { 0% { transform: rotate(-40deg); } 100% { transform: rotate(20deg); } }
+@keyframes catBobbing { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+@keyframes bellJingle { 0% { transform: rotate(-20deg); } 100% { transform: rotate(20deg); } }
+@keyframes whiskerTwitch { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
+@keyframes catBlinking { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+.panel-cat { position: absolute; width: 58px; height: 50px; top: -43px; z-index: 12; pointer-events: none; will-change: transform; animation: catPanelPeekLook 3.5s ease-in-out infinite alternate; }
+.cat-orange-peeking { --pcoat: #f97316; --pcoat-dark: #ea580c; --peye: #22c55e; }
+.pcat-head { position: absolute; width: 48px; height: 44px; background: var(--pcoat); border-radius: 24px 24px 18px 18px; bottom: 0; left: 5px; box-shadow: 0 5px 12px rgba(15, 23, 42, 0.05), inset -2px -3px 0 rgba(0,0,0,0.1); }
+.pcat-ear { position: absolute; width: 0; height: 0; border-left: 6.5px solid transparent; border-right: 6.5px solid transparent; border-bottom: 11px solid var(--pcoat); bottom: 37px; }
+.pcat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-bottom: 6px solid #fda4af; left: -3px; top: 4px; }
+.pcat-ear.ear-l { left: 6px; transform: rotate(-13deg); } .pcat-ear.ear-r { right: 6px; transform: rotate(13deg); }
+.pcat-eye { position: absolute; width: 6px; height: 6px; background: var(--peye); border-radius: 50%; top: 15px; animation: catBlinking 3s infinite; }
+.pcat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+.pcat-eye.eye-l { left: 10px; } .pcat-eye.eye-r { right: 10px; }
+.pcat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 20px; left: 22px; }
+.pcat-paw { position: absolute; width: 13px; height: 13px; background: var(--pcoat); border-radius: 50% 50% 3px 3px; bottom: -6px; z-index: 15; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08); }
+.pcat-paw::after { content: ''; position: absolute; width: 9px; height: 5px; background: #fda4af; border-radius: 50% 50% 2px 2px; top: 2px; left: 2px; }
+.pcat-paw.paw-l { left: 10px; } .pcat-paw.paw-r { right: 10px; }
+@keyframes catPanelPeekLook { 0% { transform: translateY(0) rotate(0deg); } 35% { transform: translateY(-4px) rotate(3deg); } 70% { transform: translateY(1px) rotate(-3deg); } 100% { transform: translateY(-1px) rotate(1deg); } }
+
+.detailed-cat.cat-resting { animation: none !important; }
+.detailed-cat.cat-resting .cat-wrapper { animation: catSleeping 1.5s ease-in-out infinite alternate !important; }
+.detailed-cat.cat-resting .cat-body-main { transform: translateY(6px) scaleY(0.85); transition: transform 0.5s ease; }
+.detailed-cat.cat-resting .cat-head-main { transform: translateY(8px) translateX(-3px); transition: transform 0.5s ease; }
+.detailed-cat.cat-resting .cat-leg-detailed { height: 6px !important; top: 42px !important; animation: none !important; transition: all 0.5s ease; }
+@keyframes catSleeping { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(2px) scale(0.98, 1.02); } }
+</style>
+</head>
+<body>
+
+<button id="main-theme-btn" class="theme-toggle-btn" onclick="toggleThemeMode()" title="สลับโหมดมืด/สว่าง">
+  <i id="theme-icon" class="fa-solid fa-moon"></i>
+</button>
+
+<div id="app-container"></div>
+
+<script>
+    // 🌟 ใช้ตัวแปร Global เพื่อให้แชร์ข้อมูลคนไข้กันได้ทุกหน้า (POS, EMR, Booking)
+    window.clinicPatientsList = [];
+    let currentSelectedPatient = null;
+
+    function openHRPage() { 
+      document.getElementById('page-hr').style.display = 'block'; 
+      sessionStorage.setItem('pos_current_page', 'page-hr');
+    }
+    
+    function openBookingPage() { 
+      document.getElementById('page-booking').style.display = 'block'; 
+      sessionStorage.setItem('pos_current_page', 'page-booking');
+      fetchAppointments(); // โหลดคิวทุกครั้งที่เปิด
+    }
+    
+    function openEMRPage() { 
+      document.getElementById('page-emr').style.display = 'block'; 
+      sessionStorage.setItem('pos_current_page', 'page-emr');
+      fetchPatients(); 
+    }
+
+    function closePage(pageId) {
+      document.getElementById(pageId).style.display = 'none';
+      sessionStorage.setItem('pos_current_page', 'main-menu');
+    }
+
+    function openNewPatientModal() {
+      new bootstrap.Modal(document.getElementById('modal-new-patient')).show();
+    }
+
+    function saveNewPatient() {
+      const patientData = {
+        id_card: document.getElementById('pat-idcard').value,
+        prefix: document.getElementById('pat-prefix').value,
+        first_name: document.getElementById('pat-fname').value,
+        last_name: document.getElementById('pat-lname').value,
+        phone: document.getElementById('pat-phone').value,
+        birthdate: document.getElementById('pat-dob').value,
+        gender: document.getElementById('pat-gender').value,
+        allergy: document.getElementById('pat-allergy').value,
+        congenital_disease: document.getElementById('pat-disease').value
+      };
+      if(!patientData.first_name || !patientData.last_name || !patientData.phone) {
+        return Swal.fire('ผิดพลาด', 'กรุณากรอก ชื่อ, นามสกุล และเบอร์โทรศัพท์ ให้ครบถ้วน', 'warning');
+      }
+      google.script.run.withSuccessHandler((data) => {
+        if(data.status === 'success') {
+          Swal.fire('สำเร็จ', 'สร้างเวชระเบียนใหม่เรียบร้อย (HN: ' + data.hn_code + ')', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('modal-new-patient')).hide();
+          fetchPatients(); 
+        } else {
+          Swal.fire('ผิดพลาด', data.message, 'error');
+        }
+      }).addPatient(currentTenantSheetId, patientData);
+    }
+
+    // 🌟 ดึงข้อมูลคนไข้เก็บไว้ในระบบส่วนกลาง
+    function fetchPatients() {
+      google.script.run.withSuccessHandler((data) => {
+        window.clinicPatientsList = data || [];
+        // ถ้ากำลังเปิดหน้า EMR อยู่ ให้สั่งรีเฟรชรายชื่อด้วย
+        if (typeof filterEMRPatients === 'function') {
+           filterEMRPatients();
+        }
+      }).getPatients(currentTenantSheetId);
+    }
+
+    // 🌟 ระบบค้นหาคนไข้ของจริง (สำหรับหน้า POS)
+    function openSelectPatientModal() {
+      if(!window.clinicPatientsList || window.clinicPatientsList.length === 0) fetchPatients();
+      
+      Swal.fire({
+        title: 'ค้นหาคนไข้',
+        input: 'text',
+        inputPlaceholder: 'กรอก HN, เบอร์โทร หรือชื่อ...',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-search"></i> ค้นหา',
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          let kw = result.value.toLowerCase().trim();
+          let found = window.clinicPatientsList.find(p => p.hn_code.toLowerCase().includes(kw) || p.phone.includes(kw) || p.first_name.toLowerCase().includes(kw));
+          
+          if(found) {
+            currentSelectedPatient = { id: found.id, name: `${found.first_name} ${found.last_name}`, hn: found.hn_code };
+            let patientBox = document.getElementById('pos-selected-patient');
+            if(patientBox) patientBox.innerHTML = `<h5 class="m-0 fw-bold text-primary">${currentSelectedPatient.name} <span class="badge bg-info">${currentSelectedPatient.hn}</span></h5>`;
+            let custNameInput = document.getElementById('pos-cust-name');
+            if(custNameInput) custNameInput.value = currentSelectedPatient.name;
+          } else {
+            Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา', 'error');
+          }
+        }
+      });
+    }
+
+    function openDeductCourseModal() {
+      if(!currentSelectedPatient) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ที่หน้า POS ก่อน', 'warning');
+      document.getElementById('course-patient-name').innerText = currentSelectedPatient.name;
+      
+      google.script.run.withSuccessHandler((courses) => {
+        const container = document.getElementById('course-list-container');
+        container.innerHTML = '';
+        if(!courses || courses.length === 0) {
+          container.innerHTML = '<div class="text-center text-muted p-3">ไม่มีคอร์สคงเหลือ</div>';
+        } else {
+          courses.forEach(c => {
+            container.innerHTML += `
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-0 fw-bold">${c.course_name}</h6>
+                  <small class="text-muted">เหลือ: <b class="text-danger">${c.remain_qty} ครั้ง</b></small>
+                </div>
+                <button class="btn btn-sm btn-warning fw-bold" onclick="executeDeductCourse(${c.id})">ตัด 1 ครั้ง</button>
+              </div>
+            `;
+          });
+        }
+        new bootstrap.Modal(document.getElementById('modal-deduct-course')).show();
+      }).getCourses(currentTenantSheetId, currentSelectedPatient.id);
+    }
+
+    function executeDeductCourse(courseId) {
+      Swal.fire({ title: 'ยืนยันตัดคอร์ส?', text: "ต้องการตัดคอร์สจำนวน 1 ครั้ง ใช่หรือไม่?", icon: 'question', showCancelButton: true, confirmButtonColor: '#f59e0b', confirmButtonText: 'ยืนยันตัดคอร์ส'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          google.script.run.withSuccessHandler((data) => {
+            if(data.status === 'success') {
+              Swal.fire('สำเร็จ', 'ตัดคอร์สเรียบร้อยแล้ว (เหลือ ' + data.remain + ' ครั้ง)', 'success');
+              bootstrap.Modal.getInstance(document.getElementById('modal-deduct-course')).hide();
+              google.script.run.logAction(currentTenantSheetId, currentStaff.name, "ตัดคอร์ส", "คนไข้ " + currentSelectedPatient.name);
+            } else {
+              Swal.fire('ผิดพลาด', data.message, 'error');
+            }
+          }).deductCourse(currentTenantSheetId, courseId, 1);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
