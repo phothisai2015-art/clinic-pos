@@ -19,8 +19,9 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// 🌟 เพิ่มคอลัมน์รองรับวันนัดและหมายเหตุแบบแยกช่อง
+// 🌟 เพิ่มคอลัมน์รองรับวันนัด เวลา และหมายเหตุแบบแยกช่อง
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, () => {});
+db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, () => {});
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, () => {});
 
 // สร้างตารางเก็บรูปภาพคนไข้
@@ -113,21 +114,21 @@ app.post('/api/patients', (req, res) => {
   });
 });
 
-// 4. 🌟 บันทึกประวัติการรักษา (EMR) + ลงตารางนัดหมายให้อัตโนมัติเพื่อใช้แจ้งเตือนในอนาคต
+// 4. 🌟 บันทึก EMR + ลงตารางนัดหมาย (Appointments) พร้อมเวลา
 app.post('/api/emr', (req, res) => {
-  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_note } = req.body;
+  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note } = req.body;
   const visit_date = new Date().toISOString();
   
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_note)
-               VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note)
+               VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?, ?)`;
   
-  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_note || ''], function(err) {
+  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || ''], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
 
-    // 🌟 หากมีระบุวันนัด ให้บันทึกลงตาราง appointments อัตโนมัติสำหรับระบบแจ้งเตือนอนาคต
+    // 🌟 หากมีระบุวันและเวลานัด ให้ลงตาราง appointments อัตโนมัติ
     if (next_appointment_date) {
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, 1, ?, '10:00', ?)`,
-        [patient_id, next_appointment_date, next_appointment_note || 'นัดติดตามผลจาก EMR']);
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, 1, ?, ?, ?)`,
+        [patient_id, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
     }
 
     res.json({ status: 'success', message: 'บันทึก EMR สำเร็จ' });
