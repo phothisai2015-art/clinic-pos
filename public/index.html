@@ -180,7 +180,7 @@
     function applyPermissions(perms) {
       let p = perms.toUpperCase();
       let buttons = {
-        'BOOKING': document.querySelector('button[onclick="openModule(\\'booking.html\\')"]'),
+        'BOOKING': document.querySelectorAll('.menu-card-btn')[0], // นัดหมาย
         'PATIENT': document.querySelectorAll('.menu-card-btn')[1], // เวชระเบียน
         'POS': document.querySelectorAll('.menu-card-btn')[2],     // ขาย & ชำระเงิน
         'STOCK': document.querySelectorAll('.menu-card-btn')[3],   // คลังยา
@@ -190,13 +190,16 @@
 
       // วนลูปเช็คสิทธิ์ ถ้าไม่มีสิทธิ์ให้ปุ่มเป็นสีเทา (disabled)
       for (const [key, btn] of Object.entries(buttons)) {
-        if (p.includes('ADMIN') || p.includes(key)) {
-          btn.disabled = false;
-          btn.style.opacity = '1';
-        } else {
-          btn.disabled = true;
-          btn.style.opacity = '0.5';
-          btn.style.cursor = 'not-allowed';
+        if (btn) { // ป้องกัน Error หาปุ่มไม่เจอ
+          if (p.includes('ADMIN') || p.includes(key)) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+          } else {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+          }
         }
       }
     }

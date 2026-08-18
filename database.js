@@ -21,13 +21,13 @@ db.serialize(() => {
     clinic_id INTEGER,
     pin TEXT,
     name TEXT,
-    role TEXT, -- เช่น DOCTOR, ADMIN, THERAPIST, CASHIER
+    role TEXT,
     permissions TEXT
   )`);
 
   // 3. ทะเบียนคนไข้ (Patients)
   db.run(`CREATE TABLE IF NOT EXISTS patients (
-    id TEXT PRIMARY KEY, -- เลข HN
+    id TEXT PRIMARY KEY,
     clinic_id INTEGER,
     full_name TEXT,
     id_card TEXT,
@@ -47,7 +47,7 @@ db.serialize(() => {
     room_name TEXT,
     appointment_date TEXT,
     appointment_time TEXT,
-    status TEXT DEFAULT 'WAITING', -- WAITING, IN_ROOM, DONE
+    status TEXT DEFAULT 'WAITING',
     notes TEXT
   )`);
 
@@ -61,7 +61,7 @@ db.serialize(() => {
     symptoms TEXT,
     diagnosis TEXT,
     treatment_details TEXT,
-    images_url TEXT -- เก็บ URL รูปภาพ Before/After
+    images_url TEXT
   )`);
 
   // 6. สินค้า, ยา และ คอร์ส (Products & Inventory)
@@ -69,7 +69,7 @@ db.serialize(() => {
     id TEXT PRIMARY KEY,
     clinic_id INTEGER,
     name TEXT,
-    type TEXT, -- MEDICINE, COURSE, PRODUCT
+    type TEXT,
     price REAL,
     stock INTEGER,
     unit TEXT
@@ -86,14 +86,18 @@ db.serialize(() => {
   )`);
   
   console.log("✅ Database tables initialized successfully.");
-});
 
-// สร้างผู้ใช้งานเริ่มต้น (ถ้ายังไม่มีในระบบ)
+  // 🌟 ย้ายมาอยู่ด้านในนี้ เพื่อรอให้ตารางสร้างเสร็จก่อนถึงจะเพิ่ม PIN
   db.get("SELECT count(*) as count FROM users", (err, row) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return;
+    }
     if (row && row.count === 0) {
       db.run(`INSERT INTO users (pin, name, role, permissions) VALUES ('1234', 'ผู้บริหาร (Admin)', 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`);
       console.log("👤 สร้างผู้ใช้งานเริ่มต้นสำเร็จ: ใช้ PIN 1234 ในการเข้าสู่ระบบ");
     }
   });
+});
 
 module.exports = db;

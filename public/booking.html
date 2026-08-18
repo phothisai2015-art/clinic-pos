@@ -1,136 +1,119 @@
 <style>
+  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; }
+  .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+  .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
   .queue-table th { background-color: #f1f5f9; color: #475569; padding: 12px; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; }
   .queue-table td { vertical-align: middle; padding: 15px 12px; border-bottom: 1px solid #e2e8f0; }
   .queue-row { transition: all 0.2s; cursor: pointer; }
   .queue-row:hover { background-color: #f8fafc; }
   
-  /* สเตตัสคิว (ป้ายสี) */
   .status-badge { font-size: 0.8rem; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; }
   .status-wait-dr { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
   .status-in-room { background-color: #e0f2fe; color: #2563eb; border: 1px solid #bfdbfe; }
   .status-wait-pay { background-color: #fce7f3; color: #e11d48; border: 1px solid #fbcfe8; }
   .status-done { background-color: #dcfce3; color: #059669; border: 1px solid #bbf7d0; }
 
-  /* Dark Mode Support (ดึงคลาส body จากหน้า index) */
   body.dark-theme #module-container { background-color: #0f172a !important; color: #f1f5f9; }
-  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9; }
+  body.dark-theme .bg-white, body.dark-theme .bg-light { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9; }
   body.dark-theme .queue-table th { background-color: #0f172a; color: #cbd5e1; border-color: #334155; }
   body.dark-theme .queue-table td { border-color: #334155; color: #f8fafc; }
   body.dark-theme .queue-row:hover { background-color: #0f172a; }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px;">
-  
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-ol me-2"></i> จัดการคิวหน้างาน</h3>
+    <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-calendar-check me-2"></i> นัดหมาย & คิว</h3>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()">
       <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
     </button>
   </div>
 
-  <!-- แดชบอร์ดสรุปสั้นๆ ด้านบน -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
-      <div class="p-3 rounded-4 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
-        <div class="small fw-bold mb-1 opacity-75">รอพบแพทย์</div>
-        <h3 class="fw-bold m-0">5 <span class="fs-6 opacity-75">คิว</span></h3>
+  <ul class="nav nav-pills clinic-nav-pills mb-4" id="bookingTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="queue-tab" data-bs-toggle="pill" data-bs-target="#queue-content" type="button" role="tab"><i class="fa-solid fa-list-ol me-1"></i> จัดการคิวหน้างาน</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="calendar-tab" data-bs-toggle="pill" data-bs-target="#calendar-content" type="button" role="tab"><i class="fa-regular fa-calendar-days me-1"></i> ตารางนัดหมาย</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="dash-tab" data-bs-toggle="pill" data-bs-target="#dash-content" type="button" role="tab" onclick="initClinicCharts()"><i class="fa-solid fa-chart-pie me-1"></i> แดชบอร์ดสรุปผล</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="bookingTabsContent">
+    
+    <div class="tab-pane fade show active" id="queue-content" role="tabpanel">
+      <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2 text-primary"></i> รายชื่อคิวปัจจุบัน</h5>
+          <button class="btn btn-primary fw-bold rounded-pill px-3 shadow-sm"><i class="fa-solid fa-plus me-1"></i> เพิ่มคิว Walk-in</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table queue-table mb-0 w-100">
+            <thead>
+              <tr>
+                <th width="8%" class="text-center">คิวที่</th>
+                <th width="12%">เวลา</th>
+                <th width="25%">ชื่อคนไข้ (HN)</th>
+                <th width="20%">แพทย์ / ห้องหัตถการ</th>
+                <th width="15%">สถานะ</th>
+                <th width="20%" class="text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="queue-row">
+                <td class="text-center fw-bold fs-5 text-primary">01</td>
+                <td class="text-muted fw-bold">10:00 น.</td>
+                <td><div class="fw-bold fs-6">คุณ สมหญิง รักสวย</div><div class="small text-muted">HN-670001</div></td>
+                <td><div class="fw-bold">นพ. สมชาย</div><div class="small text-muted"><i class="fa-solid fa-door-open"></i> ห้องเลเซอร์ 1</div></td>
+                <td><span class="status-badge status-in-room"><i class="fa-solid fa-bed-pulse"></i> กำลังทำหัตถการ</span></td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3">ส่งไปชำระเงิน <i class="fa-solid fa-chevron-right ms-1"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="col-md-3 col-6">
-      <div class="p-3 rounded-4 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #065f46, #10b981);">
-        <div class="small fw-bold mb-1 opacity-75">กำลังทำหัตถการ</div>
-        <h3 class="fw-bold m-0">2 <span class="fs-6 opacity-75">คิว</span></h3>
+
+    <div class="tab-pane fade" id="calendar-content" role="tabpanel">
+      <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <h5 class="fw-bold mb-3"><i class="fa-regular fa-calendar-days text-warning me-2"></i> ตารางนัดหมายล่วงหน้า</h5>
+        <div class="text-center py-5 text-muted">ระบบปฏิทินกำลังพัฒนาใน Step ถัดไป...</div>
       </div>
     </div>
-    <div class="col-md-3 col-6">
-      <div class="p-3 rounded-4 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #b91c1c, #f43f5e);">
-        <div class="small fw-bold mb-1 opacity-75">รอชำระเงิน</div>
-        <h3 class="fw-bold m-0">3 <span class="fs-6 opacity-75">คิว</span></h3>
+
+    <div class="tab-pane fade" id="dash-content" role="tabpanel">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #1e40af, #3b82f6);"><div class="small fw-bold mb-1 opacity-75">ผู้เข้ารับบริการวันนี้</div><h3 class="fw-bold m-0">34 <span class="fs-6 opacity-75">คน</span></h3></div></div>
+        <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #065f46, #10b981);"><div class="small fw-bold mb-1 opacity-75">เคสใหม่ (New)</div><h3 class="fw-bold m-0">8 <span class="fs-6 opacity-75">คน</span></h3></div></div>
+        <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #b91c1c, #f43f5e);"><div class="small fw-bold mb-1 opacity-75">ยอดขายประจำวัน</div><h3 class="fw-bold m-0">฿15,400</h3></div></div>
+        <div class="col-md-3 col-6"><div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #7e22ce, #a855f7);"><div class="small fw-bold mb-1 opacity-75">หัตถการสูงสุด</div><h5 class="fw-bold m-0 mt-1">Pico Laser</h5></div></div>
+      </div>
+      <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <h6 class="fw-bold text-muted mb-3">แนวโน้มคนไข้ (รายสัปดาห์)</h6>
+        <div style="position: relative; height: 250px; width: 100%;"><canvas id="clinicTrafficChart"></canvas></div>
       </div>
     </div>
-    <div class="col-md-3 col-6">
-      <div class="p-3 rounded-4 shadow-sm text-dark h-100 bg-white border">
-        <div class="small text-muted fw-bold mb-1">เสร็จสิ้นแล้ววันนี้</div>
-        <h3 class="fw-bold m-0 text-success">18 <span class="fs-6 text-muted">คิว</span></h3>
-      </div>
-    </div>
+
   </div>
-
-  <!-- ตารางคิว (Table List) -->
-  <div class="bg-white p-4 rounded-4 shadow-sm border">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2 text-primary"></i> รายชื่อคิวปัจจุบัน</h5>
-      <button class="btn btn-primary fw-bold rounded-pill px-3 shadow-sm"><i class="fa-solid fa-plus me-1"></i> เพิ่มคิว Walk-in</button>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table queue-table mb-0 w-100">
-        <thead>
-          <tr>
-            <th width="8%" class="text-center">คิวที่</th>
-            <th width="12%">เวลา</th>
-            <th width="25%">ชื่อคนไข้ (HN)</th>
-            <th width="20%">แพทย์ / ห้องหัตถการ</th>
-            <th width="15%">สถานะ</th>
-            <th width="20%" class="text-center">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- ตัวอย่างคิว 1 -->
-          <tr class="queue-row">
-            <td class="text-center fw-bold fs-5 text-primary">01</td>
-            <td class="text-muted fw-bold">10:00 น.</td>
-            <td>
-              <div class="fw-bold fs-6">คุณ สมหญิง รักสวย</div>
-              <div class="small text-muted">HN-670001</div>
-            </td>
-            <td>
-              <div class="fw-bold">นพ. สมชาย</div>
-              <div class="small text-muted"><i class="fa-solid fa-door-open"></i> ห้องเลเซอร์ 1</div>
-            </td>
-            <td><span class="status-badge status-in-room"><i class="fa-solid fa-bed-pulse"></i> กำลังทำหัตถการ</span></td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3">ส่งไปชำระเงิน <i class="fa-solid fa-chevron-right ms-1"></i></button>
-            </td>
-          </tr>
-          <!-- ตัวอย่างคิว 2 -->
-          <tr class="queue-row">
-            <td class="text-center fw-bold fs-5 text-primary">02</td>
-            <td class="text-muted fw-bold">10:30 น.</td>
-            <td>
-              <div class="fw-bold fs-6">คุณ ใจดี มีสุข</div>
-              <div class="small text-muted">HN-670045</div>
-            </td>
-            <td>
-              <div class="fw-bold">พญ. ใจรัก</div>
-              <div class="small text-muted"><i class="fa-solid fa-door-open"></i> ห้องตรวจ 2</div>
-            </td>
-            <td><span class="status-badge status-wait-dr"><i class="fa-solid fa-user-doctor"></i> รอพบแพทย์</span></td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3">เรียกเข้าห้อง <i class="fa-solid fa-volume-high ms-1"></i></button>
-            </td>
-          </tr>
-          <!-- ตัวอย่างคิว 3 -->
-          <tr class="queue-row">
-            <td class="text-center fw-bold fs-5 text-primary">03</td>
-            <td class="text-muted fw-bold">11:00 น.</td>
-            <td>
-              <div class="fw-bold fs-6">คุณ สายฟ้า พารวย</div>
-              <div class="small text-muted">HN-670112</div>
-            </td>
-            <td>
-              <div class="fw-bold">-</div>
-              <div class="small text-muted">กดสิว + ฉายแสง</div>
-            </td>
-            <td><span class="status-badge status-wait-pay"><i class="fa-solid fa-file-invoice-dollar"></i> รอชำระเงิน</span></td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-success fw-bold rounded-pill px-3"><i class="fa-solid fa-cash-register me-1"></i> เปิดบิล</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let clinicChartInstance = null;
+
+  function initClinicCharts() {
+    if (clinicChartInstance) return; 
+    setTimeout(() => {
+      const ctx = document.getElementById('clinicTrafficChart').getContext('2d');
+      clinicChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'],
+          datasets: [{ label: 'จำนวนคนไข้ (คน)', data: [25, 30, 20, 45, 55, 80, 75], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderWidth: 3, tension: 0.4, fill: true }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }, 300);
+  }
+</script>
