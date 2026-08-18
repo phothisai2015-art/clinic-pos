@@ -19,7 +19,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// 🌟 เพิ่มคอลัมน์รองรับวันนัด เวลา และหมายเหตุแบบแยกช่อง
+// เพิ่มคอลัมน์รองรับวันนัด เวลา และหมายเหตุแบบแยกช่อง
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, () => {});
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, () => {});
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, () => {});
@@ -57,14 +57,9 @@ app.get('/', (req, res) => {
 // ==========================================
 app.post('/api/login', (req, res) => {
   const { pin } = req.body;
-  
   db.get(`SELECT id, name, role, permissions FROM users WHERE pin = ?`, [pin], (err, row) => {
-    if (err) {
-      return res.status(500).json({ status: 'error', message: 'Database error' });
-    }
-    if (!row) {
-      return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
-    }
+    if (err) return res.status(500).json({ status: 'error', message: 'Database error' });
+    if (!row) return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
     res.json({ status: 'success', user: row });
   });
 });
@@ -72,8 +67,6 @@ app.post('/api/login', (req, res) => {
 // ==========================================
 // 🏥 API ทะเบียนคนไข้ & เวชระเบียน (EMR)
 // ==========================================
-
-// 1. ค้นหาคนไข้
 app.get('/api/patients', (req, res) => {
   const search = req.query.search || '';
   const sql = `SELECT * FROM patients WHERE full_name LIKE ? OR phone LIKE ? OR id LIKE ?`;
@@ -84,7 +77,6 @@ app.get('/api/patients', (req, res) => {
   });
 });
 
-// 2. ดึงข้อมูลคนไข้ 1 คน ตาม HN
 app.get('/api/patients/:id', (req, res) => {
   db.get(`SELECT * FROM patients WHERE id = ?`, [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
@@ -92,15 +84,11 @@ app.get('/api/patients/:id', (req, res) => {
   });
 });
 
-// 3. บันทึก/อัปเดตข้อมูลคนไข้ใหม่
 app.post('/api/patients', (req, res) => {
   const { id, full_name, id_card, phone, dob, allergies, congenital_disease } = req.body;
   const created_at = new Date().toISOString();
-
   let patientId = id;
-  if (!patientId) {
-    patientId = 'HN-' + Math.floor(100000 + Math.random() * 900000); 
-  }
+  if (!patientId) patientId = 'HN-' + Math.floor(100000 + Math.random() * 900000); 
 
   const sql = `INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) 
                VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?)
@@ -114,7 +102,6 @@ app.post('/api/patients', (req, res) => {
   });
 });
 
-// 4. 🌟 บันทึก EMR + ลงตารางนัดหมาย (Appointments) พร้อมเวลา
 app.post('/api/emr', (req, res) => {
   const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note } = req.body;
   const visit_date = new Date().toISOString();
@@ -125,17 +112,14 @@ app.post('/api/emr', (req, res) => {
   db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || ''], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
 
-    // 🌟 หากมีระบุวันและเวลานัด ให้ลงตาราง appointments อัตโนมัติ
     if (next_appointment_date) {
       db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, 1, ?, ?, ?)`,
         [patient_id, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
     }
-
     res.json({ status: 'success', message: 'บันทึก EMR สำเร็จ' });
   });
 });
 
-// 5. ดึงประวัติย้อนหลังของคนไข้
 app.get('/api/emr/:patient_id', (req, res) => {
   db.all(`SELECT * FROM emr_logs WHERE patient_id = ? ORDER BY id DESC`, [req.params.patient_id], (err, rows) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
@@ -146,13 +130,9 @@ app.get('/api/emr/:patient_id', (req, res) => {
 // ==========================================
 // 📸 API บันทึก ดึงข้อมูล และลบรูปภาพคนไข้
 // ==========================================
-
 app.post('/api/patients/photos', (req, res) => {
   const { patient_id, photo_type, image_data } = req.body;
-  
-  if (!patient_id || !image_data) {
-    return res.status(400).json({ status: 'error', message: 'กรุณาเลือกคนไข้และระบุรูปภาพ' });
-  }
+  if (!patient_id || !image_data) return res.status(400).json({ status: 'error', message: 'กรุณาเลือกคนไข้และระบุรูปภาพ' });
 
   try {
     const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
@@ -160,14 +140,13 @@ app.post('/api/patients/photos', (req, res) => {
     const filePath = path.join(uploadDir, fileName);
 
     fs.writeFileSync(filePath, base64Data, { encoding: 'base64' });
-
     const image_path = `/uploads/${fileName}`;
     const created_at = new Date().toISOString();
 
     const sql = `INSERT INTO patient_photos (patient_id, photo_type, image_path, created_at) VALUES (?, ?, ?, ?)`;
     db.run(sql, [patient_id, photo_type || 'MARKING', image_path, created_at], function(err) {
       if (err) return res.status(500).json({ status: 'error', message: err.message });
-      res.json({ status: 'success', message: 'บันทึกรูปภาพลงประวัติเรียบร้อยแล้ว', photo_path: image_path });
+      res.json({ status: 'success', message: 'บันทึกรูปภาพเรียบร้อยแล้ว', photo_path: image_path });
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'ไม่สามารถบันทึกไฟล์รูปภาพได้' });
@@ -183,7 +162,6 @@ app.get('/api/patients/:id/photos', (req, res) => {
 
 app.delete('/api/patients/photos/:id', (req, res) => {
   const photoId = req.params.id;
-  
   db.get(`SELECT image_path FROM patient_photos WHERE id = ?`, [photoId], (err, row) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     if (!row) return res.status(404).json({ status: 'error', message: 'ไม่พบรูปภาพในระบบ' });
@@ -192,7 +170,6 @@ app.delete('/api/patients/photos/:id', (req, res) => {
     if (fs.existsSync(fullPath)) {
       try { fs.unlinkSync(fullPath); } catch (e) { console.error('Delete file error:', e); }
     }
-
     db.run(`DELETE FROM patient_photos WHERE id = ?`, [photoId], function(err) {
       if (err) return res.status(500).json({ status: 'error', message: err.message });
       res.json({ status: 'success', message: 'ลบรูปภาพเรียบร้อยแล้ว' });
@@ -204,22 +181,31 @@ app.delete('/api/patients/photos/:id', (req, res) => {
 // 🗓️ API ระบบนัดหมาย (Appointments)
 // ==========================================
 app.get('/api/appointments', (req, res) => {
-  // ดึงข้อมูลนัดหมาย พร้อมกับ Join ตาราง patients เพื่อเอาชื่อคนไข้มาแสดง
   const sql = `
     SELECT 
+      a.id,
       a.appointment_date as date, 
       a.appointment_time as time, 
       a.patient_id as hn, 
       p.full_name as name, 
-      a.notes as note
+      p.phone,
+      a.notes as note,
+      a.status
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     ORDER BY a.appointment_date ASC, a.appointment_time ASC
   `;
-  
   db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', data: rows });
+  });
+});
+
+app.put('/api/appointments/:id/status', (req, res) => {
+  const { status } = req.body;
+  db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [status, req.params.id], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'อัปเดตสถานะสำเร็จ' });
   });
 });
 
