@@ -2,260 +2,337 @@
   .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; }
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
-  
-  /* Allergy Banner */
-  .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; }
-
-  /* Canvas photo marking */
-  .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-  #faceCanvas { border-radius: 12px; cursor: crosshair; }
-
+  .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; display: none; }
   body.dark-theme .bg-white, body.dark-theme .bg-light { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9; }
   body.dark-theme .allergy-alert-box { background: #4c0519; color: #fecdd3; border-color: #f43f5e; }
-  body.dark-theme .canvas-container { background: #0f172a; border-color: #334155; }
+  .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+  #faceCanvas { border-radius: 12px; cursor: crosshair; }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px;">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-id-card-clip me-2"></i> ทะเบียนคนไข้ & เวชระเบียน (EMR)</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()">
-      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
-    </button>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
-  <!-- Alert การแพ้ยา/สารเคมี (แสดงทันทีเมื่อเปิดเลือก profile คนไข้) -->
-  <div id="allergyAlert" class="allergy-alert-box d-flex align-items-center justify-content-between mb-4 shadow-sm">
+  <!-- 🔍 กล่องค้นหาคนไข้ -->
+  <div class="card shadow-sm border-0 mb-4 rounded-4">
+    <div class="card-body bg-light rounded-4 d-flex align-items-center">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-4 text-primary"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <input type="text" id="searchInput" class="form-control border-start-0 py-2 rounded-end-pill form-control-lg" placeholder="ค้นหาประวัติคนไข้ด้วย ชื่อ, นามสกุล, หรือเบอร์โทรศัพท์..." onkeypress="if(event.key === 'Enter') searchPatient()">
+        <button class="btn btn-primary rounded-pill ms-3 px-4 fw-bold shadow-sm" onclick="searchPatient()">ค้นหาคนไข้</button>
+        <button class="btn btn-outline-secondary rounded-pill ms-2 px-3 fw-bold" onclick="clearForm()"><i class="fa-solid fa-broom me-1"></i> เคลียร์หน้าจอ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert การแพ้ยา/สารเคมี (ซ่อนเป็นค่าเริ่มต้น) -->
+  <div id="allergyAlert" class="allergy-alert-box align-items-center justify-content-between mb-4 shadow-sm">
     <div class="d-flex align-items-center">
       <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
       <div>
-        <div class="fw-bold fs-6">⚠️ คำเตือนการแพ้ยา & ข้อควรระวัง (HN-670001: คุณ สมหญิง รักสวย)</div>
-        <div class="small text-danger fw-semibold" id="allergyDetails">แพ้ยา: Penicillin, Aspirin | โรคประจำตัว: ความดันโลหิตสูง</div>
+        <div class="fw-bold fs-6" id="allergyTitle">⚠️ คำเตือนการแพ้ยา & ข้อควรระวัง</div>
+        <div class="small text-danger fw-semibold" id="allergyDetails"></div>
       </div>
     </div>
-    <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-virus me-1"></i> แพ้ยารุนแรง</span>
+    <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-virus me-1"></i> โปรดระวังรุนแรง</span>
   </div>
 
   <!-- Tabs Navigation -->
   <ul class="nav nav-pills clinic-nav-pills mb-4" id="patientTabs" role="tablist">
-    <li class="nav-item">
-      <button class="nav-link active" id="reg-tab" data-bs-toggle="pill" data-bs-target="#reg-content" type="button"><i class="fa-solid fa-user-plus me-1"></i> ลงทะเบียนคนไข้ใหม่</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="emr-tab" data-bs-toggle="pill" data-bs-target="#emr-content" type="button"><i class="fa-solid fa-notes-medical me-1"></i> ประวัติการรักษา (EMR)</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="gallery-tab" data-bs-toggle="pill" data-bs-target="#gallery-content" type="button"><i class="fa-solid fa-images me-1"></i> รูปภาพ Before & After</button>
-    </li>
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#reg-content" type="button"><i class="fa-solid fa-user-plus me-1"></i> ประวัติส่วนตัว (Profile)</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#emr-content" type="button"><i class="fa-solid fa-notes-medical me-1"></i> ประวัติการรักษา (EMR)</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#gallery-content" type="button"><i class="fa-solid fa-images me-1"></i> รูปภาพ Before & After</button></li>
   </ul>
 
   <div class="tab-content" id="patientTabsContent">
-    
-    <!-- Tab 1: ลงทะเบียนคนไข้ใหม่ -->
+    <!-- Tab 1: Profile -->
     <div class="tab-pane fade show active" id="reg-content" role="tabpanel">
       <div class="bg-white p-4 rounded-4 shadow-sm border">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> บันทึกข้อมูลคนไข้ใหม่</h5>
-          <button class="btn btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" onclick="readSmartCard()">
-            <i class="fa-solid fa-id-card me-2"></i> อ่านบัตรประชาชน (Smart Card)
-          </button>
+          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> ข้อมูลคนไข้</h5>
+          <button class="btn btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" onclick="readSmartCard()"><i class="fa-solid fa-id-card me-2"></i> อ่านบัตรประชาชน</button>
         </div>
-
         <form id="patientForm" onsubmit="savePatient(event)">
           <div class="row g-3">
             <div class="col-md-3">
               <label class="form-label fw-bold small text-muted">รหัสคนไข้ (HN)</label>
-              <input type="text" id="p_hn" class="form-control rounded-3" value="HN-670002" readonly>
+              <input type="text" id="p_hn" class="form-control rounded-3 bg-light" placeholder="ระบบสร้างอัตโนมัติ" readonly>
             </div>
             <div class="col-md-5">
               <label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label>
-              <input type="text" id="p_name" class="form-control rounded-3" placeholder="ระบุชื่อ-นามสกุล" required>
+              <input type="text" id="p_name" class="form-control rounded-3" required>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label>
-              <input type="text" id="p_idcard" class="form-control rounded-3" placeholder="13 หลัก">
+              <input type="text" id="p_idcard" class="form-control rounded-3">
             </div>
-
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label>
-              <input type="tel" id="p_phone" class="form-control rounded-3" placeholder="08X-XXX-XXXX" required>
+              <input type="tel" id="p_phone" class="form-control rounded-3" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small text-muted">วัน/เดือน/ปีเกิด</label>
+              <label class="form-label fw-bold small text-muted">วันเกิด</label>
               <input type="date" id="p_dob" class="form-control rounded-3">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">โรคประจำตัว</label>
-              <input type="text" id="p_disease" class="form-control rounded-3" placeholder="เช่น ความดัน, เบาหวาน">
+              <input type="text" id="p_disease" class="form-control rounded-3">
             </div>
-
             <div class="col-12">
-              <label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา / สารเคมี (สำคัญ)</label>
-              <textarea id="p_allergies" class="form-control rounded-3" rows="2" placeholder="เช่น Penicillin, Alcohol, ยาชา"></textarea>
+              <label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา / สารเคมี (ระบุให้ชัดเจน)</label>
+              <textarea id="p_allergies" class="form-control rounded-3" rows="2" placeholder="เช่น อาหารทะเล, Penicillin"></textarea>
             </div>
-
             <div class="col-12 text-end mt-4">
-              <button type="reset" class="btn btn-light rounded-pill px-4 me-2">ยกเลิก</button>
-              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
-                <i class="fa-solid fa-floppy-disk me-2"></i> บันทึกข้อมูลคนไข้
-              </button>
+              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i> บันทึกข้อมูลคนไข้</button>
             </div>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Tab 2: ประวัติการรักษา (EMR) -->
+    <!-- Tab 2: EMR -->
     <div class="tab-pane fade" id="emr-content" role="tabpanel">
       <div class="row g-4">
-        <!-- ฟอร์มบันทึกการรักษา -->
+        <!-- Form -->
         <div class="col-md-5">
           <div class="bg-white p-4 rounded-4 shadow-sm border">
             <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียนใหม่</h5>
+            <div id="emrCurrentPatient" class="text-danger fw-bold small mb-3">กรุณาเลือกหรือบันทึกคนไข้ก่อน...</div>
             <form id="emrForm" onsubmit="saveEMR(event)">
               <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">อาการแรกรับ / ความต้องการ (CC)</label>
-                <textarea id="emr_symptoms" class="form-control rounded-3" rows="2" placeholder="ระบุอาการของคนไข้..." required></textarea>
+                <label class="form-label fw-bold small text-muted">อาการแรกรับ (CC)</label>
+                <textarea id="emr_symptoms" class="form-control rounded-3" rows="2" required></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัยแพทย์ (Diagnosis)</label>
-                <textarea id="emr_diagnosis" class="form-control rounded-3" rows="2" placeholder="ระบุผลวินิจฉัย..." required></textarea>
+                <label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Diagnosis)</label>
+                <textarea id="emr_diagnosis" class="form-control rounded-3" rows="2" required></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Treatment)</label>
-                <textarea id="emr_treatment" class="form-control rounded-3" rows="3" placeholder="เช่น Pico Laser 2,000 ช็อต, ฉีด Botox 50 ยูนิต"></textarea>
+                <label class="form-label fw-bold small text-muted">หัตถการที่ทำ / ยา (Treatment)</label>
+                <textarea id="emr_treatment" class="form-control rounded-3" rows="3"></textarea>
               </div>
-              <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2">
-                <i class="fa-solid fa-circle-plus me-1"></i> บันทึกประวัติการรักษา
-              </button>
+              <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกประวัติการรักษา</button>
             </form>
           </div>
         </div>
-
-        <!-- ประวัติย้อนหลัง -->
+        <!-- History -->
         <div class="col-md-7">
           <div class="bg-white p-4 rounded-4 shadow-sm border">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> ประวัติการรักษาที่ผ่านมา</h5>
-            <div class="timeline" id="emrTimeline">
-              <div class="border-start border-3 border-primary ps-3 pb-3 mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="fw-bold text-primary">18 ส.ค. 2026 (10:30 น.)</span>
-                  <span class="badge bg-light text-dark border">พญ. ณิชา</span>
-                </div>
-                <div class="fw-bold mt-1">วินิจฉัย: ฝ้ากระแดด บริเวณโหนกแก้ม</div>
-                <div class="small text-muted">หัตถการ: Pico Laser (โหนกแก้ม 2 ข้าง) + ทายาลดรอยดำ</div>
-              </div>
+            <div class="timeline" id="emrTimeline" style="max-height: 500px; overflow-y: auto;">
+              <div class="text-muted text-center py-4">กรุณาค้นหาคนไข้เพื่อดูประวัติ...</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Tab 3: Photo Gallery (Before & After + Drawing) -->
+    <!-- Tab 3: Gallery (แบบเดิม) -->
     <div class="tab-pane fade" id="gallery-content" role="tabpanel">
-      <div class="bg-white p-4 rounded-4 shadow-sm border">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0"><i class="fa-solid fa-camera me-2 text-primary"></i> เปรียบเทียบภาพและมาร์กจุดใบหน้า</h5>
-          <div>
-            <button class="btn btn-sm btn-outline-danger me-2" onclick="clearCanvas()"><i class="fa-solid fa-eraser me-1"></i> ล้างรอยวาด</button>
-            <button class="btn btn-sm btn-primary" onclick="alert('บันทึกรูปภาพเรียบร้อย')"><i class="fa-solid fa-download me-1"></i> บันทึกรูปภาพ</button>
-          </div>
-        </div>
-
-        <div class="row g-4 text-center">
-          <div class="col-md-6">
-            <h6 class="fw-bold text-muted mb-2">ภาพ Before (ก่อนรักษา)</h6>
-            <div class="canvas-container p-2" style="min-height: 320px;">
-              <img src="https://via.placeholder.com/350x300/e2e8f0/475569?text=Before+Photo" class="img-fluid rounded-3" alt="Before">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <h6 class="fw-bold text-primary mb-2">มาร์กจุด / ภาพ After (วาดระบุตำแหน่ง)</h6>
-            <div class="canvas-container">
-              <canvas id="faceCanvas" width="350" height="300"></canvas>
-            </div>
-            <div class="mt-2 small text-muted"><i class="fa-solid fa-pen me-1"></i> ใช้เมาส์/นิ้วลากวาดบน Canvas เพื่อระบุตำแหน่งหัตถการ</div>
-          </div>
-        </div>
+      <div class="bg-white p-4 rounded-4 shadow-sm border text-center py-5">
+        <h4 class="text-muted">ระบบรูปภาพกำลังพัฒนาต่อในเวอร์ชันถัดไป</h4>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-  // Smart Card Reader Simulation
-  function readSmartCard() {
-    Swal.fire({ title: 'กำลังเชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    setTimeout(() => {
-      document.getElementById('p_name').value = 'นางสาว สมหทัย ใจดี';
-      document.getElementById('p_idcard').value = '1100200300401';
-      document.getElementById('p_phone').value = '0812345678';
-      document.getElementById('p_dob').value = '1995-05-15';
-      document.getElementById('p_disease').value = 'ไม่มี';
-      document.getElementById('p_allergies').value = 'แพ้ยา Sulfa (รุนแรง)';
-      Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-    }, 1200);
-  }
+  let currentHN = ''; 
 
-  // Save Patient
-  function savePatient(e) {
-    e.preventDefault();
-    Swal.fire('สำเร็จ', 'บันทึกข้อมูลคนไข้ใหม่เรียบร้อยแล้ว', 'success');
-  }
+  // ==========================================
+  // 🔍 1. ระบบค้นหาคนไข้
+  // ==========================================
+  async function searchPatient() {
+    const text = document.getElementById('searchInput').value.trim();
+    if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ชื่อ หรือเบอร์โทรศัพท์เพื่อค้นหา', 'warning');
 
-  // Save EMR
-  function saveEMR(e) {
-    e.preventDefault();
-    const sym = document.getElementById('emr_symptoms').value;
-    const diag = document.getElementById('emr_diagnosis').value;
-    const treat = document.getElementById('emr_treatment').value;
-
-    const html = `
-      <div class="border-start border-3 border-primary ps-3 pb-3 mb-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="fw-bold text-primary">วันนี้ (ปัจจุบัน)</span>
-          <span class="badge bg-light text-dark border">แพทย์ประจำวัน</span>
-        </div>
-        <div class="fw-bold mt-1">วินิจฉัย: ${diag}</div>
-        <div class="small text-muted">อาการ: ${sym}</div>
-        <div class="small text-muted">หัตถการ: ${treat}</div>
-      </div>
-    `;
-    document.getElementById('emrTimeline').insertAdjacentHTML('afterbegin', html);
-    document.getElementById('emrForm').reset();
-    Swal.fire({ icon: 'success', title: 'บันทึก EMR เรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-  }
-
-  // Canvas Marking Logic
-  const canvas = document.getElementById('faceCanvas');
-  const ctx = canvas ? canvas.getContext('2d') : null;
-  let isDrawing = false;
-
-  if (canvas && ctx) {
-    // Draw background placeholder
-    const bgImg = new Image();
-    bgImg.src = 'https://via.placeholder.com/350x300/3b82f6/ffffff?text=After+Marking+Area';
-    bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-
-    canvas.onmousedown = (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
-    canvas.onmousemove = (e) => {
-      if (isDrawing) {
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.strokeStyle = '#e11d48';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+    Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      const res = await fetch(`/api/patients?search=${text}`);
+      const data = await res.json();
+      
+      if (data.data.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้ที่ค้นหา สามารถเพิ่มเป็นคนไข้ใหม่ได้เลย', 'info');
+      } else if (data.data.length === 1) {
+        Swal.close();
+        loadPatientProfile(data.data[0]);
+      } else {
+        // กรณีเจอหลายคน ให้แสดง List ให้คลิกเลือก
+        let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+        data.data.forEach(p => {
+           html += `<button class="list-group-item list-group-item-action py-3" onclick="selectFromList('${p.id}')">
+                      <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id}</small></div>
+                      <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${p.phone}</small>
+                    </button>`;
+        });
+        html += '</div>';
+        
+        Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
       }
-    };
-    canvas.onmouseup = () => isDrawing = false;
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    }
   }
 
-  function clearCanvas() {
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const bgImg = new Image();
-      bgImg.src = 'https://via.placeholder.com/350x300/3b82f6/ffffff?text=After+Marking+Area';
-      bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  // ดึงข้อมูลรายคนเมื่อกดเลือกจาก List
+  async function selectFromList(hn) {
+    Swal.showLoading();
+    const res = await fetch(`/api/patients/${hn}`);
+    const data = await res.json();
+    loadPatientProfile(data.data);
+    Swal.close();
+  }
+
+  // ==========================================
+  // 👤 2. นำข้อมูลใส่หน้าจอ & โชว์ Alert แพ้ยา
+  // ==========================================
+  function loadPatientProfile(p) {
+    currentHN = p.id;
+    document.getElementById('p_hn').value = p.id;
+    document.getElementById('p_name').value = p.full_name || '';
+    document.getElementById('p_idcard').value = p.id_card || '';
+    document.getElementById('p_phone').value = p.phone || '';
+    document.getElementById('p_dob').value = p.dob || '';
+    document.getElementById('p_disease').value = p.congenital_disease || '';
+    document.getElementById('p_allergies').value = p.allergies || '';
+
+    // โชว์ Alert แพ้ยา
+    const alertBox = document.getElementById('allergyAlert');
+    if (p.allergies && p.allergies.trim() !== '' && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
+      alertBox.style.display = 'flex';
+      document.getElementById('allergyTitle').innerText = `⚠️ ข้อมูลแพ้ยา (${p.id}: ${p.full_name})`;
+      document.getElementById('allergyDetails').innerText = `แพ้ยา: ${p.allergies} | โรคประจำตัว: ${p.congenital_disease || 'ไม่มี'}`;
+    } else {
+      alertBox.style.display = 'none';
     }
+
+    // เตรียมฟอร์ม EMR
+    document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary">${p.full_name} (${p.id})</span>`;
+    loadEMRHistory(p.id);
+
+    Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+  }
+
+  // ==========================================
+  // 💾 3. บันทึก / อัปเดต คนไข้
+  // ==========================================
+  async function savePatient(e) {
+    e.preventDefault();
+    const payload = {
+      id: document.getElementById('p_hn').value,
+      full_name: document.getElementById('p_name').value,
+      id_card: document.getElementById('p_idcard').value,
+      phone: document.getElementById('p_phone').value,
+      dob: document.getElementById('p_dob').value,
+      congenital_disease: document.getElementById('p_disease').value,
+      allergies: document.getElementById('p_allergies').value
+    };
+
+    try {
+      const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.status === 'success') {
+        Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+        
+        // ถ้าเป็นการสร้างใหม่ ให้โหลด HN ที่ได้จาก Server มาใส่ช่อง HN
+        if(!payload.id) {
+          payload.id = data.patient_id; 
+        }
+        loadPatientProfile(payload); // รีโหลดหน้าจออีกรอบ
+      }
+    } catch (err) {
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error');
+    }
+  }
+
+  // ==========================================
+  // 📋 4. ระบบบันทึกเวชระเบียน (EMR)
+  // ==========================================
+  async function saveEMR(e) {
+    e.preventDefault();
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ก่อนบันทึกรักษา', 'warning');
+
+    const payload = {
+      patient_id: currentHN,
+      symptoms: document.getElementById('emr_symptoms').value,
+      diagnosis: document.getElementById('emr_diagnosis').value,
+      treatment_details: document.getElementById('emr_treatment').value
+    };
+
+    try {
+      const res = await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.status === 'success') {
+        document.getElementById('emrForm').reset();
+        loadEMRHistory(currentHN);
+        Swal.fire({ icon: 'success', title: 'บันทึกรักษาเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      }
+    } catch (err) {
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก EMR', 'error');
+    }
+  }
+
+  // ดึงประวัติเก่ามาโชว์
+  async function loadEMRHistory(hn) {
+    const timeline = document.getElementById('emrTimeline');
+    timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    
+    try {
+      const res = await fetch(`/api/emr/${hn}`);
+      const data = await res.json();
+      
+      if (data.data.length === 0) {
+        timeline.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษาในระบบ</div>';
+        return;
+      }
+
+      let html = '';
+      data.data.forEach(log => {
+         const dateObj = new Date(log.visit_date);
+         const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+         
+         html += `
+          <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-primary"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span>
+              <span class="badge bg-light text-dark border">หมอ/พนักงานตรวจ</span>
+            </div>
+            <div class="fw-bold text-dark mt-2">วินิจฉัย: ${log.diagnosis}</div>
+            <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms}</div>
+            <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
+          </div>`;
+      });
+      timeline.innerHTML = html;
+    } catch (err) {
+      timeline.innerHTML = '<div class="text-danger text-center py-4">โหลดประวัติไม่สำเร็จ</div>';
+    }
+  }
+
+  // เคลียร์ฟอร์มเตรียมรับคนใหม่
+  function clearForm() {
+    currentHN = '';
+    document.getElementById('patientForm').reset();
+    document.getElementById('emrForm').reset();
+    document.getElementById('p_hn').value = '';
+    document.getElementById('allergyAlert').style.display = 'none';
+    document.getElementById('emrCurrentPatient').innerHTML = 'กรุณาเลือกหรือบันทึกคนไข้ก่อน...';
+    document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">กรุณาค้นหาคนไข้เพื่อดูประวัติ...</div>';
+  }
+
+  // ระบบจำลองบัตรประชาชน (จะล้างช่อง HN ออกเพื่อให้เป็นคนใหม่)
+  function readSmartCard() {
+    Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    setTimeout(() => {
+      clearForm();
+      document.getElementById('p_name').value = 'สมชาย รักชาติ';
+      document.getElementById('p_idcard').value = '1100200300401';
+      document.getElementById('p_phone').value = '0891234567';
+      document.getElementById('p_dob').value = '1985-10-25';
+      Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    }, 1000);
   }
 </script>
