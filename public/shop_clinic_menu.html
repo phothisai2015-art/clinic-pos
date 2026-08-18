@@ -1,0 +1,97 @@
+<!-- 🌟 หน้าเมนูหลักสำหรับคลินิก (shop_clinic_menu.html) -->
+<div class="main-container" id="clinic-main-menu" style="max-width: 900px; padding-top: 3vh; display: none;">
+  
+  <!-- หัวข้อและสถานะพนักงาน -->
+  <div class="text-center mb-4">
+    <img id="display-clinic-logo" src="" style="max-width: 100px; margin-bottom: 15px; border-radius: 20px; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <h2 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">
+      <i class="fa-solid fa-hospital-user text-primary me-2"></i>ระบบจัดการคลินิก
+    </h2>
+    <div class="d-inline-flex align-items-center bg-white px-4 py-2 mt-2 rounded-pill shadow-sm border">
+      <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px; animation: pulse 2s infinite;"></div>
+      <span class="text-muted fw-bold small me-2">ผู้ใช้งาน:</span> 
+      <span id="display-clinic-staff-name" class="fw-bold text-primary">กำลังโหลด...</span>
+    </div>
+  </div>
+
+  <!-- การ์ดเมนูหลัก 6 ปุ่มสำหรับคลินิก -->
+  <div class="row g-3">
+    
+    <!-- 1. ประวัติคนไข้ (OPD) -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-patients" onclick="openPatientsPage()">
+        <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary">
+          <i class="fa-solid fa-users-medical"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">ประวัติคนไข้</h5>
+        <span class="small text-muted">ลงทะเบียนและค้นหา HN</span>
+      </button>
+    </div>
+
+    <!-- 2. จัดการคิว -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-queue" onclick="openQueuePage()">
+        <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">ระบบคิว</h5>
+        <span class="small text-muted">เรียกคิวและซักประวัติ</span>
+      </button>
+    </div>
+
+    <!-- 3. ห้องตรวจแพทย์ -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-doctor" onclick="openDoctorPage()">
+        <div class="menu-icon-wrap bg-success bg-opacity-10 text-success">
+          <i class="fa-solid fa-user-doctor"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">ห้องตรวจ</h5>
+        <span class="small text-muted">วินิจฉัยและสั่งจ่ายยา</span>
+      </button>
+    </div>
+
+    <!-- 4. ห้องยา / คิดเงิน (POS) -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-pos" onclick="openPOSPage()">
+        <div class="menu-icon-wrap bg-info bg-opacity-10 text-info">
+          <i class="fa-solid fa-cash-register"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">ห้องยา / คิดเงิน</h5>
+        <span class="small text-muted">ชำระเงินและจ่ายยา</span>
+      </button>
+    </div>
+
+    <!-- 5. คลังยาและเวชภัณฑ์ -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-stock" onclick="openProductsPage()">
+        <div class="menu-icon-wrap bg-teal bg-opacity-10 text-teal" style="color: #0d9488;">
+          <i class="fa-solid fa-boxes-packing"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">คลังยา</h5>
+        <span class="small text-muted">สต็อกยาและเวชภัณฑ์</span>
+      </button>
+    </div>
+
+    <!-- 6. สถิติและรายงาน -->
+    <div class="col-6 col-md-4">
+      <button class="menu-card-btn w-100" id="btn-menu-dash" onclick="openDashboardPage()">
+        <div class="menu-icon-wrap bg-purple bg-opacity-10 text-purple" style="color: #9333ea;">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">สถิติ / รายงาน</h5>
+        <span class="small text-muted">สรุปรายได้และประวัติ</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ด้านล่าง -->
+  <div class="text-center mt-4 text-muted fw-bold small d-flex justify-content-center align-items-center gap-3">
+    <span>Clinic POS Version <span id="clinic-app-version">1.0.0</span></span>
+    <span class="text-secondary opacity-25">|</span>
+    <a href="#" onclick="lockScreenManual()" class="text-danger text-decoration-none">
+      <i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ
+    </a>
+  </div>
+
+</div>
