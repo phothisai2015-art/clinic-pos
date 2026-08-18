@@ -165,6 +165,51 @@
         Swal.fire('Error', 'Unable to connect to server', 'error');
       });
     }
+	
+	function handleLogin(e) {
+      e.preventDefault();
+      // ดึงค่าจากช่องกรอก
+      const contact = document.getElementById('contactInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+
+      Swal.fire({
+        title: 'Authenticating...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      // เปลี่ยนมาเรียกใช้ /api/login ให้ตรงกับ server.js
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: contact, password: password }) // ส่งค่า username และ password
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          // เก็บข้อมูล User ไว้ในระบบ
+          sessionStorage.setItem('user_name', data.user.name);
+          sessionStorage.setItem('user_role', data.user.role);
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Welcome!',
+            text: 'เข้าสู่ระบบสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            // วิ่งไปที่หน้า dashboard ของคลินิก
+            window.location.href = '/dashboard';
+          });
+        } else {
+          Swal.fire('Login Failed', data.message || 'Invalid credentials', 'error');
+        }
+      })
+      .catch(err => {
+        Swal.fire('Error', 'Unable to connect to server', 'error');
+      });
+    }
+	
   </script>
 </body>
 </html>
