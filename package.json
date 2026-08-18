@@ -9,9 +9,14 @@
     "cors": "^2.8.6",
     "express": "^4.22.2",
     "googleapis": "^128.0.0",
+    "jimp": "^0.22.12",
+    "jsqr": "^1.4.0",
+    "jsonwebtoken": "^9.0.2",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.10.1",
-    "sqlite3": "^5.1.7"
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7",
+    "tesseract.js": "^5.1.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
