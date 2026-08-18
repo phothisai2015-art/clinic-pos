@@ -19,6 +19,9 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// 🌟 เพิ่มคอลัมน์ next_appointment เข้าตาราง emr_logs อัตโนมัติ (ถ้ายังไม่มี)
+db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment TEXT`, (err) => { /* ข้ามถ้ามีอยู่แล้ว */ });
+
 // สร้างตารางเก็บรูปภาพคนไข้
 db.run(`CREATE TABLE IF NOT EXISTS patient_photos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -109,15 +112,15 @@ app.post('/api/patients', (req, res) => {
   });
 });
 
-// 4. บันทึกประวัติการรักษา (EMR)
+// 4. 🌟 บันทึกประวัติการรักษา (EMR) เพิ่ม next_appointment
 app.post('/api/emr', (req, res) => {
-  const { patient_id, symptoms, diagnosis, treatment_details } = req.body;
+  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment } = req.body;
   const visit_date = new Date().toISOString();
   
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details)
-               VALUES (1, ?, 1, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment)
+               VALUES (1, ?, 1, ?, ?, ?, ?, ?)`;
   
-  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details], function(err) {
+  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment || ''], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', message: 'บันทึก EMR สำเร็จ' });
   });
@@ -135,7 +138,6 @@ app.get('/api/emr/:patient_id', (req, res) => {
 // 📸 API บันทึก ดึงข้อมูล และลบรูปภาพคนไข้
 // ==========================================
 
-// 6. บันทึกรูปภาพคนไข้ลง Server
 app.post('/api/patients/photos', (req, res) => {
   const { patient_id, photo_type, image_data } = req.body;
   
@@ -163,7 +165,6 @@ app.post('/api/patients/photos', (req, res) => {
   }
 });
 
-// 7. ดึงประวัติรูปภาพทั้งหมดของคนไข้รายนั้น
 app.get('/api/patients/:id/photos', (req, res) => {
   db.all(`SELECT * FROM patient_photos WHERE patient_id = ? ORDER BY id DESC`, [req.params.id], (err, rows) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
@@ -171,7 +172,6 @@ app.get('/api/patients/:id/photos', (req, res) => {
   });
 });
 
-// 8. 🌟 ลบรูปภาพออกจากระบบและ Disk
 app.delete('/api/patients/photos/:id', (req, res) => {
   const photoId = req.params.id;
   
@@ -179,13 +179,11 @@ app.delete('/api/patients/photos/:id', (req, res) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     if (!row) return res.status(404).json({ status: 'error', message: 'ไม่พบรูปภาพในระบบ' });
 
-    // ลบไฟล์รูปจริงบน Disk
     const fullPath = path.join(__dirname, 'public', row.image_path);
     if (fs.existsSync(fullPath)) {
       try { fs.unlinkSync(fullPath); } catch (e) { console.error('Delete file error:', e); }
     }
 
-    // ลบข้อมูลออกจากฐานข้อมูล
     db.run(`DELETE FROM patient_photos WHERE id = ?`, [photoId], function(err) {
       if (err) return res.status(500).json({ status: 'error', message: err.message });
       res.json({ status: 'success', message: 'ลบรูปภาพเรียบร้อยแล้ว' });
