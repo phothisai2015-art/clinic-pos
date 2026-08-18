@@ -88,4 +88,12 @@ db.serialize(() => {
   console.log("✅ Database tables initialized successfully.");
 });
 
+// สร้างผู้ใช้งานเริ่มต้น (ถ้ายังไม่มีในระบบ)
+  db.get("SELECT count(*) as count FROM users", (err, row) => {
+    if (row && row.count === 0) {
+      db.run(`INSERT INTO users (pin, name, role, permissions) VALUES ('1234', 'ผู้บริหาร (Admin)', 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`);
+      console.log("👤 สร้างผู้ใช้งานเริ่มต้นสำเร็จ: ใช้ PIN 1234 ในการเข้าสู่ระบบ");
+    }
+  });
+
 module.exports = db;

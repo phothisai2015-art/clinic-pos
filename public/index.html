@@ -138,15 +138,66 @@
       
       updatePinDisplay();
       
+      // เมื่อกดครบ 4 ตัว ให้ส่งไปเช็คกับ Server
       if(currentPin.length === 4) {
-        // ทดสอบล็อกอินด้วยรหัสอะไรก็ได้ไปก่อน (เพราะเราเพิ่งเริ่มจาก 0 ยังไม่ต่อ API Login)
-        setTimeout(() => {
-          Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
-          document.getElementById('lock-screen').style.display = 'none';
-          document.getElementById('main-menu').style.display = 'block';
+        Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: currentPin })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            
+            // เปลี่ยนชื่อบนหน้าจอ
+            document.getElementById('display-staff-name').innerText = data.user.name;
+            
+            // สลับหน้าจอ
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'block';
+            
+            // นำสิทธิ์การใช้งาน (Permissions) ไปปลดล็อกปุ่มเมนู
+            applyPermissions(data.user.permissions);
+
+          } else {
+            Swal.fire({ icon: 'error', title: 'รหัสผิดพลาด', text: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+          }
           currentPin = "";
           updatePinDisplay();
-        }, 200);
+        })
+        .catch(err => {
+          Swal.fire({ icon: 'error', title: 'เซิร์ฟเวอร์ไม่ตอบสนอง', text: 'โปรดตรวจสอบการเชื่อมต่อ', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+          currentPin = "";
+          updatePinDisplay();
+        });
+      }
+    }
+
+    // ฟังก์ชันเปิด/ปิดปุ่มตามสิทธิ์ (Role-based Access)
+    function applyPermissions(perms) {
+      let p = perms.toUpperCase();
+      let buttons = {
+        'BOOKING': document.querySelector('button[onclick="openModule(\\'booking.html\\')"]'),
+        'PATIENT': document.querySelectorAll('.menu-card-btn')[1], // เวชระเบียน
+        'POS': document.querySelectorAll('.menu-card-btn')[2],     // ขาย & ชำระเงิน
+        'STOCK': document.querySelectorAll('.menu-card-btn')[3],   // คลังยา
+        'HR': document.querySelectorAll('.menu-card-btn')[4],      // ค่ามือแพทย์
+        'DASH': document.querySelectorAll('.menu-card-btn')[5]     // รายงาน
+      };
+
+      // วนลูปเช็คสิทธิ์ ถ้าไม่มีสิทธิ์ให้ปุ่มเป็นสีเทา (disabled)
+      for (const [key, btn] of Object.entries(buttons)) {
+        if (p.includes('ADMIN') || p.includes(key)) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        } else {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
       }
     }
 
