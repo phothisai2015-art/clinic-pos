@@ -168,13 +168,15 @@
       document.getElementById('allergyDetails').innerText = `แพ้ยา: ${p.allergies}`;
     } else { document.getElementById('allergyAlert').style.display = 'none'; }
     
-    // 🌟 ดึงข้อมูลคอร์สมาโชว์ให้หมอเห็น (จากเฟส 1)
+// 🌟 ดึงข้อมูลคอร์สมาโชว์ให้หมอเห็น 
     const cRes = await fetch(`/api/patients/${hn}/courses`);
     const cData = await cRes.json();
     let cHtml = '';
     cData.data.forEach(c => {
       let remain = c.total_qty - c.used_qty;
-      if(remain > 0) cHtml += `<span class="badge bg-success me-2" style="font-size: 0.85rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${c.product_id}: คงเหลือ ${remain}</span>`;
+      let displayName = c.product_name || c.product_id; // ดึงชื่อจริงจากที่ JOIN ไว้มาแสดง
+      let unitName = c.unit || 'ครั้ง';
+      if(remain > 0) cHtml += `<span class="badge bg-success me-2 mb-2" style="font-size: 0.85rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${displayName}: คงเหลือ ${remain} ${unitName}</span>`;
     });
     document.getElementById('courseAlert').innerHTML = cHtml ? `<div class="p-3 bg-light border border-success border-opacity-25 rounded-3"><b>คอร์สคนไข้ที่มี:</b><br><div class="mt-2">${cHtml}</div></div>` : '';
 

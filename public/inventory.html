@@ -13,41 +13,45 @@
   </div>
 
   <div class="row g-4 flex-grow-1" style="min-height: 0;">
-    
-    <!-- 📦 ฟอร์มเพิ่มสินค้าใหม่ -->
     <div class="col-lg-4 col-md-5 h-100">
       <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
-        <h5 class="fw-bold m-0 mb-4 text-primary"><i class="fa-solid fa-box-open me-2"></i> เพิ่ม / แก้ไขสินค้า</h5>
-        
+        <h5 class="fw-bold m-0 mb-4 text-primary"><i class="fa-solid fa-box-open me-2"></i> เพิ่ม / จัดโปรโมชั่น</h5>
         <form id="productForm" onsubmit="saveProduct(event)">
-          <div class="mb-3"><label class="form-label fw-bold small text-muted">รหัสสินค้า (ID / Barcode) *</label><input type="text" id="pd_id" class="form-control rounded-3" placeholder="เช่น BTX-001" required></div>
-          <div class="mb-3"><label class="form-label fw-bold small text-muted">ชื่อสินค้า / บริการ *</label><input type="text" id="pd_name" class="form-control rounded-3" placeholder="เช่น โบท็อกซ์เกาหลี 100U" required></div>
+          <div class="mb-3"><label class="form-label fw-bold small text-muted">รหัสสินค้า / โปรโมชั่น *</label><input type="text" id="pd_id" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label fw-bold small text-muted">ชื่อสินค้า / โปรโมชั่น *</label><input type="text" id="pd_name" class="form-control" required></div>
           <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">ประเภทหมวดหมู่</label>
-            <select id="pd_type" class="form-select rounded-3">
+            <label class="form-label fw-bold small text-muted">หมวดหมู่</label>
+            <select id="pd_type" class="form-select" onchange="togglePromoType()">
               <option value="MEDICINE">ยาและเวชภัณฑ์</option>
               <option value="INJECTABLE">กลุ่มฉีด (Botox, Filler, Meso)</option>
               <option value="COURSE">คอร์ส / หัตถการเลเซอร์</option>
               <option value="SKINCARE">สกินแคร์ / ครีม</option>
+              <option value="PROMOTION">🎁 โปรโมชั่น (จัดเซ็ต)</option>
             </select>
           </div>
           <div class="row mb-3">
-            <div class="col-6"><label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label><input type="number" id="pd_price" class="form-control rounded-3" value="0"></div>
-            <div class="col-6"><label class="form-label fw-bold small text-muted">หน่วยนับ</label><input type="text" id="pd_unit" class="form-control rounded-3" placeholder="เช่น ยูนิต, CC" required></div>
+            <div class="col-6"><label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label><input type="number" id="pd_price" class="form-control" value="0"></div>
+            <div class="col-6"><label class="form-label fw-bold small text-muted">หน่วยนับ</label><input type="text" id="pd_unit" class="form-control" required></div>
           </div>
           
-          <!-- 🌟 เพิ่มช่อง Lot และ Expiry -->
-          <div class="row mb-3 p-3 bg-light rounded-3 border">
-            <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.8rem;"><i class="fa-solid fa-shield-halved me-1"></i> มาตรฐานความปลอดภัย</h6>
-            <div class="col-6"><label class="form-label fw-bold small text-muted">สต็อกตั้งต้น</label><input type="number" id="pd_stock" class="form-control" value="0" step="0.1"></div>
-            <div class="col-6"><label class="form-label fw-bold small text-muted">เลข Lot (ถ้ามี)</label><input type="text" id="pd_lot" class="form-control" placeholder="Lot No."></div>
-            <div class="col-12 mt-2"><label class="form-label fw-bold small text-muted">วันหมดอายุ (Expiry Date)</label><input type="date" id="pd_expiry" class="form-control"></div>
+          <div id="normal_fields" class="row mb-3 p-3 bg-light rounded-3 border mx-0">
+            <div class="col-6 mb-2"><label class="form-label fw-bold small text-muted">สต็อกตั้งต้น</label><input type="number" id="pd_stock" class="form-control" value="0" step="0.1"></div>
+            <div class="col-6 mb-2"><label class="form-label fw-bold small text-muted">เลข Lot (ถ้ามี)</label><input type="text" id="pd_lot" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small text-muted">วันหมดอายุ (Expiry Date)</label><input type="date" id="pd_expiry" class="form-control"></div>
+          </div>
+
+          <div id="promo_fields" style="display:none;" class="p-3 bg-light border rounded-3 mb-3">
+            <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-gift me-1"></i> รายการในโปรโมชั่นนี้</h6>
+            <div id="promo_items_list" class="mb-2"></div>
+            <div class="input-group input-group-sm">
+              <select id="promo_product_select" class="form-select"></select>
+              <input type="number" id="promo_product_qty" class="form-control" placeholder="จำนวน" style="max-width:80px;">
+              <button type="button" class="btn btn-secondary" onclick="addPromoItem()">เพิ่ม</button>
+            </div>
+            <small class="text-muted" style="font-size:0.7rem;">(ระบบจะหักสต็อกยาตามรายการเหล่านี้)</small>
           </div>
           
-          <div class="d-flex gap-2 mt-4">
-            <button type="button" class="btn btn-light rounded-pill fw-bold shadow-sm w-50" onclick="document.getElementById('productForm').reset()">เคลียร์ฟอร์ม</button>
-            <button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึก</button>
-          </div>
+          <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-light rounded-pill fw-bold shadow-sm w-50" onclick="clearProductForm()">เคลียร์</button><button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></div>
         </form>
       </div>
     </div>
@@ -57,51 +61,34 @@
       <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold m-0"><i class="fa-solid fa-boxes-stacked me-2 text-warning"></i> รายการสินค้าคงคลัง</h5>
-          <div class="input-group" style="width: 250px;">
-            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-            <input type="text" id="searchInventory" class="form-control border-start-0 bg-light" placeholder="ค้นหาสินค้า..." onkeyup="filterInventory()">
-          </div>
+          <input type="text" id="searchInventory" class="form-control bg-light" style="width:250px;" placeholder="ค้นหาสินค้า..." onkeyup="filterInventory()">
         </div>
-
         <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
-          <table class="table inventory-table w-100 mb-0" id="inventoryTable">
+          <table class="table inventory-table w-100 mb-0">
             <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-              <tr>
-                <th width="15%">รหัส</th>
-                <th width="35%">ชื่อสินค้า / Lot.</th>
-                <th width="15%">ประเภท</th>
-                <th width="15%" class="text-center">สต็อกคงเหลือ</th>
-                <th width="20%" class="text-center">จัดการ</th>
-              </tr>
+              <tr><th width="15%">รหัส</th><th width="35%">ชื่อสินค้า / Lot.</th><th width="15%">ประเภท</th><th width="15%" class="text-center">คงเหลือ</th><th width="20%" class="text-center">จัดการ</th></tr>
             </thead>
-            <tbody id="inventoryList">
-              <tr><td colspan="5" class="text-center py-5 text-muted">กำลังโหลดข้อมูลคลังสินค้า...</td></tr>
-            </tbody>
+            <tbody id="inventoryList"></tbody>
           </table>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-  var inventoryData = [];
-
-  function initInventory() { loadInventory(); }
-  initInventory();
+  var inventoryData = []; var bundleItems = [];
+  initInventory(); function initInventory() { loadInventory(); }
 
   async function loadInventory() {
     try {
-      const res = await fetch('/api/inventory');
-      const data = await res.json();
+      const res = await fetch('/api/inventory'); const data = await res.json();
       if(data.status === 'success') { inventoryData = data.data; renderInventoryList(inventoryData); }
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   }
 
   function renderInventoryList(items) {
-    const list = document.getElementById('inventoryList');
-    list.innerHTML = '';
+    const list = document.getElementById('inventoryList'); list.innerHTML = '';
     if(items.length === 0) return list.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">ยังไม่มีรายการสินค้าในคลัง</td></tr>`;
 
     items.forEach(item => {
@@ -109,94 +96,83 @@
       if(item.type === 'MEDICINE') typeBadge = '<span class="badge bg-secondary">ยา/เวชภัณฑ์</span>';
       else if(item.type === 'INJECTABLE') typeBadge = '<span class="badge bg-danger">กลุ่มฉีด</span>';
       else if(item.type === 'COURSE') typeBadge = '<span class="badge bg-info text-dark">คอร์สเลเซอร์</span>';
+      else if(item.type === 'PROMOTION') typeBadge = '<span class="badge bg-primary">โปรโมชั่น</span>';
       else typeBadge = '<span class="badge bg-success">สกินแคร์</span>';
 
-      let stockDisplay = item.stock <= 5 && item.type !== 'COURSE' ? `<span class="stock-low">${item.stock} ${item.unit}</span>` : `<span>${item.stock} ${item.unit}</span>`;
-      
-      // 🌟 คำนวณวันหมดอายุ
+      let stockDisplay = item.type === 'PROMOTION' ? '<span class="text-muted">-</span>' : (item.stock <= 5 && item.type !== 'COURSE' ? `<span class="stock-low">${item.stock} ${item.unit}</span>` : `<span>${item.stock} ${item.unit}</span>`);
       let expiryInfo = '';
-      if(item.expiry_date) {
-        let expDate = new Date(item.expiry_date);
-        let now = new Date();
-        let diffTime = Math.abs(expDate - now);
-        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        let warnClass = (expDate > now && diffDays <= 90) ? 'expiry-warn' : (expDate < now ? 'text-danger fw-bold' : 'text-muted');
-        let expText = expDate < now ? 'หมดอายุแล้ว!' : `หมดอายุ: ${expDate.toLocaleDateString('th-TH')}`;
-        expiryInfo = `<div class="${warnClass}"><i class="fa-regular fa-clock me-1"></i>${expText}</div>`;
+      if(item.expiry_date && item.type !== 'PROMOTION') {
+        let expDate = new Date(item.expiry_date); let diffDays = Math.ceil(Math.abs(expDate - new Date()) / (1000 * 60 * 60 * 24)); 
+        let warnClass = (expDate > new Date() && diffDays <= 90) ? 'expiry-warn' : (expDate < new Date() ? 'text-danger fw-bold' : 'text-muted');
+        expiryInfo = `<div class="${warnClass}"><i class="fa-regular fa-clock me-1"></i>${expDate < new Date() ? 'หมดอายุแล้ว!' : `หมดอายุ: ${expDate.toLocaleDateString('th-TH')}`}</div>`;
       }
 
-      list.innerHTML += `
-        <tr>
-          <td class="fw-bold text-muted small">${item.id}</td>
-          <td>
-            <a href="#" class="fw-bold text-primary text-decoration-none" onclick="editProduct('${item.id}')">${item.name}</a><br>
-            <small class="text-muted border px-1 rounded bg-light me-1">Lot: ${item.lot_number || '-'}</small>
-            ${expiryInfo}
-          </td>
-          <td>${typeBadge}</td>
-          <td class="text-center fw-bold fs-6">${stockDisplay}</td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-outline-success rounded-circle me-1" title="รับเข้าสต็อก" onclick="adjustStock('${item.id}', '${item.name}', 'add')"><i class="fa-solid fa-plus"></i></button>
-            <button class="btn btn-sm btn-outline-warning rounded-circle me-2" title="เบิกออกสต็อก" onclick="adjustStock('${item.id}', '${item.name}', 'remove')"><i class="fa-solid fa-minus"></i></button>
-            <button class="btn btn-sm btn-light text-danger rounded-circle" title="ลบสินค้า" onclick="deleteProduct('${item.id}')"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
+      list.innerHTML += `<tr><td class="fw-bold text-muted small">${item.id}</td><td><a href="#" class="fw-bold text-primary text-decoration-none" onclick="editProduct('${item.id}')">${item.name}</a><br>${item.type !== 'PROMOTION' ? `<small class="text-muted border px-1 rounded bg-light me-1">Lot: ${item.lot_number || '-'}</small>` : ''}${expiryInfo}</td><td>${typeBadge}</td><td class="text-center fw-bold fs-6">${stockDisplay}</td><td class="text-center">${item.type !== 'PROMOTION' ? `<button class="btn btn-sm btn-outline-success rounded-circle me-1" onclick="adjustStock('${item.id}', '${item.name}', 'add')"><i class="fa-solid fa-plus"></i></button><button class="btn btn-sm btn-outline-warning rounded-circle me-2" onclick="adjustStock('${item.id}', '${item.name}', 'remove')"><i class="fa-solid fa-minus"></i></button>` : ''}<button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteProduct('${item.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
     });
   }
 
-  function filterInventory() {
-    let search = document.getElementById('searchInventory').value.toLowerCase();
-    let filtered = inventoryData.filter(i => i.name.toLowerCase().includes(search) || i.id.toLowerCase().includes(search));
-    renderInventoryList(filtered);
+  function filterInventory() { let search = document.getElementById('searchInventory').value.toLowerCase(); renderInventoryList(inventoryData.filter(i => i.name.toLowerCase().includes(search) || i.id.toLowerCase().includes(search))); }
+
+  function togglePromoType() {
+    let type = document.getElementById('pd_type').value;
+    if (type === 'PROMOTION') {
+      document.getElementById('promo_fields').style.display = 'block'; document.getElementById('normal_fields').style.display = 'none';
+      document.getElementById('pd_unit').value = 'เซ็ต'; document.getElementById('pd_stock').value = 0;
+      let sel = document.getElementById('promo_product_select'); sel.innerHTML = '<option value="">-- เลือกหัตถการในโปร --</option>';
+      inventoryData.filter(i => i.type === 'INJECTABLE' || i.type === 'COURSE').forEach(i => { sel.innerHTML += `<option value="${i.id}" data-name="${i.name}">${i.name}</option>`; });
+    } else {
+      document.getElementById('promo_fields').style.display = 'none'; document.getElementById('normal_fields').style.display = 'flex';
+    }
+  }
+
+  function addPromoItem() {
+    let sel = document.getElementById('promo_product_select'); let qty = document.getElementById('promo_product_qty').value;
+    if(!sel.value || !qty) return;
+    bundleItems.push({ id: sel.value, name: sel.options[sel.selectedIndex].getAttribute('data-name'), qty: parseFloat(qty) });
+    renderPromoItems(); document.getElementById('promo_product_qty').value = '';
+  }
+
+  function renderPromoItems() {
+    let html = '';
+    bundleItems.forEach((b, index) => { html += `<span class="badge bg-white text-dark border me-1 mb-1 p-2">${b.name} <b class="text-primary">x ${b.qty}</b> <i class="fa-solid fa-xmark text-danger ms-1" style="cursor:pointer" onclick="bundleItems.splice(${index},1); renderPromoItems()"></i></span>`; });
+    document.getElementById('promo_items_list').innerHTML = html;
   }
 
   async function saveProduct(e) {
     e.preventDefault();
     const payload = {
-      id: document.getElementById('pd_id').value, name: document.getElementById('pd_name').value,
-      type: document.getElementById('pd_type').value, price: parseFloat(document.getElementById('pd_price').value),
-      stock: parseFloat(document.getElementById('pd_stock').value), unit: document.getElementById('pd_unit').value,
-      lot_number: document.getElementById('pd_lot').value, expiry_date: document.getElementById('pd_expiry').value
+      id: document.getElementById('pd_id').value, name: document.getElementById('pd_name').value, type: document.getElementById('pd_type').value,
+      price: parseFloat(document.getElementById('pd_price').value), stock: parseFloat(document.getElementById('pd_stock').value), unit: document.getElementById('pd_unit').value,
+      lot_number: document.getElementById('pd_lot').value, expiry_date: document.getElementById('pd_expiry').value, bundle_items: JSON.stringify(bundleItems)
     };
-
-    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
     try {
       await fetch('/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-      document.getElementById('productForm').reset(); loadInventory();
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+      clearProductForm(); loadInventory();
+    } catch(e) {}
   }
 
   function editProduct(id) {
     let item = inventoryData.find(i => i.id === id);
     if(item) {
-      document.getElementById('pd_id').value = item.id; document.getElementById('pd_name').value = item.name;
-      document.getElementById('pd_type').value = item.type; document.getElementById('pd_price').value = item.price;
-      document.getElementById('pd_stock').value = item.stock; document.getElementById('pd_unit').value = item.unit;
+      document.getElementById('pd_id').value = item.id; document.getElementById('pd_name').value = item.name; document.getElementById('pd_type').value = item.type;
+      document.getElementById('pd_price').value = item.price; document.getElementById('pd_stock').value = item.stock; document.getElementById('pd_unit').value = item.unit;
       document.getElementById('pd_lot').value = item.lot_number || ''; document.getElementById('pd_expiry').value = item.expiry_date || '';
+      bundleItems = JSON.parse(item.bundle_items || '[]'); togglePromoType(); renderPromoItems();
     }
   }
 
+  function clearProductForm() { document.getElementById('productForm').reset(); bundleItems = []; renderPromoItems(); togglePromoType(); }
   function adjustStock(id, name, mode) {
-    let titleTxt = mode === 'add' ? 'รับเข้าสต็อก' : 'เบิกออกสต็อก (ลดจำนวน)';
-    Swal.fire({
-      title: titleTxt, text: `สินค้า: ${name}`, input: 'number', inputAttributes: { step: '0.1', min: '0.1' },
-      showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: mode === 'add' ? '#10b981' : '#f59e0b'
-    }).then(async (result) => {
-      if (result.isConfirmed && result.value) {
-        let qty = parseFloat(result.value); if(mode === 'remove') qty = -Math.abs(qty);
-        Swal.fire({ title: 'กำลังอัปเดต...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: mode === 'add' ? 'รับเข้าสต็อก' : 'เบิกออกสต็อก', text: name, input: 'number', inputAttributes: { step: '0.1', min: '0.1' }, showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: mode === 'add' ? '#10b981' : '#f59e0b'
+    }).then(async (res) => {
+      if (res.isConfirmed && res.value) {
+        let qty = parseFloat(res.value); if(mode === 'remove') qty = -Math.abs(qty);
         await fetch(`/api/inventory/${id}/stock`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ adjust_qty: qty }) });
-        Swal.fire({ icon: 'success', title: 'อัปเดตสต็อกเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         loadInventory();
       }
     });
   }
-
-  async function deleteProduct(id) {
-    if ((await Swal.fire({ title: 'ยืนยันลบสินค้านี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) {
-      await fetch(`/api/inventory/${id}`, { method: 'DELETE' }); loadInventory();
-    }
-  }
+  async function deleteProduct(id) { if ((await Swal.fire({ title: 'ลบสินค้านี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/inventory/${id}`, { method: 'DELETE' }); loadInventory(); } }
 </script>
