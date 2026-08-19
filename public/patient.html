@@ -371,6 +371,7 @@
     updateTabState();
     loadEMRHistory(p.id);
     loadPatientPhotos(p.id);
+
     renderEmrQueue();
 
     if(document.getElementById('searchInput').value) {
@@ -422,11 +423,11 @@
         document.getElementById('emrForm').reset();
         document.getElementById('emr_next_appointment_time').value = '10:00'; 
         
-        // บันทึกเสร็จให้โหลดประวัติใหม่ขึ้นมาทันที 
-        loadEMRHistory(currentHN);
-        
-        // เคลียร์คิวนี้ออกจากช่องรอตรวจซ้ายมือ
+        // 🌟 เตะคนไข้คนนี้ออกจากคิวหน้าห้อง (เปลี่ยนสถานะใน DB เป็น COMPLETED)
         await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
+        
+        // 🌟 โหลดประวัติใหม่หลังจากเปลี่ยนสถานะเสร็จแล้ว
+        loadEMRHistory(currentHN);
         renderEmrQueue();
 
         Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
@@ -436,6 +437,7 @@
     }
   }
 
+  // 🌟 ฟังก์ชันดึงประวัติพร้อมปุ่มจ่ายเงินที่เช็คสถานะฐานข้อมูลจริงๆ
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -443,6 +445,12 @@
     try {
       const res = await fetch(`/api/emr/${hn}`);
       const data = await res.json();
+      
+      // 🌟 ดึงสถานะคิวทั้งหมดจากฐานข้อมูล เพื่อเช็คว่าคิวนี้ถูกส่งไปจ่ายเงินแล้วหรือยัง
+      const apptRes = await fetch('/api/appointments');
+      const apptData = await apptRes.json();
+      const patientAppts = apptData.data ? apptData.data.filter(a => a.hn === hn) : [];
+
       if (data.data.length === 0) {
         timeline.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษา</div>';
         return;
@@ -452,6 +460,7 @@
       data.data.forEach(log => {
          const dateObj = new Date(log.visit_date);
          const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+         const logDateOnly = log.visit_date.split('T')[0]; // หาวันที่ของบันทึกนี้
          
          let apptBadge = '';
          if (log.next_appointment_date) {
@@ -465,6 +474,40 @@
                         </div>`;
          }
 
+         // 🌟 หาสถานะคิวที่ตรงกับวันที่บันทึกประวัติ
+         const matchedAppt = patientAppts.find(a => a.date === logDateOnly);
+         
+         const now = new Date();
+         const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+         
+         let paymentBtnHtml = '';
+
+         // 🌟 แสดงปุ่มส่งการเงิน "เฉพาะประวัติของวันนี้" เท่านั้น ป้องกันหมอกดส่งประวัติเก่า
+         if (logDateOnly === todayStrLocal) {
+           if (matchedAppt && matchedAppt.status === 'WAITING_PAYMENT') {
+             paymentBtnHtml = `
+              <div class="mt-3">
+                <button class="btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
+                  <i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว
+                </button>
+              </div>`;
+           } else if (matchedAppt && matchedAppt.status === 'PAID') {
+             paymentBtnHtml = `
+              <div class="mt-3">
+                <button class="btn btn-sm btn-secondary text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
+                  <i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น
+                </button>
+              </div>`;
+           } else {
+             paymentBtnHtml = `
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="sendToPayment('${hn}', this)">
+                  <i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา
+                </button>
+              </div>`;
+           }
+         }
+
          html += `
           <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -475,14 +518,7 @@
             <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms}</div>
             <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
             ${apptBadge}
-            
-            <!-- 🌟 ปุ่มกดส่งชำระเงินที่เปลี่ยนสีได้ และไม่เด้งไปไหน -->
-            <div class="mt-3">
-              <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="sendToPayment('${hn}', this)">
-                <i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา
-              </button>
-            </div>
-
+            ${paymentBtnHtml}
           </div>`;
       });
       timeline.innerHTML = html;
@@ -492,21 +528,18 @@
   }
 
   // =====================================
-  // 💳 ฟังก์ชันส่งคนไข้ไปห้องชำระเงิน (คลิกแล้วปุ่มเปลี่ยนสี ไม่เปลี่ยนหน้า)
+  // 💳 🌟 ฟังก์ชันส่งคนไข้ไปห้องชำระเงิน (คลิกแล้วเปลี่ยนสี ทนทานต่อการรีเฟรช และไม่เปลี่ยนหน้า)
   // =====================================
   async function sendToPayment(hn, btnElement) {
-    // โชว์ว่ากำลังประมวลผล
     const originalHtml = btnElement.innerHTML;
     btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่ง...';
     btnElement.disabled = true;
 
     try {
-      // เรียก API ไปปรับสถานะคิวคนนี้เป็น WAITING_PAYMENT
       const res = await fetch(`/api/pos/send/${hn}`, { method: 'PUT' });
       const data = await res.json();
       
       if (data.status === 'success') {
-        // เปลี่ยนปุ่มเป็นสีเขียวทึบ และล็อกการกดซ้ำ
         btnElement.classList.remove('btn-outline-success');
         btnElement.classList.add('btn-success', 'text-white');
         btnElement.innerHTML = '<i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';

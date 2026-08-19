@@ -238,15 +238,19 @@
         }
       }
 
-      // 🌟 ดึงข้อมูลจากฐานข้อมูลโดยตรง
-      let isCheckedIn = (appt.status === 'CHECKED_IN');
+      // 🌟 อัปเดตตรรกะเช็คสถานะการชำระเงิน
       let actionBtnHtml = '';
 
-      if (isCheckedIn) {
+      if (appt.status === 'CHECKED_IN') {
         actionBtnHtml = `<span class="badge bg-warning text-dark border"><i class="fa-solid fa-user-clock me-1"></i> รอเข้าห้องตรวจ</span>`;
       } else if (appt.status === 'COMPLETED') {
         actionBtnHtml = `<span class="badge bg-success text-white border"><i class="fa-solid fa-check-double me-1"></i> ตรวจเสร็จสิ้น</span>`;
+      } else if (appt.status === 'WAITING_PAYMENT') {
+        actionBtnHtml = `<span class="badge bg-info text-dark border"><i class="fa-solid fa-file-invoice-dollar me-1"></i> รอชำระเงิน</span>`;
+      } else if (appt.status === 'PAID') {
+        actionBtnHtml = `<span class="badge bg-secondary text-white border"><i class="fa-solid fa-check-to-slot me-1"></i> ชำระเงินแล้ว</span>`;
       } else {
+        // หากยังไม่ถูก Check-in
         actionBtnHtml = `
           <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient(${appt.id}, '${patientName}')">
             <i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ
@@ -358,9 +362,6 @@
     }
   }
 
-  // =====================================
-  // 🩺 🌟 ระบบ Check-in (บันทึกลง Database ของจริง)
-  // =====================================
   function checkInPatient(id, name) {
     Swal.fire({
       title: `ส่งคิว ${name}?`,
@@ -374,7 +375,6 @@
       if (result.isConfirmed) {
         Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        // ส่งสถานะ CHECKED_IN ไปที่ Server
         try {
           await fetch(`/api/appointments/${id}/status`, {
             method: 'PUT',
@@ -383,7 +383,7 @@
           });
           
           Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าคิวเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-          fetchAppointments(); // โหลดตารางใหม่
+          fetchAppointments(); 
         } catch(e) {
           Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
         }
