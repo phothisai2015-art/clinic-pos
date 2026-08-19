@@ -223,11 +223,10 @@
   var canvas, ctx, isDrawing = false;
 
   // ==========================================
-  // 🩺 1. โหลดคิวจาก Server แบบ Auto-Refresh
+  // 🩺 โหลดคิวจาก Server แบบ Auto-Refresh
   // ==========================================
   function initPatientModule() {
     renderEmrQueue();
-    
     if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
     window.emrQueueInterval = setInterval(renderEmrQueue, 5000);
 
@@ -246,7 +245,6 @@
     try {
       const res = await fetch('/api/queue');
       const data = await res.json();
-      
       const list = document.getElementById('emrQueueList');
       if(!list) return;
 
@@ -276,9 +274,7 @@
         `;
       });
       list.innerHTML = html;
-    } catch(e) {
-      console.error('Queue Fetch Error:', e);
-    }
+    } catch(e) { console.error('Queue Fetch Error:', e); }
   }
 
   function selectQueueFromList(hn) {
@@ -375,7 +371,6 @@
     updateTabState();
     loadEMRHistory(p.id);
     loadPatientPhotos(p.id);
-
     renderEmrQueue();
 
     if(document.getElementById('searchInput').value) {
@@ -403,9 +398,7 @@
         if(!payload.id) payload.id = data.patient_id; 
         loadPatientProfile(payload);
       }
-    } catch (err) {
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error');
-    }
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error'); }
   }
 
   async function saveEMR(e) {
@@ -428,12 +421,15 @@
       if (data.status === 'success') {
         document.getElementById('emrForm').reset();
         document.getElementById('emr_next_appointment_time').value = '10:00'; 
+        
+        // บันทึกเสร็จให้โหลดประวัติใหม่ขึ้นมาทันที 
         loadEMRHistory(currentHN);
         
+        // เคลียร์คิวนี้ออกจากช่องรอตรวจซ้ายมือ
         await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
         renderEmrQueue();
 
-        Swal.fire({ icon: 'success', title: 'ตรวจเสร็จสิ้น โยนคิวไปชำระเงิน', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       }
     } catch (err) {
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก EMR', 'error');
@@ -480,9 +476,9 @@
             <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
             ${apptBadge}
             
-            <!-- 🌟 เพิ่มปุ่มส่งชำระเงิน/รับยา ไปหน้า POS -->
+            <!-- 🌟 ปุ่มกดส่งชำระเงินที่เปลี่ยนสีได้ และไม่เด้งไปไหน -->
             <div class="mt-3">
-              <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="goToPOS('${hn}')">
+              <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="sendToPayment('${hn}', this)">
                 <i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา
               </button>
             </div>
@@ -496,14 +492,34 @@
   }
 
   // =====================================
-  // 💳 ฟังก์ชันส่งคนไข้ไปหน้า POS
+  // 💳 ฟังก์ชันส่งคนไข้ไปห้องชำระเงิน (คลิกแล้วปุ่มเปลี่ยนสี ไม่เปลี่ยนหน้า)
   // =====================================
-  function goToPOS(hn) {
-    window.globalTargetPOS_HN = hn;
-    if (typeof openModule === 'function') {
-      openModule('pos.html');
-    } else {
-      Swal.fire('Error', 'ไม่สามารถเปิดหน้า POS ได้', 'error');
+  async function sendToPayment(hn, btnElement) {
+    // โชว์ว่ากำลังประมวลผล
+    const originalHtml = btnElement.innerHTML;
+    btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่ง...';
+    btnElement.disabled = true;
+
+    try {
+      // เรียก API ไปปรับสถานะคิวคนนี้เป็น WAITING_PAYMENT
+      const res = await fetch(`/api/pos/send/${hn}`, { method: 'PUT' });
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        // เปลี่ยนปุ่มเป็นสีเขียวทึบ และล็อกการกดซ้ำ
+        btnElement.classList.remove('btn-outline-success');
+        btnElement.classList.add('btn-success', 'text-white');
+        btnElement.innerHTML = '<i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
+        Swal.fire({ icon: 'success', title: 'ส่งไปการเงินสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      } else {
+        btnElement.innerHTML = originalHtml;
+        btnElement.disabled = false;
+        Swal.fire('Error', data.message, 'error');
+      }
+    } catch (e) {
+      btnElement.innerHTML = originalHtml;
+      btnElement.disabled = false;
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อระบบได้', 'error');
     }
   }
 
