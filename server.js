@@ -242,10 +242,30 @@ app.put('/api/queue/complete/:hn', (req, res) => {
 
 // ส่งคนไข้ไปห้องชำระเงิน (กดจากหน้า EMR ของหมอ)
 app.put('/api/pos/send/:hn', (req, res) => {
-  // เปลี่ยนสถานะคิวเป็น รอชำระเงิน (WAITING_PAYMENT)
-  db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE patient_id = ? AND status IN ('WAITING', 'CHECKED_IN', 'COMPLETED')`, [req.params.hn], function(err) {
+  const hn = req.params.hn;
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // เช็คก่อนว่าวันนี้คนไข้มีคิวในระบบหรือยัง
+  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? ORDER BY id DESC LIMIT 1`, [hn, today], (err, row) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
-    res.json({ status: 'success', message: 'ส่งไปหน้าชำระเงินเรียบร้อย' });
+
+    if (row) {
+      // 1. ถ้ามีคิวของวันนี้อยู่แล้ว ให้อัปเดตสถานะเป็น รอชำระเงิน
+      db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id], function(updateErr) {
+        if (updateErr) return res.status(500).json({ status: 'error', message: updateErr.message });
+        res.json({ status: 'success', message: 'ส่งไปหน้าชำระเงินเรียบร้อย' });
+      });
+    } else {
+      // 2. ถ้าเป็นเคส Walk-in (ไม่มีคิวมาก่อน) ให้สร้างคิวใหม่สำหรับวันนี้ เพื่อให้ไปโผล่ที่หน้า POS ทันที
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, notes) 
+              VALUES (1, ?, 1, ?, ?, 'WAITING_PAYMENT', 'Walk-in (ส่งจากห้องตรวจ)')`, 
+      [hn, today, timeStr], function(insertErr) {
+        if (insertErr) return res.status(500).json({ status: 'error', message: insertErr.message });
+        res.json({ status: 'success', message: 'สร้างคิวและส่งไปหน้าชำระเงินเรียบร้อย' });
+      });
+    }
   });
 });
 
