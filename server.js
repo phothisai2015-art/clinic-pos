@@ -96,35 +96,7 @@ app.put('/api/courses/:id/deduct', (req, res) => {
   });
 });
 
-// ซื้อคอร์สใหม่ (ทดสอบ)
-app.post('/api/patients/:id/courses', (req, res) => {
-  const { course_name, total_qty } = req.body;
-  db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, 
-    [req.params.id, course_name, parseFloat(total_qty)], function(err) {
-    res.json({ status: 'success', course_id: this.lastID });
-  });
-});
 
-// หักยอดคอร์ส (รองรับทศนิยม) และหักสต็อกคลังยาอัตโนมัติ
-app.put('/api/courses/:id/deduct', (req, res) => {
-  const { deduct_amount } = req.body;
-  const deductVal = parseFloat(deduct_amount);
-
-  // 1. ดึงข้อมูลคอร์สก่อนว่าผูกกับสินค้าอะไร
-  db.get(`SELECT product_id FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
-    if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
-
-    // 2. อัปเดตยอดใช้คอร์สของคนไข้
-    db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [deductVal, req.params.id], function(err2) {
-      if (err2) return res.status(500).json({ status: 'error', message: err2.message });
-
-      // 3. 🌟 ไปหักสต็อกในคลังอัตโนมัติ (เทียบจาก id รหัสสินค้า)
-      db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err3) {
-        res.json({ status: 'success', message: 'ตัดคอร์สและหักสต็อกสำเร็จ' });
-      });
-    });
-  });
-});
 
 // เพิ่ม Route สำหรับหน้าใหม่
 app.get('/reception.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reception.html')); });
