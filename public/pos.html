@@ -188,7 +188,7 @@
       items: [
         { name: 'โปรโมชั่น ฉีดโบท็อกซ์กราม 100U', qty: 1, price: 3900 }
       ],
-      courses: [], // ไม่มีคอร์ส
+      courses: [], 
       discount: 400
     }
   ];
@@ -196,10 +196,56 @@
   var activeBill = null;
   var currentPayMethod = 'cash';
 
-  // โหลดรายชื่อคิวเมื่อเปิดหน้าต่าง
-  function initPOS() {
+  // 🌟 โหลดรายชื่อคิว และเช็คการรับคำสั่งจาก EMR
+  async function initPOS() {
+    // ถ้ารับคำสั่งมาจากหน้า EMR ให้สร้างคิวจำลองขึ้นมาอัตโนมัติ
+    if (window.globalTargetPOS_HN) {
+      let exists = posQueues.find(q => q.hn === window.globalTargetPOS_HN);
+      if (!exists) {
+        try {
+          // ดึงชื่อคนไข้จาก Database ของคลินิก
+          const res = await fetch(`/api/patients/${window.globalTargetPOS_HN}`);
+          const data = await res.json();
+          let pName = data.data ? data.data.full_name : 'คนไข้ทั่วไป';
+          
+          // แทรกคิวใหม่เข้าเป็นคนแรก
+          posQueues.unshift({
+            id: Date.now(),
+            hn: window.globalTargetPOS_HN,
+            name: pName,
+            doctor: 'แพทย์ผู้ตรวจ',
+            sale: 'ไม่มี',
+            items: [
+              { name: 'ค่ายาและเวชภัณฑ์ (รอระบุ)', qty: 1, price: 500 },
+              { name: 'ค่าบริการทางการแพทย์', qty: 1, price: 200 }
+            ],
+            courses: [],
+            discount: 0
+          });
+        } catch(e) { console.error(e); }
+      }
+    }
+
     renderPosQueue();
+
+    // 🌟 ไฮไลท์และเปิดบิลอัตโนมัติ (ถ้าส่งข้ามมาจาก EMR)
+    if (window.globalTargetPOS_HN) {
+      setTimeout(() => {
+        let q = posQueues.find(q => q.hn === window.globalTargetPOS_HN);
+        if (q) {
+          let cards = document.querySelectorAll('.pos-queue-card');
+          for(let i=0; i<cards.length; i++) {
+             if(cards[i].innerHTML.includes(window.globalTargetPOS_HN)) {
+               selectPosQueue(q.id, cards[i]);
+               break;
+             }
+          }
+        }
+        window.globalTargetPOS_HN = null; // ล้างค่าทิ้งเมื่อใช้งานเสร็จ
+      }, 300);
+    }
   }
+  
   initPOS();
 
   // ==========================================
@@ -236,19 +282,15 @@
   // 💳 2. เลือกคิวและแสดงรายละเอียดบิล
   // ==========================================
   function selectPosQueue(id, element) {
-    // ไฮไลท์การ์ดที่ถูกเลือก
     document.querySelectorAll('.pos-queue-card').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
 
-    // สลับ View ฝั่งขวา
     document.getElementById('posEmptyState').style.display = 'none';
     const billState = document.getElementById('posBillState');
     billState.style.display = 'flex';
 
-    // ดึงข้อมูลคิวที่เลือก
     activeBill = posQueues.find(q => q.id === id);
     
-    // อัปเดต Header บิล
     document.getElementById('b_patient_name').innerText = activeBill.name;
     document.getElementById('b_patient_hn').innerText = activeBill.hn;
     document.getElementById('b_doctor').innerText = activeBill.doctor;
@@ -262,7 +304,6 @@
     tbody.innerHTML = '';
     let subtotal = 0;
 
-    // แสดงรายการยา/หัตถการ
     activeBill.items.forEach(item => {
       const lineTotal = item.qty * item.price;
       subtotal += lineTotal;
@@ -276,7 +317,6 @@
       `;
     });
 
-    // 🌟 แสดงคอร์ส (ถ้ามี)
     const courseSec = document.getElementById('courseSection');
     const courseList = document.getElementById('courseList');
     courseList.innerHTML = '';
@@ -301,10 +341,7 @@
       courseSec.style.display = 'none';
     }
 
-    // คำนวณยอดเงินและ DF
     let netTotal = subtotal - activeBill.discount;
-    
-    // จำลองการคำนวณ DF (10% ของยอดสุทธิ) และ Commission (3% ของยอดสุทธิ)
     let dfCalc = netTotal * 0.10;
     let commCalc = netTotal * 0.03;
 
@@ -331,19 +368,17 @@
       cancelButtonText: 'ยกเลิก'
     }).then((result) => {
       if (result.isConfirmed) {
-        // อัปเดตข้อมูลจำนวนครั้งที่ใช้
         let course = activeBill.courses.find(c => c.id === courseId);
         course.used += 1;
         let remain = course.total - course.used;
 
-        // แทรกการตัดคอร์สลงไปในบิล (ราคา 0 บาท) เพื่อให้ออกใบเสร็จ
         activeBill.items.push({
           name: `[ตัดคอร์ส] ${course.name} (คงเหลือ ${remain}/${course.total})`,
           qty: 1,
           price: 0
         });
 
-        renderBillItems(); // รีโหลดหน้าจอบิลใหม่
+        renderBillItems();
         Swal.fire({ icon: 'success', title: 'ตัดคอร์สสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       }
     });
@@ -364,7 +399,6 @@
     if (!activeBill) return;
 
     if (currentPayMethod === 'qr') {
-      // จำลองโชว์หน้าจอ QR Code
       Swal.fire({
         title: 'สแกน QR Code ชำระเงิน',
         html: `<img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" style="width: 200px; height: 200px;" class="mb-3"><br>
@@ -378,7 +412,6 @@
         if (result.isConfirmed) completeBill();
       });
     } else {
-      // เงินสด หรือ บัตรเครดิต
       completeBill();
     }
   }
@@ -394,15 +427,13 @@
         confirmButtonText: 'ตกลง',
         confirmButtonColor: '#3b82f6'
       }).then(() => {
-        // ลบคิวนี้ออกจาก List จำลอง
         posQueues = posQueues.filter(q => q.id !== activeBill.id);
         activeBill = null;
         
-        // รีเซ็ตหน้าจอ
         document.getElementById('posBillState').style.display = 'none';
         document.getElementById('posEmptyState').style.display = 'flex';
         renderPosQueue();
       });
-    }, 1500); // จำลองเวลาดีเลย์ 1.5 วินาที
+    }, 1500); 
   }
 </script>

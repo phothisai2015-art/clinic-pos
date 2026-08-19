@@ -151,7 +151,7 @@
                       <input type="text" id="emr_next_appointment_note" class="form-control rounded-3" placeholder="ติดตามผล">
                     </div>
                   </div>
-                  <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกการตรวจ & ส่งคิวชำระเงิน</button>
+                  <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-circle-plus me-1"></i> บันทึกการตรวจ</button>
                 </form>
               </div>
             </div>
@@ -228,7 +228,6 @@
   function initPatientModule() {
     renderEmrQueue();
     
-    // 🌟 ดึงข้อมูลคิวใหม่ทุกๆ 5 วินาที
     if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
     window.emrQueueInterval = setInterval(renderEmrQueue, 5000);
 
@@ -243,14 +242,13 @@
   }
   initPatientModule();
 
-  // ดึงคิวจาก Server โดยตรง (ดึงข้ามคอมพิวเตอร์ได้)
   async function renderEmrQueue() {
     try {
       const res = await fetch('/api/queue');
       const data = await res.json();
       
       const list = document.getElementById('emrQueueList');
-      if(!list) return; // ถ้าเปลี่ยนเมนูหนีไปแล้ว ไม่ต้องทำอะไรต่อ
+      if(!list) return;
 
       const queueData = data.data;
       document.getElementById('emrQueueCount').innerText = `${queueData.length} คิว`;
@@ -410,7 +408,6 @@
     }
   }
 
-  // 🌟 บันทึกการรักษาเสร็จ -> ส่งสัญญาณเคลียร์คิวที่ Database ด้วย
   async function saveEMR(e) {
     e.preventDefault();
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาคนไข้', 'warning');
@@ -433,7 +430,6 @@
         document.getElementById('emr_next_appointment_time').value = '10:00'; 
         loadEMRHistory(currentHN);
         
-        // 🌟 เตะคนไข้คนนี้ออกจากคิวหน้าห้อง (เปลี่ยนสถานะใน DB เป็น COMPLETED)
         await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
         renderEmrQueue();
 
@@ -483,11 +479,31 @@
             <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms}</div>
             <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
             ${apptBadge}
+            
+            <!-- 🌟 เพิ่มปุ่มส่งชำระเงิน/รับยา ไปหน้า POS -->
+            <div class="mt-3">
+              <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="goToPOS('${hn}')">
+                <i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา
+              </button>
+            </div>
+
           </div>`;
       });
       timeline.innerHTML = html;
     } catch (err) {
       timeline.innerHTML = '<div class="text-danger text-center py-4">โหลดประวัติไม่สำเร็จ</div>';
+    }
+  }
+
+  // =====================================
+  // 💳 ฟังก์ชันส่งคนไข้ไปหน้า POS
+  // =====================================
+  function goToPOS(hn) {
+    window.globalTargetPOS_HN = hn;
+    if (typeof openModule === 'function') {
+      openModule('pos.html');
+    } else {
+      Swal.fire('Error', 'ไม่สามารถเปิดหน้า POS ได้', 'error');
     }
   }
 
