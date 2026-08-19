@@ -127,6 +127,23 @@ app.get('/api/patients', (req, res) => {
   });
 });
 
+// -----------------------------------------------------------------
+// 🌟 นำไปวางต่อท้าย API ทะเบียนคนไข้เดิม (ก่อนถึง API เวชระเบียน /api/emr)
+// -----------------------------------------------------------------
+
+// ลบข้อมูลคนไข้
+app.delete('/api/patients/:id', (req, res) => {
+  db.run(`DELETE FROM patients WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'ลบข้อมูลคนไข้สำเร็จ' });
+  });
+});
+
+// เพิ่ม Route สำหรับหน้ารายการคนไข้
+app.get('/patients_list.html', (req, res) => { 
+  res.sendFile(path.join(__dirname, 'public', 'patients_list.html')); 
+});
+
 app.get('/api/patients/:id', (req, res) => {
   db.get(`SELECT * FROM patients WHERE id = ?`, [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ status: 'error', message: err.message });

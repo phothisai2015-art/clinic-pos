@@ -1,0 +1,192 @@
+<style>
+  .patient-table th { font-weight: bold; color: #64748b; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; padding: 12px; }
+  .patient-table td { padding: 12px; vertical-align: middle; border-bottom: 1px dashed #e2e8f0; }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
+
+<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-users me-2"></i> ฐานข้อมูลคนไข้ทั้งหมด</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+  </div>
+
+  <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 d-flex flex-column" style="min-height: 0;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-book me-2"></i> รายชื่อคนไข้ในระบบ</h5>
+      <div class="input-group" style="width: 300px;">
+        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+        <input type="text" id="searchPatientList" class="form-control border-start-0 bg-light" placeholder="ค้นหา ชื่อ, เบอร์โทร, HN..." onkeyup="filterPatientList()">
+      </div>
+    </div>
+
+    <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
+      <table class="table patient-table w-100 mb-0">
+        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+          <tr>
+            <th width="15%">รหัสคนไข้ (HN)</th>
+            <th width="25%">ชื่อ - นามสกุล</th>
+            <th width="15%">เบอร์โทรศัพท์</th>
+            <th width="20%">ข้อมูลแพ้ยา</th>
+            <th width="25%" class="text-center">จัดการข้อมูล</th>
+          </tr>
+        </thead>
+        <tbody id="patientListBody">
+          <tr><td colspan="5" class="text-center py-5 text-muted">กำลังโหลดข้อมูลคนไข้...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  var allPatients = [];
+
+  function initPatientList() {
+    loadAllPatients();
+  }
+  initPatientList();
+
+  async function loadAllPatients() {
+    try {
+      const res = await fetch('/api/patients');
+      const data = await res.json();
+      if(data.status === 'success') {
+        allPatients = data.data;
+        // เรียงจากสมัครล่าสุดขึ้นก่อน
+        allPatients.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        renderPatientTable(allPatients);
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function renderPatientTable(items) {
+    const tbody = document.getElementById('patientListBody');
+    tbody.innerHTML = '';
+    
+    if(items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">ไม่พบข้อมูลคนไข้</td></tr>`;
+      return;
+    }
+
+    items.forEach(p => {
+      let allergyBadge = (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') 
+        ? `<span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation"></i> ${p.allergies}</span>` 
+        : '<span class="text-muted small">ไม่มี</span>';
+
+      tbody.innerHTML += `
+        <tr>
+          <td class="fw-bold text-muted">${p.id}</td>
+          <td class="fw-bold text-primary">${p.full_name}</td>
+          <td>${p.phone}</td>
+          <td>${allergyBadge}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-2 fw-bold" onclick="openEditPatient('${p.id}')"><i class="fa-solid fa-pen-to-square me-1"></i> ดู/แก้ไข</button>
+            <button class="btn btn-sm btn-light text-danger rounded-circle" title="ลบข้อมูล" onclick="deletePatientData('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function filterPatientList() {
+    let search = document.getElementById('searchPatientList').value.toLowerCase();
+    let filtered = allPatients.filter(p => 
+      (p.full_name && p.full_name.toLowerCase().includes(search)) || 
+      (p.id && p.id.toLowerCase().includes(search)) || 
+      (p.phone && p.phone.includes(search))
+    );
+    renderPatientTable(filtered);
+  }
+
+  // 🌟 ป๊อปอัปแก้ไขข้อมูลคนไข้
+  function openEditPatient(hn) {
+    const p = allPatients.find(x => x.id === hn);
+    if(!p) return;
+
+    Swal.fire({
+      title: '<h4 class="fw-bold text-primary mb-0"><i class="fa-solid fa-user-pen me-2"></i>แก้ไขข้อมูลคนไข้</h4>',
+      width: '700px',
+      html: `
+        <div class="row g-3 text-start mt-2">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">รหัสคนไข้ (HN)</label>
+            <input id="edit_hn" class="form-control bg-light" value="${p.id}" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">เลขบัตรประชาชน</label>
+            <input id="edit_idcard" class="form-control" value="${p.id_card || ''}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">ชื่อ - นามสกุล *</label>
+            <input id="edit_name" class="form-control border-primary" value="${p.full_name}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">เบอร์โทรศัพท์ *</label>
+            <input id="edit_phone" class="form-control border-primary" value="${p.phone}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">วันเกิด</label>
+            <input type="date" id="edit_dob" class="form-control" value="${p.dob || ''}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted mb-1">โรคประจำตัว</label>
+            <input id="edit_disease" class="form-control" value="${p.congenital_disease || ''}">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold text-danger mb-1">ประวัติการแพ้ยา</label>
+            <textarea id="edit_allergies" class="form-control border-danger" rows="2">${p.allergies || ''}</textarea>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการแก้ไข',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#3b82f6',
+      preConfirm: () => {
+        return {
+          id: document.getElementById('edit_hn').value,
+          full_name: document.getElementById('edit_name').value,
+          id_card: document.getElementById('edit_idcard').value,
+          phone: document.getElementById('edit_phone').value,
+          dob: document.getElementById('edit_dob').value,
+          congenital_disease: document.getElementById('edit_disease').value,
+          allergies: document.getElementById('edit_allergies').value
+        }
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        if(!result.value.full_name || !result.value.phone) {
+          return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและเบอร์โทรศัพท์', 'error');
+        }
+
+        Swal.fire({ title: 'กำลังอัปเดตข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+          // โค้ดเดิมในฝั่ง Server รองรับการอัปเดตทับข้อมูลเก่าอยู่แล้ว (ON CONFLICT DO UPDATE)
+          const res = await fetch('/api/patients', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(result.value) 
+          });
+          const data = await res.json();
+          if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+            loadAllPatients(); // รีเฟรชตาราง
+          }
+        } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+      }
+    });
+  }
+
+  async function deletePatientData(hn) {
+    if ((await Swal.fire({ title: 'ยืนยันลบประวัติคนไข้?', text: "ข้อมูลนี้จะถูกลบและกู้คืนไม่ได้", icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) {
+      Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await fetch(`/api/patients/${hn}`, { method: 'DELETE' });
+        Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        loadAllPatients();
+      } catch (e) {
+        Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error');
+      }
+    }
+  }
+</script>

@@ -110,13 +110,24 @@
           <h6 class="fw-bold mt-3 mb-1">คลังยา (Inventory)</h6>
         </button>
       </div>
+
+<!-- ปุ่มที่ 6 (รายงาน) -->
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="Swal.fire('Coming Soon','หน้า Reports กำลังพัฒนา','info')">
           <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-line"></i></div>
           <h6 class="fw-bold mt-3 mb-1">รายงาน (Reports)</h6>
         </button>
       </div>
-    </div>
+
+      <!-- 🌟 ปุ่มที่ 7 ฐานข้อมูลคนไข้ (ต้องอยู่ก่อนแท็ก </div> ปิด row) -->
+      <div class="col-6 col-md-4">
+        <button class="menu-card-btn w-100 h-100" onclick="openModule('patients_list.html')">
+          <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
+          <h6 class="fw-bold mt-3 mb-1">ฐานข้อมูลคนไข้</h6>
+        </button>
+      </div>
+
+    </div> <!-- 👈 นี่คือ </div> ปิดของ <div class="row g-4"> ต้องอยู่ล่างสุดเสมอ -->
 
   <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
@@ -187,18 +198,23 @@
     // ฟังก์ชันเปิด/ปิดปุ่มตามสิทธิ์ (Role-based Access)
     function applyPermissions(perms) {
       let p = perms.toUpperCase();
+      
+      // 🌟 อัปเดต Map ปุ่มให้ครบ 7 ปุ่ม
       let buttons = {
-        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],
-        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], // Reception
-        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], // Doctor
-        'POS': document.querySelectorAll('.menu-card-btn')[3],
-        'STOCK': document.querySelectorAll('.menu-card-btn')[4],
-        'DASH': document.querySelectorAll('.menu-card-btn')[5]
+        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   // 1. นัดหมาย
+        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], // 2. Reception
+        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], // 3. Doctor
+        'POS': document.querySelectorAll('.menu-card-btn')[3],       // 4. ขาย & ชำระเงิน
+        'STOCK': document.querySelectorAll('.menu-card-btn')[4],     // 5. คลังยา
+        'DASH': document.querySelectorAll('.menu-card-btn')[5],      // 6. รายงาน
+        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[6]  // 🌟 7. ฐานข้อมูลคนไข้ (ปุ่มใหม่)
       };
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
+          // ถ้าคีย์มีคำว่า PATIENT ให้รวบใช้สิทธิ์ PATIENT เดียวกัน
           let checkKey = key.includes('PATIENT') ? 'PATIENT' : key;
+          
           if (p.includes('ADMIN') || p.includes(checkKey)) {
             btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
           } else {
