@@ -475,7 +475,8 @@
          }
 
          // 🌟 หาสถานะคิวที่ตรงกับวันที่บันทึกประวัติ
-         const matchedAppt = patientAppts.find(a => a.date === logDateOnly);
+         // 🌟 แก้ไข: ให้หาคิวล่าสุดของวันนี้แทนด้วยการ .reverse() ป้องกันบั๊กเจอคิวเก่าที่จ่ายเงินไปแล้ว
+const matchedAppt = patientAppts.slice().reverse().find(a => a.date === logDateOnly);
          
          const now = new Date();
          const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
