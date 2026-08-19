@@ -438,6 +438,7 @@
   }
 
   // 🌟 ฟังก์ชันดึงประวัติพร้อมปุ่มจ่ายเงินที่เช็คสถานะฐานข้อมูลจริงๆ
+// 🌟 ฟังก์ชันดึงประวัติพร้อมปุ่มจ่ายเงินที่เช็คสถานะฐานข้อมูลจริงๆ
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -446,7 +447,6 @@
       const res = await fetch(`/api/emr/${hn}`);
       const data = await res.json();
       
-      // 🌟 ดึงสถานะคิวทั้งหมดจากฐานข้อมูล เพื่อเช็คว่าคิวนี้ถูกส่งไปจ่ายเงินแล้วหรือยัง
       const apptRes = await fetch('/api/appointments');
       const apptData = await apptRes.json();
       const patientAppts = apptData.data ? apptData.data.filter(a => a.hn === hn) : [];
@@ -456,11 +456,19 @@
         return;
       }
 
+      // 🌟 นับจำนวนประวัติ EMR และจำนวนคิว POS ของ "วันนี้"
+      const now = new Date();
+      const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+      const emrsToday = data.data.filter(l => l.visit_date.startsWith(todayStrLocal));
+      const apptsToday = patientAppts.filter(a => a.date === todayStrLocal);
+
       let html = '';
-      data.data.forEach(log => {
+      // 🌟 ใช้ index เข้ามาช่วย เพื่อให้ปุ่มโชว์แค่ในประวัติ "ล่าสุด" (บนสุด) เท่านั้น
+      data.data.forEach((log, index) => {
          const dateObj = new Date(log.visit_date);
          const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-         const logDateOnly = log.visit_date.split('T')[0]; // หาวันที่ของบันทึกนี้
+         const logDateOnly = log.visit_date.split('T')[0]; 
          
          let apptBadge = '';
          if (log.next_appointment_date) {
@@ -474,25 +482,32 @@
                         </div>`;
          }
 
-         // 🌟 หาสถานะคิวที่ตรงกับวันที่บันทึกประวัติ
-         // 🌟 แก้ไข: ให้หาคิวล่าสุดของวันนี้แทนด้วยการ .reverse() ป้องกันบั๊กเจอคิวเก่าที่จ่ายเงินไปแล้ว
-const matchedAppt = patientAppts.slice().reverse().find(a => a.date === logDateOnly);
-         
-         const now = new Date();
-         const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-         
          let paymentBtnHtml = '';
 
-         // 🌟 แสดงปุ่มส่งการเงิน "เฉพาะประวัติของวันนี้" เท่านั้น ป้องกันหมอกดส่งประวัติเก่า
-         if (logDateOnly === todayStrLocal) {
-           if (matchedAppt && matchedAppt.status === 'WAITING_PAYMENT') {
+         // 🌟 ตรวจสอบปุ่มชำระเงิน เฉพาะประวัติ "ล่าสุดของวันนี้" (index === 0) เท่านั้น!
+         if (logDateOnly === todayStrLocal && index === 0) {
+           const latestAppt = apptsToday[apptsToday.length - 1]; // ดึงคิวล่าสุดของวันนี้
+
+           let isAlreadyPaid = false;
+           let isWaitingPayment = false;
+
+           if (latestAppt) {
+             if (latestAppt.status === 'WAITING_PAYMENT') {
+               isWaitingPayment = true;
+             } else if (latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) {
+               // ถ้าจำนวนประวัติวันนี้ ไม่ได้เยอะกว่าจำนวนคิว (แปลว่าไม่มีประวัติ Walk-in ใหม่ซ้อน)
+               isAlreadyPaid = true;
+             }
+           }
+
+           if (isWaitingPayment) {
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
                   <i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว
                 </button>
               </div>`;
-           } else if (matchedAppt && matchedAppt.status === 'PAID') {
+           } else if (isAlreadyPaid) {
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-secondary text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
@@ -500,6 +515,7 @@ const matchedAppt = patientAppts.slice().reverse().find(a => a.date === logDateO
                 </button>
               </div>`;
            } else {
+             // ถ้าเป็นประวัติใหม่เอี่ยม ปุ่มส่งชำระเงินจะเด้งขึ้นมาให้กดเสมอ!
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="sendToPayment('${hn}', this)">
