@@ -71,11 +71,24 @@ app.post('/api/patients/:id/courses', (req, res) => {
   });
 });
 
-// หักยอดคอร์ส (รองรับทศนิยม)
+// หักยอดคอร์ส (รองรับทศนิยม) และหักสต็อกคลังยาอัตโนมัติ
 app.put('/api/courses/:id/deduct', (req, res) => {
   const { deduct_amount } = req.body;
-  db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [parseFloat(deduct_amount), req.params.id], function(err) {
-    res.json({ status: 'success' });
+  const deductVal = parseFloat(deduct_amount);
+
+  // 1. ดึงข้อมูลคอร์สก่อนว่าผูกกับสินค้าอะไร
+  db.get(`SELECT product_id FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
+    if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
+
+    // 2. อัปเดตยอดใช้คอร์สของคนไข้
+    db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [deductVal, req.params.id], function(err2) {
+      if (err2) return res.status(500).json({ status: 'error', message: err2.message });
+
+      // 3. 🌟 ไปหักสต็อกในคลังอัตโนมัติ (เทียบจาก id รหัสสินค้า)
+      db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err3) {
+        res.json({ status: 'success', message: 'ตัดคอร์สและหักสต็อกสำเร็จ' });
+      });
+    });
   });
 });
 
