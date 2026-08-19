@@ -84,46 +84,39 @@
         <button class="menu-card-btn w-100 h-100" onclick="openModule('booking.html')">
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
           <h6 class="fw-bold mt-3 mb-1">นัดหมาย & คิว</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">ตารางแพทย์และคิวหน้าห้อง</span>
         </button>
       </div>
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100 h-100" onclick="openModule('patient.html')">
-          <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-id-card-clip"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">เวชระเบียน (EMR)</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">ประวัติคนไข้และรูปถ่าย</span>
+        <button class="menu-card-btn w-100 h-100" onclick="openModule('reception.html')">
+          <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
+          <h6 class="fw-bold mt-3 mb-1">ลงทะเบียน & คัดกรอง</h6>
+        </button>
+      </div>
+      <div class="col-6 col-md-4">
+        <button class="menu-card-btn w-100 h-100" onclick="openModule('doctor.html')">
+          <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-stethoscope"></i></div>
+          <h6 class="fw-bold mt-3 mb-1">ห้องตรวจแพทย์</h6>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('pos.html')">
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
           <h6 class="fw-bold mt-3 mb-1">ขาย & ชำระเงิน</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">เปิดบิล ตัดคอร์ส รับเงิน</span>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="Swal.fire('Coming Soon','หน้า Inventory กำลังพัฒนา','info')">
           <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
           <h6 class="fw-bold mt-3 mb-1">คลังยา (Inventory)</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">สต็อกยา โบท็อกซ์ สินค้า</span>
-        </button>
-      </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100 h-100" onclick="Swal.fire('Coming Soon','หน้า HR กำลังพัฒนา','info')">
-          <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-user-doctor"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">ค่ามือแพทย์ (DF)</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">จัดการพนักงาน ค่าคอมฯ</span>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="Swal.fire('Coming Soon','หน้า Reports กำลังพัฒนา','info')">
-          <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-line"></i></div>
           <h6 class="fw-bold mt-3 mb-1">รายงาน (Reports)</h6>
-          <span class="small text-muted" style="font-size: 0.75rem;">ยอดขาย สถิติ คอร์สค้าง</span>
         </button>
       </div>
     </div>
-  </div>
 
   <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
@@ -195,25 +188,21 @@
     function applyPermissions(perms) {
       let p = perms.toUpperCase();
       let buttons = {
-        'BOOKING': document.querySelectorAll('.menu-card-btn')[0], // นัดหมาย
-        'PATIENT': document.querySelectorAll('.menu-card-btn')[1], // เวชระเบียน
-        'POS': document.querySelectorAll('.menu-card-btn')[2],     // ขาย & ชำระเงิน
-        'STOCK': document.querySelectorAll('.menu-card-btn')[3],   // คลังยา
-        'HR': document.querySelectorAll('.menu-card-btn')[4],      // ค่ามือแพทย์
-        'DASH': document.querySelectorAll('.menu-card-btn')[5]     // รายงาน
+        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],
+        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], // Reception
+        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], // Doctor
+        'POS': document.querySelectorAll('.menu-card-btn')[3],
+        'STOCK': document.querySelectorAll('.menu-card-btn')[4],
+        'DASH': document.querySelectorAll('.menu-card-btn')[5]
       };
 
-      // วนลูปเช็คสิทธิ์ ถ้าไม่มีสิทธิ์ให้ปุ่มเป็นสีเทา (disabled)
       for (const [key, btn] of Object.entries(buttons)) {
-        if (btn) { // ป้องกัน Error หาปุ่มไม่เจอ
-          if (p.includes('ADMIN') || p.includes(key)) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.style.cursor = 'pointer';
+        if (btn) {
+          let checkKey = key.includes('PATIENT') ? 'PATIENT' : key;
+          if (p.includes('ADMIN') || p.includes(checkKey)) {
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
           } else {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
+            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
           }
         }
       }

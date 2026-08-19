@@ -1,0 +1,141 @@
+<div class="container-fluid py-4" style="max-width: 1200px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-info m-0"><i class="fa-solid fa-clipboard-user me-2"></i> ลงทะเบียน & คัดกรองคนไข้</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+  </div>
+
+  <div class="row g-4">
+    <!-- ค้นหาคนไข้ -->
+    <div class="col-lg-4">
+      <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+        <h6 class="fw-bold m-0 mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-primary"></i> ค้นหาฐานข้อมูล</h6>
+        <div class="input-group mb-3">
+          <input type="text" id="searchInput" class="form-control bg-light border-0" placeholder="ชื่อ, นามสกุล, HN..." onkeypress="if(event.key === 'Enter') searchPatient()">
+          <button class="btn btn-primary" onclick="searchPatient()"><i class="fa-solid fa-search"></i></button>
+        </div>
+        <div class="text-center py-4 text-muted small" id="searchResultText">พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา</div>
+      </div>
+    </div>
+
+    <!-- ฟอร์มประวัติส่วนตัว -->
+    <div class="col-lg-8">
+      <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> ข้อมูลคนไข้ (Profile)</h5>
+          <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" onclick="readSmartCard()"><i class="fa-solid fa-id-card me-2"></i> อ่านบัตร ปชช.</button>
+        </div>
+        <form id="patientForm" onsubmit="savePatient(event)">
+          <div class="row g-3">
+            <div class="col-md-3"><label class="form-label fw-bold small text-muted">รหัสคนไข้ (HN)</label><input type="text" id="p_hn" class="form-control bg-light" readonly></div>
+            <div class="col-md-5"><label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label><input type="text" id="p_name" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">วันเกิด</label><input type="date" id="p_dob" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">โรคประจำตัว</label><input type="text" id="p_disease" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา (ระบุให้ชัดเจน)</label><textarea id="p_allergies" class="form-control" rows="2"></textarea></div>
+            <div class="col-12 text-end mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-light rounded-pill px-4 me-2 fw-bold shadow-sm" onclick="clearForm()">เคลียร์ข้อมูล</button>
+              <button type="submit" class="btn btn-primary rounded-pill px-4 me-2 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติ</button>
+              <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="sendWalkinQueue()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ (ซักประวัติ)</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var currentHN = '';
+  
+  async function searchPatient() {
+    const text = document.getElementById('searchInput').value.trim();
+    if (!text) return;
+    Swal.showLoading();
+    try {
+      const res = await fetch(`/api/patients?search=${text}`);
+      const data = await res.json();
+      if (data.data.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'สามารถเพิ่มเป็นคนไข้ใหม่ได้เลย', 'info');
+      } else if (data.data.length === 1) {
+        loadPatientProfile(data.data[0]);
+        Swal.close();
+      } else {
+        let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+        data.data.forEach(p => { html += `<button class="list-group-item list-group-item-action py-3" onclick="selectFromList('${p.id}')"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id} | โทร: ${p.phone}</small></button>`; });
+        Swal.fire({ title: 'พบหลายรายการ', html: html+'</div>', showConfirmButton: false, showCloseButton: true });
+      }
+    } catch(e) {}
+  }
+  
+  async function selectFromList(hn) {
+    Swal.showLoading();
+    const res = await fetch(`/api/patients/${hn}`);
+    const data = await res.json();
+    loadPatientProfile(data.data);
+    Swal.close();
+  }
+
+  function loadPatientProfile(p) {
+    currentHN = p.id;
+    document.getElementById('p_hn').value = p.id;
+    document.getElementById('p_name').value = p.full_name || '';
+    document.getElementById('p_idcard').value = p.id_card || '';
+    document.getElementById('p_phone').value = p.phone || '';
+    document.getElementById('p_dob').value = p.dob || '';
+    document.getElementById('p_disease').value = p.congenital_disease || '';
+    document.getElementById('p_allergies').value = p.allergies || '';
+    document.getElementById('searchResultText').innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-check"></i> ดึงประวัติ ${p.full_name} เรียบร้อย</span>`;
+  }
+
+  async function savePatient(e) {
+    e.preventDefault();
+    const payload = {
+      id: document.getElementById('p_hn').value,
+      full_name: document.getElementById('p_name').value, id_card: document.getElementById('p_idcard').value,
+      phone: document.getElementById('p_phone').value, dob: document.getElementById('p_dob').value,
+      congenital_disease: document.getElementById('p_disease').value, allergies: document.getElementById('p_allergies').value
+    };
+    try {
+      const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        if(!payload.id) payload.id = data.patient_id; 
+        loadPatientProfile(payload);
+      }
+    } catch(e) {}
+  }
+
+  function sendWalkinQueue() {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
+    Swal.fire({
+      title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
+      html: `
+        <div class="text-start mt-3">
+          <label class="small fw-bold text-muted mb-1">ความดันโลหิต (BP)</label>
+          <input id="swal-bp" class="form-control mb-3" placeholder="เช่น 120/80">
+          <div class="row"><div class="col-6"><label class="small fw-bold text-muted mb-1">น้ำหนัก (kg)</label><input id="swal-weight" type="number" class="form-control" placeholder="เช่น 60"></div>
+          <div class="col-6"><label class="small fw-bold text-muted mb-1">ส่วนสูง (cm)</label><input id="swal-height" type="number" class="form-control" placeholder="เช่น 170"></div></div>
+        </div>`,
+      showCancelButton: true, confirmButtonText: 'ส่งเข้าห้องตรวจ', confirmButtonColor: '#0dcaf0', cancelButtonText: 'ยกเลิก',
+      preConfirm: () => ({ bp: document.getElementById('swal-bp').value, weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value })
+    }).then(async (res) => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'กำลังส่งคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, ...res.value }) });
+        Swal.fire({ icon: 'success', title: 'คิวไปรอที่ห้องตรวจแล้ว!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+        clearForm();
+      }
+    });
+  }
+
+  function clearForm() {
+    currentHN = ''; document.getElementById('patientForm').reset(); document.getElementById('p_hn').value = '';
+    document.getElementById('searchInput').value = ''; document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
+  }
+  function readSmartCard() {
+    Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    setTimeout(() => { clearForm(); document.getElementById('p_name').value = 'สมชาย รักชาติ'; document.getElementById('p_idcard').value = '1100200300401'; document.getElementById('p_phone').value = '0891234567'; document.getElementById('p_dob').value = '1985-10-25'; Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); }, 1000);
+  }
+</script>

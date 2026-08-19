@@ -33,6 +33,24 @@ db.run(`CREATE TABLE IF NOT EXISTS patient_photos (
   created_at TEXT
 )`);
 
+// ----------------------------------------------------
+// 🌟 นำไปใส่แทนที่ตรงโซนสร้างตารางด้านบน (ประมาณบรรทัดที่ 30)
+// ----------------------------------------------------
+db.run(`CREATE TABLE IF NOT EXISTS patient_photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  patient_id TEXT, photo_type TEXT, image_path TEXT, created_at TEXT
+)`);
+
+// เพิ่มคอลัมน์ระบบ Walk-in และการคัดกรอง (Vitals)
+db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
+
+// เพิ่ม Route สำหรับหน้าใหม่
+app.get('/reception.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reception.html')); });
+app.get('/doctor.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'doctor.html')); });
+
 // Routing หน้าเว็บ
 app.get('/booking.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'booking.html'));
@@ -213,10 +231,11 @@ app.put('/api/appointments/:id/status', (req, res) => {
 // 🛎️ API จัดการคิวหน้าห้องตรวจ (Real-time Queue)
 // ==========================================
 
-// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว
+// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว (อัปเดตให้ดึง Vitals มาด้วย)
 app.get('/api/queue', (req, res) => {
   const sql = `
-    SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time
+    SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time,
+           a.is_walkin, a.bp, a.weight, a.height
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     WHERE a.status = 'CHECKED_IN'
@@ -228,11 +247,33 @@ app.get('/api/queue', (req, res) => {
   });
 });
 
-// 2. อัปเดตสถานะเป็น "ตรวจเสร็จแล้ว" เมื่อบันทึก EMR
+// 2. API ส่งเข้าห้องตรวจ (ซักประวัติ Vitals) จัดการทั้ง Appt และ Walk-in
+app.post('/api/queue/send-doctor', (req, res) => {
+  const { patient_id, bp, weight, height } = req.body;
+  const today = new Date().toISOString().split('T')[0];
+  const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+
+  // เช็คก่อนว่ามีคิวนัดของวันนี้อยู่แล้วไหม
+  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED') ORDER BY id ASC LIMIT 1`, [patient_id, today], (err, row) => {
+    if (row) {
+      // มีคิวอยู่แล้ว -> อัปเดตสถานะและใส่ Vitals
+      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, weight = ?, height = ? WHERE id = ?`, [bp, weight, height, row.id], () => {
+        res.json({status: 'success', message: 'เช็คอินคิวนัดและส่งเข้าห้องตรวจสำเร็จ'});
+      });
+    } else {
+      // ไม่มีคิว -> สร้างเป็น Walk-in
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, weight, height, notes) 
+              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, weight, height], () => {
+        res.json({status: 'success', message: 'สร้างคิว Walk-in เข้าห้องตรวจสำเร็จ'});
+      });
+    }
+  });
+});
+
+// 3. อัปเดตสถานะเป็น "ตรวจเสร็จแล้ว" เมื่อบันทึก EMR
 app.put('/api/queue/complete/:hn', (req, res) => {
-  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status IN ('WAITING', 'CHECKED_IN')`, [req.params.hn], function(err) {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
-    res.json({ status: 'success', message: 'เคลียร์คิวสำเร็จ' });
+  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status = 'CHECKED_IN'`, [req.params.hn], function(err) {
+    res.json({ status: 'success' });
   });
 });
 
