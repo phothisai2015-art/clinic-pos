@@ -618,4 +618,15 @@
       }
     }
   }
+  
+  // ==========================================
+  // 🩺 ระบบรับคำสั่ง "เปิด EMR ด่วน" จากหน้าปฏิทินนัดหมาย
+  // ==========================================
+  if (window.globalTargetHN) {
+    setTimeout(() => {
+      document.getElementById('searchInput').value = window.globalTargetHN;
+      searchPatient(); // สั่งค้นหาอัตโนมัติ
+      window.globalTargetHN = null; // ล้างค่าทิ้งหลังจากใช้เสร็จ
+    }, 400); // ดีเลย์เล็กน้อยรอให้หน้าต่างโหลดเสร็จ
+  }
 </script>
