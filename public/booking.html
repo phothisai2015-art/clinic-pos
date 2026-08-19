@@ -3,7 +3,6 @@
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
   
-  /* Calendar Custom Styles */
   .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
   .calendar-day-name { font-weight: bold; color: #64748b; font-size: 0.85rem; padding-bottom: 10px; }
@@ -15,12 +14,10 @@
   .appt-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 4px; display: none; }
   .has-appt .appt-dot { display: block; }
 
-  /* Appt List Styles */
   .appt-card { border-left: 4px solid #3b82f6; transition: 0.2s; cursor: default; }
   .appt-card:hover { transform: translateX(3px); box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
   .appt-card.confirmed-card { border-left-color: #10b981; }
 
-  /* Scrollbars */
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -36,8 +33,6 @@
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px; display: flex; flex-direction: column;">
-  
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-primary m-0"><i class="fa-regular fa-calendar-days me-2"></i> ระบบนัดหมาย</h3>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()">
@@ -45,7 +40,6 @@
     </button>
   </div>
 
-  <!-- Tabs Navigation -->
   <ul class="nav nav-pills clinic-nav-pills mb-4">
     <li class="nav-item">
       <button class="nav-link active" id="btn-tab-calendar" onclick="switchBookingTab('calendar')">
@@ -60,13 +54,9 @@
     </li>
   </ul>
 
-  <!-- Tab Contents -->
   <div class="tab-content">
-    
-    <!-- 📅 Tab 1: ปฏิทินตารางนัดหมาย (2 คอลัมน์) -->
     <div class="tab-pane-custom" id="calendar-content" style="display: block;">
       <div class="row g-4">
-        <!-- ฝั่งซ้าย: ปฏิทิน -->
         <div class="col-lg-7 col-md-12">
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
             <div class="calendar-header">
@@ -83,20 +73,16 @@
               <div class="calendar-day-name">ศ</div>
               <div class="calendar-day-name text-primary">ส</div>
             </div>
-            <div class="calendar-grid" id="calendarDays">
-              <!-- JS จะสร้างวันในปฏิทินตรงนี้ -->
-            </div>
+            <div class="calendar-grid" id="calendarDays"></div>
           </div>
         </div>
 
-        <!-- ฝั่งขวา: รายการนัดหมายวันที่เลือก -->
         <div class="col-lg-5 col-md-12">
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
               <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-primary me-2"></i> คิววันที่เลือก</h5>
               <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">กำลังโหลด...</span>
             </div>
-            
             <div id="selectedApptList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; max-height: 500px; padding-right: 5px;">
               <div class="text-center py-5 text-muted">กำลังโหลดข้อมูลนัดหมาย...</div>
             </div>
@@ -105,20 +91,15 @@
       </div>
     </div>
 
-    <!-- 📞 Tab 2: คิวของวันพรุ่งนี้ -->
     <div class="tab-pane-custom" id="tomorrow-content" style="display: none;">
       <div class="bg-white p-4 rounded-4 shadow-sm border" style="background: linear-gradient(to bottom, #ffffff, #f0fdf4);">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-success">
           <h5 class="fw-bold m-0 text-success"><i class="fa-solid fa-bell me-2"></i> รายการที่ต้องโทรยืนยันคิว สำหรับวันพรุ่งนี้</h5>
           <span class="badge bg-success rounded-pill px-3" id="tomorrowDateBadge">...</span>
         </div>
-        
-        <div class="row g-3" id="tomorrowApptList">
-          <!-- List วันพรุ่งนี้ จะถูกแสดงเป็นกล่องๆ Grid -->
-        </div>
+        <div class="row g-3" id="tomorrowApptList"></div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -127,20 +108,14 @@
   var _todayDate = new Date();
   var currentMonth = _todayDate.getMonth();
   var currentYear = _todayDate.getFullYear();
-  
   var activeSelectedDate = `${_todayDate.getFullYear()}-${String(_todayDate.getMonth() + 1).padStart(2, '0')}-${String(_todayDate.getDate()).padStart(2, '0')}`;
-  
   var thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
   function initBookingModule() {
     fetchAppointments();
   }
-  
   initBookingModule();
 
-  // =====================================
-  // 🌟 ฟังก์ชันสลับแท็บ
-  // =====================================
   function switchBookingTab(tabName) {
     document.getElementById('btn-tab-calendar').classList.remove('active');
     document.getElementById('btn-tab-tomorrow').classList.remove('active');
@@ -156,9 +131,6 @@
     }
   }
 
-  // =====================================
-  // 🌟 โหลดคิวนัดหมายของจริงจาก Database
-  // =====================================
   async function fetchAppointments() {
     try {
       const res = await fetch('/api/appointments');
@@ -179,9 +151,6 @@
     }
   }
 
-  // =====================================
-  // 📅 ระบบปฏิทินนัดหมาย (Calendar UI)
-  // =====================================
   function renderCalendar() {
     const daysContainer = document.getElementById('calendarDays');
     const monthYearTitle = document.getElementById('calendarMonthYear');
@@ -230,9 +199,6 @@
     renderApptList(dateStr, 'selectedApptList');
   }
 
-  // =====================================
-  // 📋 Render List (วันที่เลือกในปฏิทิน) + ปุ่ม Check-in
-  // =====================================
   function renderApptList(filterDate, containerId) {
     const listContainer = document.getElementById(containerId);
     if(!listContainer) return;
@@ -265,7 +231,6 @@
       if (apptDateTime < now) {
         timeBadgeClass = "bg-danger text-white"; 
         cardClass += " opacity-75"; 
-        
         if (appt.date === nowDateStr) {
           overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-clock-rotate-left"></i> เลยเวลานัด</span>';
         } else {
@@ -273,17 +238,17 @@
         }
       }
 
-      // 🌟 ตรวจสอบว่าคิวนี้ถูก Check-in เข้าห้องตรวจไปแล้วหรือยัง
-      let isCheckedIn = window.globalCheckedInQueue && window.globalCheckedInQueue.find(q => q.hn === appt.hn);
+      // 🌟 ดึงข้อมูลจากฐานข้อมูลโดยตรง
+      let isCheckedIn = (appt.status === 'CHECKED_IN');
       let actionBtnHtml = '';
 
       if (isCheckedIn) {
-        // หากส่งไปแล้ว เปลี่ยนปุ่มเป็นป้าย "รอตรวจ"
         actionBtnHtml = `<span class="badge bg-warning text-dark border"><i class="fa-solid fa-user-clock me-1"></i> รอเข้าห้องตรวจ</span>`;
+      } else if (appt.status === 'COMPLETED') {
+        actionBtnHtml = `<span class="badge bg-success text-white border"><i class="fa-solid fa-check-double me-1"></i> ตรวจเสร็จสิ้น</span>`;
       } else {
-        // หากยังไม่ส่ง ให้แสดงปุ่ม Check-in
         actionBtnHtml = `
-          <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient('${appt.hn}', '${patientName}')">
+          <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient(${appt.id}, '${patientName}')">
             <i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ
           </button>`;
       }
@@ -314,9 +279,6 @@
     listContainer.innerHTML = html;
   }
 
-  // =====================================
-  // 📞 Render List คิวของวันพรุ่งนี้
-  // =====================================
   function renderTomorrowList() {
     const listContainer = document.getElementById('tomorrowApptList');
     if(!listContainer) return;
@@ -397,30 +359,34 @@
   }
 
   // =====================================
-  // 🩺 ฟังก์ชัน Check-in คนไข้ (แบบไม่เด้งเปลี่ยนหน้า)
+  // 🩺 🌟 ระบบ Check-in (บันทึกลง Database ของจริง)
   // =====================================
-  function checkInPatient(hn, name) {
+  function checkInPatient(id, name) {
     Swal.fire({
       title: `ส่งคิว ${name}?`,
-      text: "ระบบจะส่งคนไข้เข้าคิวรอตรวจหน้าห้องแพทย์",
+      text: "ระบบจะอัปเดตสถานะเป็น 'รอเข้าห้องตรวจ' บน Server",
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน Check-in',
       cancelButtonText: 'ยกเลิก',
       confirmButtonColor: '#0dcaf0'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // เพิ่มคนไข้เข้าคิว EMR (เก็บใน Global Variable เพื่อให้หน้า EMR ดึงไปโชว์)
-        if(!window.globalCheckedInQueue) window.globalCheckedInQueue = [];
+        Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        if(!window.globalCheckedInQueue.find(q => q.hn === hn)) {
-          window.globalCheckedInQueue.push({ hn: hn, name: name });
+        // ส่งสถานะ CHECKED_IN ไปที่ Server
+        try {
+          await fetch(`/api/appointments/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'CHECKED_IN' })
+          });
+          
+          Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าคิวเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+          fetchAppointments(); // โหลดตารางใหม่
+        } catch(e) {
+          Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
         }
-
-        Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าคิวเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-
-        // รีเฟรชรายการบัตรคิว เพื่อให้ปุ่ม Check-in เปลี่ยนเป็นป้าย "รอตรวจ"
-        renderApptList(activeSelectedDate, 'selectedApptList');
       }
     });
   }
