@@ -51,14 +51,48 @@ db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, () => {});
 // 🌟 เพิ่มคอลัมน์ Lot และ Expiry ให้ตารางคลังสินค้า
 db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
 db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
+// เพิ่มคอลัมน์เก็บตะกร้าสินค้าสำหรับจัดโปรโมชั่น
+db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
 
 // ==========================================
 // 💳 API ระบบคอร์สความงาม (Patient Courses)
 // ==========================================
-// ดึงรายการคอร์สของคนไข้
+// ดึงรายการคอร์สของคนไข้ (JOIN กับตารางสินค้าเพื่อดึงชื่อและหน่วยจริงมาแสดง)
 app.get('/api/patients/:id/courses', (req, res) => {
-  db.all(`SELECT * FROM patient_courses WHERE patient_id = ?`, [req.params.id], (err, rows) => {
+  const sql = `
+    SELECT c.*, p.name as product_name, p.unit
+    FROM patient_courses c
+    LEFT JOIN products p ON c.product_id = p.id
+    WHERE c.patient_id = ?
+  `;
+  db.all(sql, [req.params.id], (err, rows) => {
     res.json({ status: 'success', data: rows || [] });
+  });
+});
+
+// ซื้อคอร์ส/หัตถการใหม่ (บันทึกรหัสสินค้าลงไปตรงๆ)
+app.post('/api/patients/:id/courses', (req, res) => {
+  const { course_name, total_qty } = req.body; // course_name ตอนนี้คือ product_id
+  db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, 
+    [req.params.id, course_name, parseFloat(total_qty)], function(err) {
+    res.json({ status: 'success', course_id: this.lastID });
+  });
+});
+
+// หักยอดคอร์ส และ หักสต็อกคลังยาอัตโนมัติ 🌟
+app.put('/api/courses/:id/deduct', (req, res) => {
+  const deductVal = parseFloat(req.body.deduct_amount);
+  // ดึงว่าคอร์สนี้ผูกกับรหัสสินค้าอะไร
+  db.get(`SELECT product_id FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
+    if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
+    
+    // อัปเดตคอร์สคนไข้
+    db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [deductVal, req.params.id], function(err2) {
+      // 🌟 หักสต็อกในคลังสินค้าตามรหัส ID
+      db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err3) {
+        res.json({ status: 'success' });
+      });
+    });
   });
 });
 
@@ -405,44 +439,34 @@ app.put('/api/pos/pay/:id', (req, res) => {
 // 📦 API ระบบคลังยาและเวชภัณฑ์ (Inventory)
 // ==========================================
 
-// 1. ดึงรายการสินค้าทั้งหมด
+// ==========================================
+// 📦 API ระบบคลังยาและเวชภัณฑ์ (Inventory)
+// ==========================================
 app.get('/api/inventory', (req, res) => {
   db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', data: rows });
   });
 });
 
-// 2. เพิ่มสินค้า/เวชภัณฑ์ใหม่ (อัปเดตรับค่า Lot และ Expiry)
 app.post('/api/inventory', (req, res) => {
-  const { id, name, type, price, stock, unit, lot_number, expiry_date } = req.body;
-  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date) 
-               VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?)
+  const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items } = req.body;
+  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items) 
+               VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT(id) DO UPDATE SET 
-               name=excluded.name, type=excluded.type, price=excluded.price, 
-               stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date`;
+               name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, 
+               unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items`;
   
-  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || ''], function(err) {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
-    res.json({ status: 'success', message: 'บันทึกสินค้าสำเร็จ' });
+  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]'], function(err) {
+    res.json({ status: 'success' });
   });
 });
 
-// 3. ปรับปรุงสต็อก (รับเข้า / เบิกออก)
+// ปรับปรุงสต็อกแมนนวล / ลบสินค้า (ใช้ API เดิมที่มีอยู่ได้เลย)
 app.put('/api/inventory/:id/stock', (req, res) => {
-  const { adjust_qty } = req.body; // ใส่ค่าบวกเพื่อรับเข้า ค่าลบเพื่อเบิกออก
-  db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [adjust_qty, req.params.id], function(err) {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
-    res.json({ status: 'success', message: 'อัปเดตสต็อกสำเร็จ' });
-  });
+  db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id], () => res.json({status: 'success'}));
 });
-
-// 4. ลบสินค้า
 app.delete('/api/inventory/:id', (req, res) => {
-  db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], function(err) {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
-    res.json({ status: 'success', message: 'ลบสินค้าสำเร็จ' });
-  });
+  db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], () => res.json({status: 'success'}));
 });
 
 // เพิ่ม Route สำหรับหน้า Inventory
