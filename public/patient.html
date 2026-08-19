@@ -126,7 +126,7 @@
                 <textarea id="emr_treatment" class="form-control rounded-3" rows="2"></textarea>
               </div>
 
-              <!-- 🌟 ส่วนกรอกวันนัด เวลา และหมายเหตุ -->
+              <!-- ส่วนกรอกวันนัด เวลา และหมายเหตุ -->
               <div class="row g-2 mb-3">
                 <div class="col-md-4">
                   <label class="form-label fw-bold small text-primary"><i class="fa-regular fa-calendar-check me-1"></i> วันนัดถัดไป</label>
@@ -208,9 +208,29 @@
 </div>
 
 <script>
-  let currentHN = '';
-  let canvas, ctx, isDrawing = false;
+  // 🌟 แก้ปัญหาโหลดซ้ำไม่ได้ ด้วยการเปลี่ยนตัวแปรทั้งหมดเป็น var
+  var currentHN = '';
+  var canvas, ctx, isDrawing = false;
 
+  // ==========================================
+  // 🩺 ระบบรับคำสั่ง "เปิด EMR ด่วน" จากหน้าอื่น
+  // ==========================================
+  function initPatientModule() {
+    if (window.globalTargetHN) {
+      setTimeout(() => {
+        document.getElementById('searchInput').value = window.globalTargetHN;
+        searchPatient(); // สั่งค้นหาคนไข้ทันที
+        window.globalTargetHN = null; // ล้างค่าทิ้งเมื่อดึงเสร็จ
+      }, 300); // รอให้ DOM ของแท็บโหลดเสร็จ
+    }
+  }
+  
+  // เรียกใช้งานทันทีที่เปิดหน้านี้
+  initPatientModule();
+
+  // ==========================================
+  // ระบบจัดการสลับแท็บ
+  // ==========================================
   function switchPatientTab(tabName) {
     if ((tabName === 'emr' || tabName === 'gallery') && !currentHN) {
       Swal.fire({
@@ -249,6 +269,9 @@
     }
   }
 
+  // ==========================================
+  // ระบบค้นหาและโหลดข้อมูล
+  // ==========================================
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ชื่อ หรือเบอร์โทรศัพท์เพื่อค้นหา', 'warning');
@@ -311,11 +334,16 @@
     document.getElementById('photoCurrentPatient').innerHTML = `คนไข้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
     
     updateTabState();
-
     loadEMRHistory(p.id);
     loadPatientPhotos(p.id);
 
-    Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+    // ถ้ามาจากการกด "เปิด EMR ด่วน" ให้สลับไปหน้า EMR ให้เลย
+    if(window.globalTargetHN === null && document.getElementById('searchInput').value) {
+      switchPatientTab('emr');
+      Swal.close(); // ปิดโหลดทิ้ง
+    } else {
+      Swal.fire({ icon: 'success', title: `ดึงประวัติ ${p.full_name} สำเร็จ`, toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+    }
   }
 
   async function savePatient(e) {
@@ -343,7 +371,6 @@
     }
   }
 
-  // 🌟 ส่งข้อมูล วันนัด เวลา และ หมายเหตุ
   async function saveEMR(e) {
     e.preventDefault();
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาและเลือกคนไข้ก่อนบันทึกรักษา', 'warning');
@@ -363,7 +390,7 @@
       const data = await res.json();
       if (data.status === 'success') {
         document.getElementById('emrForm').reset();
-        document.getElementById('emr_next_appointment_time').value = '10:00'; // ตั้งค่าเวลาเริ่มต้น
+        document.getElementById('emr_next_appointment_time').value = '10:00'; 
         loadEMRHistory(currentHN);
         Swal.fire({ icon: 'success', title: 'บันทึกรักษาเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       }
@@ -372,7 +399,6 @@
     }
   }
 
-  // 🌟 โหลดประวัติรักษาพร้อมป้ายบอกวันและเวลานัด
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -447,6 +473,9 @@
     }, 1000);
   }
 
+  // ==========================================
+  // ระบบวาดภาพ
+  // ==========================================
   function initCanvas() {
     canvas = document.getElementById('faceCanvas');
     if (!canvas) return;
@@ -617,16 +646,5 @@
         Swal.fire('Error', 'ไม่สามารถลบรูปภาพได้', 'error');
       }
     }
-  }
-  
-  // ==========================================
-  // 🩺 ระบบรับคำสั่ง "เปิด EMR ด่วน" จากหน้าปฏิทินนัดหมาย
-  // ==========================================
-  if (window.globalTargetHN) {
-    setTimeout(() => {
-      document.getElementById('searchInput').value = window.globalTargetHN;
-      searchPatient(); // สั่งค้นหาอัตโนมัติ
-      window.globalTargetHN = null; // ล้างค่าทิ้งหลังจากใช้เสร็จ
-    }, 400); // ดีเลย์เล็กน้อยรอให้หน้าต่างโหลดเสร็จ
   }
 </script>
