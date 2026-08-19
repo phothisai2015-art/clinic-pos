@@ -236,6 +236,48 @@ app.put('/api/queue/complete/:hn', (req, res) => {
   });
 });
 
+// ==========================================
+// 💰 API ระบบ POS (จุดชำระเงิน)
+// ==========================================
+
+// ส่งคนไข้ไปห้องชำระเงิน (กดจากหน้า EMR ของหมอ)
+app.put('/api/pos/send/:hn', (req, res) => {
+  // เปลี่ยนสถานะคิวเป็น รอชำระเงิน (WAITING_PAYMENT)
+  db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED')`, [req.params.hn], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'ส่งไปหน้าชำระเงินเรียบร้อย' });
+  });
+});
+
+// ดึงรายการคิวรอชำระเงิน (ไปโชว์ที่หน้า POS)
+app.get('/api/pos/queue', (req, res) => {
+  const sql = `
+    SELECT 
+      a.id as appt_id,
+      a.patient_id as hn, 
+      p.full_name as name, 
+      a.appointment_time as time,
+      (SELECT treatment_details FROM emr_logs WHERE patient_id = a.patient_id ORDER BY id DESC LIMIT 1) as treatment_details
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    WHERE a.status = 'WAITING_PAYMENT'
+    ORDER BY a.id ASC
+  `;
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', data: rows });
+  });
+});
+
+// ชำระเงินเสร็จสิ้น (เคลียร์คิว)
+app.put('/api/pos/pay/:id', (req, res) => {
+  db.run(`UPDATE appointments SET status = 'PAID' WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'ชำระเงินสำเร็จ' });
+  });
+});
+
+
 // เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`);
