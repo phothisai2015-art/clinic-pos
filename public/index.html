@@ -271,6 +271,11 @@
     }
 
     function closeModule() {
+      // 🛑 หยุดระบบ Auto-refresh ของทุกหน้าเมื่อกดปิด ป้องกันเน็ตเวิร์คทำงานซ้ำซ้อน
+      if(window.bookingInterval) clearInterval(window.bookingInterval);
+      if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
+      if(window.posQueueInterval) clearInterval(window.posQueueInterval);
+
       document.getElementById('module-container').innerHTML = '';
       document.getElementById('module-container').style.display = 'none';
     }

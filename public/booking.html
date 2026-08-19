@@ -113,6 +113,10 @@
 
   function initBookingModule() {
     fetchAppointments();
+    
+    // เคลียร์ของเก่าทิ้งก่อน (ถ้ามี) แล้วตั้งเวลาให้ดึงข้อมูลใหม่ทุกๆ 5 วินาที
+    if(window.bookingInterval) clearInterval(window.bookingInterval);
+    window.bookingInterval = setInterval(fetchAppointments, 5000);
   }
   initBookingModule();
 
