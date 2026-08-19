@@ -230,7 +230,7 @@ app.get('/api/queue', (req, res) => {
 
 // 2. อัปเดตสถานะเป็น "ตรวจเสร็จแล้ว" เมื่อบันทึก EMR
 app.put('/api/queue/complete/:hn', (req, res) => {
-  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status = 'CHECKED_IN'`, [req.params.hn], function(err) {
+  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status IN ('WAITING', 'CHECKED_IN')`, [req.params.hn], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', message: 'เคลียร์คิวสำเร็จ' });
   });
@@ -243,7 +243,7 @@ app.put('/api/queue/complete/:hn', (req, res) => {
 // ส่งคนไข้ไปห้องชำระเงิน (กดจากหน้า EMR ของหมอ)
 app.put('/api/pos/send/:hn', (req, res) => {
   // เปลี่ยนสถานะคิวเป็น รอชำระเงิน (WAITING_PAYMENT)
-  db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED')`, [req.params.hn], function(err) {
+  db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE patient_id = ? AND status IN ('WAITING', 'CHECKED_IN', 'COMPLETED')`, [req.params.hn], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', message: 'ส่งไปหน้าชำระเงินเรียบร้อย' });
   });
