@@ -132,12 +132,11 @@
   
   var thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
-  // เริ่มทำงานทันทีที่เปิดหน้านี้
   function initBookingModule() {
     fetchAppointments();
   }
   
-  initBookingModule(); // เรียกใช้งาน
+  initBookingModule();
 
   // =====================================
   // 🌟 ฟังก์ชันสลับแท็บ
@@ -200,9 +199,7 @@
 
     for (let i = 1; i <= daysInMonth; i++) {
       let checkDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      
       let hasAppt = clinicAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
-      
       let isSelected = (checkDateStr === activeSelectedDate) ? 'active' : '';
 
       daysContainer.innerHTML += `
@@ -258,10 +255,7 @@
       const dStr = dObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
       const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
       
-      let statusBadge = appt.status === 'CONFIRMED' 
-        ? '<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> โทรแล้ว</span>' 
-        : '';
-      
+      let statusBadge = appt.status === 'CONFIRMED' ? '<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> โทรแล้ว</span>' : '';
       let cardClass = appt.status === 'CONFIRMED' ? 'confirmed-card' : '';
       let timeBadgeClass = "bg-warning text-dark"; 
       let overdueBadge = "";
@@ -279,6 +273,21 @@
         }
       }
 
+      // 🌟 ตรวจสอบว่าคิวนี้ถูก Check-in เข้าห้องตรวจไปแล้วหรือยัง
+      let isCheckedIn = window.globalCheckedInQueue && window.globalCheckedInQueue.find(q => q.hn === appt.hn);
+      let actionBtnHtml = '';
+
+      if (isCheckedIn) {
+        // หากส่งไปแล้ว เปลี่ยนปุ่มเป็นป้าย "รอตรวจ"
+        actionBtnHtml = `<span class="badge bg-warning text-dark border"><i class="fa-solid fa-user-clock me-1"></i> รอเข้าห้องตรวจ</span>`;
+      } else {
+        // หากยังไม่ส่ง ให้แสดงปุ่ม Check-in
+        actionBtnHtml = `
+          <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient('${appt.hn}', '${patientName}')">
+            <i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ
+          </button>`;
+      }
+
       html += `
         <div class="card appt-card ${cardClass} mb-3 shadow-sm border-0 bg-light">
           <div class="card-body p-3">
@@ -287,10 +296,7 @@
                 <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge} ${overdueBadge}</h6>
                 <div class="d-flex align-items-center gap-2 mt-1">
                   <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
-                  <!-- 🌟 ปุ่ม Check-in -->
-                  <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient('${appt.hn}', '${patientName}')">
-                    <i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ
-                  </button>
+                  ${actionBtnHtml}
                 </div>
               </div>
               <div class="text-end">
@@ -391,30 +397,30 @@
   }
 
   // =====================================
-  // 🩺 ฟังก์ชัน Check-in คนไข้
+  // 🩺 ฟังก์ชัน Check-in คนไข้ (แบบไม่เด้งเปลี่ยนหน้า)
   // =====================================
   function checkInPatient(hn, name) {
     Swal.fire({
-      title: `Check-in ${name}?`,
-      text: "ระบบจะส่งคนไข้เข้าคิวรอตรวจ และเปิดหน้า EMR",
-      icon: 'info',
+      title: `ส่งคิว ${name}?`,
+      text: "ระบบจะส่งคนไข้เข้าคิวรอตรวจหน้าห้องแพทย์",
+      icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน Check-in',
-      cancelButtonText: 'ยกเลิก'
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#0dcaf0'
     }).then((result) => {
       if (result.isConfirmed) {
-        // จำลองเพิ่มคนไข้เข้าคิว (เก็บใน Global Variable เพื่อให้หน้า EMR ดึงไปโชว์)
+        // เพิ่มคนไข้เข้าคิว EMR (เก็บใน Global Variable เพื่อให้หน้า EMR ดึงไปโชว์)
         if(!window.globalCheckedInQueue) window.globalCheckedInQueue = [];
-        // เช็คว่าเคยเช็คอินไปแล้วหรือยัง
+        
         if(!window.globalCheckedInQueue.find(q => q.hn === hn)) {
           window.globalCheckedInQueue.push({ hn: hn, name: name });
         }
-        
-        // สั่งวาร์ปไปหน้า EMR พร้อมโหลดข้อมูลคนไข้คนแรกในคิว
-        window.globalTargetHN = hn;
-        if (typeof openModule === 'function') {
-          openModule('patient.html');
-        }
+
+        Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าคิวเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+
+        // รีเฟรชรายการบัตรคิว เพื่อให้ปุ่ม Check-in เปลี่ยนเป็นป้าย "รอตรวจ"
+        renderApptList(activeSelectedDate, 'selectedApptList');
       }
     });
   }
