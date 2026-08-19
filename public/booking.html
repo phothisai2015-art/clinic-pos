@@ -238,14 +238,13 @@
   }
 
   // =====================================
-  // 📋 Render List (วันที่เลือกในปฏิทิน) + ระบบแจ้งเตือนเลยเวลา
+  // 📋 Render List (วันที่เลือกในปฏิทิน) + ปุ่มเปิด EMR ด่วน
   // =====================================
   function renderApptList(filterDate, containerId) {
     const listContainer = document.getElementById(containerId);
     if(!listContainer) return;
     listContainer.innerHTML = '';
 
-    // แสดงเฉพาะวันที่เลือกเท่านั้น (ไม่มีคำว่า ALL แล้ว)
     let filtered = clinicAppointments.filter(a => a.date === filterDate);
     filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
@@ -255,7 +254,7 @@
     }
 
     let html = '';
-    const now = new Date(); // เวลาปัจจุบัน
+    const now = new Date(); 
     const nowDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     filtered.forEach(appt => {
@@ -268,17 +267,15 @@
         : '';
       
       let cardClass = appt.status === 'CONFIRMED' ? 'confirmed-card' : '';
-      let timeBadgeClass = "bg-warning text-dark"; // สีเวลาปกติ
+      let timeBadgeClass = "bg-warning text-dark"; 
       let overdueBadge = "";
 
-      // 🌟 คำนวณเช็คเลยเวลา
       const apptDateTime = new Date(`${appt.date}T${appt.time}`);
       
       if (apptDateTime < now) {
-        timeBadgeClass = "bg-danger text-white"; // เปลี่ยนสีป้ายเวลาเป็นสีแดง
-        cardClass += " opacity-75"; // ทำให้การ์ดสีจางลงนิดนึง
+        timeBadgeClass = "bg-danger text-white"; 
+        cardClass += " opacity-75"; 
         
-        // เช็คว่าเลยเวลาในวันนี้ หรือเลยมาจากวันอื่น
         if (appt.date === nowDateStr) {
           overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-clock-rotate-left"></i> เลยเวลานัด</span>';
         } else {
@@ -292,7 +289,13 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge} ${overdueBadge}</h6>
-                <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
+                  <!-- 🌟 เพิ่มปุ่มเปิด EMR -->
+                  <button class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="openEMRQuick('${appt.hn}')">
+                    <i class="fa-solid fa-notes-medical"></i> เปิด EMR
+                  </button>
+                </div>
               </div>
               <div class="text-end">
                 <span class="badge ${timeBadgeClass} mb-1"><i class="fa-regular fa-clock me-1"></i> ${appt.time} น.</span><br>
@@ -310,7 +313,7 @@
   }
 
   // =====================================
-  // 📞 Render List คิวของวันพรุ่งนี้ 
+  // 📞 Render List คิวของวันพรุ่งนี้ + ปุ่มเปิด EMR ด่วน
   // =====================================
   function renderTomorrowList() {
     const listContainer = document.getElementById('tomorrowApptList');
@@ -352,7 +355,13 @@
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                   <h6 class="fw-bold text-success m-0 mb-1">${patientName}</h6>
-                  <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small><br>
+                  <div class="d-flex align-items-center gap-2 mt-1 mb-1">
+                    <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
+                    <!-- 🌟 เพิ่มปุ่มเปิด EMR -->
+                    <button class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="openEMRQuick('${appt.hn}')">
+                      <i class="fa-solid fa-notes-medical"></i> เปิด EMR
+                    </button>
+                  </div>
                   <small class="fw-bold text-dark"><i class="fa-solid fa-phone me-1 text-success"></i> ${patientPhone}</small>
                 </div>
               </div>
@@ -389,6 +398,18 @@
       }
     } catch (err) {
       Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error');
+    }
+  }
+
+  // =====================================
+  // 🩺 ฟังก์ชันโยนข้อมูลไปเปิดหน้า EMR ด่วน
+  // =====================================
+  function openEMRQuick(hn) {
+    // เซ็ตตัวแปร Global ไว้ให้หน้า patient.html ดึงไปค้นหา
+    window.globalTargetHN = hn;
+    // สั่งให้ระบบหลักเปิดหน้า patient.html
+    if (typeof openModule === 'function') {
+      openModule('patient.html');
     }
   }
 </script>
