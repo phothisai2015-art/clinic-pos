@@ -209,6 +209,33 @@ app.put('/api/appointments/:id/status', (req, res) => {
   });
 });
 
+// ==========================================
+// 🛎️ API จัดการคิวหน้าห้องตรวจ (Real-time Queue)
+// ==========================================
+
+// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว
+app.get('/api/queue', (req, res) => {
+  const sql = `
+    SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    WHERE a.status = 'CHECKED_IN'
+    ORDER BY a.appointment_date ASC, a.appointment_time ASC
+  `;
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', data: rows });
+  });
+});
+
+// 2. อัปเดตสถานะเป็น "ตรวจเสร็จแล้ว" เมื่อบันทึก EMR
+app.put('/api/queue/complete/:hn', (req, res) => {
+  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status = 'CHECKED_IN'`, [req.params.hn], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'เคลียร์คิวสำเร็จ' });
+  });
+});
+
 // เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`);
