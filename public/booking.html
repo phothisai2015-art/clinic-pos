@@ -94,7 +94,6 @@
           <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
               <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-primary me-2"></i> คิววันที่เลือก</h5>
-              <!-- 🌟 ป้ายบอกวันที่ ถูกย้ายมาแสดงวันที่ปัจจุบันแทนคำว่าแสดงทั้งหมด -->
               <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">กำลังโหลด...</span>
             </div>
             
@@ -129,7 +128,6 @@
   var currentMonth = _todayDate.getMonth();
   var currentYear = _todayDate.getFullYear();
   
-  // 🌟 ตั้งค่าเริ่มต้นให้ activeSelectedDate เป็น "วันนี้" เสมอ ไม่ใช่ 'ALL'
   var activeSelectedDate = `${_todayDate.getFullYear()}-${String(_todayDate.getMonth() + 1).padStart(2, '0')}-${String(_todayDate.getDate()).padStart(2, '0')}`;
   
   var thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -170,7 +168,6 @@
         clinicAppointments = data.data;
         renderCalendar();
         
-        // เซ็ตป้ายบอกวันที่เป็นวันปัจจุบันทันที
         const dateObj = new Date(activeSelectedDate);
         const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
         document.getElementById('selectedDateBadge').innerText = `${thDateStr}`;
@@ -206,7 +203,6 @@
       
       let hasAppt = clinicAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
       
-      // ให้ไฮไลท์สีฟ้าตรงกับวันที่ที่กำลังเลือก (activeSelectedDate) เท่านั้น
       let isSelected = (checkDateStr === activeSelectedDate) ? 'active' : '';
 
       daysContainer.innerHTML += `
@@ -238,7 +234,7 @@
   }
 
   // =====================================
-  // 📋 Render List (วันที่เลือกในปฏิทิน) + ปุ่มเปิด EMR ด่วน
+  // 📋 Render List (วันที่เลือกในปฏิทิน) + ปุ่ม Check-in
   // =====================================
   function renderApptList(filterDate, containerId) {
     const listContainer = document.getElementById(containerId);
@@ -291,9 +287,9 @@
                 <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge} ${overdueBadge}</h6>
                 <div class="d-flex align-items-center gap-2 mt-1">
                   <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
-                  <!-- 🌟 เพิ่มปุ่มเปิด EMR -->
-                  <button class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="openEMRQuick('${appt.hn}')">
-                    <i class="fa-solid fa-notes-medical"></i> เปิด EMR
+                  <!-- 🌟 ปุ่ม Check-in -->
+                  <button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient('${appt.hn}', '${patientName}')">
+                    <i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ
                   </button>
                 </div>
               </div>
@@ -313,7 +309,7 @@
   }
 
   // =====================================
-  // 📞 Render List คิวของวันพรุ่งนี้ + ปุ่มเปิด EMR ด่วน
+  // 📞 Render List คิวของวันพรุ่งนี้
   // =====================================
   function renderTomorrowList() {
     const listContainer = document.getElementById('tomorrowApptList');
@@ -357,10 +353,6 @@
                   <h6 class="fw-bold text-success m-0 mb-1">${patientName}</h6>
                   <div class="d-flex align-items-center gap-2 mt-1 mb-1">
                     <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn}</small>
-                    <!-- 🌟 เพิ่มปุ่มเปิด EMR -->
-                    <button class="btn btn-sm btn-outline-info rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="openEMRQuick('${appt.hn}')">
-                      <i class="fa-solid fa-notes-medical"></i> เปิด EMR
-                    </button>
                   </div>
                   <small class="fw-bold text-dark"><i class="fa-solid fa-phone me-1 text-success"></i> ${patientPhone}</small>
                 </div>
@@ -380,9 +372,6 @@
     listContainer.innerHTML = html;
   }
 
-  // =====================================
-  // 🟢 API อัปเดตสถานะเป็น "โทรยืนยันแล้ว"
-  // =====================================
   async function markAsContacted(id) {
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
@@ -402,14 +391,31 @@
   }
 
   // =====================================
-  // 🩺 ฟังก์ชันโยนข้อมูลไปเปิดหน้า EMR ด่วน
+  // 🩺 ฟังก์ชัน Check-in คนไข้
   // =====================================
-  function openEMRQuick(hn) {
-    // เซ็ตตัวแปร Global ไว้ให้หน้า patient.html ดึงไปค้นหา
-    window.globalTargetHN = hn;
-    // สั่งให้ระบบหลักเปิดหน้า patient.html
-    if (typeof openModule === 'function') {
-      openModule('patient.html');
-    }
+  function checkInPatient(hn, name) {
+    Swal.fire({
+      title: `Check-in ${name}?`,
+      text: "ระบบจะส่งคนไข้เข้าคิวรอตรวจ และเปิดหน้า EMR",
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน Check-in',
+      cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // จำลองเพิ่มคนไข้เข้าคิว (เก็บใน Global Variable เพื่อให้หน้า EMR ดึงไปโชว์)
+        if(!window.globalCheckedInQueue) window.globalCheckedInQueue = [];
+        // เช็คว่าเคยเช็คอินไปแล้วหรือยัง
+        if(!window.globalCheckedInQueue.find(q => q.hn === hn)) {
+          window.globalCheckedInQueue.push({ hn: hn, name: name });
+        }
+        
+        // สั่งวาร์ปไปหน้า EMR พร้อมโหลดข้อมูลคนไข้คนแรกในคิว
+        window.globalTargetHN = hn;
+        if (typeof openModule === 'function') {
+          openModule('patient.html');
+        }
+      }
+    });
   }
 </script>
