@@ -122,6 +122,17 @@
             </div>
 
             <div class="mt-4">
+			<!-- 🌟 เพิ่ม Dropdown เลือกเซลล์ตรงนี้ -->
+            <div class="mb-3 pt-3 border-top">
+              <label class="fw-bold text-muted small mb-1"><i class="fa-solid fa-headset text-primary"></i> พนักงานขาย / เซลล์ที่ปรึกษา:</label>
+              <select id="sales_rep_select" class="form-select bg-light">
+                <option value="">-- ไม่ระบุเซลล์ --</option>
+                <option value="น้องส้ม (เซลล์)">น้องส้ม (เซลล์)</option>
+                <option value="น้องฟ้า (เซลล์)">น้องฟ้า (เซลล์)</option>
+                <option value="หมอขายเอง">แพทย์ปิดการขายเอง</option>
+              </select>
+            </div> 
+			
               <h6 class="fw-bold text-muted small mb-2">เลือกช่องทางการชำระเงิน</h6>
               <div class="d-flex gap-2 mb-3">
                 <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectPayMethod('cash')"><i class="fa-solid fa-money-bill-wave d-block fs-4 mb-1"></i> เงินสด</button>
@@ -234,7 +245,7 @@
   // ==========================================
   // 💳 2. เลือกคิวและแสดงรายละเอียดบิล
   // ==========================================
-  function selectPosQueue(id, element) {
+  async function selectPosQueue(id, element) {
     document.querySelectorAll('.pos-queue-card').forEach(el => el.classList.remove('active'));
     if(element) element.classList.add('active');
 
@@ -248,7 +259,11 @@
     document.getElementById('b_patient_name').innerText = activeBill.name;
     document.getElementById('b_patient_hn').innerText = activeBill.hn;
     document.getElementById('b_doctor').innerText = activeBill.doctor;
-    document.getElementById('b_sale').innerText = activeBill.sale;
+
+    // 🌟 ดึงคอร์สจากฐานข้อมูลจริง
+    const cRes = await fetch(`/api/patients/${activeBill.hn}/courses`);
+    const cData = await cRes.json();
+    activeBill.courses = cData.data.map(c => ({ id: c.id, name: c.product_id, total: c.total_qty, used: c.used_qty }));
 
     renderBillItems();
   }
@@ -311,27 +326,33 @@
   // ✂️ 3. ระบบตัดคอร์ส
   // ==========================================
   function deductCourse(courseId) {
+    let course = activeBill.courses.find(c => c.id === courseId);
+    let remain = course.total - course.used;
+    
     Swal.fire({
-      title: 'ยืนยันการตัดคอร์ส?',
-      text: "ระบบจะทำการหักสิทธิ์การใช้งาน 1 ครั้ง และนำไปแสดงในใบเสร็จ",
-      icon: 'question',
+      title: `ตัดคอร์ส: ${course.name}`,
+      html: `<div class="mb-2">คงเหลือทั้งหมด <b>${remain}</b> ครั้ง/ยูนิต</div>
+             <div class="small text-muted mb-2">ระบุจำนวนที่ต้องการใช้งาน (ใส่ทศนิยมได้)</div>`,
+      input: 'number',
+      inputAttributes: { step: '0.1', min: '0.1', max: remain },
       showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'ยืนยันตัดสิทธิ์',
-      cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        let course = activeBill.courses.find(c => c.id === courseId);
-        course.used += 1;
-        let remain = course.total - course.used;
-
-        activeBill.items.push({
-          name: `[ตัดคอร์ส] ${course.name} (คงเหลือ ${remain}/${course.total})`,
-          qty: 1,
-          price: 0
+      confirmButtonText: 'ยืนยันการตัด',
+      confirmButtonColor: '#10b981'
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        let deductVal = parseFloat(result.value);
+        if(deductVal > remain) return Swal.fire('Error', 'ตัดเกินจำนวนคงเหลือ', 'error');
+        
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        // ยิง API หักคอร์สใน Database
+        await fetch(`/api/courses/${courseId}/deduct`, {
+          method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: deductVal})
         });
 
+        course.used += deductVal;
+        activeBill.items.push({ name: `[ใช้งานคอร์ส] ${course.name} (ใช้ไป ${deductVal})`, qty: 1, price: 0 });
+        
         renderBillItems();
         Swal.fire({ icon: 'success', title: 'ตัดคอร์สสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       }
@@ -374,24 +395,23 @@
   async function completeBill() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูลและพิมพ์ใบเสร็จ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
+    const salesRep = document.getElementById('sales_rep_select').value;
+
     try {
-      // อัปเดตสถานะบิลบน Database เป็น PAID
-      await fetch('/api/pos/pay/' + activeBill.id, { method: 'PUT' });
+      await fetch('/api/pos/pay/' + activeBill.id, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sales_rep: salesRep }) 
+      });
 
       Swal.fire({
-        icon: 'success',
-        title: 'รับชำระเงินเสร็จสิ้น',
-        text: 'ระบบได้พิมพ์ใบเสร็จ/ใบกำกับภาษี และจัดคิวรับยากลับบ้านเรียบร้อยแล้ว',
-        confirmButtonText: 'ตกลง',
-        confirmButtonColor: '#3b82f6'
+        icon: 'success', title: 'รับชำระเงินเสร็จสิ้น', text: 'จัดคิวรับยากลับบ้านเรียบร้อยแล้ว', confirmButtonColor: '#3b82f6'
       }).then(() => {
         activeBill = null;
         document.getElementById('posBillState').style.display = 'none';
         document.getElementById('posEmptyState').style.display = 'flex';
-        fetchPosQueue(); // รีเฟรชคิวล่าสุด
+        fetchPosQueue(); 
       });
-    } catch (err) {
-      Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
-    }
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
   }
 </script>

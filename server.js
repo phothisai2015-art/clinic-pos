@@ -46,6 +46,38 @@ db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => 
 db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
 db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
 db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
+// เพิ่มคอลัมน์เซลล์ดูแล (Sales Rep) ในตารางคิว
+db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, () => {});
+// 🌟 เพิ่มคอลัมน์ Lot และ Expiry ให้ตารางคลังสินค้า
+db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
+db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
+
+// ==========================================
+// 💳 API ระบบคอร์สความงาม (Patient Courses)
+// ==========================================
+// ดึงรายการคอร์สของคนไข้
+app.get('/api/patients/:id/courses', (req, res) => {
+  db.all(`SELECT * FROM patient_courses WHERE patient_id = ?`, [req.params.id], (err, rows) => {
+    res.json({ status: 'success', data: rows || [] });
+  });
+});
+
+// ซื้อคอร์สใหม่ (ทดสอบ)
+app.post('/api/patients/:id/courses', (req, res) => {
+  const { course_name, total_qty } = req.body;
+  db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, 
+    [req.params.id, course_name, parseFloat(total_qty)], function(err) {
+    res.json({ status: 'success', course_id: this.lastID });
+  });
+});
+
+// หักยอดคอร์ส (รองรับทศนิยม)
+app.put('/api/courses/:id/deduct', (req, res) => {
+  const { deduct_amount } = req.body;
+  db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [parseFloat(deduct_amount), req.params.id], function(err) {
+    res.json({ status: 'success' });
+  });
+});
 
 // เพิ่ม Route สำหรับหน้าใหม่
 app.get('/reception.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reception.html')); });
@@ -330,13 +362,61 @@ app.get('/api/pos/queue', (req, res) => {
   });
 });
 
-// ชำระเงินเสร็จสิ้น (เคลียร์คิว)
+// ชำระเงินเสร็จสิ้น (เคลียร์คิวและเก็บยอดเซลล์)
 app.put('/api/pos/pay/:id', (req, res) => {
-  db.run(`UPDATE appointments SET status = 'PAID' WHERE id = ?`, [req.params.id], function(err) {
+  const { sales_rep } = req.body;
+  db.run(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE id = ?`, [sales_rep || '-', req.params.id], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
     res.json({ status: 'success', message: 'ชำระเงินสำเร็จ' });
   });
 });
+
+// ==========================================
+// 📦 API ระบบคลังยาและเวชภัณฑ์ (Inventory)
+// ==========================================
+
+// 1. ดึงรายการสินค้าทั้งหมด
+app.get('/api/inventory', (req, res) => {
+  db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', data: rows });
+  });
+});
+
+// 2. เพิ่มสินค้า/เวชภัณฑ์ใหม่ (อัปเดตรับค่า Lot และ Expiry)
+app.post('/api/inventory', (req, res) => {
+  const { id, name, type, price, stock, unit, lot_number, expiry_date } = req.body;
+  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date) 
+               VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET 
+               name=excluded.name, type=excluded.type, price=excluded.price, 
+               stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date`;
+  
+  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || ''], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'บันทึกสินค้าสำเร็จ' });
+  });
+});
+
+// 3. ปรับปรุงสต็อก (รับเข้า / เบิกออก)
+app.put('/api/inventory/:id/stock', (req, res) => {
+  const { adjust_qty } = req.body; // ใส่ค่าบวกเพื่อรับเข้า ค่าลบเพื่อเบิกออก
+  db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [adjust_qty, req.params.id], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'อัปเดตสต็อกสำเร็จ' });
+  });
+});
+
+// 4. ลบสินค้า
+app.delete('/api/inventory/:id', (req, res) => {
+  db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    res.json({ status: 'success', message: 'ลบสินค้าสำเร็จ' });
+  });
+});
+
+// เพิ่ม Route สำหรับหน้า Inventory
+app.get('/inventory.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'inventory.html')); });
 
 
 // เริ่มรันเซิร์ฟเวอร์
