@@ -80,8 +80,8 @@
                 <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียน</h5>
                 <form id="emrForm" onsubmit="saveEMR(event)">
                   <!-- 🌟 เอาคำว่า required ออก และเพิ่ม rows="4" ให้กล่องสูงขึ้น -->
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="4"></textarea></div>
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="4"></textarea></div>
+                  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="1"></textarea></div>
+                  <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="1"></textarea></div>
                   
                   <!-- กล่องหักสิทธิ์คอร์ส (จะถูกซ่อนไว้โดยค่าเริ่มต้น ถ้าไม่มีคอร์ส) -->
                   <div id="emr_deduct_section" class="mb-3 p-3 bg-light border border-success rounded-3" style="display: none;">
