@@ -96,9 +96,9 @@
                   <input type="tel" id="p_phone" class="form-control rounded-3" required>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label fw-bold small text-muted">วันเกิด</label>
-                  <input type="date" id="p_dob" class="form-control rounded-3">
-                </div>
+				<label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
+				<input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
+				</div>
                 <div class="col-md-4">
                   <label class="form-label fw-bold small text-muted">โรคประจำตัว</label>
                   <input type="text" id="p_disease" class="form-control rounded-3">
@@ -353,6 +353,7 @@
     document.getElementById('p_idcard').value = p.id_card || '';
     document.getElementById('p_phone').value = p.phone || '';
     document.getElementById('p_dob').value = p.dob || '';
+	calculateAge();
     document.getElementById('p_disease').value = p.congenital_disease || '';
     document.getElementById('p_allergies').value = p.allergies || '';
 
@@ -578,6 +579,7 @@
     document.getElementById('patientForm').reset();
     document.getElementById('emrForm').reset();
     document.getElementById('p_hn').value = '';
+	document.getElementById('age_display').innerText = '';
     document.getElementById('allergyAlert').style.display = 'none';
     document.getElementById('emrCurrentPatient').innerHTML = 'กรุณาเลือกคนไข้...';
     document.getElementById('photoCurrentPatient').innerHTML = 'เลือกคนไข้...';
@@ -675,5 +677,18 @@
         if (data.status === 'success') { Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); loadPatientPhotos(currentHN); }
       } catch (err) {}
     }
+  }
+  
+  // 🌟 ฟังก์ชันคำนวณอายุอัตโนมัติ
+  function calculateAge() {
+    const dobStr = document.getElementById('p_dob').value;
+    const ageDisplay = document.getElementById('age_display');
+    if (!dobStr) { ageDisplay.innerText = ''; return; }
+    
+    const dob = new Date(dobStr);
+    const diffMS = Date.now() - dob.getTime();
+    const ageDate = new Date(diffMS);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    ageDisplay.innerText = `(อายุ ${age} ปี)`;
   }
 </script>

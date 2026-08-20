@@ -30,7 +30,10 @@
             <div class="col-md-5"><label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label><input type="text" id="p_name" class="form-control" required></div>
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control"></div>
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label fw-bold small text-muted">วันเกิด</label><input type="date" id="p_dob" class="form-control"></div>
+            <div class="col-md-4">
+			<label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
+			<input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
+			</div>
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">โรคประจำตัว</label><input type="text" id="p_disease" class="form-control"></div>
             <div class="col-12"><label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา (ระบุให้ชัดเจน)</label><textarea id="p_allergies" class="form-control" rows="2"></textarea></div>
             <div class="col-12 text-end mt-4 pt-3 border-top">
@@ -83,10 +86,12 @@
     document.getElementById('p_idcard').value = p.id_card || '';
     document.getElementById('p_phone').value = p.phone || '';
     document.getElementById('p_dob').value = p.dob || '';
+	calculateAge();
     document.getElementById('p_disease').value = p.congenital_disease || '';
     document.getElementById('p_allergies').value = p.allergies || '';
     document.getElementById('searchResultText').innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-check"></i> ดึงประวัติ ${p.full_name} เรียบร้อย</span>`;
-  }
+	
+ }
 
   async function savePatient(e) {
     e.preventDefault();
@@ -107,19 +112,33 @@
     } catch(e) {}
   }
 
+  // 🌟 อัปเดต Pop-up ความดันแบบละเอียด
   function sendWalkinQueue() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
     Swal.fire({
       title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
       html: `
         <div class="text-start mt-3">
-          <label class="small fw-bold text-muted mb-1">ความดันโลหิต (BP)</label>
-          <input id="swal-bp" class="form-control mb-3" placeholder="เช่น 120/80">
-          <div class="row"><div class="col-6"><label class="small fw-bold text-muted mb-1">น้ำหนัก (kg)</label><input id="swal-weight" type="number" class="form-control" placeholder="เช่น 60"></div>
-          <div class="col-6"><label class="small fw-bold text-muted mb-1">ส่วนสูง (cm)</label><input id="swal-height" type="number" class="form-control" placeholder="เช่น 170"></div></div>
+          <div class="row g-2 mb-3">
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">SYS (ตัวบน)</label><input id="swal-sys" type="number" class="form-control" placeholder="120"></div>
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">DIA (ตัวล่าง)</label><input id="swal-dia" type="number" class="form-control" placeholder="80"></div>
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">ชีพจร (Pulse)</label><input id="swal-pulse" type="number" class="form-control" placeholder="72"></div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6"><label class="small fw-bold text-muted mb-1">น้ำหนัก (kg)</label><input id="swal-weight" type="number" class="form-control" placeholder="60"></div>
+            <div class="col-6"><label class="small fw-bold text-muted mb-1">ส่วนสูง (cm)</label><input id="swal-height" type="number" class="form-control" placeholder="170"></div>
+          </div>
         </div>`,
       showCancelButton: true, confirmButtonText: 'ส่งเข้าห้องตรวจ', confirmButtonColor: '#0dcaf0', cancelButtonText: 'ยกเลิก',
-      preConfirm: () => ({ bp: document.getElementById('swal-bp').value, weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value })
+      preConfirm: () => {
+        let sys = document.getElementById('swal-sys').value;
+        let dia = document.getElementById('swal-dia').value;
+        let bp = (sys || dia) ? `${sys}/${dia}` : ''; // จับมารวมกันเป็น 120/80
+        return { 
+          bp: bp, pulse: document.getElementById('swal-pulse').value, 
+          weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value 
+        }
+      }
     }).then(async (res) => {
       if (res.isConfirmed) {
         Swal.fire({ title: 'กำลังส่งคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -132,10 +151,24 @@
 
   function clearForm() {
     currentHN = ''; document.getElementById('patientForm').reset(); document.getElementById('p_hn').value = '';
-    document.getElementById('searchInput').value = ''; document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
+    document.getElementById('age_display').innerText = '';
+	document.getElementById('searchInput').value = ''; document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
   }
   function readSmartCard() {
     Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     setTimeout(() => { clearForm(); document.getElementById('p_name').value = 'สมชาย รักชาติ'; document.getElementById('p_idcard').value = '1100200300401'; document.getElementById('p_phone').value = '0891234567'; document.getElementById('p_dob').value = '1985-10-25'; Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); }, 1000);
+  }
+  
+  // 🌟 ฟังก์ชันคำนวณอายุอัตโนมัติ
+  function calculateAge() {
+    const dobStr = document.getElementById('p_dob').value;
+    const ageDisplay = document.getElementById('age_display');
+    if (!dobStr) { ageDisplay.innerText = ''; return; }
+    
+    const dob = new Date(dobStr);
+    const diffMS = Date.now() - dob.getTime();
+    const ageDate = new Date(diffMS);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    ageDisplay.innerText = `(อายุ ${age} ปี)`;
   }
 </script>
