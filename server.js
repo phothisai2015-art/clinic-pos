@@ -297,7 +297,7 @@ app.put('/api/appointments/:id/status', (req, res) => {
 app.get('/api/queue', (req, res) => {
   const sql = `
     SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time,
-           a.is_walkin, a.bp, a.pulse, a.weight, a.height
+           a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes 
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     WHERE a.status = 'CHECKED_IN'
@@ -311,22 +311,24 @@ app.get('/api/queue', (req, res) => {
 
 // 2. API ส่งเข้าห้องตรวจ (ซักประวัติ Vitals แบบละเอียด)
 app.post('/api/queue/send-doctor', (req, res) => {
-  const { patient_id, bp, pulse, weight, height } = req.body;
+  // 🌟 เพิ่ม notes เข้ามารับค่าด้วย
+  const { patient_id, bp, pulse, weight, height, notes } = req.body;
   const today = new Date().toISOString().split('T')[0];
   const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
-  // เพิ่ม CHECKED_IN ในเงื่อนไข เพื่อให้แก้ไข/อัปเดต Vitals ทับของเดิมได้ถ้าพยาบาลกดส่งซ้ำ
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
     if (row) {
-      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ? WHERE id = ?`, [bp, pulse, weight, height, row.id], function(updateErr) {
+      // 🌟 อัปเดต notes ทับของเดิมด้วย
+      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, [bp, pulse, weight, height, notes || 'Walk-in', row.id], function(updateErr) {
         if (updateErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + updateErr.message});
         res.json({status: 'success', message: 'อัปเดต Vitals และส่งเข้าห้องตรวจสำเร็จ'});
       });
     } else {
+      // 🌟 นำ notes ที่ได้ไปบันทึก
       db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) 
-              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, pulse, weight, height], function(insertErr) {
+              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, [patient_id, today, timeStr, bp, pulse, weight, height, notes || 'Walk-in'], function(insertErr) {
         if (insertErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + insertErr.message});
-        res.json({status: 'success', message: 'สร้างคิว Walk-in เข้าห้องตรวจสำเร็จ'});
+        res.json({status: 'success', message: 'สร้างคิว Walk-in หน้าห้องตรวจสำเร็จ'});
       });
     }
   });
