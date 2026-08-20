@@ -317,11 +317,22 @@
 
   async function saveEMR(e) {
     e.preventDefault(); if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
+    
+    // 🌟 ดึงค่า Vitals จากแถบด้านบนเพื่อส่งไปเซฟ
+    let v_bp = document.getElementById('v_bp').innerText;
+    let v_pulse = document.getElementById('v_pulse').innerText;
+    let v_weight = document.getElementById('v_weight').innerText;
+    let v_height = document.getElementById('v_height').innerText;
+
     const payload = {
       patient_id: currentHN, symptoms: document.getElementById('emr_symptoms').value,
       diagnosis: document.getElementById('emr_diagnosis').value, treatment_details: document.getElementById('emr_treatment').value,
       next_appointment_date: document.getElementById('emr_next_appointment_date').value, next_appointment_time: '10:00',
-      next_appointment_note: document.getElementById('emr_next_appointment_note').value
+      next_appointment_note: document.getElementById('emr_next_appointment_note').value,
+      bp: v_bp !== '-' ? v_bp : '',
+      pulse: v_pulse !== '-' ? v_pulse : '',
+      weight: v_weight !== '-' ? v_weight : '',
+      height: v_height !== '-' ? v_height : ''
     };
     try {
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -353,7 +364,20 @@
            else if (latestAppt && latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double"></i> ชำระเงินเสร็จสิ้น</button>`;
            else paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar"></i> ส่งไปชำระเงิน / รับยา</button>`;
          }
-         html += `<div class="border-start border-3 border-primary ps-3 pb-3 mb-4"><span class="fw-bold text-primary">${dateStr} น.</span><div class="fw-bold mt-2">Dx: ${log.diagnosis}</div><div class="small text-muted mt-1">CC: ${log.symptoms}</div><div class="small text-muted mt-1">Tx: ${log.treatment_details}</div>${paymentBtn}</div>`;
+         
+         // 🌟 นำค่า Vitals ในอดีตมาแสดงในประวัติ
+         let vitalsLog = (log.bp || log.pulse || log.weight || log.height)
+               ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>`
+               : '';
+
+         html += `<div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
+                    <span class="fw-bold text-primary">${dateStr} น.</span>
+                    <div class="fw-bold mt-2">Dx: ${log.diagnosis}</div>
+                    <div class="small text-muted mt-1">CC: ${log.symptoms}</div>
+                    <div class="small text-muted mt-1">Tx: ${log.treatment_details}</div>
+                    ${vitalsLog}
+                    <br>${paymentBtn}
+                  </div>`;
       });
       tl.innerHTML = html;
     } catch(e) {}
