@@ -89,6 +89,33 @@ app.put('/api/courses/:id/deduct', (req, res) => {
   });
 });
 
+// 🌟 API แตกโปรโมชั่นเป็นคอร์สย่อยให้คนไข้ (รับจากหน้า Reception)
+app.post('/api/patients/:id/assign-promo', (req, res) => {
+  const { product_id } = req.body;
+  db.get(`SELECT * FROM products WHERE id = ?`, [product_id], (err, prod) => {
+    if (err || !prod) return res.status(500).json({status: 'error'});
+    
+    if (prod.type === 'PROMOTION') {
+      let items = [];
+      try { items = JSON.parse(prod.bundle_items || '[]'); } catch(e){}
+      if(items.length === 0) return res.json({status: 'success'});
+      
+      let completed = 0;
+      items.forEach(item => {
+        // แตกไอเทมย่อยในโปรโมชั่น ออกเป็นคอร์สใส่ให้คนไข้
+        db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, 
+          [req.params.id, item.id, item.qty], () => {
+          completed++;
+          if (completed === items.length) res.json({status: 'success'});
+        });
+      });
+    } else {
+      // ถ้าเลือกหัตถการเดี่ยวๆ
+      db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, 
+        [req.params.id, prod.id], () => { res.json({status: 'success'}); });
+    }
+  });
+});
 
 
 // เพิ่ม Route สำหรับหน้าใหม่
@@ -293,11 +320,11 @@ app.put('/api/appointments/:id/status', (req, res) => {
 // 🛎️ API จัดการคิวหน้าห้องตรวจ (Real-time Queue)
 // ==========================================
 
-// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว (อัปเดตให้ดึง Pulse มาด้วย)
+// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว (ดึง Notes มาโชว์ให้หมอเห็นด้วย)
 app.get('/api/queue', (req, res) => {
   const sql = `
     SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time,
-           a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes 
+           a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     WHERE a.status = 'CHECKED_IN'
@@ -309,26 +336,21 @@ app.get('/api/queue', (req, res) => {
   });
 });
 
-// 2. API ส่งเข้าห้องตรวจ (ซักประวัติ Vitals แบบละเอียด)
+// 2. API ส่งเข้าห้องตรวจ (อัปเดตให้รับค่า notes ด้วย)
 app.post('/api/queue/send-doctor', (req, res) => {
-  // 🌟 เพิ่ม notes เข้ามารับค่าด้วย
   const { patient_id, bp, pulse, weight, height, notes } = req.body;
   const today = new Date().toISOString().split('T')[0];
   const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
     if (row) {
-      // 🌟 อัปเดต notes ทับของเดิมด้วย
       db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, [bp, pulse, weight, height, notes || 'Walk-in', row.id], function(updateErr) {
-        if (updateErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + updateErr.message});
         res.json({status: 'success', message: 'อัปเดต Vitals และส่งเข้าห้องตรวจสำเร็จ'});
       });
     } else {
-      // 🌟 นำ notes ที่ได้ไปบันทึก
       db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) 
               VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, [patient_id, today, timeStr, bp, pulse, weight, height, notes || 'Walk-in'], function(insertErr) {
-        if (insertErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + insertErr.message});
-        res.json({status: 'success', message: 'สร้างคิว Walk-in หน้าห้องตรวจสำเร็จ'});
+        res.json({status: 'success', message: 'สร้างคิว Walk-in เข้าห้องตรวจสำเร็จ'});
       });
     }
   });
