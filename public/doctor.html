@@ -37,7 +37,7 @@
             <h4 class="fw-bold m-0 text-primary" id="hdr_name">กรุณาเลือกคิวคนไข้...</h4>
             <div class="d-flex flex-wrap gap-3 mt-2 small text-muted">
               <div><i class="fa-solid fa-address-card text-secondary me-1"></i> HN: <span id="hdr_hn" class="fw-bold text-dark">-</span></div>
-              <div><i class="fa-solid fa-phone text-secondary me-1"></i> โทร: <span id="hdr_phone" class="fw-bold text-dark">-</span></div>
+              <div><i class="fa-solid fa-id-card text-secondary me-1"></i> เลข ปชช.: <span id="hdr_idcard" class="fw-bold text-dark">-</span></div>
               <div><i class="fa-solid fa-calendar text-secondary me-1"></i> อายุ: <span id="hdr_age" class="fw-bold text-dark">-</span></div>
             </div>
           </div>
@@ -261,7 +261,7 @@
     
     document.getElementById('hdr_name').innerText = p.full_name;
     document.getElementById('hdr_hn').innerText = p.id;
-    document.getElementById('hdr_phone').innerText = p.phone || '-';
+    document.getElementById('hdr_idcard').innerText = p.id_card || '-';
     
     let ageText = '-';
     if (p.dob) {
@@ -591,7 +591,7 @@
         currentHN = '';
         document.getElementById('hdr_name').innerText = 'กรุณาเลือกคิวคนไข้...';
         document.getElementById('hdr_hn').innerText = '-';
-        document.getElementById('hdr_phone').innerText = '-';
+        document.getElementById('hdr_idcard').innerText = '-';
         document.getElementById('hdr_age').innerText = '-';
         document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">รอเลือกคนไข้...</div>';
         
