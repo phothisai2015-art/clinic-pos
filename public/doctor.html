@@ -142,7 +142,7 @@
   }
   initDoctorModule();
 
-  async function renderEmrQueue() {
+async function renderEmrQueue() {
     try {
       const res = await fetch('/api/queue');
       const data = await res.json();
@@ -155,11 +155,15 @@
       let html = '';
       currentQueueData.forEach(q => {
         const isActive = (q.hn === currentHN) ? 'active' : '';
+        
+        // 🌟 บรรทัดที่หายไป (ป้าย Walk-in / นัดหมาย) ต้องมีบรรทัดนี้นะครับ
+        let typeBadge = q.is_walkin ? '<span class="badge bg-info text-white ms-1" style="font-size: 0.65rem;">Walk-in</span>' : '<span class="badge bg-success text-white ms-1" style="font-size: 0.65rem;">นัดหมาย</span>';
+        
         let vitalsHtml = (q.bp || q.pulse || q.weight || q.height) 
             ? `<div class="mt-2 pt-2 border-top border-light small text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${q.bp||'-'}</b> | HR: <b>${q.pulse||'-'}</b> | W: <b>${q.weight||'-'}</b> | H: <b>${q.height||'-'}</b></div>` 
             : '';
             
-        // 🌟 เพิ่มป้ายแสดงจุดประสงค์ / อาการ (ดึงจาก q.notes)
+        // ป้ายแสดงจุดประสงค์ / อาการ (ดึงจาก q.notes)
         let noteBadge = (q.notes && q.notes !== 'Walk-in') 
             ? `<div class="mt-1 small fw-bold text-success" style="font-size: 0.75rem;"><i class="fa-solid fa-bullseye me-1"></i> ${q.notes}</div>` 
             : '';
@@ -174,7 +178,9 @@
                  </div>`;
       });
       list.innerHTML = html;
-    } catch(e) {}
+    } catch(e) {
+      console.error('Error rendering queue:', e);
+    }
   }
 
   async function selectPatient(hn) {
