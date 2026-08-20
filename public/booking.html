@@ -83,6 +83,13 @@
               <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-primary me-2"></i> คิววันที่เลือก</h5>
               <span class="badge bg-primary rounded-pill px-3" id="selectedDateBadge">กำลังโหลด...</span>
             </div>
+            
+            <!-- 🌟 เพิ่มช่องค้นหาชื่อ/เบอร์โทร -->
+            <div class="input-group mb-3 shadow-sm rounded-3">
+              <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-primary"></i></span>
+              <input type="text" id="searchApptInput" class="form-control border-start-0 bg-light fw-bold text-primary" placeholder="ค้นหาชื่อ หรือ เบอร์โทรคนไข้..." onkeyup="searchAppointments()">
+            </div>
+
             <div id="selectedApptList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; max-height: 500px; padding-right: 5px;">
               <div class="text-center py-5 text-muted">กำลังโหลดข้อมูลนัดหมาย...</div>
             </div>
@@ -141,11 +148,10 @@
         clinicAppointments = data.data;
         renderCalendar();
         
-        const dateObj = new Date(activeSelectedDate);
-        const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-        document.getElementById('selectedDateBadge').innerText = `${thDateStr}`;
+        // 🌟 ให้ระบบส่งคำค้นหาปัจจุบันเข้าไปด้วยตอนรีเฟรชออโต้
+        const searchInput = document.getElementById('searchApptInput');
+        renderApptList(activeSelectedDate, 'selectedApptList', searchInput ? searchInput.value : '');
         
-        renderApptList(activeSelectedDate, 'selectedApptList');
         renderTomorrowList();
       }
     } catch (err) {
@@ -198,7 +204,16 @@
     const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
     document.getElementById('selectedDateBadge').innerText = `${thDateStr}`;
 
+    // 🌟 ล้างช่องค้นหาทิ้ง เวลาเปลี่ยนวันในปฏิทิน
+    const searchInput = document.getElementById('searchApptInput');
+    if(searchInput) searchInput.value = '';
+
     renderApptList(dateStr, 'selectedApptList');
+  }
+
+  // 🌟 ฟังก์ชันทำงานเวลาพิมพ์ค้นหาชื่อหรือเบอร์โทร
+  function searchAppointments() {
+    renderApptList(activeSelectedDate, 'selectedApptList', document.getElementById('searchApptInput').value);
   }
 
   // 🌟 ฟังก์ชันดึงและแสดงคอร์สคนไข้ใน Pop-up
@@ -260,16 +275,37 @@
     }
   }
 
-  function renderApptList(filterDate, containerId) {
+  // 🌟 อัปเดตให้รองรับการรับข้อความค้นหา (searchTerm)
+  function renderApptList(filterDate, containerId, searchTerm = '') {
     const listContainer = document.getElementById(containerId);
     if(!listContainer) return;
     listContainer.innerHTML = '';
 
-    let filtered = clinicAppointments.filter(a => a.date === filterDate);
+    let filtered = [];
+    searchTerm = searchTerm.toLowerCase().trim();
+
+    if (searchTerm) {
+      // 🌟 ถ้ามีการพิมพ์ค้นหา ให้ค้นหาจากรายชื่อคิว "ทั้งหมด" ไม่จำกัดวัน
+      filtered = clinicAppointments.filter(a => 
+        (a.name && a.name.toLowerCase().includes(searchTerm)) || 
+        (a.phone && a.phone.includes(searchTerm)) ||
+        (a.hn && a.hn.toLowerCase().includes(searchTerm))
+      );
+      document.getElementById('selectedDateBadge').innerText = `ผลลัพธ์การค้นหา: ${filtered.length} คิว`;
+      document.getElementById('selectedDateBadge').className = "badge bg-warning text-dark rounded-pill px-3";
+    } else {
+      // 🌟 ถ้าไม่ได้พิมพ์ค้นหา ให้โชว์คิวตามวันที่ในปฏิทินปกติ
+      filtered = clinicAppointments.filter(a => a.date === filterDate);
+      const dateObj = new Date(filterDate);
+      document.getElementById('selectedDateBadge').innerText = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+      document.getElementById('selectedDateBadge').className = "badge bg-primary rounded-pill px-3";
+    }
+
+    // เรียงเวลาจากเช้าไปเย็นเสมอ
     filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
 
     if (filtered.length === 0) {
-      listContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-mug-hot fa-2x mb-3 text-light"></i><br>ไม่มีคิวนัดหมาย</div>`;
+      listContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-magnifying-glass fa-2x mb-3 text-light"></i><br>${searchTerm ? 'ไม่พบคิวจากคำค้นหา' : 'ไม่มีคิวนัดหมาย'}</div>`;
       return;
     }
 
