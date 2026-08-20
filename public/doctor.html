@@ -354,7 +354,7 @@ async function renderEmrQueue() {
     };
     try {
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
+    
       document.getElementById('emrForm').reset();
       loadEMRHistory(currentHN); renderEmrQueue();
       Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
@@ -406,8 +406,12 @@ async function renderEmrQueue() {
     try {
       const res = await fetch(`/api/pos/send/${hn}`, { method: 'PUT' });
       if ((await res.json()).status === 'success') {
-        btn.className = 'btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm mt-3'; btn.innerHTML = '<i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
+        btn.className = 'btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm mt-3'; 
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
         Swal.fire({ icon: 'success', title: 'ส่งไปการเงินสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        
+        // 🌟 เพิ่มบรรทัดนี้ เพื่อให้คิวฝั่งซ้ายมือหายไปทันทีที่หมอกดส่ง
+        renderEmrQueue();
       }
     } catch(e) {}
   }
