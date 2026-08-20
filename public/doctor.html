@@ -155,14 +155,13 @@
       let html = '';
       currentQueueData.forEach(q => {
         const isActive = (q.hn === currentHN) ? 'active' : '';
-        let typeBadge = q.is_walkin ? '<span class="badge bg-info text-white ms-1" style="font-size: 0.65rem;">Walk-in</span>' : '<span class="badge bg-success text-white ms-1" style="font-size: 0.65rem;">นัดหมาย</span>';
         let vitalsHtml = (q.bp || q.pulse || q.weight || q.height) 
             ? `<div class="mt-2 pt-2 border-top border-light small text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${q.bp||'-'}</b> | HR: <b>${q.pulse||'-'}</b> | W: <b>${q.weight||'-'}</b> | H: <b>${q.height||'-'}</b></div>` 
             : '';
             
         // 🌟 เพิ่มป้ายแสดงจุดประสงค์ / อาการ (ดึงจาก q.notes)
         let noteBadge = (q.notes && q.notes !== 'Walk-in') 
-            ? `<div class="mt-1 small fw-bold text-success" style="font-size: 0.7rem;"><i class="fa-solid fa-thumbtack"></i> ${q.notes}</div>` 
+            ? `<div class="mt-1 small fw-bold text-success" style="font-size: 0.75rem;"><i class="fa-solid fa-bullseye me-1"></i> ${q.notes}</div>` 
             : '';
 
         html += `<div class="card pos-queue-card ${isActive} mb-2 border-0 bg-light shadow-sm" onclick="selectPatient('${q.hn}')">
@@ -216,6 +215,7 @@
     }
 
     // 🌟 ดึงข้อมูลคอร์สมาโชว์ให้หมอเห็น 
+    // 🌟 ดึงข้อมูลคอร์สมาโชว์ให้หมอเห็น พร้อมปุ่มกดหักสิทธิ์หน้างาน
     const cRes = await fetch(`/api/patients/${hn}/courses`);
     const cData = await cRes.json();
     let cHtml = '';
@@ -223,9 +223,15 @@
       let remain = c.total_qty - c.used_qty;
       let displayName = c.product_name || c.product_id;
       let unitName = c.unit || 'ครั้ง';
-      if(remain > 0) cHtml += `<span class="badge bg-success me-2 mb-2" style="font-size: 0.85rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${displayName}: คงเหลือ ${remain} ${unitName}</span>`;
+      if(remain > 0) {
+        cHtml += `
+          <div class="d-inline-flex align-items-center bg-white border border-success rounded-pill ps-3 pe-1 py-1 me-2 mb-2 shadow-sm">
+            <span class="fw-bold text-success me-2" style="font-size: 0.85rem;"><i class="fa-solid fa-syringe me-1"></i> ${displayName}: เหลือ ${remain} ${unitName}</span>
+            <button class="btn btn-sm btn-success rounded-circle shadow-sm" style="width:28px; height:28px; padding:0;" onclick="deductCourseDoc('${c.id}', '${displayName}', ${remain})" title="หักสิทธิ์/ใช้งาน"><i class="fa-solid fa-minus" style="font-size: 0.7rem;"></i></button>
+          </div>`;
+      }
     });
-    document.getElementById('courseAlert').innerHTML = cHtml ? `<div class="p-3 bg-light border border-success border-opacity-25 rounded-3"><b>คอร์สคนไข้ที่มี:</b><br><div class="mt-2">${cHtml}</div></div>` : '';
+    document.getElementById('courseAlert').innerHTML = cHtml ? `<div class="p-3 bg-light border border-success border-opacity-50 rounded-3"><b class="text-success"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> รายการในโปรโมชั่น / คอร์สที่คนไข้มี:</b><br><div class="mt-2">${cHtml}</div></div>` : '';
 
     loadEMRHistory(hn);
     loadPatientPhotos(hn);
@@ -451,4 +457,33 @@
       await fetch(`/api/patients/photos/${id}`, { method: 'DELETE' }); loadPatientPhotos(currentHN);
     }
   }
+  
+  // 🌟 ฟังก์ชันให้หมอกดหักคอร์ส/โปรโมชั่นจากหน้าตรวจ
+  function deductCourseDoc(courseId, name, remain) {
+    Swal.fire({
+      title: `ใช้งาน: ${name}`,
+      html: `คงเหลือทั้งหมด <b>${remain}</b><br><small class="text-muted">ระบุจำนวนที่ต้องการใช้ (ระบบจะหักสต็อกอัตโนมัติ)</small>`,
+      input: 'number', inputAttributes: { step: '0.1', min: '0.1', max: remain }, inputValue: 1,
+      showCancelButton: true, confirmButtonText: '<i class="fa-solid fa-scissors me-1"></i> หักสต็อกและใช้งาน', confirmButtonColor: '#10b981'
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        let val = parseFloat(result.value);
+        if(val > remain) return Swal.fire('Error', 'ตัดเกินจำนวนคงเหลือ', 'error');
+        
+        Swal.fire({ title: 'กำลังหักสต็อก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        // ยิงไปหักคอร์สและสต็อกคลัง
+        await fetch(`/api/courses/${courseId}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: val}) });
+        
+        // 🌟 พิมพ์ชื่อหัตถการที่ทำลงในช่อง Tx (Treatment) ให้อัตโนมัติ!
+        let tx = document.getElementById('emr_treatment');
+        let newTxText = `- ทำหัตถการ: ${name} (จำนวน ${val})`;
+        tx.value = tx.value ? tx.value + `\n${newTxText}` : newTxText;
+        
+        Swal.fire({ icon: 'success', title: 'หักสต็อกสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        selectPatient(currentHN); // รีเฟรชกรอบสีเขียวให้ยอดลดลงทันที
+      }
+    });
+  }
+  
 </script>
