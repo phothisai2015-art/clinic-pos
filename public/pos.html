@@ -38,7 +38,13 @@
           <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2 text-primary"></i> คิวรอชำระเงิน</h5>
           <span class="badge bg-danger rounded-pill" id="posQueueCount">0 คิว</span>
         </div>
-        <div class="input-group mb-3"><span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span><input type="text" class="form-control border-start-0 bg-light" placeholder="ค้นหา HN หรือ ชื่อคนไข้..."></div>
+        
+        <!-- ค้นหา HN แบบตรงๆ เพื่อดึงบิลแบ่งจ่าย -->
+        <div class="input-group mb-3">
+          <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+          <input type="text" id="posSearchInput" class="form-control border-start-0 bg-light" placeholder="ค้นหาด้วยรหัส HN..." onkeypress="if(event.key === 'Enter') searchPosPatient()">
+        </div>
+        
         <div id="posQueueList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;"></div>
       </div>
     </div>
@@ -51,35 +57,38 @@
         <div id="posBillState" style="display: none; flex-direction: column; height: 100%;">
           <div class="bill-header d-flex justify-content-between align-items-center">
             <div><h4 class="fw-bold m-0 text-white" id="b_patient_name">ชื่อคนไข้</h4><div class="small opacity-75 mt-1"><i class="fa-solid fa-address-card me-1"></i> <span id="b_patient_hn">HN-XXXXXX</span></div></div>
-            <div class="text-end text-white"><div class="badge bg-white bg-opacity-25 mb-1"><i class="fa-solid fa-user-doctor me-1"></i> แพทย์: <span id="b_doctor">นพ. ...</span></div></div>
           </div>
 
           <div class="p-4 custom-scrollbar" style="overflow-y: auto; flex-grow: 1;">
-            <div id="courseSection" class="mb-4" style="display: none;"><h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> คอร์สที่คนไข้มี (สามารถตัดคอร์สได้)</h6><div id="courseList"></div></div>
 
-            <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-file-invoice-dollar me-1"></i> รายการขาย / ค่ารักษา</h6>
+            <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-file-invoice-dollar me-1"></i> รายการบิลค้างชำระ / สั่งยา</h6>
             <table class="table bill-table w-100 mb-0">
-              <thead><tr><th width="50%">รายการ</th><th width="15%" class="text-center">จำนวน</th><th width="15%" class="text-end">ราคา/หน่วย</th><th width="20%" class="text-end">รวม (฿)</th></tr></thead>
+              <thead><tr>
+                <th width="35%">รายการ</th>
+                <th width="15%" class="text-end">ยอดเต็ม</th>
+                <th width="15%" class="text-end">ชำระแล้ว</th>
+                <th width="15%" class="text-end">คงเหลือ</th>
+                <th width="20%" class="text-end text-success">ชำระรอบนี้ (฿)</th>
+              </tr></thead>
               <tbody id="billItems"></tbody>
             </table>
             
-            <!-- 🌟 ปุ่มเพิ่มรายการขาย -->
             <div class="text-end mt-3 border-top pt-3">
-              <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" onclick="openAddProductModal()"><i class="fa-solid fa-cart-plus me-1"></i> เพิ่มรายการขาย / ขายโปรโมชั่น</button>
+              <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" onclick="openAddProductModal()"><i class="fa-solid fa-cart-plus me-1"></i> เพิ่มรายการขายหน้าเคาน์เตอร์</button>
             </div>
           </div>
 
           <div class="payment-box m-3 shadow-sm">
             <div class="row">
               <div class="col-md-6 border-end">
-                <div class="d-flex justify-content-between mb-2 small fw-bold text-muted"><span>รวมเป็นเงิน:</span> <span id="b_subtotal">0.00</span></div>
-                <div class="d-flex justify-content-between mb-2 small fw-bold text-danger"><span>ส่วนลด:</span> <span>- <span id="b_discount">0.00</span></span></div>
+                <div class="d-flex justify-content-between mb-2 small fw-bold text-muted"><span>ยอดรวมรอบนี้:</span> <span id="b_subtotal">0.00</span></div>
+                <div class="d-flex justify-content-between mb-2 small fw-bold text-danger"><span>ส่วนลด (เฉพาะรายการใหม่):</span> <span>- <span id="b_discount">0.00</span></span></div>
                 <hr class="my-2 border-secondary">
                 <div class="d-flex justify-content-between small text-muted"><span>ค่าแพทย์ (DF):</span> <span id="b_df">0.00</span></div>
                 <div class="d-flex justify-content-between small text-muted"><span>ค่าคอมฯ เซลล์:</span> <span id="b_comm">0.00</span></div>
               </div>
               <div class="col-md-6 ps-4 d-flex flex-column justify-content-center">
-                <div class="text-end text-muted fw-bold small mb-1">ยอดสุทธิที่ต้องชำระ</div>
+                <div class="text-end text-muted fw-bold small mb-1">ยอดสุทธิที่ต้องชำระ (บาท)</div>
                 <div class="total-amount-display" id="b_net_total">0.00</div>
               </div>
             </div>
@@ -100,7 +109,7 @@
                 <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectPayMethod('qr')"><i class="fa-solid fa-qrcode d-block fs-4 mb-1"></i> สแกน QR</button>
                 <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectPayMethod('credit')"><i class="fa-solid fa-credit-card d-block fs-4 mb-1"></i> บัตรเครดิต</button>
               </div>
-              <button class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm fs-5" onclick="processPayment()"><i class="fa-solid fa-check-circle me-1"></i> รับชำระเงินและออกใบเสร็จ</button>
+              <button class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm fs-5" onclick="completeBill()"><i class="fa-solid fa-check-circle me-1"></i> รับชำระเงินและออกใบเสร็จ</button>
             </div>
           </div>
           
@@ -120,15 +129,7 @@
     try {
       const res = await fetch('/api/pos/queue'); const data = await res.json();
       if (data.status === 'success') {
-        let oldQueues = posQueues;
-        posQueues = data.data.map(row => {
-          let existing = oldQueues.find(q => q.id === row.appt_id);
-          if (existing) return existing; // ถ้าเป็นคิวเดิม ให้เก็บไอเท็มที่เพิ่มไว้ไม่ให้หาย
-          
-          let billItemName = row.treatment_details ? `ค่าตรวจรักษา: ${row.treatment_details}` : 'ค่าบริการทางการแพทย์';
-          return { id: row.appt_id, hn: row.hn, name: row.name || 'คนไข้ทั่วไป', doctor: 'แพทย์ผู้ตรวจ', items: [{ name: billItemName, qty: 1, price: 500, type: 'SERVICE' }], courses: [], discount: 0 };
-        });
-        if (activeBill) { let checkStillExist = posQueues.find(q => q.id === activeBill.id); if (!checkStillExist) activeBill = null; }
+        posQueues = data.data;
         renderPosQueue();
       }
     } catch (err) {}
@@ -138,49 +139,111 @@
     const list = document.getElementById('posQueueList'); if(!list) return;
     document.getElementById('posQueueCount').innerText = `${posQueues.length} คิว`; list.innerHTML = '';
     if (posQueues.length === 0) {
-      list.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-check-double fa-2x mb-2 opacity-50"></i><br>ไม่มีคิวค้างชำระ</div>`;
-      if(!activeBill) { document.getElementById('posEmptyState').style.display = 'flex'; document.getElementById('posBillState').style.display = 'none'; }
+      list.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-check-double fa-2x mb-2 opacity-50"></i><br>ไม่มีคิวค้างชำระจากห้องตรวจ</div>`;
       return;
     }
     posQueues.forEach(q => {
-      const isActive = (activeBill && activeBill.id === q.id) ? 'active' : '';
-      list.innerHTML += `<div class="card pos-queue-card ${isActive} mb-2 border-0 bg-light" onclick="selectPosQueue(${q.id}, this)"><div class="card-body p-3 d-flex justify-content-between align-items-center"><div><h6 class="fw-bold text-primary m-0 mb-1">${q.name}</h6><small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${q.hn}</small></div><div class="text-end"><span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i> รอชำระเงิน</span></div></div></div>`;
+      const isActive = (activeBill && activeBill.hn === q.hn) ? 'active' : '';
+      list.innerHTML += `<div class="card pos-queue-card ${isActive} mb-2 border-0 bg-light" onclick="selectPosQueueByHN('${q.hn}')"><div class="card-body p-3 d-flex justify-content-between align-items-center"><div><h6 class="fw-bold text-primary m-0 mb-1">${q.name}</h6><small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${q.hn}</small></div><div class="text-end"><span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i> รอชำระเงิน</span></div></div></div>`;
     });
   }
 
-  async function selectPosQueue(id, element) {
-    document.querySelectorAll('.pos-queue-card').forEach(el => el.classList.remove('active')); if(element) element.classList.add('active');
-    document.getElementById('posEmptyState').style.display = 'none'; document.getElementById('posBillState').style.display = 'flex';
-    activeBill = posQueues.find(q => q.id === id); if(!activeBill) return;
-    document.getElementById('b_patient_name').innerText = activeBill.name; document.getElementById('b_patient_hn').innerText = activeBill.hn; document.getElementById('b_doctor').innerText = activeBill.doctor;
-    const cRes = await fetch(`/api/patients/${activeBill.hn}/courses`); const cData = await cRes.json();
-    activeBill.courses = cData.data.map(c => ({ id: c.id, name: c.product_id, total: c.total_qty, used: c.used_qty }));
-    renderBillItems();
+  // 🌟 ฟังก์ชันค้นหา HN ตรงๆ เพื่อดึงบิลแบ่งจ่าย
+  async function searchPosPatient() {
+     let hn = document.getElementById('posSearchInput').value.trim();
+     if(!hn) return;
+     selectPosQueueByHN(hn);
+  }
+
+  async function selectPosQueueByHN(hn) {
+    Swal.showLoading();
+    try {
+      const res = await fetch(`/api/patients/${hn}`);
+      const data = await res.json();
+      if(data.data) {
+        activeBill = { hn: data.data.id, name: data.data.full_name, bills: [], new_items: [], discount: 0 };
+        document.getElementById('posEmptyState').style.display = 'none'; 
+        document.getElementById('posBillState').style.display = 'flex';
+        document.getElementById('b_patient_name').innerText = activeBill.name; 
+        document.getElementById('b_patient_hn').innerText = activeBill.hn;
+        
+        // 🌟 ดึงบิลทั้งหมดที่สถานะยังไม่จ่ายหรือจ่ายไม่ครบ
+        const billRes = await fetch(`/api/pos/bill/${hn}`);
+        const billData = await billRes.json();
+        activeBill.bills = billData.data || [];
+        
+        Swal.close();
+        renderBillItems();
+      } else {
+        Swal.fire('ไม่พบคนไข้', 'กรุณาตรวจสอบรหัส HN', 'warning');
+      }
+    } catch(e) { Swal.close(); }
   }
 
   function renderBillItems() {
-    const tbody = document.getElementById('billItems'); tbody.innerHTML = ''; let subtotal = 0;
-    activeBill.items.forEach(item => {
-      const lineTotal = item.qty * item.price; subtotal += lineTotal;
-      tbody.innerHTML += `<tr><td class="fw-bold text-dark">${item.name}</td><td class="text-center">${item.qty}</td><td class="text-end">${item.price.toLocaleString()}</td><td class="text-end fw-bold text-primary">${lineTotal.toLocaleString()}</td></tr>`;
+    const tbody = document.getElementById('billItems'); tbody.innerHTML = ''; 
+
+    // Render บิลจาก Database
+    activeBill.bills.forEach((b, index) => {
+      let balance = b.total_price - b.paid_amount;
+      let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
+      let badge = isPromo ? '<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span>' : '<span class="badge bg-secondary ms-1">ยา/บริการ</span>';
+      
+      tbody.innerHTML += `
+        <tr>
+          <td class="fw-bold text-dark" style="font-size: 0.9rem;">${b.item_name} ${badge}</td>
+          <td class="text-end">${b.total_price.toLocaleString()}</td>
+          <td class="text-end text-success">${b.paid_amount.toLocaleString()}</td>
+          <td class="text-end text-danger fw-bold">${balance.toLocaleString()}</td>
+          <td class="text-end">
+            <input type="number" class="form-control form-control-sm text-end pay-today-input border-success" 
+                   data-index="${index}" data-type="db" data-balance="${balance}" 
+                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()">
+          </td>
+        </tr>`;
     });
-    const courseSec = document.getElementById('courseSection'); const courseList = document.getElementById('courseList'); courseList.innerHTML = '';
-    if (activeBill.courses.length > 0) {
-      courseSec.style.display = 'block';
-      activeBill.courses.forEach(c => {
-        let remain = c.total - c.used;
-        courseList.innerHTML += `<div class="course-card p-3 mb-2 d-flex justify-content-between align-items-center"><div><div class="fw-bold text-success">${c.name}</div><small class="text-muted">ใช้ไป ${c.used} / คงเหลือ <span class="fw-bold text-danger">${remain}</span></small></div><button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3" onclick="deductCourse('${c.id}')" ${remain <= 0 ? 'disabled' : ''}><i class="fa-solid fa-scissors me-1"></i> หักสิทธิ์ / ตัดคอร์ส</button></div>`;
-      });
-    } else { courseSec.style.display = 'none'; }
-    let netTotal = subtotal - activeBill.discount;
-    document.getElementById('b_subtotal').innerText = subtotal.toLocaleString('th-TH', {minimumFractionDigits: 2});
-    document.getElementById('b_discount').innerText = activeBill.discount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+
+    // Render รายการใหม่ที่พนักงานเพิ่มที่หน้า POS
+    activeBill.new_items.forEach((item, index) => {
+      let lineTotal = item.qty * item.price;
+      tbody.innerHTML += `
+        <tr>
+          <td class="fw-bold text-dark" style="font-size: 0.9rem;">${item.name} <span class="badge bg-info">เพิ่มที่เคาน์เตอร์</span></td>
+          <td class="text-end">${lineTotal.toLocaleString()}</td>
+          <td class="text-end text-success">0</td>
+          <td class="text-end text-danger fw-bold">${lineTotal.toLocaleString()}</td>
+          <td class="text-end">
+            <input type="number" class="form-control form-control-sm text-end pay-today-input border-success" 
+                   data-index="${index}" data-type="new" data-balance="${lineTotal}" 
+                   value="${lineTotal}" max="${lineTotal}" min="0" oninput="calculatePosTotal()">
+          </td>
+        </tr>`;
+    });
+
+    if (activeBill.bills.length === 0 && activeBill.new_items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">ไม่มียอดค้างชำระ</td></tr>`;
+    }
+
+    calculatePosTotal();
+  }
+
+  function calculatePosTotal() {
+    let totalPayToday = 0;
+    document.querySelectorAll('.pay-today-input').forEach(input => {
+      let val = parseFloat(input.value) || 0;
+      let max = parseFloat(input.getAttribute('data-balance'));
+      if (val > max) { val = max; input.value = max; } // ป้องกันกรอกจ่ายเกินยอด
+      if (val < 0) { val = 0; input.value = 0; }
+      totalPayToday += val;
+    });
+
+    let netTotal = totalPayToday - activeBill.discount;
+    document.getElementById('b_subtotal').innerText = totalPayToday.toLocaleString('th-TH', {minimumFractionDigits: 2});
     document.getElementById('b_net_total').innerText = netTotal.toLocaleString('th-TH', {minimumFractionDigits: 2});
     document.getElementById('b_df').innerText = (netTotal * 0.10).toLocaleString('th-TH', {minimumFractionDigits: 2});
     document.getElementById('b_comm').innerText = (netTotal * 0.03).toLocaleString('th-TH', {minimumFractionDigits: 2});
   }
 
-  // 🌟 ฟังก์ชันดึงสินค้าจากคลังมาขาย
   async function openAddProductModal() {
     if(!activeBill) return;
     Swal.fire({ title: 'กำลังดึงข้อมูลคลัง...', didOpen: () => Swal.showLoading() });
@@ -203,11 +266,14 @@
     }).then(result => {
        if(result.isConfirmed && result.value) {
           const val = result.value;
-          const isCourse = (val.type === 'COURSE' || val.type === 'INJECTABLE'); // ถ้าเป็น 2 ประเภทนี้ จะถือเป็นการซื้อโปรฯ
-          activeBill.items.push({
+          const isCourse = (val.type === 'COURSE' || val.type === 'PROMOTION' || val.type === 'INJECTABLE'); 
+          activeBill.new_items.push({
              product_id: val.product_id,
-             name: val.name + (isCourse ? ' <span class="badge bg-success" style="font-size:0.6rem;">เปิดโปรใหม่</span>' : ''),
-             qty: val.qty, price: val.price, type: val.type, is_new_course: isCourse
+             name: val.name,
+             qty: val.qty, 
+             price: val.price, 
+             type: val.type, 
+             is_new_course: isCourse
           });
           renderBillItems();
        }
@@ -219,59 +285,41 @@
     if(opt.value) document.getElementById('swal_price').value = opt.getAttribute('data-price');
   }
 
-  function deductCourse(courseId) {
-    let course = activeBill.courses.find(c => c.id === courseId); let remain = course.total - course.used;
-    Swal.fire({
-      title: `ตัดคอร์ส: ${course.name}`,
-      html: `<div class="mb-2">คงเหลือทั้งหมด <b>${remain}</b></div><div class="small text-muted mb-2">ระบุจำนวนที่ใช้ (หักสต็อกอัตโนมัติ)</div>`,
-      input: 'number', inputAttributes: { step: '0.1', min: '0.1', max: remain }, showCancelButton: true, confirmButtonText: 'ยืนยันตัดสิทธิ์', confirmButtonColor: '#10b981'
-    }).then(async (result) => {
-      if (result.isConfirmed && result.value) {
-        let deductVal = parseFloat(result.value); if(deductVal > remain) return Swal.fire('Error', 'ตัดเกินจำนวนคงเหลือ', 'error');
-        Swal.fire({ title: 'กำลังหักสต็อก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        // 🌟 วิ่งไปหักทั้งคอร์สและคลังยาในคลิกเดียว!
-        await fetch(`/api/courses/${courseId}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: deductVal}) });
-        course.used += deductVal;
-        activeBill.items.push({ name: `[ใช้งานคอร์ส] ${course.name} (ใช้ไป ${deductVal})`, qty: 1, price: 0, type: 'USE_COURSE' });
-        renderBillItems();
-        Swal.fire({ icon: 'success', title: 'ตัดคอร์ส/สต็อกสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-      }
-    });
-  }
-
   function selectPayMethod(method) { currentPayMethod = method; document.querySelectorAll('.pay-method-btn').forEach(btn => btn.classList.remove('selected')); document.getElementById('pay_' + method).classList.add('selected'); }
 
-  function processPayment() {
-    if (!activeBill) return;
-    if (currentPayMethod === 'qr') {
-      Swal.fire({
-        title: 'สแกน QR Code ชำระเงิน', html: `<h4 class="fw-bold text-primary mt-3">${document.getElementById('b_net_total').innerText} บาท</h4>`,
-        showCancelButton: true, confirmButtonText: 'ยืนยันได้รับเงินแล้ว', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#10b981'
-      }).then((result) => { if (result.isConfirmed) completeBill(); });
-    } else { completeBill(); }
-  }
-
-  // 🌟 บันทึกการรับชำระเงิน (จัดการแยก ยา vs คอร์ส)
+  // 🌟 บันทึกการรับชำระเงินและตัดสต็อก (รวบรวมข้อมูลในตารางทั้งหมดส่งให้ Server)
   async function completeBill() {
     Swal.fire({ title: 'กำลังออกใบเสร็จ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const salesRep = document.getElementById('sales_rep_select').value;
-    try {
-      // 1. เคลียร์คิวและปิดบิล
-      await fetch('/api/pos/pay/' + activeBill.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sales_rep: salesRep }) });
+    
+    let payments = [];
+    let newItemsToSave = [];
 
-      // 2. ลูปจัดการรายการในบิลทีละตัว
-      for (const item of activeBill.items) {
-         if (item.is_new_course) {
-           // ถ้าเป็นการซื้อโปร/คอร์สใหม่ -> ยัดเข้าตารางคอร์สคนไข้ (ยังไม่หักสต็อกคลัง จนกว่าจะกดตัดคอร์ส)
-           await fetch(`/api/patients/${activeBill.hn}/courses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ course_name: item.product_id, total_qty: item.qty }) });
-         } else if (item.product_id && item.type === 'MEDICINE' || item.type === 'SKINCARE') {
-           // ถ้าเป็นการซื้อครีม/ยา -> วิ่งไปหักสต็อกคลังยาเดี๋ยวนั้นเลยทันที!
-           await fetch(`/api/inventory/${item.product_id}/stock`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adjust_qty: -Math.abs(item.qty) }) });
-         }
+    // วนลูปอ่านข้อมูลในช่อง Text Box เพื่อดูว่าพนักงานกรอกจ่ายช่องไหนบ้าง
+    document.querySelectorAll('.pay-today-input').forEach(input => {
+      let val = parseFloat(input.value) || 0;
+      let type = input.getAttribute('data-type');
+      let index = parseInt(input.getAttribute('data-index'));
+      
+      if (type === 'db' && val > 0) {
+         payments.push({ bill_id: activeBill.bills[index].id, pay_amount: val });
+      } else if (type === 'new') {
+         let item = activeBill.new_items[index];
+         item.pay_amount = val; 
+         newItemsToSave.push(item);
       }
+    });
 
-      Swal.fire({ icon: 'success', title: 'รับชำระเงินเสร็จสิ้น', text: 'ระบบอัปเดตสิทธิ์คอร์สและสต็อกเรียบร้อยแล้ว', confirmButtonColor: '#3b82f6' }).then(() => {
-        activeBill = null; document.getElementById('posBillState').style.display = 'none'; document.getElementById('posEmptyState').style.display = 'flex'; fetchPosQueue(); 
+    try {
+      await fetch('/api/pos/pay/' + activeBill.hn, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ sales_rep: salesRep, payments: payments, new_items: newItemsToSave }) 
+      });
+
+      Swal.fire({ icon: 'success', title: 'รับชำระเงินเสร็จสิ้น', confirmButtonColor: '#3b82f6' }).then(() => {
+        activeBill = null; document.getElementById('posBillState').style.display = 'none'; document.getElementById('posEmptyState').style.display = 'flex'; 
+        fetchPosQueue(); 
       });
     } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
   }
