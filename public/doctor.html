@@ -3,7 +3,7 @@
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .pos-queue-card { transition: all 0.2s; cursor: pointer; border-left: 4px solid #cbd5e1; }
   .pos-queue-card.active { border-left-color: #3b82f6; background-color: #eff6ff !important; }
-  .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; display: none; }
+  .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; }
   .vitals-banner { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 15px; color: #0369a1; display: none; }
   .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
   .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -30,21 +30,29 @@
     <!-- 👨‍⚕️ ฝั่งขวา: รายละเอียด EMR -->
     <div class="col-lg-9 col-md-8 h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
       
-      <!-- ข้อมูลคนไข้แบบย่อส่วน -->
-      <div class="bg-white p-3 rounded-4 shadow-sm border mb-3 d-flex justify-content-between align-items-center">
-        <div>
-          <h5 class="fw-bold m-0 text-primary" id="hdr_name">กรุณาเลือกคิวคนไข้...</h5>
-          <div class="small text-muted mt-1"><i class="fa-solid fa-address-card me-1"></i> HN: <span id="hdr_hn">-</span></div>
-        </div>
-      </div>
-
-      <!-- 🌟 กล่องเตือนข้อควรระวัง (แพ้ยา / โรคประจำตัว) -->
-      <div id="allergyAlert" class="allergy-alert-box align-items-center justify-content-between mb-3 shadow-sm">
-        <div class="d-flex align-items-center">
-          <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
-          <div>
-            <div class="fw-bold fs-6" id="allergyTitle">⚠️ ข้อควรระวังทางการแพทย์</div>
-            <div class="small text-danger fw-semibold" id="allergyDetails"></div>
+      <!-- 🌟 ข้อมูลคนไข้ และ กล่องเตือนแพ้ยา (จัดให้อยู่แถวเดียวกัน) -->
+      <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+        <div class="row align-items-center">
+          <!-- ข้อมูลคนไข้ (ซ้าย) -->
+          <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
+            <h4 class="fw-bold m-0 text-primary" id="hdr_name">กรุณาเลือกคิวคนไข้...</h4>
+            <div class="d-flex flex-wrap gap-3 mt-2 small text-muted">
+              <div><i class="fa-solid fa-address-card text-secondary me-1"></i> HN: <span id="hdr_hn" class="fw-bold text-dark">-</span></div>
+              <div><i class="fa-solid fa-phone text-secondary me-1"></i> โทร: <span id="hdr_phone" class="fw-bold text-dark">-</span></div>
+              <div><i class="fa-solid fa-calendar text-secondary me-1"></i> อายุ: <span id="hdr_age" class="fw-bold text-dark">-</span></div>
+            </div>
+          </div>
+          <!-- กล่องเตือนข้อควรระวัง (ขวา) -->
+          <div class="col-md-6 col-sm-12">
+            <div id="allergyAlert" class="allergy-alert-box align-items-center justify-content-between m-0 shadow-sm" style="display: none; padding: 10px 15px;">
+              <div class="d-flex align-items-center">
+                <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
+                <div>
+                  <div class="fw-bold text-danger" style="font-size: 0.9rem;" id="allergyTitle">⚠️ ข้อควรระวังทางการแพทย์</div>
+                  <div class="small text-danger fw-semibold" id="allergyDetails"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -68,7 +76,9 @@
         <!-- Tab 1: EMR -->
         <div class="tab-pane-custom" id="emr-content" style="display: block;">
           <div class="row g-4">
-            <div class="col-md-5">
+            
+            <!-- 🌟 แบ่งสัดส่วนจอ 50:50 ด้วย col-lg-6 -->
+            <div class="col-lg-6 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
                 <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียน</h5>
                 <form id="emrForm" onsubmit="saveEMR(event)">
@@ -97,12 +107,15 @@
                 </form>
               </div>
             </div>
-            <div class="col-md-7">
+            
+            <!-- 🌟 ประวัติย้อนหลัง (แบ่งครึ่ง 50% col-lg-6) -->
+            <div class="col-lg-6 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 h-100">
                 <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> ประวัติย้อนหลัง</h5>
                 <div class="timeline custom-scrollbar" id="emrTimeline" style="height: 500px; overflow-y: auto; padding-right: 5px;"><div class="text-muted text-center py-4">รอเลือกคนไข้...</div></div>
               </div>
             </div>
+            
           </div>
         </div>
 
@@ -192,13 +205,24 @@
 
   async function selectPatient(hn) {
     currentHN = hn;
-	pendingDeductions = []; // 🌟 เพิ่มบรรทัดนี้
+    pendingDeductions = []; // เคลียร์กล่องความจำหักคอร์ส
     Swal.showLoading();
     const res = await fetch(`/api/patients/${hn}`);
     const data = await res.json();
     const p = data.data;
+    
+    // 🌟 นำข้อมูลลง Header ใหม่ที่เพิ่มเบอร์โทรกับอายุ
     document.getElementById('hdr_name').innerText = p.full_name;
     document.getElementById('hdr_hn').innerText = p.id;
+    document.getElementById('hdr_phone').innerText = p.phone || '-';
+    
+    let ageText = '-';
+    if (p.dob) {
+      const dob = new Date(p.dob);
+      const ageDate = new Date(Date.now() - dob.getTime());
+      ageText = Math.abs(ageDate.getUTCFullYear() - 1970) + ' ปี';
+    }
+    document.getElementById('hdr_age').innerText = ageText;
     
     let alertDetails = [];
     if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
@@ -210,7 +234,7 @@
 
     if (alertDetails.length > 0) {
       document.getElementById('allergyAlert').style.display = 'flex';
-      document.getElementById('allergyDetails').innerHTML = alertDetails.join(' | ');
+      document.getElementById('allergyDetails').innerHTML = alertDetails.join('<br>');
     } else { 
       document.getElementById('allergyAlert').style.display = 'none'; 
     }
@@ -226,7 +250,7 @@
       document.getElementById('vitalsBanner').style.display = 'none';
     }
 
-    // 🌟 ดึงข้อมูลคอร์สมาจัดลงใน Dropdown ของฟอร์ม EMR
+    // ดึงข้อมูลคอร์สมาจัดลงใน Dropdown ของฟอร์ม EMR
     const cRes = await fetch(`/api/patients/${hn}/courses`);
     const cData = await cRes.json();
     let courseOptions = '<option value="">-- เลือกหัตถการที่ต้องการใช้ --</option>';
@@ -247,7 +271,7 @@
     Swal.close();
   }
 
-  // 🌟 ฟังก์ชันดึงค่าจาก Dropdown ไปเขียนลงช่อง Tx (พักไว้รอหักจริงตอนบันทึก)
+  // ฟังก์ชันดึงค่าจาก Dropdown ไปเขียนลงช่อง Tx (พักไว้รอหักจริงตอนบันทึก)
   function deductCourseInline() {
     let sel = document.getElementById('emr_course_select');
     let qtyInput = document.getElementById('emr_course_qty');
@@ -263,7 +287,7 @@
 
     if(qty > remain) return Swal.fire('Error', 'ไม่สามารถตัดเกินจำนวนคงเหลือได้', 'error');
 
-    // 🌟 นำข้อมูลไปพักไว้ใน Array ก่อน ยังไม่ยิง API
+    // นำข้อมูลไปพักไว้ใน Array ก่อน ยังไม่ยิง API
     pendingDeductions.push({ course_id: courseId, deduct_amount: qty });
 
     // หักตัวเลขในหน้าจอชั่วคราว (กันหมอกดเบิ้ลเกินจำนวน)
@@ -389,10 +413,10 @@
     try {
       Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-      // 🌟 1. บันทึกเวชระเบียน (EMR)
+      // 1. บันทึกเวชระเบียน (EMR)
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
-      // 🌟 2. วนลูปหักสต็อกและคอร์สจากที่พักไว้
+      // 2. วนลูปหักสต็อกและคอร์สจากที่พักไว้
       if (pendingDeductions.length > 0) {
         const deductPromises = pendingDeductions.map(item => 
           fetch(`/api/courses/${item.course_id}/deduct`, { 
@@ -464,7 +488,7 @@
         btn.innerHTML = '<i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
         Swal.fire({ icon: 'success', title: 'ส่งไปการเงินสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         
-        // 🌟 ให้คิวหายไปทันทีเมื่อกดปุ่มส่งชำระเงินสำเร็จ
+        // ให้คิวหายไปทันทีเมื่อกดปุ่มส่งชำระเงินสำเร็จ
         renderEmrQueue();
       }
     } catch(e) {}
