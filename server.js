@@ -54,6 +54,14 @@ db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
 // เพิ่มคอลัมน์เก็บตะกร้าสินค้าสำหรับจัดโปรโมชั่น
 db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
 
+// เพิ่มคอลัมน์ระบบ Walk-in และการคัดกรอง (Vitals)
+db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
+db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
+// 🌟 เพิ่มคอลัมน์ Pulse (ชีพจร)
+db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, () => {});
+
 // ==========================================
 // 💳 API ระบบคอร์สความงาม (Patient Courses)
 // ==========================================
@@ -299,11 +307,11 @@ app.put('/api/appointments/:id/status', (req, res) => {
 // 🛎️ API จัดการคิวหน้าห้องตรวจ (Real-time Queue)
 // ==========================================
 
-// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว (อัปเดตให้ดึง Vitals มาด้วย)
+// 1. ดึงรายชื่อคนที่ถูก Check-in แล้ว (อัปเดตให้ดึง Pulse มาด้วย)
 app.get('/api/queue', (req, res) => {
   const sql = `
     SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time,
-           a.is_walkin, a.bp, a.weight, a.height
+           a.is_walkin, a.bp, a.pulse, a.weight, a.height
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     WHERE a.status = 'CHECKED_IN'
@@ -315,23 +323,20 @@ app.get('/api/queue', (req, res) => {
   });
 });
 
-// 2. API ส่งเข้าห้องตรวจ (ซักประวัติ Vitals) จัดการทั้ง Appt และ Walk-in
+// 2. API ส่งเข้าห้องตรวจ (ซักประวัติ Vitals แบบละเอียด)
 app.post('/api/queue/send-doctor', (req, res) => {
-  const { patient_id, bp, weight, height } = req.body;
+  const { patient_id, bp, pulse, weight, height } = req.body;
   const today = new Date().toISOString().split('T')[0];
   const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
-  // เช็คก่อนว่ามีคิวนัดของวันนี้อยู่แล้วไหม
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED') ORDER BY id ASC LIMIT 1`, [patient_id, today], (err, row) => {
     if (row) {
-      // มีคิวอยู่แล้ว -> อัปเดตสถานะและใส่ Vitals
-      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, weight = ?, height = ? WHERE id = ?`, [bp, weight, height, row.id], () => {
+      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ? WHERE id = ?`, [bp, pulse, weight, height, row.id], () => {
         res.json({status: 'success', message: 'เช็คอินคิวนัดและส่งเข้าห้องตรวจสำเร็จ'});
       });
     } else {
-      // ไม่มีคิว -> สร้างเป็น Walk-in
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, weight, height, notes) 
-              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, weight, height], () => {
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) 
+              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, pulse, weight, height], () => {
         res.json({status: 'success', message: 'สร้างคิว Walk-in เข้าห้องตรวจสำเร็จ'});
       });
     }
