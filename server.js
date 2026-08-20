@@ -54,11 +54,6 @@ db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
 // เพิ่มคอลัมน์เก็บตะกร้าสินค้าสำหรับจัดโปรโมชั่น
 db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
 
-// เพิ่มคอลัมน์ระบบ Walk-in และการคัดกรอง (Vitals)
-db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
 // 🌟 เพิ่มคอลัมน์ Pulse (ชีพจร)
 db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, () => {});
 
