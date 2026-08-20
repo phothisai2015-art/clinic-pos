@@ -144,6 +144,7 @@
 
 <script>
   var currentHN = ''; var currentQueueData = []; var canvas, ctx, isDrawing = false;
+  var pendingDeductions = []; // 🌟 ตัวแปรเก็บคอร์สที่รอกดบันทึก
   
   function initDoctorModule() {
     renderEmrQueue();
@@ -191,6 +192,7 @@
 
   async function selectPatient(hn) {
     currentHN = hn;
+	pendingDeductions = []; // 🌟 เพิ่มบรรทัดนี้
     Swal.showLoading();
     const res = await fetch(`/api/patients/${hn}`);
     const data = await res.json();
@@ -245,8 +247,8 @@
     Swal.close();
   }
 
-  // 🌟 ฟังก์ชันดึงค่าจาก Dropdown ไปหักสต็อก และเขียนลงช่อง Tx
-  async function deductCourseInline() {
+  // 🌟 ฟังก์ชันดึงค่าจาก Dropdown ไปเขียนลงช่อง Tx (พักไว้รอหักจริงตอนบันทึก)
+  function deductCourseInline() {
     let sel = document.getElementById('emr_course_select');
     let qtyInput = document.getElementById('emr_course_qty');
     let courseId = sel.value;
@@ -261,25 +263,22 @@
 
     if(qty > remain) return Swal.fire('Error', 'ไม่สามารถตัดเกินจำนวนคงเหลือได้', 'error');
 
-    Swal.fire({ title: 'กำลังหักสต็อก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    // 🌟 นำข้อมูลไปพักไว้ใน Array ก่อน ยังไม่ยิง API
+    pendingDeductions.push({ course_id: courseId, deduct_amount: qty });
 
-    try {
-      await fetch(`/api/courses/${courseId}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: qty}) });
+    // หักตัวเลขในหน้าจอชั่วคราว (กันหมอกดเบิ้ลเกินจำนวน)
+    opt.setAttribute('data-remain', remain - qty);
+    opt.innerText = `เหลือ ${remain - qty} - ${name} (รอเซฟ)`;
 
-      // เติมข้อความลงในช่อง Tx (หัตถการ/ยา) ให้อัตโนมัติ
-      let tx = document.getElementById('emr_treatment');
-      let newTxText = `- ทำหัตถการ: ${name} (ใช้ไป ${qty})`;
-      tx.value = tx.value ? tx.value + `\n${newTxText}` : newTxText;
+    // เติมข้อความลงในช่อง Tx (หัตถการ/ยา) ให้อัตโนมัติ
+    let tx = document.getElementById('emr_treatment');
+    let newTxText = `- ทำหัตถการ: ${name} (ใช้ไป ${qty})`;
+    tx.value = tx.value ? tx.value + `\n${newTxText}` : newTxText;
 
-      qtyInput.value = ''; // เคลียร์ช่องจำนวน
-      
-      Swal.fire({ icon: 'success', title: 'หักสต็อกสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-      
-      // รีเฟรชรายชื่อใน Dropdown เพื่อให้ยอดคงเหลืออัปเดต
-      selectPatient(currentHN);
-    } catch (e) {
-      Swal.fire('Error', 'เกิดข้อผิดพลาดในการตัดคอร์ส', 'error');
-    }
+    qtyInput.value = ''; // เคลียร์ช่องจำนวน
+    
+    // โชว์ข้อความเล็กๆ ว่าเพิ่มลงบิลรอเซฟแล้ว
+    Swal.fire({ icon: 'info', title: 'เพิ่มลงรายการแล้ว (รอระบุตอนบันทึกเวชระเบียน)', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
   }
 
   function switchTab(t) {
@@ -373,7 +372,6 @@
   async function saveEMR(e) {
     e.preventDefault(); if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
     
-    // ดึงค่า Vitals จากแถบด้านบนเพื่อส่งไปเซฟ
     let v_bp = document.getElementById('v_bp').innerText;
     let v_pulse = document.getElementById('v_pulse').innerText;
     let v_weight = document.getElementById('v_weight').innerText;
@@ -384,20 +382,35 @@
       diagnosis: document.getElementById('emr_diagnosis').value, treatment_details: document.getElementById('emr_treatment').value,
       next_appointment_date: document.getElementById('emr_next_appointment_date').value, next_appointment_time: '10:00',
       next_appointment_note: document.getElementById('emr_next_appointment_note').value,
-      bp: v_bp !== '-' ? v_bp : '',
-      pulse: v_pulse !== '-' ? v_pulse : '',
-      weight: v_weight !== '-' ? v_weight : '',
-      height: v_height !== '-' ? v_height : ''
+      bp: v_bp !== '-' ? v_bp : '', pulse: v_pulse !== '-' ? v_pulse : '',
+      weight: v_weight !== '-' ? v_weight : '', height: v_height !== '-' ? v_height : ''
     };
+
     try {
+      Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      // 🌟 1. บันทึกเวชระเบียน (EMR)
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      
-      // ลบคำสั่ง /api/queue/complete ออก เพื่อไม่ให้คิวหายไปจากการกดบันทึก (คิวจะหายตอนกดปุ่มชำระเงินแทน)
-      
+
+      // 🌟 2. วนลูปหักสต็อกและคอร์สจากที่พักไว้
+      if (pendingDeductions.length > 0) {
+        const deductPromises = pendingDeductions.map(item => 
+          fetch(`/api/courses/${item.course_id}/deduct`, { 
+            method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: item.deduct_amount}) 
+          })
+        );
+        await Promise.all(deductPromises); // รอให้หักสต็อกครบทุกตัว
+      }
+
       document.getElementById('emrForm').reset();
-      loadEMRHistory(currentHN); renderEmrQueue();
+      pendingDeductions = []; // เคลียร์ของที่พักไว้
+      loadEMRHistory(currentHN); 
+      renderEmrQueue();
+      selectPatient(currentHN); // รีเฟรชคอร์สที่เหลืออยู่
       Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-    } catch (err) {}
+    } catch (err) {
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error');
+    }
   }
 
   async function loadEMRHistory(hn) {
