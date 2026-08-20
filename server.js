@@ -39,6 +39,12 @@ db.serialize(() => {
   db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
   db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
   db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
+  
+  // 🌟 เพิ่มคอลัมน์เก็บ Vitals ในตารางประวัติการรักษา (emr_logs)
+  db.run(`ALTER TABLE emr_logs ADD COLUMN bp TEXT`, () => {});
+  db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, () => {});
+  db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, () => {});
+  db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, () => {});
 });
 
 // ==========================================
@@ -176,13 +182,14 @@ app.post('/api/patients', (req, res) => {
 });
 
 app.post('/api/emr', (req, res) => {
-  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note } = req.body;
+  // 🌟 รับค่า Vitals เพิ่มเติมเข้ามาด้วย
+  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height } = req.body;
   const visit_date = new Date().toISOString();
   
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note)
-               VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height)
+               VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
-  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || ''], function(err) {
+  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || ''], function(err) {
     if (err) return res.status(500).json({ status: 'error', message: err.message });
 
     if (next_appointment_date) {
