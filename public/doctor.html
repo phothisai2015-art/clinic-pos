@@ -506,17 +506,42 @@
   }
 
   async function sendToPayment(hn, btn) {
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ส่ง...'; btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ส่ง...'; 
+    btn.disabled = true;
     try {
       const res = await fetch(`/api/pos/send/${hn}`, { method: 'PUT' });
-      if ((await res.json()).status === 'success') {
-        btn.className = 'btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm mt-3'; 
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
+      const data = await res.json();
+      
+      if (data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'ส่งไปการเงินสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         
+        // 🌟 เคลียร์ข้อมูลหน้าจอขวามือทิ้ง เพื่อเตรียมรับคนไข้คิวต่อไป
+        currentHN = '';
+        document.getElementById('hdr_name').innerText = 'กรุณาเลือกคิวคนไข้...';
+        document.getElementById('hdr_hn').innerText = '-';
+        document.getElementById('hdr_phone').innerText = '-';
+        document.getElementById('hdr_age').innerText = '-';
+        document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">รอเลือกคนไข้...</div>';
+        
+        // ซ่อนกล่องต่างๆ กลับไปเหมือนตอนเข้ามาใหม่ๆ
+        document.getElementById('emr_deduct_section').style.display = 'none';
+        document.getElementById('vitalsBanner').style.display = 'none';
+        document.getElementById('allergyAlert').style.display = 'none';
+        
+        // อัปเดตคิวฝั่งซ้ายมือ (คิวที่ส่งไปแล้วจะหายวับไปทันที)
+        renderEmrQueue();
+      } else {
+        // กรณี error เช่น กดเบิ้ล หรือคิวถูกส่งไปก่อนหน้าแล้ว
+        Swal.fire('แจ้งเตือน', data.message, 'warning');
+        btn.innerHTML = 'ส่งไปชำระเงิน / รับยา'; 
+        btn.disabled = false;
         renderEmrQueue();
       }
-    } catch(e) {}
+    } catch(e) {
+      Swal.fire('Error', 'เชื่อมต่อระบบล้มเหลว', 'error');
+      btn.innerHTML = 'ส่งไปชำระเงิน / รับยา'; 
+      btn.disabled = false;
+    }
   }
 
   function clearCanvas() { if(ctx) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height); } }
