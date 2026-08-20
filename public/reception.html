@@ -112,17 +112,41 @@
     } catch(e) {}
   }
 
-  // 🌟 อัปเดต Pop-up ความดันแบบละเอียด
-  function sendWalkinQueue() {
+// 🌟 อัปเดต Pop-up ความดันแบบละเอียด + แนบรายการหัตถการที่ต้องการทำ
+  async function sendWalkinQueue() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
+    
+    // 🌟 ดึงข้อมูลสินค้า/หัตถการ/โปรโมชั่นจากหลังบ้านมาสร้างเป็นตัวเลือก
+    let productOptions = '<option value="">-- ระบุอาการ / ไม่เลือกหัตถการล่วงหน้า --</option>';
+    try {
+      Swal.fire({ title: 'กำลังโหลดข้อมูล...', didOpen: () => Swal.showLoading() });
+      const pdRes = await fetch('/api/inventory');
+      const pdData = await pdRes.json();
+      Swal.close();
+      if(pdData.status === 'success') {
+        pdData.data.forEach(p => {
+          // ใส่ (โปรโมชั่น) ต่อท้ายชื่อเพื่อให้พนักงานรู้
+          let typeLabel = p.type === 'PROMOTION' ? ' [โปรโมชั่น]' : (p.type === 'COURSE' ? ' [คอร์ส]' : '');
+          productOptions += `<option value="ต้องการทำ: ${p.name}${typeLabel}">${p.name}${typeLabel}</option>`;
+        });
+      }
+    } catch(e) { Swal.close(); }
+
     Swal.fire({
       title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
       html: `
         <div class="text-start mt-3">
-          <div class="row g-2 mb-3">
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">SYS (ตัวบน)</label><input id="swal-sys" type="number" class="form-control" placeholder="120"></div>
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">DIA (ตัวล่าง)</label><input id="swal-dia" type="number" class="form-control" placeholder="80"></div>
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">ชีพจร (Pulse)</label><input id="swal-pulse" type="number" class="form-control" placeholder="72"></div>
+          <div class="mb-3 p-3 bg-light border rounded">
+             <label class="small fw-bold text-primary mb-1"><i class="fa-solid fa-bullseye me-1"></i> จุดประสงค์การเข้าตรวจ / หัตถการที่ต้องการทำ</label>
+             <select id="swal-purpose" class="form-select border-primary shadow-sm mb-2">${productOptions}</select>
+             <input id="swal-note" class="form-control" placeholder="พิมพ์ระบุอาการ/หมายเหตุเพิ่มเติม...">
+          </div>
+          
+          <h6 class="fw-bold text-muted small border-bottom pb-1 mb-2">ข้อมูล Vitals (ทางเลือก)</h6>
+          <div class="row g-2 mb-2">
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">SYS</label><input id="swal-sys" type="number" class="form-control" placeholder="120"></div>
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">DIA</label><input id="swal-dia" type="number" class="form-control" placeholder="80"></div>
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">Pulse</label><input id="swal-pulse" type="number" class="form-control" placeholder="72"></div>
           </div>
           <div class="row g-2">
             <div class="col-6"><label class="small fw-bold text-muted mb-1">น้ำหนัก (kg)</label><input id="swal-weight" type="number" class="form-control" placeholder="60"></div>
@@ -133,16 +157,26 @@
       preConfirm: () => {
         let sys = document.getElementById('swal-sys').value;
         let dia = document.getElementById('swal-dia').value;
-        let bp = (sys || dia) ? `${sys}/${dia}` : ''; // จับมารวมกันเป็น 120/80
+        let bp = (sys || dia) ? `${sys}/${dia}` : ''; 
+        
+        let purpose = document.getElementById('swal-purpose').value;
+        let note = document.getElementById('swal-note').value;
+        let finalNote = [purpose, note].filter(Boolean).join(' | ');
+
         return { 
           bp: bp, pulse: document.getElementById('swal-pulse').value, 
-          weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value 
+          weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value,
+          notes: finalNote || 'Walk-in' // 🌟 ส่งข้อมูลที่เลือกเป็นหมายเหตุ (Notes)
         }
       }
     }).then(async (res) => {
       if (res.isConfirmed) {
         Swal.fire({ title: 'กำลังส่งคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        // เราใช้ API ของเดิม แต่เราจะแนบ notes ใหม่ที่เราจับมารวมกันส่งไปด้วย
+        // โดยเราต้องไปแก้ไขฝั่ง Server นิดหน่อยให้รับค่า notes ด้วย (ดูขั้นตอนที่ 2)
         await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, ...res.value }) });
+        
         Swal.fire({ icon: 'success', title: 'คิวไปรอที่ห้องตรวจแล้ว!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
         clearForm();
       }

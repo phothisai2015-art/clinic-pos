@@ -159,11 +159,17 @@
         let vitalsHtml = (q.bp || q.pulse || q.weight || q.height) 
             ? `<div class="mt-2 pt-2 border-top border-light small text-muted" style="font-size: 0.75rem;"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${q.bp||'-'}</b> | HR: <b>${q.pulse||'-'}</b> | W: <b>${q.weight||'-'}</b> | H: <b>${q.height||'-'}</b></div>` 
             : '';
-        
+            
+        // 🌟 เพิ่มป้ายแสดงจุดประสงค์ / อาการ (ดึงจาก q.notes)
+        let noteBadge = (q.notes && q.notes !== 'Walk-in') 
+            ? `<div class="mt-1 small fw-bold text-success" style="font-size: 0.7rem;"><i class="fa-solid fa-thumbtack"></i> ${q.notes}</div>` 
+            : '';
+
         html += `<div class="card pos-queue-card ${isActive} mb-2 border-0 bg-light shadow-sm" onclick="selectPatient('${q.hn}')">
                   <div class="card-body p-3">
                     <h6 class="fw-bold text-primary m-0 mb-1">${q.name} ${typeBadge}</h6>
                     <small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${q.hn}</small>
+                    ${noteBadge}
                     ${vitalsHtml}
                   </div>
                  </div>`;
