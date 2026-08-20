@@ -24,38 +24,22 @@ db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, () => {});
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, () => {});
 db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, () => {});
 
-// สร้างตารางเก็บรูปภาพคนไข้
-db.run(`CREATE TABLE IF NOT EXISTS patient_photos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  patient_id TEXT,
-  photo_type TEXT,
-  image_path TEXT,
-  created_at TEXT
-)`);
 
 // ----------------------------------------------------
-// 🌟 นำไปใส่แทนที่ตรงโซนสร้างตารางด้านบน (ประมาณบรรทัดที่ 30)
+// 🌟 รวมคำสั่งอัปเดตฐานข้อมูล (ป้องกัน Database Locked)
 // ----------------------------------------------------
-db.run(`CREATE TABLE IF NOT EXISTS patient_photos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  patient_id TEXT, photo_type TEXT, image_path TEXT, created_at TEXT
-)`);
-
-// เพิ่มคอลัมน์ระบบ Walk-in และการคัดกรอง (Vitals)
-db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
-db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
-// เพิ่มคอลัมน์เซลล์ดูแล (Sales Rep) ในตารางคิว
-db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, () => {});
-// 🌟 เพิ่มคอลัมน์ Lot และ Expiry ให้ตารางคลังสินค้า
-db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
-db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
-// เพิ่มคอลัมน์เก็บตะกร้าสินค้าสำหรับจัดโปรโมชั่น
-db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
-
-// 🌟 เพิ่มคอลัมน์ Pulse (ชีพจร)
-db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, () => {});
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS patient_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT, photo_type TEXT, image_path TEXT, created_at TEXT)`);
+  db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, () => {});
+  db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
+  db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
+  db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
+});
 
 // ==========================================
 // 💳 API ระบบคอร์สความงาม (Patient Courses)
@@ -324,14 +308,17 @@ app.post('/api/queue/send-doctor', (req, res) => {
   const today = new Date().toISOString().split('T')[0];
   const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
-  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED') ORDER BY id ASC LIMIT 1`, [patient_id, today], (err, row) => {
+  // เพิ่ม CHECKED_IN ในเงื่อนไข เพื่อให้แก้ไข/อัปเดต Vitals ทับของเดิมได้ถ้าพยาบาลกดส่งซ้ำ
+  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
     if (row) {
-      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ? WHERE id = ?`, [bp, pulse, weight, height, row.id], () => {
-        res.json({status: 'success', message: 'เช็คอินคิวนัดและส่งเข้าห้องตรวจสำเร็จ'});
+      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ? WHERE id = ?`, [bp, pulse, weight, height, row.id], function(updateErr) {
+        if (updateErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + updateErr.message});
+        res.json({status: 'success', message: 'อัปเดต Vitals และส่งเข้าห้องตรวจสำเร็จ'});
       });
     } else {
       db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) 
-              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, pulse, weight, height], () => {
+              VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, 'Walk-in')`, [patient_id, today, timeStr, bp, pulse, weight, height], function(insertErr) {
+        if (insertErr) return res.status(500).json({status: 'error', message: 'DB Error: ' + insertErr.message});
         res.json({status: 'success', message: 'สร้างคิว Walk-in เข้าห้องตรวจสำเร็จ'});
       });
     }
