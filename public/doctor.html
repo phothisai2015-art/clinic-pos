@@ -75,10 +75,12 @@
         <div class="tab-pane-custom" id="emr-content" style="display: block;">
           <div class="row g-4">
             
-            <div class="col-lg-6 col-md-12">
+            <!-- 🌟 ขยายกล่องฟอร์มให้กว้างขึ้นเป็น 7 ส่วน -->
+            <div class="col-lg-7 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
                 <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียน</h5>
                 <form id="emrForm" onsubmit="saveEMR(event)">
+				<fieldset id="emrFieldset" disabled>
                   <!-- 🌟 เอาคำว่า required ออก และเพิ่ม rows="4" ให้กล่องสูงขึ้น -->
                   <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="1"></textarea></div>
                   <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="1"></textarea></div>
@@ -139,11 +141,13 @@
                   </div>
 
                   <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกเวชระเบียน</button>
+                  </fieldset>
                 </form>
               </div>
             </div>
             
-            <div class="col-lg-6 col-md-12">
+            <!-- 🌟 บีบกล่องประวัติย้อนหลังให้แคบลงเหลือ 5 ส่วน -->
+            <div class="col-lg-5 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 h-100">
                 <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> ประวัติย้อนหลัง</h5>
                 <!-- 🌟 ขยายความสูงของกล่องประวัติให้ยาวเต็มหน้าจอ -->
@@ -329,6 +333,9 @@
       document.getElementById('emr_deduct_section').style.display = 'none';
     }
 
+    // 🌟 ปลดล็อกให้กรอกฟอร์มเวชระเบียนได้
+    document.getElementById('emrFieldset').disabled = false;
+
     loadEMRHistory(hn);
     loadPatientPhotos(hn);
     renderEmrQueue();
@@ -393,6 +400,11 @@
   }
 
   function switchTab(t) {
+    // 🌟 ดักไว้ว่าถ้ายังไม่มี HN และพยายามกดแท็บรูปถ่าย ให้เตือนและเด้งออก
+    if (!currentHN && t !== 'emr') {
+      return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อนครับ', 'warning');
+    }
+
     document.getElementById('btn-tab-emr').classList.remove('active'); document.getElementById('btn-tab-gallery').classList.remove('active');
     document.getElementById('emr-content').style.display = 'none'; document.getElementById('gallery-content').style.display = 'none';
     document.getElementById(`btn-tab-${t}`).classList.add('active'); document.getElementById(`${t}-content`).style.display = 'block';
@@ -599,6 +611,9 @@
         document.getElementById('vitalsBanner').style.display = 'none';
         document.getElementById('allergyAlert').style.display = 'none';
         
+        // 🌟 ล็อกฟอร์มกลับเป็นสีเทา เพื่อรอหมอเลือกคนไข้คิวต่อไป
+        document.getElementById('emrFieldset').disabled = true;
+
         renderEmrQueue();
       } else {
         Swal.fire('แจ้งเตือน', data.message, 'warning');
