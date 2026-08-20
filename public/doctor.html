@@ -30,7 +30,7 @@
     <!-- 👨‍⚕️ ฝั่งขวา: รายละเอียด EMR -->
     <div class="col-lg-9 col-md-8 h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
       
-      <!-- 🌟 ข้อมูลคนไข้ และ กล่องเตือนแพ้ยา (จัดให้อยู่แถวเดียวกัน) -->
+      <!-- ข้อมูลคนไข้ และ กล่องเตือนแพ้ยา -->
       <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
         <div class="row align-items-center">
           <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <!-- 🌟 แถบแสดง Vitals เบื้องต้น -->
+      <!-- แถบแสดง Vitals เบื้องต้น -->
       <div id="vitalsBanner" class="vitals-banner align-items-center justify-content-between mb-3 shadow-sm">
         <div class="d-flex align-items-center gap-4 w-100 justify-content-around">
           <div><i class="fa-solid fa-heart-pulse text-danger me-1"></i> ความดัน (BP): <b id="v_bp" class="fs-6 text-dark">-</b> mmHg</div>
@@ -75,7 +75,6 @@
         <div class="tab-pane-custom" id="emr-content" style="display: block;">
           <div class="row g-4">
             
-            <!-- 🌟 แบ่งสัดส่วนจอ 50:50 ด้วย col-lg-6 -->
             <div class="col-lg-6 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
                 <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียน</h5>
@@ -83,8 +82,8 @@
                   <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="2" required></textarea></div>
                   <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="2" required></textarea></div>
                   
-                  <!-- 🌟 1. ช่องแสดงผลโควตาและหักสิทธิ์คอร์ส -->
-                  <div class="mb-3 p-3 bg-light border border-success rounded-3">
+                  <!-- 🌟 กล่องหักสิทธิ์คอร์ส (จะถูกซ่อนไว้โดยค่าเริ่มต้น ถ้าไม่มีคอร์ส) -->
+                  <div id="emr_deduct_section" class="mb-3 p-3 bg-light border border-success rounded-3" style="display: none;">
                     <label class="form-label fw-bold small text-success mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> โควตาคงเหลือ และ การหักสิทธิ์</label>
                     <div class="input-group input-group-sm mb-2">
                       <select id="emr_course_select" class="form-select border-success">
@@ -97,7 +96,7 @@
                     <textarea id="emr_treatment" class="form-control bg-white text-success fw-bold" rows="2" placeholder="รายการหัตถการ/คอร์สที่เลือก จะมาแสดงตรงนี้อัตโนมัติ..." readonly></textarea>
                   </div>
 
-                  <!-- 🌟 2. บันทึกการรักษา (4 ช่อง) -->
+                  <!-- บันทึกการรักษา (4 ช่อง) -->
                   <div class="mb-3 border p-3 rounded-3">
                     <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-syringe"></i> บันทึกรายละเอียดหัตถการ</label>
                     <div class="row g-2">
@@ -108,7 +107,7 @@
                     </div>
                   </div>
 
-                  <!-- 🌟 3. ส่วนสรุปและนัดหมาย (3 ช่อง) -->
+                  <!-- ส่วนสรุปและนัดหมาย (3 ช่อง) -->
                   <div class="mb-3 border p-3 rounded-3 bg-light">
                     <label class="form-label fw-bold small text-secondary mb-2"><i class="fa-solid fa-clipboard-check"></i> สรุปและนัดหมาย</label>
                     <div class="mb-2">
@@ -129,7 +128,6 @@
               </div>
             </div>
             
-            <!-- 🌟 ประวัติย้อนหลัง (แบ่งครึ่ง 50% col-lg-6) -->
             <div class="col-lg-6 col-md-12">
               <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 h-100">
                 <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i> ประวัติย้อนหลัง</h5>
@@ -178,14 +176,13 @@
 
 <script>
   var currentHN = ''; var currentQueueData = []; var canvas, ctx, isDrawing = false;
-  var pendingDeductions = []; // 🌟 ตัวแปรเก็บคอร์สที่รอกดบันทึก
+  var pendingDeductions = []; // ตัวแปรเก็บคอร์สที่รอกดบันทึก
   
   function initDoctorModule() {
     renderEmrQueue();
     if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
     window.emrQueueInterval = setInterval(renderEmrQueue, 5000);
 
-    // 🌟 ดึงชื่อแพทย์ที่ล็อกอินอยู่จากแถบเมนูหลักมาใส่ฟอร์มอัตโนมัติ
     const staffElem = document.getElementById('display-staff-name');
     if (staffElem && document.getElementById('emr_doctor_name')) {
       document.getElementById('emr_doctor_name').value = staffElem.innerText;
@@ -278,20 +275,29 @@
       document.getElementById('vitalsBanner').style.display = 'none';
     }
 
-    // ดึงข้อมูลโควตาคงเหลือใส่ Dropdown
+    // 🌟 ดึงข้อมูลโควตาคงเหลือใส่ Dropdown
     const cRes = await fetch(`/api/patients/${hn}/courses`);
     const cData = await cRes.json();
     let courseOptions = '<option value="">-- เลือกคอร์ส/หัตถการที่ต้องการใช้ --</option>';
+    let hasCourse = false; // ตัวแปรเช็คว่ามีคอร์สหรือไม่
     
     cData.data.forEach(c => {
       let remain = c.total_qty - c.used_qty;
       let displayName = c.product_name || c.product_id;
       let unitName = c.unit || 'ครั้ง';
       if(remain > 0) {
+        hasCourse = true;
         courseOptions += `<option value="${c.id}" data-name="${displayName}" data-remain="${remain}">เหลือ ${remain} ${unitName} - ${displayName}</option>`;
       }
     });
     document.getElementById('emr_course_select').innerHTML = courseOptions;
+
+    // 🌟 เปิด/ปิด กล่องหักคอร์สอัตโนมัติตามสถานะคนไข้
+    if (hasCourse) {
+      document.getElementById('emr_deduct_section').style.display = 'block';
+    } else {
+      document.getElementById('emr_deduct_section').style.display = 'none';
+    }
 
     loadEMRHistory(hn);
     loadPatientPhotos(hn);
@@ -299,7 +305,6 @@
     Swal.close();
   }
 
-  // ฟังก์ชันดึงค่าจาก Dropdown ไปเขียนลงช่อง (พักไว้รอหักจริงตอนบันทึก)
   function deductCourseInline() {
     let sel = document.getElementById('emr_course_select');
     let qtyInput = document.getElementById('emr_course_qty');
@@ -315,19 +320,16 @@
 
     if(qty > remain) return Swal.fire('Error', 'ไม่สามารถตัดเกินจำนวนคงเหลือได้', 'error');
 
-    // นำข้อมูลไปพักไว้ใน Array ก่อน ยังไม่ยิง API
     pendingDeductions.push({ course_id: courseId, deduct_amount: qty });
 
-    // หักตัวเลขในหน้าจอชั่วคราว
     opt.setAttribute('data-remain', remain - qty);
     opt.innerText = `เหลือ ${remain - qty} - ${name} (รอเซฟ)`;
 
-    // เติมข้อความลงในช่อง TextArea แบบ Readonly
     let tx = document.getElementById('emr_treatment');
     let newTxText = `- หักสิทธิ์: ${name} (ใช้ไป ${qty})`;
     tx.value = tx.value ? tx.value + `\n${newTxText}` : newTxText;
 
-    qtyInput.value = ''; // เคลียร์ช่องจำนวน
+    qtyInput.value = ''; 
     
     Swal.fire({ icon: 'info', title: 'เพิ่มรายการแล้ว (จะถูกหักเมื่อกดบันทึกเวชระเบียน)', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
   }
@@ -388,7 +390,6 @@
     document.getElementById('imgAfter').selectedIndex = 0;
   }
 
-  // 🌟 บันทึก EMR พร้อมรวบรวม 4 ช่องการรักษา และ 3 ช่องสรุป
   async function saveEMR(e) {
     e.preventDefault(); if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
     
@@ -397,7 +398,6 @@
     let v_weight = document.getElementById('v_weight').innerText;
     let v_height = document.getElementById('v_height').innerText;
 
-    // รวบรวมข้อมูลจากช่องต่างๆ ในหน้าจอรวมเป็น Text เดียวกันเพื่อส่งให้ Backend
     let selectedTx = document.getElementById('emr_treatment').value;
     let area = document.getElementById('emr_area').value;
     let brand = document.getElementById('emr_brand').value;
@@ -438,10 +438,8 @@
     try {
       Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-      // 1. บันทึกเวชระเบียน (EMR)
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
-      // 2. วนลูปหักสต็อกและคอร์สจากที่พักไว้
       if (pendingDeductions.length > 0) {
         const deductPromises = pendingDeductions.map(item => 
           fetch(`/api/courses/${item.course_id}/deduct`, { 
@@ -453,11 +451,10 @@
 
       document.getElementById('emrForm').reset();
       
-      // ดึงชื่อหมอกลับมาใส่ใหม่หลังรีเซ็ตฟอร์ม
       const staffElem = document.getElementById('display-staff-name');
       if (staffElem) document.getElementById('emr_doctor_name').value = staffElem.innerText;
 
-      pendingDeductions = []; // เคลียร์ของที่พักไว้
+      pendingDeductions = []; 
       loadEMRHistory(currentHN); 
       renderEmrQueue();
       selectPatient(currentHN); 
@@ -493,7 +490,6 @@
                ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>`
                : '';
 
-         // ฟอร์แมตช่อง Tx ให้ขึ้นบรรทัดใหม่สวยงาม
          let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
 
          html += `<div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
@@ -518,7 +514,6 @@
         btn.innerHTML = '<i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว';
         Swal.fire({ icon: 'success', title: 'ส่งไปการเงินสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         
-        // ให้คิวหายไปทันทีเมื่อกดปุ่มส่งชำระเงินสำเร็จ
         renderEmrQueue();
       }
     } catch(e) {}
