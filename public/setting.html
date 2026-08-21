@@ -47,8 +47,8 @@
     <!-- รายละเอียดด้านขวา (Content) -->
     <div class="settings-content col-9 position-relative">
       
-      <!-- TAB 1: พนักงาน -->
-      <div id="tab-users" class="h-100 d-flex flex-column">
+      <!-- TAB 1: พนักงาน (🌟 แก้ไขตรงนี้ไม่ให้ดื้อโชว์ตลอดเวลา) -->
+      <div id="tab-users" class="h-100 flex-column" style="display: flex;">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
           <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i> เพิ่มพนักงานใหม่</button>
@@ -188,6 +188,7 @@
     document.getElementById('tab-users').style.display = 'none';
     document.getElementById('tab-clinic').style.display = 'none';
     
+    // โชว์หน้าใหม่
     document.getElementById('tab-' + tab).style.display = 'flex';
     if(tab === 'clinic') loadClinicData();
   }
@@ -231,7 +232,6 @@
     } catch(e) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
   }
 
-  // อัปโหลด Logo แบบ Base64
   function uploadClinicLogo(input) {
     if (input.files && input.files[0]) {
       const reader = new FileReader();
@@ -259,7 +259,7 @@
   }
 
 
-  // --- ระบบจัดการพนักงาน (แบบเดิม) ---
+  // --- ระบบจัดการพนักงาน ---
   async function loadUsers() {
     try {
       const res = await fetch('/api/users');
