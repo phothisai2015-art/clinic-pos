@@ -33,14 +33,15 @@
       <div class="settings-menu-item text-muted" onclick="Swal.fire('Coming Soon','กำลังพัฒนาระบบข้อมูลคลินิก','info')">
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
-      <div class="settings-menu-item text-muted text-danger mt-auto border-top pt-3" style="position:absolute; bottom: 30px; width: calc(25% - 40px);" onclick="closeModule()">
+      
+      <!-- 🌟 เพิ่มคำสั่งลบ Modal ทิ้งตอนกดออกจากหน้าตั้งค่า เพื่อคืนทรัพยากรระบบ -->
+      <div class="settings-menu-item text-muted text-danger mt-auto border-top pt-3" style="position:absolute; bottom: 30px; width: calc(25% - 40px);" onclick="closeModule(); document.getElementById('userModal')?.remove();">
         <i class="fa-solid fa-arrow-right-from-bracket me-3 fs-5"></i> ออกจากการตั้งค่า
       </div>
     </div>
 
     <!-- รายละเอียดด้านขวา (Content) -->
     <div class="settings-content col-9 position-relative">
-      
       <div id="tab-users" class="h-100 d-flex flex-column">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
@@ -51,7 +52,6 @@
           <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -62,7 +62,6 @@
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-bottom-0 bg-light rounded-top-4 p-4">
         <h5 class="modal-title fw-bold text-primary" id="userModalTitle"><i class="fa-solid fa-user-pen me-2"></i>สร้าง/แก้ไขพนักงาน</h5>
-        <!-- 🌟 เปลี่ยนวิธีปิดป๊อปอัป -->
         <button type="button" class="btn-close" onclick="closeUserModal()"></button>
       </div>
       <div class="modal-body p-4">
@@ -106,7 +105,6 @@
         </form>
       </div>
       <div class="modal-footer border-top-0 bg-light rounded-bottom-4 p-3">
-        <!-- 🌟 เปลี่ยนวิธีปิดป๊อปอัป -->
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeUserModal()">ยกเลิก</button>
         <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
       </div>
@@ -116,7 +114,7 @@
 
 <script>
   var allUsers = [];
-  var userModal = null; // 🌟 ประกาศตัวแปรไว้เฉยๆ ไม่ต้องผูกทันที
+  var userModal = null; 
 
   function initSettings() { loadUsers(); }
   initSettings();
@@ -166,8 +164,14 @@
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = checkbox.checked; cb.disabled = checkbox.checked; });
   }
 
-  // 🌟 ฟังก์ชันเปิด Modal แบบคลีนๆ เคลียร์ของเก่าทิ้งเสมอ
   function openUserModal(id = null) {
+    const modalEl = document.getElementById('userModal');
+    
+    // 🌟 พระเอกของเรา: ย้าย Modal ออกมาไว้ที่ชั้นนอกสุดของหน้าจอ เพื่อไม่ให้โดนฉากหลังสีดำบัง!
+    if (modalEl && modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
     document.getElementById('userForm').reset();
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = false; cb.disabled = false; });
     
@@ -191,8 +195,6 @@
       document.getElementById('u_id').value = '';
     }
 
-    // จัดการผูก Modal ใหม่ทุกครั้งที่เปิด เพื่อป้องกันบั๊กค้าง
-    const modalEl = document.getElementById('userModal');
     let existingModal = bootstrap.Modal.getInstance(modalEl);
     if (existingModal) existingModal.dispose();
     
@@ -200,11 +202,10 @@
     userModal.show();
   }
 
-  // 🌟 ฟังก์ชันสั่งปิด Modal อย่างถูกวิธี บังคับลบฉากหลังสีดำ
   function closeUserModal() {
     if(userModal) {
        userModal.hide();
-       // บังคับลบฉากหลังสีดำออกให้ชัวร์ๆ
+       // ล้างฉากหลังสีดำให้สะอาด เผื่อมีค้าง
        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
        document.body.classList.remove('modal-open');
        document.body.style.overflow = '';
@@ -240,7 +241,7 @@
       
       if(data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-        closeUserModal(); // 🌟 เรียกใช้ฟังก์ชันปิดที่เราเขียนเอง
+        closeUserModal(); 
         loadUsers();
       } else {
         Swal.fire('ข้อผิดพลาด', data.message, 'error'); 
