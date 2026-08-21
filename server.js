@@ -376,8 +376,11 @@ app.get('/api/reports/dashboard', (req, res) => {
 // ==========================================
 app.get('/api/check-setup', (req, res) => {
   db.get("SELECT count(*) as count FROM users", (err, row) => {
-    if (err) return res.json({ status: 'error' });
-    // ถ้าพนักงานเป็น 0 ให้ส่ง needsSetup = true กลับไป
+    if (err) {
+      console.error("❌ DB Error (check-setup):", err.message);
+      return res.json({ status: 'error', message: err.message });
+    }
+    console.log("🔎 ตรวจสอบระบบ: พบพนักงานจำนวน", row.count, "คน");
     res.json({ status: 'success', needsSetup: row.count === 0 });
   });
 });
