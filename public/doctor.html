@@ -13,7 +13,7 @@
   /* การ์ดรายการยิบย่อยในโปรโมชั่น */
   .sub-item-card { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; transition: 0.2s; position: relative; }
   .sub-item-card:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
-  .sub-item-card.removed { opacity: 0.4; background: #f8fafc; border-style: dashed; text-decoration: line-through; }
+  .sub-item-card.removed { opacity: 0.45; background: #f8fafc; border-style: dashed; }
 
   .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
   .custom-scrollbar::-webkit-scrollbar { width: 6px; } 
@@ -102,7 +102,7 @@
                     </button>
                   </div>
 
-                  <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการยิบย่อยที่จะทำในครั้งนี้ (กดลบออกได้หากไม่ทำ)</h6>
+                  <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการยิบย่อยที่จะทำในครั้งนี้</h6>
                   <div id="promo_sub_items_list" class="row g-2 mb-3"></div>
                   
                   <div class="row g-3 mb-3">
@@ -129,7 +129,7 @@
                 <div class="mb-3 border border-primary p-3 rounded-3 bg-white">
                   <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์เพิ่มเติม (Rx)</label>
                   <div class="input-group input-group-sm mb-2">
-                    <select id="emr_med_select" class="form-select border-primary"><option value="">-- โหลดรายการยา... --</option></select>
+                    <select id="emr_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
                     <input type="number" id="emr_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
                     <input type="text" id="emr_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
                     <button type="button" class="btn btn-primary fw-bold" onclick="addMedicationInline()"><i class="fa-solid fa-plus"></i></button>
@@ -195,8 +195,8 @@
   var currentQueueData = []; 
   var canvas, ctx, isDrawing = false;
   var pendingMeds = []; 
-  var activePromoInfo = null; // ข้อมูลโปรโมชั่นที่ส่งมา
-  var currentSubItems = [];   // รายการยิบย่อย
+  var activePromoInfo = null; 
+  var currentSubItems = [];   
 
   function initDoctorModule() {
     renderEmrQueue();
@@ -274,7 +274,6 @@
     
     Swal.showLoading();
     
-    // ดึงข้อมูลคนไข้, ยาในคลัง, คอร์สคนไข้
     const [pRes, invRes, cRes] = await Promise.all([
       fetch(`/api/patients/${hn}`),
       fetch('/api/inventory'),
@@ -285,7 +284,6 @@
     const invData = (await invRes.json()).data || [];
     const cData = (await cRes.json()).data || [];
     
-    // ตั้งค่าส่วนหัวคนไข้
     document.getElementById('hdr_name').innerText = p.full_name; 
     document.getElementById('hdr_hn').innerText = p.id;
     document.getElementById('hdr_idcard').innerText = p.id_card || '-';
@@ -297,7 +295,6 @@
     }
     document.getElementById('hdr_age').innerText = ageText;
     
-    // แจ้งเตือนแพ้ยา
     let alertDetails = [];
     if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') alertDetails.push(`<span class="text-danger fw-bold">แพ้ยา:</span> ${p.allergies}`);
     if (p.congenital_disease && p.congenital_disease !== '-' && p.congenital_disease !== 'ไม่มี') alertDetails.push(`<span class="text-danger fw-bold">โรคประจำตัว:</span> ${p.congenital_disease}`);
@@ -308,7 +305,6 @@
       document.getElementById('allergyAlert').style.display = 'none'; 
     }
     
-    // โหลด Vitals
     const queueInfo = currentQueueData.find(q => q.hn === hn);
     if (queueInfo && (queueInfo.bp || queueInfo.pulse || queueInfo.weight || queueInfo.height)) {
       document.getElementById('vitalsBanner').style.display = 'flex'; 
@@ -320,7 +316,6 @@
       document.getElementById('vitalsBanner').style.display = 'none'; 
     }
 
-    // Dropdown สั่งจ่ายยา
     let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
     invData.forEach(item => { 
       if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
@@ -329,38 +324,31 @@
     });
     document.getElementById('emr_med_select').innerHTML = medOptions;
 
-    // 🌟 ตรวจสอบว่าคิวนี้มีการระบุ [บริการ] โปรโมชั่นหรือคอร์สมาหรือไม่
     let serviceNote = queueInfo ? queueInfo.notes || '' : '';
     
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
-      // ดึงชื่อบริการที่เลือกมา
       let promoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0];
-      
-      // หาว่าเป็นโปรโมชั่นตัวไหนในคลัง
       let matchedProd = invData.find(x => promoName.includes(x.name));
-      
       activePromoInfo = { name: promoName, prod: matchedProd };
-      
-      // ถ้าระบบเจอว่าเป็นโปรโมชั่นจัดเซ็ต ดึงรายการยิบย่อย (bundle_items)
+
+      let rawBundleItems = [];
       if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
-        try {
-          currentSubItems = JSON.parse(matchedProd.bundle_items).map((b, idx) => ({
-            id: b.id,
-            name: b.name,
-            qty: b.qty,
-            removed: false,
-            course_id: null
-          }));
-        } catch (e) { currentSubItems = []; }
+        try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
       } else {
-        // ถ้าเป็นคอร์สเดี่ยวๆ
-        currentSubItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: promoName, qty: 1, removed: false, course_id: null }];
+        rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: promoName, qty: 1 }];
       }
 
-      // ผูก course_id จาก patient_courses ให้ถ้ามี
-      currentSubItems.forEach(sub => {
-        let matchedCourse = cData.find(c => (c.product_name === sub.name || c.product_id === sub.id) && (c.total_qty - c.used_qty) > 0);
-        if (matchedCourse) sub.course_id = matchedCourse.id;
+      currentSubItems = rawBundleItems.map(b => {
+        let matchedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
+        let remain = matchedCourse ? (matchedCourse.total_qty - matchedCourse.used_qty) : b.qty;
+        
+        return {
+          id: b.id,
+          name: b.name,
+          remain_qty: remain,
+          used_today: remain > 0 ? 1 : 0,
+          course_id: matchedCourse ? matchedCourse.id : null
+        };
       });
 
       switchToPromoMode();
@@ -375,7 +363,6 @@
     Swal.close();
   }
 
-  // --- โหมดโปรโมชั่น ---
   function switchToPromoMode() {
     document.getElementById('mode_general').style.display = 'none';
     document.getElementById('mode_promo').style.display = 'block';
@@ -385,7 +372,6 @@
     renderSubItemsList();
   }
 
-  // --- โหมดตรวจทั่วไป ---
   function switchToGeneralMode() {
     document.getElementById('mode_promo').style.display = 'none';
     document.getElementById('mode_general').style.display = 'block';
@@ -395,7 +381,6 @@
     }
   }
 
-  // --- แสดงรายการยิบย่อยให้หมอกดลบ/หัก ---
   function renderSubItemsList() {
     const container = document.getElementById('promo_sub_items_list');
     if (!container) return;
@@ -407,29 +392,55 @@
     }
 
     currentSubItems.forEach((sub, idx) => {
-      let isRemovedClass = sub.removed ? 'removed' : '';
-      let btnHtml = sub.removed 
-        ? `<button class="btn btn-sm btn-outline-success rounded-circle" onclick="toggleRemoveSubItem(${idx})" title="นำกลับมารักษา"><i class="fa-solid fa-rotate-left"></i></button>`
-        : `<button class="btn btn-sm btn-outline-danger rounded-circle" onclick="toggleRemoveSubItem(${idx})" title="ลบรายการนี้ออก"><i class="fa-solid fa-trash"></i></button>`;
+      let isNotDone = sub.used_today === 0;
+      let cardClass = isNotDone ? 'sub-item-card removed' : 'sub-item-card border-primary';
 
       container.innerHTML += `
         <div class="col-md-6">
-          <div class="sub-item-card ${isRemovedClass} d-flex justify-content-between align-items-center">
-            <div>
-              <div class="fw-bold text-dark small">${sub.name}</div>
-              <small class="text-muted">จำนวน: ${sub.qty} ครั้ง/หน่วย</small>
+          <div class="${cardClass} p-3 rounded-3 shadow-sm bg-white border">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="fw-bold text-dark fs-6">${sub.name}</div>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill mt-1">
+                  สิทธิ์คงเหลือ: ${sub.remain_qty} ครั้ง
+                </span>
+              </div>
+              <button class="btn btn-sm ${isNotDone ? 'btn-outline-primary' : 'btn-outline-danger'} rounded-pill px-2 py-0" style="font-size:0.75rem;" onclick="toggleSubItemStatus(${idx})">
+                ${isNotDone ? '<i class="fa-solid fa-plus me-1"></i>ทำวันนี้' : '<i class="fa-solid fa-xmark me-1"></i>ไม่ทำวันนี้'}
+              </button>
             </div>
-            <div>${btnHtml}</div>
+            
+            <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-2">
+              <small class="fw-bold ${isNotDone ? 'text-muted' : 'text-primary'}">ทำวันนี้:</small>
+              <div class="input-group input-group-sm" style="width: 110px;">
+                <button class="btn btn-outline-secondary fw-bold" type="button" onclick="adjustSubItemQty(${idx}, -1)" ${isNotDone ? 'disabled' : ''}>-</button>
+                <input type="text" class="form-control text-center fw-bold text-primary bg-light" value="${sub.used_today}" readonly>
+                <button class="btn btn-outline-secondary fw-bold" type="button" onclick="adjustSubItemQty(${idx}, 1)" ${isNotDone || sub.used_today >= sub.remain_qty ? 'disabled' : ''}>+</button>
+              </div>
+            </div>
           </div>
         </div>
       `;
     });
   }
 
-  // --- กดลบ / ดึงกลับ รายการยิบย่อย ---
-  function toggleRemoveSubItem(index) {
-    currentSubItems[index].removed = !currentSubItems[index].removed;
+  function toggleSubItemStatus(index) {
+    if (currentSubItems[index].used_today > 0) {
+      currentSubItems[index].used_today = 0;
+    } else {
+      currentSubItems[index].used_today = currentSubItems[index].remain_qty > 0 ? 1 : 0;
+    }
     renderSubItemsList();
+  }
+
+  function adjustSubItemQty(index, step) {
+    let item = currentSubItems[index];
+    let newQty = item.used_today + step;
+    
+    if (newQty >= 0 && newQty <= item.remain_qty) {
+      item.used_today = newQty;
+      renderSubItemsList();
+    }
   }
 
   function addMedicationInline() {
@@ -454,28 +465,26 @@
     sel.value = ''; qtyInput.value = ''; sigInput.value = '';
   }
 
-  // --- บันทึก EMR ---
   async function submitEMR() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
     let finalTxArray = [];
     let sys_symptoms = 'ตรวจทั่วไป'; 
     let sys_diagnosis = '-';
-    
     let isPromoModeActive = document.getElementById('mode_promo').style.display !== 'none';
 
     if (isPromoModeActive && activePromoInfo) {
        sys_symptoms = `มารับบริการโปรโมชั่น: ${activePromoInfo.name}`; 
        sys_diagnosis = 'บริการความงามและหัตถการ';
 
-       let doneItems = currentSubItems.filter(x => !x.removed);
-       let removedItems = currentSubItems.filter(x => x.removed);
+       let doneItems = currentSubItems.filter(x => x.used_today > 0);
+       let skippedItems = currentSubItems.filter(x => x.used_today === 0);
 
        if (doneItems.length > 0) {
-         finalTxArray.push(`[ทำหัตถการในเซ็ต]\n` + doneItems.map(d => `- ${d.name} (${d.qty} ครั้ง)`).join('\n'));
+         finalTxArray.push(`[ทำหัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง (คงเหลือสิทธิ์ ${(d.remain_qty - d.used_today)} ครั้ง)`).join('\n'));
        }
-       if (removedItems.length > 0) {
-         finalTxArray.push(`[รายการที่ยกเลิก/ไม่ทำ]\n` + removedItems.map(r => `- ${r.name}`).join('\n'));
+       if (skippedItems.length > 0) {
+         finalTxArray.push(`[รายการที่ยังไม่ทำวันนี้]\n` + skippedItems.map(s => `- ${s.name} (คงเหลือสิทธิ์ ${s.remain_qty} ครั้ง)`).join('\n'));
        }
 
        let area = document.getElementById('mc_area').value; 
@@ -506,22 +515,19 @@
 
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     try {
-      // 1. บันทึก EMR
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
-      // 2. หักคอร์สสำหรับรายการยิบย่อยที่ทำจริง
       if (isPromoModeActive) {
-        let doneItems = currentSubItems.filter(x => !x.removed && x.course_id);
+        let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
         for (let item of doneItems) {
            await fetch(`/api/courses/${item.course_id}/deduct`, { 
              method: 'PUT', 
              headers: {'Content-Type':'application/json'}, 
-             body: JSON.stringify({deduct_amount: item.qty}) 
+             body: JSON.stringify({ deduct_amount: item.used_today }) 
            });
         }
       }
 
-      // 3. ปิดคิวการตรวจ
       await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
 
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
