@@ -147,56 +147,10 @@
   <!-- Container สำหรับโหลดหน้าต่างๆ (Module) -->
   <div id="module-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8fafc; z-index: 1050; overflow-y: auto;"></div>
 
-  <script>
+<script>
     let currentPin = "";
     
-    function pressNum(val) {
-      if(val === 'clear') currentPin = "";
-      else if(val === 'del') currentPin = currentPin.slice(0, -1);
-      else if(currentPin.length < 4) currentPin += val;
-      
-      updatePinDisplay();
-      
-      // เมื่อกดครบ 4 ตัว ให้ส่งไปเช็คกับ Server
-      if(currentPin.length === 4) {
-        Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: currentPin })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
-            
-            // เปลี่ยนชื่อบนหน้าจอ
-            document.getElementById('display-staff-name').innerText = data.user.name;
-            
-            // สลับหน้าจอ
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('main-menu').style.display = 'block';
-            document.getElementById('footer-menu').style.display = 'flex'; // แสดงแถบด้านล่าง
-            
-            // นำสิทธิ์การใช้งาน (Permissions) ไปปลดล็อกปุ่มเมนู
-            applyPermissions(data.user.permissions);
-
-          } else {
-            Swal.fire({ icon: 'error', title: 'รหัสผิดพลาด', text: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
-          }
-          currentPin = "";
-          updatePinDisplay();
-        })
-        .catch(err => {
-          Swal.fire({ icon: 'error', title: 'เซิร์ฟเวอร์ไม่ตอบสนอง', text: 'โปรดตรวจสอบการเชื่อมต่อ', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
-          currentPin = "";
-          updatePinDisplay();
-        });
-      }
-    }
-
-    // เมื่อเปิดหน้าเว็บมา ให้เช็คก่อนว่ามีพนักงานในระบบหรือยัง
+    // 1. ตรวจสอบตอนเปิดเว็บว่ามี Admin หรือยัง
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
@@ -205,16 +159,13 @@
     async function checkFirstSetup() {
       try {
         console.log("กำลังตรวจสอบสถานะ Admin...");
-        // 🌟 เติม ?t=... เพื่อบังคับให้เบราว์เซอร์ดึงข้อมูลใหม่เสมอ ป้องกันปัญหา Cache
         const res = await fetch('/api/check-setup?t=' + new Date().getTime());
         const data = await res.json();
         
-        console.log("ผลลัพธ์จาก Server:", data); // ดูค่าใน F12
-
-        // ถ้าพบว่าไม่มีพนักงานเลย ให้แสดงป๊อปอัป
         if (data.needsSetup === true) {
-          console.log("ไม่มีพนักงาน -> แสดงป๊อปอัปสร้าง Admin");
-		  document.getElementById('lock-screen').style.display = 'none';
+          // ซ่อนหน้า Lock Screen ที่บังอยู่ออกไป
+          document.getElementById('lock-screen').style.display = 'none'; 
+
           Swal.fire({
             title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
             html: `
@@ -248,12 +199,8 @@
               
               if (setupData.status === 'success') {
                 Swal.fire({ 
-                  icon: 'success', 
-                  title: 'ตั้งค่าสำเร็จ!', 
-                  text: 'กรุณาใช้รหัส PIN ที่คุณตั้งไว้ เพื่อเข้าสู่ระบบได้เลยครับ', 
-                  confirmButtonText: 'ตกลง' 
+                  icon: 'success', title: 'ตั้งค่าสำเร็จ!', text: 'กรุณาใช้รหัส PIN เพื่อเข้าสู่ระบบได้เลยครับ', confirmButtonText: 'ตกลง' 
                 }).then(() => {
-                  // 🌟 2. รีเฟรชหน้าเว็บ เพื่อให้กลับไปหน้า Lock Screen ให้เราล็อกอิน
                   window.location.reload(); 
                 });
               } else {
@@ -261,11 +208,80 @@
               }
             }
           });
-        } else if (data.status === 'error') {
-          console.error("เกิดข้อผิดพลาดจากฐานข้อมูล:", data.message);
         }
       } catch(e) {
         console.error('Error checking setup', e);
+      }
+    }
+
+    // 2. ระบบกดรหัส PIN
+    function pressNum(val) {
+      if(val === 'clear') currentPin = "";
+      else if(val === 'del') currentPin = currentPin.slice(0, -1);
+      else if(currentPin.length < 4) currentPin += val;
+      
+      updatePinDisplay();
+      
+      if(currentPin.length === 4) {
+        Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: currentPin })
+        })
+        .then(async res => {
+          if (!res.ok) throw new Error(`เซิร์ฟเวอร์อาจกำลังรีสตาร์ท โปรดรอสักครู่`);
+          return res.json();
+        })
+        .then(data => {
+          if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            
+            document.getElementById('display-staff-name').innerText = data.user.name;
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('footer-menu').style.display = 'flex'; 
+            
+            if(data.user.permissions) applyPermissions(data.user.permissions);
+
+          } else {
+            Swal.fire({ icon: 'error', title: 'รหัสผิดพลาด', text: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+          }
+          currentPin = ""; updatePinDisplay();
+        })
+        .catch(err => {
+          console.error("Login Error:", err);
+          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+          currentPin = ""; updatePinDisplay();
+        });
+      }
+    }
+
+    // 3. ฟังก์ชันปลดล็อกปุ่มตามสิทธิ์ (ที่หาไม่เจอ ผมใส่มาให้แล้วครับ!)
+    function applyPermissions(perms) {
+      if (!perms) return; 
+      let p = perms.toUpperCase();
+      
+      let buttons = {
+        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   
+        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], 
+        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], 
+        'POS': document.querySelectorAll('.menu-card-btn')[3],       
+        'STOCK': document.querySelectorAll('.menu-card-btn')[4],     
+        'DASH': document.querySelectorAll('.menu-card-btn')[5],      
+        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[6]  
+      };
+
+      for (const [key, btn] of Object.entries(buttons)) {
+        if (btn) {
+          let checkKey = key.includes('PATIENT') ? 'PATIENT' : key;
+          if (p.includes('ADMIN') || p.includes(checkKey)) {
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+          } else {
+            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+          }
+        }
       }
     }
 
@@ -279,7 +295,7 @@
 
     function lockSystem() {
       document.getElementById('main-menu').style.display = 'none';
-      document.getElementById('footer-menu').style.display = 'none'; // ซ่อนแถบด้านล่างตอนล็อกหน้าจอ
+      document.getElementById('footer-menu').style.display = 'none'; 
       document.getElementById('lock-screen').style.display = 'flex';
     }
 
@@ -288,7 +304,6 @@
       const icon = document.getElementById('theme-icon');
       icon.className = document.body.classList.contains('dark-theme') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
       
-      // ปรับสีกล่องชื่อพนักงานให้เข้ากับ Dark Mode
       const nameBox = document.querySelector('.dark-bg-fix');
       if(document.body.classList.contains('dark-theme')) {
         nameBox.classList.remove('bg-white'); nameBox.classList.add('bg-dark');
@@ -297,7 +312,6 @@
       }
     }
 
-    // ฟังก์ชันโหลด Module แบบ SPA (ดึงไฟล์ HTML อื่นมาแปะหน้าจอ)
     async function openModule(pageUrl) {
       Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       try {
@@ -307,7 +321,6 @@
         container.innerHTML = html;
         container.style.display = 'block';
         
-        // รัน Script ที่ติดมากับไฟล์ HTML ย่อย
         const scripts = container.querySelectorAll('script');
         scripts.forEach(script => {
           const newScript = document.createElement('script');
@@ -321,11 +334,9 @@
     }
 
     function closeModule() {
-      // 🛑 หยุดระบบ Auto-refresh ของทุกหน้าเมื่อกดปิด ป้องกันเน็ตเวิร์คทำงานซ้ำซ้อน
       if(window.bookingInterval) clearInterval(window.bookingInterval);
       if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
       if(window.posQueueInterval) clearInterval(window.posQueueInterval);
-
       document.getElementById('module-container').innerHTML = '';
       document.getElementById('module-container').style.display = 'none';
     }
