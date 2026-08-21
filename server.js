@@ -315,17 +315,29 @@ app.get('/api/users', (req, res) => {
 
 app.post('/api/users', (req, res) => {
   const { name, pin, role, permissions } = req.body;
-  db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, ?, ?)`,
-    [pin, name, role, permissions], function(err) {
-      res.json({ status: 'success', user_id: this.lastID });
+  // เช็ค PIN ซ้ำก่อนบันทึก
+  db.get(`SELECT id FROM users WHERE pin = ?`, [pin], (err, row) => {
+    if (row) return res.json({ status: 'error', message: 'รหัส PIN นี้มีผู้ใช้งานแล้ว กรุณาตั้งรหัสใหม่' });
+    
+    db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, ?, ?)`,
+      [pin, name, role, permissions], function(err) {
+        if(err) return res.json({ status: 'error', message: err.message });
+        res.json({ status: 'success', user_id: this.lastID });
+    });
   });
 });
 
 app.put('/api/users/:id', (req, res) => {
   const { name, pin, role, permissions } = req.body;
-  db.run(`UPDATE users SET name=?, pin=?, role=?, permissions=? WHERE id=?`,
-    [name, pin, role, permissions, req.params.id], function(err) {
-      res.json({ status: 'success' });
+  // เช็ค PIN ซ้ำ (ยกเว้นตัวเอง)
+  db.get(`SELECT id FROM users WHERE pin = ? AND id != ?`, [pin, req.params.id], (err, row) => {
+    if (row) return res.json({ status: 'error', message: 'รหัส PIN นี้ถูกใช้ไปแล้ว กรุณาตั้งรหัสใหม่' });
+    
+    db.run(`UPDATE users SET name=?, pin=?, role=?, permissions=? WHERE id=?`,
+      [name, pin, role, permissions, req.params.id], function(err) {
+        if(err) return res.json({ status: 'error', message: err.message });
+        res.json({ status: 'success' });
+    });
   });
 });
 
@@ -333,6 +345,30 @@ app.delete('/api/users/:id', (req, res) => {
   db.run(`DELETE FROM users WHERE id=?`, [req.params.id], function(err) {
     res.json({ status: 'success' });
   });
-}); 
+});
+
+// ==========================================
+// 📊 API สำหรับหน้ารายงาน (Reports & Dashboard)
+// ==========================================
+app.get('/reports.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reports.html')); });
+
+app.get('/api/reports/dashboard', (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // ยอดขายวันนี้ (จากบิลที่จ่ายแล้ว)
+  db.get(`SELECT SUM(paid_amount) as total_revenue FROM patient_bills WHERE status = 'PAID' AND bill_date = ?`, [today], (err, revRow) => {
+    const todayRevenue = revRow ? (revRow.total_revenue || 0) : 0;
+    
+    // คิววันนี้
+    db.get(`SELECT COUNT(id) as total_appt FROM appointments WHERE appointment_date = ?`, [today], (err, apptRow) => {
+      const todayAppt = apptRow ? (apptRow.total_appt || 0) : 0;
+      
+      // ดึงข้อมูล 7 วันย้อนหลังเพื่อทำกราฟ
+      db.all(`SELECT bill_date, SUM(paid_amount) as revenue FROM patient_bills WHERE status = 'PAID' GROUP BY bill_date ORDER BY bill_date DESC LIMIT 7`, [], (err, chartRows) => {
+        res.json({ status: 'success', today_revenue: todayRevenue, today_appt: todayAppt, chart_data: chartRows || [] });
+      });
+    });
+  });
+});
 
 app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`); });
