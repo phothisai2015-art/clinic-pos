@@ -62,7 +62,8 @@
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-bottom-0 bg-light rounded-top-4 p-4">
         <h5 class="modal-title fw-bold text-primary" id="userModalTitle"><i class="fa-solid fa-user-pen me-2"></i>สร้าง/แก้ไขพนักงาน</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- 🌟 เปลี่ยนวิธีปิดป๊อปอัป -->
+        <button type="button" class="btn-close" onclick="closeUserModal()"></button>
       </div>
       <div class="modal-body p-4">
         <form id="userForm">
@@ -105,7 +106,8 @@
         </form>
       </div>
       <div class="modal-footer border-top-0 bg-light rounded-bottom-4 p-3">
-        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+        <!-- 🌟 เปลี่ยนวิธีปิดป๊อปอัป -->
+        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeUserModal()">ยกเลิก</button>
         <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
       </div>
     </div>
@@ -114,7 +116,7 @@
 
 <script>
   var allUsers = [];
-  var userModal = new bootstrap.Modal(document.getElementById('userModal'), { backdrop: 'static' });
+  var userModal = null; // 🌟 ประกาศตัวแปรไว้เฉยๆ ไม่ต้องผูกทันที
 
   function initSettings() { loadUsers(); }
   initSettings();
@@ -164,6 +166,7 @@
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = checkbox.checked; cb.disabled = checkbox.checked; });
   }
 
+  // 🌟 ฟังก์ชันเปิด Modal แบบคลีนๆ เคลียร์ของเก่าทิ้งเสมอ
   function openUserModal(id = null) {
     document.getElementById('userForm').reset();
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = false; cb.disabled = false; });
@@ -187,7 +190,26 @@
       document.getElementById('userModalTitle').innerHTML = '<i class="fa-solid fa-user-plus me-2"></i>เพิ่มพนักงานใหม่';
       document.getElementById('u_id').value = '';
     }
+
+    // จัดการผูก Modal ใหม่ทุกครั้งที่เปิด เพื่อป้องกันบั๊กค้าง
+    const modalEl = document.getElementById('userModal');
+    let existingModal = bootstrap.Modal.getInstance(modalEl);
+    if (existingModal) existingModal.dispose();
+    
+    userModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
     userModal.show();
+  }
+
+  // 🌟 ฟังก์ชันสั่งปิด Modal อย่างถูกวิธี บังคับลบฉากหลังสีดำ
+  function closeUserModal() {
+    if(userModal) {
+       userModal.hide();
+       // บังคับลบฉากหลังสีดำออกให้ชัวร์ๆ
+       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+       document.body.classList.remove('modal-open');
+       document.body.style.overflow = '';
+       document.body.style.paddingRight = '';
+    }
   }
 
   async function saveUser() {
@@ -214,14 +236,14 @@
     
     try {
       const response = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-      const data = await response.json(); // อ่านค่ากลับมาจาก Server
+      const data = await response.json(); 
       
       if(data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-        userModal.hide();
+        closeUserModal(); // 🌟 เรียกใช้ฟังก์ชันปิดที่เราเขียนเอง
         loadUsers();
       } else {
-        Swal.fire('ข้อผิดพลาด', data.message, 'error'); // โชว์แจ้งเตือนถ้า PIN ซ้ำ
+        Swal.fire('ข้อผิดพลาด', data.message, 'error'); 
       }
     } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
   }
