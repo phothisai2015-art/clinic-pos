@@ -131,8 +131,14 @@
 
   <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
-    <span class="fw-bold version-text">Version 1.0.0</span>
+    <span class="fw-bold version-text">Version 1.0.1</span>
     <span class="mx-3 text-muted opacity-50">|</span>
+    
+    <!-- 🌟 ปุ่มตั้งค่าที่เพิ่มเข้ามา -->
+    <button class="btn btn-link text-secondary fw-bold p-0 text-decoration-none me-3" onclick="openModule('setting.html')" style="font-size: 1.05rem;">
+      <i class="fa-solid fa-gear me-1"></i> ตั้งค่า
+    </button>
+
     <button class="btn btn-link text-danger fw-bold p-0 text-decoration-none" onclick="lockSystem()" style="font-size: 1.05rem;">
       <i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ
     </button>
