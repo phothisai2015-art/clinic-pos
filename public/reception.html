@@ -211,13 +211,13 @@
   // ==========================================
   // 🌟 ระบบ Modal เลือกโปรโมชั่น & คัดกรอง
   // ==========================================
+// 🌟 1. อัปเดตฟังก์ชันเปิด Modal (เพิ่ม Delay ป้องกันฉากหลังชนกัน)
   async function openScreeningModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
 
-    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
-      // ดึงข้อมูลคลังสินค้า (โปรโมชั่นและอื่นๆ) และคอร์สที่คนไข้มี
       const [pdRes, courseRes] = await Promise.all([ fetch('/api/inventory'), fetch(`/api/patients/${currentHN}/courses`) ]);
       const pdData = await pdRes.json(); 
       const courseData = await courseRes.json();
@@ -225,22 +225,21 @@
       allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
       allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
       
-      // รีเซ็ตการเลือกกลับไปเป็น "ปรึกษาแพทย์"
       resetSelection();
-      
-      // วาด UI ของแต่ละแท็บ
       renderPromoCards();
       renderGeneralCards();
       renderActiveCourses();
       
-      // เตรียม Modal และเปิดใช้งาน
       if (!screeningModalInstance) {
         screeningModalInstance = new bootstrap.Modal(document.getElementById('screeningModal'));
       }
       
+      // 🌟 ปิด Loading แล้ว "หน่วงเวลา 400ms" ค่อยเปิดป๊อปอัป
       Swal.close();
-      screeningModalInstance.show();
-      switchServiceTab('promo'); // เปิดมาหน้าแรกให้โชว์โปรโมชั่นก่อน
+      setTimeout(() => {
+        screeningModalInstance.show();
+        switchServiceTab('promo');
+      }, 400); 
 
     } catch (e) {
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
@@ -406,13 +405,12 @@
   }
   
 
-  // --- ยืนยันการส่งตัว (Submit) ---
+ // 🌟 2. อัปเดตฟังก์ชันตอนกด "ส่งเข้าห้องตรวจ" (เปลี่ยน Loading ไปไว้ที่ปุ่มแทน)
   async function submitScreening() {
     let actionVal = document.getElementById('selected_action_val').value;
     let selectedText = document.getElementById('selected_service_display').innerText;
     let note = document.getElementById('scr_note').value.trim();
     
-    // จัดการข้อความ Note สำหรับส่งไปห้องตรวจ
     let finalNote = [];
     if(actionVal) finalNote.push(`[บริการ] ${selectedText}`);
     else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
@@ -427,7 +425,11 @@
       notes: finalNote.join(' | ')
     };
 
-    Swal.fire({ title: 'กำลังจัดการคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    // 🌟 เปลี่ยนปุ่มให้เป็นสถานะกำลังโหลด (ป้องกันการคลิกซ้ำ และไม่ให้ฉากหลังตีกัน)
+    let btn = document.querySelector('#screeningModal .btn-info');
+    let originalBtnText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...';
+    btn.disabled = true;
     
     try {
       if(actionVal && actionVal.startsWith('NEW_')) {
@@ -445,23 +447,29 @@
         body: JSON.stringify(payload) 
       });
       
-      Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-      
-      // 🌟 เรียกใช้ฟังก์ชันปิดที่อัปเดตใหม่
+      // 🌟 ปิด Modal เคลียร์ฟอร์ม และคืนค่าปุ่ม
       closeScreeningModal();
       clearForm();
+      btn.innerHTML = originalBtnText;
+      btn.disabled = false;
       
-      // เคลียร์ Vitals form
+      // เคลียร์ช่องกรอก Vitals
       document.getElementById('scr_sys').value = '';
       document.getElementById('scr_dia').value = '';
       document.getElementById('scr_pulse').value = '';
       document.getElementById('scr_weight').value = '';
       document.getElementById('scr_height').value = '';
       document.getElementById('scr_note').value = '';
+      
+      // 🌟 โชว์แจ้งเตือนสำเร็จหลังจาก Modal ปิดไปแล้ว
+      setTimeout(() => {
+        Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+      }, 400);
 
     } catch (e) {
+      btn.innerHTML = originalBtnText;
+      btn.disabled = false;
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
-      closeScreeningModal(); // ถ้า Error ก็ต้องสั่งปิดด้วย
     }
   }
 
