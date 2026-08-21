@@ -7,6 +7,9 @@
   .vitals-banner { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 15px; color: #0369a1; display: none; }
   .canvas-container { position: relative; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 350px; }
   .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .patient-course-card { background: linear-gradient(135deg, #ffffff, #f0fdf4); border: 2px solid #bbf7d0; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+  .patient-course-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15); border-color: #22c55e; }
+  .patient-course-card.active-course { border-color: #3b82f6; background: linear-gradient(135deg, #ffffff, #eff6ff); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2); }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1500px; height: 100vh; display: flex; flex-direction: column;">
@@ -75,74 +78,60 @@
         <div class="tab-pane-custom" id="emr-content" style="display: block;">
           <div class="row g-4">
             
-            <!-- 🌟 ขยายกล่องฟอร์มให้กว้างขึ้นเป็น 7 ส่วน -->
+            <!-- 🌟 หน้าต่างบันทึก EMR ของหมอโฉมใหม่ -->
             <div class="col-lg-7 col-md-12">
-              <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
-                <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> บันทึกเวชระเบียน</h5>
-                <form id="emrForm" onsubmit="saveEMR(event)">
-				<fieldset id="emrFieldset" disabled>
-                  <!-- 🌟 เอาคำว่า required ออก และเพิ่ม rows="4" ให้กล่องสูงขึ้น -->
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="1"></textarea></div>
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="1"></textarea></div>
-                  
-                  <!-- กล่องหักสิทธิ์คอร์ส (จะถูกซ่อนไว้โดยค่าเริ่มต้น ถ้าไม่มีคอร์ส) -->
-                  <div id="emr_deduct_section" class="mb-3 p-3 bg-light border border-success rounded-3" style="display: none;">
-                    <label class="form-label fw-bold small text-success mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> โควตาคงเหลือ และ การหักสิทธิ์</label>
-                    <div class="input-group input-group-sm mb-2">
-                      <select id="emr_course_select" class="form-select border-success">
-                        <option value="">-- รอเลือกคนไข้ --</option>
-                      </select>
-                      <input type="number" id="emr_course_qty" class="form-control border-success" placeholder="จำนวน" style="max-width: 80px;" step="0.1" min="0.1">
-                      <button type="button" class="btn btn-success fw-bold" onclick="deductCourseInline()"><i class="fa-solid fa-check"></i> ใช้งาน</button>
-                    </div>
-                    <!-- กล่องแสดงรายการที่หมอกดหักไปแล้ว (พักข้อมูล) -->
-                    <textarea id="emr_treatment" class="form-control bg-white text-success fw-bold" rows="2" placeholder="รายการหัตถการ/คอร์สที่เลือก จะมาแสดงตรงนี้อัตโนมัติ..." readonly></textarea>
-                  </div>
+              
+              <!-- กล่องโชว์คอร์สให้หมอจิ้ม -->
+              <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold text-success m-0"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> คอร์ส/โปรโมชั่นของคนไข้ (คลิกเพื่อใช้งาน)</h6>
+                  <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="resetToGeneralMode()"><i class="fa-solid fa-rotate-left me-1"></i> กลับไปตรวจทั่วไป</button>
+                </div>
+                <div class="row g-2" id="patientActiveCoursesArea">
+                  <div class="col-12 text-center text-muted small py-2">กรุณาเลือกคนไข้...</div>
+                </div>
+              </div>
 
-                  <!-- บันทึกการรักษา (4 ช่อง) -->
-                  <div class="mb-3 border p-3 rounded-3">
-                    <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-syringe"></i> บันทึกรายละเอียดหัตถการ</label>
-                    <div class="row g-2">
-                      <div class="col-6"><input type="text" id="emr_area" class="form-control form-control-sm" placeholder="บริเวณที่ทำ (Area)"></div>
-                      <div class="col-6"><input type="text" id="emr_brand" class="form-control form-control-sm" placeholder="ยี่ห้อตัวยา/เครื่องมือ"></div>
-                      <div class="col-6"><input type="text" id="emr_lot" class="form-control form-control-sm" placeholder="เลขลอต (Lot No.)"></div>
-                      <div class="col-6"><input type="text" id="emr_setting" class="form-control form-control-sm" placeholder="พลังงาน/ช็อต (Settings)"></div>
-                    </div>
-                  </div>
+              <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 position-relative" id="dynamicFormArea" style="opacity: 0.5; pointer-events: none;">
+                
+                <!-- 🌟 โหมดที่ 1: ตรวจทั่วไป (Default) -->
+                <div id="mode_general" style="display: block;">
+                  <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-stethoscope me-2"></i> ตรวจรักษาทั่วไป / สั่งยา</h5>
+                  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="2"></textarea></div>
+                  <div class="mb-3"><label class="form-label fw-bold small text-muted">วินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="2"></textarea></div>
+                </div>
 
-                  <!-- สั่งจ่ายยากลับบ้าน (Prescription) -->
-                  <div class="mb-3 border border-primary p-3 rounded-3 bg-white">
-                    <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์ (Prescription)</label>
-                    <div class="input-group input-group-sm mb-2">
-                      <select id="emr_med_select" class="form-select border-primary">
-                        <option value="">-- โหลดรายการยา... --</option>
-                      </select>
-                      <input type="number" id="emr_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
-                      <input type="text" id="emr_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (เช่น เช้า-เย็น)">
-                      <button type="button" class="btn btn-primary fw-bold" onclick="addMedicationInline()"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                    <textarea id="emr_med_list_display" class="form-control bg-light text-primary fw-bold" rows="2" placeholder="รายการยาที่สั่งจะถูกสรุปไว้ตรงนี้..." readonly></textarea>
+                <!-- 🌟 โหมดที่ 2: หักคอร์ส (เมื่อคลิกการ์ด) -->
+                <div id="mode_course" style="display: none;">
+                  <div class="p-3 bg-primary bg-opacity-10 border border-primary rounded-3 mb-3">
+                    <h5 class="fw-bold text-primary m-0" id="mc_title">กำลังใช้งานคอร์ส: XXXXX</h5>
+                    <div class="small text-muted mt-1" id="mc_subtitle">คงเหลือ: X ครั้ง</div>
                   </div>
-
-                  <!-- ส่วนสรุปและนัดหมาย (3 ช่อง) -->
-                  <div class="mb-3 border p-3 rounded-3 bg-light">
-                    <label class="form-label fw-bold small text-secondary mb-2"><i class="fa-solid fa-clipboard-check"></i> สรุปและนัดหมาย</label>
-                    <div class="mb-2">
-                      <input type="text" id="emr_side_effect" class="form-control form-control-sm" placeholder="อาการข้างเคียงหลังทำ (เช่น ไม่มี, บวมเล็กน้อย, ช้ำแดง)">
-                    </div>
-                    <div class="row g-2 mb-2">
-                      <div class="col-md-5"><label class="small text-muted" style="font-size: 0.7rem;">วันนัดถัดไป</label><input type="date" id="emr_next_appointment_date" class="form-control form-control-sm"></div>
-                      <div class="col-md-7"><label class="small text-muted" style="font-size: 0.7rem;">หมายเหตุนัด</label><input type="text" id="emr_next_appointment_note" class="form-control form-control-sm" placeholder="ระบุเหตุผลการนัด"></div>
-                    </div>
-                    <div class="mt-2">
-                      <label class="small text-muted" style="font-size: 0.7rem;">แพทย์ผู้ทำหัตถการ (อัตโนมัติ)</label>
-                      <input type="text" id="emr_doctor_name" class="form-control form-control-sm bg-white fw-bold text-primary" readonly>
-                    </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">บริเวณที่ทำ (Area)</label><input type="text" id="mc_area" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">จำนวนที่ใช้ในครั้งนี้ *</label><input type="number" id="mc_deduct_qty" class="form-control fw-bold text-danger" value="1" step="0.1" min="0.1"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">ยี่ห้อตัวยา/เครื่องมือ</label><input type="text" id="mc_brand" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">พลังงาน/ช็อต (Settings)</label><input type="text" id="mc_setting" class="form-control"></div>
                   </div>
+                </div>
 
-                  <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกเวชระเบียน</button>
-                  </fieldset>
-                </form>
+                <hr class="my-3">
+                
+                <!-- สั่งจ่ายยา (ใช้ร่วมกัน 2 โหมด) -->
+                <div class="mb-3 border border-primary p-3 rounded-3 bg-white">
+                  <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์ (Prescription)</label>
+                  <div class="input-group input-group-sm mb-2">
+                    <select id="emr_med_select" class="form-select border-primary"><option value="">-- โหลดรายการยา... --</option></select>
+                    <input type="number" id="emr_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
+                    <input type="text" id="emr_med_sig" class="form-control border-primary" placeholder="วิธีใช้">
+                    <button type="button" class="btn btn-primary fw-bold" onclick="addMedicationInline()"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <textarea id="emr_med_list_display" class="form-control bg-light text-primary fw-bold" rows="2" placeholder="รายการยาที่สั่งจะแสดงที่นี่..." readonly></textarea>
+                </div>
+
+                <input type="hidden" id="emr_doctor_name">
+                <button type="button" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-3 fs-5" id="btn_save_emr" onclick="submitEMR()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูลการตรวจ</button>
+
               </div>
             </div>
             
@@ -248,301 +237,126 @@
     } catch(e) { console.error('Error rendering queue:', e); }
   }
 
+var activeSelectedCourse = null;
+
   async function selectPatient(hn) {
-    currentHN = hn;
-    pendingDeductions = []; 
-    pendingMeds = []; 
-    
-    document.getElementById('emr_treatment').value = ''; 
+    currentHN = hn; pendingMeds = []; resetToGeneralMode();
     document.getElementById('emr_med_list_display').value = ''; 
-    document.getElementById('emr_med_qty').value = '';
-    document.getElementById('emr_med_sig').value = '';
+    document.getElementById('dynamicFormArea').style.opacity = '1'; 
+    document.getElementById('dynamicFormArea').style.pointerEvents = 'auto';
     
     Swal.showLoading();
-    const res = await fetch(`/api/patients/${hn}`);
-    const data = await res.json();
-    const p = data.data;
+    const res = await fetch(`/api/patients/${hn}`); const data = await res.json(); const p = data.data;
     
-    document.getElementById('hdr_name').innerText = p.full_name;
-    document.getElementById('hdr_hn').innerText = p.id;
-    document.getElementById('hdr_idcard').innerText = p.id_card || '-';
-    
-    let ageText = '-';
-    if (p.dob) {
-      const dob = new Date(p.dob);
-      const ageDate = new Date(Date.now() - dob.getTime());
-      ageText = Math.abs(ageDate.getUTCFullYear() - 1970) + ' ปี';
-    }
-    document.getElementById('hdr_age').innerText = ageText;
-    
-    let alertDetails = [];
-    if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
-      alertDetails.push(`<span class="text-danger fw-bold">แพ้ยา:</span> ${p.allergies}`);
-    }
-    if (p.congenital_disease && p.congenital_disease !== '-' && p.congenital_disease !== 'ไม่มี') {
-      alertDetails.push(`<span class="text-danger fw-bold">โรคประจำตัว:</span> ${p.congenital_disease}`);
-    }
-
-    if (alertDetails.length > 0) {
-      document.getElementById('allergyAlert').style.display = 'flex';
-      document.getElementById('allergyDetails').innerHTML = alertDetails.join('<br>');
-    } else { 
-      document.getElementById('allergyAlert').style.display = 'none'; 
-    }
-    
+    document.getElementById('hdr_name').innerText = p.full_name; document.getElementById('hdr_hn').innerText = p.id;
     const queueInfo = currentQueueData.find(q => q.hn === hn);
     if (queueInfo && (queueInfo.bp || queueInfo.pulse || queueInfo.weight || queueInfo.height)) {
-      document.getElementById('vitalsBanner').style.display = 'flex';
-      document.getElementById('v_bp').innerText = queueInfo.bp || '-';
-      document.getElementById('v_pulse').innerText = queueInfo.pulse || '-';
-      document.getElementById('v_weight').innerText = queueInfo.weight || '-';
-      document.getElementById('v_height').innerText = queueInfo.height || '-';
-    } else {
-      document.getElementById('vitalsBanner').style.display = 'none';
-    }
+      document.getElementById('vitalsBanner').style.display = 'flex'; document.getElementById('v_bp').innerText = queueInfo.bp || '-'; document.getElementById('v_pulse').innerText = queueInfo.pulse || '-'; document.getElementById('v_weight').innerText = queueInfo.weight || '-'; document.getElementById('v_height').innerText = queueInfo.height || '-';
+    } else { document.getElementById('vitalsBanner').style.display = 'none'; }
 
-    const invRes = await fetch('/api/inventory');
-    const invData = await invRes.json();
+    // โหลดยา
+    const invRes = await fetch('/api/inventory'); const invData = await invRes.json();
     let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
-    invData.data.forEach(item => {
-      if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
-        medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`;
-      }
-    });
+    invData.data.forEach(item => { if (item.type === 'MEDICINE' || item.type === 'SKINCARE') medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`; });
     document.getElementById('emr_med_select').innerHTML = medOptions;
 
-    const cRes = await fetch(`/api/patients/${hn}/courses`);
-    const cData = await cRes.json();
-    let courseOptions = '<option value="">-- เลือกคอร์ส/หัตถการที่ต้องการใช้ --</option>';
-    let hasCourse = false; 
-    
+    // 🌟 โหลดการ์ดคอร์สให้หมอจิ้ม
+    const cRes = await fetch(`/api/patients/${hn}/courses`); const cData = await cRes.json();
+    const coursesArea = document.getElementById('patientActiveCoursesArea');
+    coursesArea.innerHTML = '';
+    let hasActiveCourse = false;
+
     cData.data.forEach(c => {
       let remain = c.total_qty - c.used_qty;
-      let displayName = c.product_name || c.product_id;
-      let unitName = c.unit || 'ครั้ง';
-      if(remain > 0) {
-        hasCourse = true;
-        courseOptions += `<option value="${c.id}" data-name="${displayName}" data-remain="${remain}">เหลือ ${remain} ${unitName} - ${displayName}</option>`;
+      if (remain > 0) {
+        hasActiveCourse = true;
+        let displayName = c.product_name || c.product_id;
+        coursesArea.innerHTML += `
+          <div class="col-md-6">
+            <div class="patient-course-card shadow-sm" id="ccard_${c.id}" onclick="selectCourseToDeduct(${c.id}, '${displayName}', ${remain}, '${c.unit||'ครั้ง'}')">
+              <h6 class="fw-bold text-success mb-1 text-truncate" title="${displayName}">${displayName}</h6>
+              <div class="d-flex justify-content-between align-items-end mt-2">
+                <small class="text-muted">ใช้แล้ว ${c.used_qty}</small>
+                <span class="badge bg-success rounded-pill px-2 py-1 fs-6">เหลือ ${remain} ${c.unit||'ครั้ง'}</span>
+              </div>
+            </div>
+          </div>`;
       }
     });
-    document.getElementById('emr_course_select').innerHTML = courseOptions;
 
-    if (hasCourse) {
-      document.getElementById('emr_deduct_section').style.display = 'block';
-    } else {
-      document.getElementById('emr_deduct_section').style.display = 'none';
-    }
-
-    // 🌟 ปลดล็อกให้กรอกฟอร์มเวชระเบียนได้
-    document.getElementById('emrFieldset').disabled = false;
-
-    loadEMRHistory(hn);
-    loadPatientPhotos(hn);
-    renderEmrQueue();
-    Swal.close();
+    if (!hasActiveCourse) coursesArea.innerHTML = '<div class="col-12 text-center text-muted small py-2">- ไม่มีคอร์สคงเหลือ -</div>';
+    loadEMRHistory(hn); renderEmrQueue(); Swal.close();
   }
 
-  function deductCourseInline() {
-    let sel = document.getElementById('emr_course_select');
-    let qtyInput = document.getElementById('emr_course_qty');
-    let courseId = sel.value;
-    let qty = parseFloat(qtyInput.value);
-
-    if(!courseId) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคอร์สหรือโปรโมชั่นก่อน', 'warning');
-    if(!qty || qty <= 0) return Swal.fire('แจ้งเตือน', 'กรุณาระบุจำนวนที่ใช้', 'warning');
-
-    let opt = sel.options[sel.selectedIndex];
-    let remain = parseFloat(opt.getAttribute('data-remain'));
-    let name = opt.getAttribute('data-name');
-
-    if(qty > remain) return Swal.fire('Error', 'ไม่สามารถตัดเกินจำนวนคงเหลือได้', 'error');
-
-    pendingDeductions.push({ course_id: courseId, deduct_amount: qty });
-
-    opt.setAttribute('data-remain', remain - qty);
-    opt.innerText = `เหลือ ${remain - qty} - ${name} (รอเซฟ)`;
-
-    let tx = document.getElementById('emr_treatment');
-    let newTxText = `- หักสิทธิ์: ${name} (ใช้ไป ${qty})`;
-    tx.value = tx.value ? tx.value + `\n${newTxText}` : newTxText;
-
-    qtyInput.value = ''; 
+  // สลับโหมดเวลาหมอจิ้มคอร์ส
+  function selectCourseToDeduct(courseId, name, remain, unit) {
+    activeSelectedCourse = { course_id: courseId, name: name, remain: remain, unit: unit };
+    document.querySelectorAll('.patient-course-card').forEach(el => el.classList.remove('active-course'));
+    document.getElementById('ccard_' + courseId).classList.add('active-course');
+    document.getElementById('mode_general').style.display = 'none';
+    document.getElementById('mode_course').style.display = 'block';
     
-    Swal.fire({ icon: 'info', title: 'เพิ่มรายการแล้ว (จะถูกหักเมื่อกดบันทึกเวชระเบียน)', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
+    document.getElementById('mc_title').innerText = `ใช้งานคอร์ส: ${name}`;
+    document.getElementById('mc_subtitle').innerText = `คงเหลือ: ${remain} ${unit}`;
+    document.getElementById('mc_deduct_qty').value = 1; document.getElementById('mc_deduct_qty').max = remain;
+    
+    document.getElementById('btn_save_emr').innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1"></i> หักสิทธิ์และบันทึกเวชระเบียน';
+    document.getElementById('btn_save_emr').className = 'btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
   }
 
-  function addMedicationInline() {
-    let sel = document.getElementById('emr_med_select');
-    let qtyInput = document.getElementById('emr_med_qty');
-    let sigInput = document.getElementById('emr_med_sig');
-    
-    if(!sel.value) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการยาที่ต้องการสั่ง', 'warning');
-    if(!qtyInput.value || qtyInput.value <= 0) return Swal.fire('แจ้งเตือน', 'กรุณาระบุจำนวนยา', 'warning');
-
-    let opt = sel.options[sel.selectedIndex];
-    let medObj = {
-      product_id: sel.value,
-      name: opt.getAttribute('data-name'),
-      unit: opt.getAttribute('data-unit'),
-      price: parseFloat(opt.getAttribute('data-price') || 0),
-      qty: parseFloat(qtyInput.value),
-      sig: sigInput.value || 'ตามแพทย์สั่ง'
-    };
-
-    pendingMeds.push(medObj);
-
-    let displayBox = document.getElementById('emr_med_list_display');
-    displayBox.value = pendingMeds.map((m, i) => `${i+1}. ${m.name} จำนวน ${m.qty} ${m.unit} - ${m.sig}`).join('\n');
-
-    sel.value = ''; 
-    qtyInput.value = ''; 
-    sigInput.value = '';
+  // กลับไปโหมดตรวจปกติ
+  function resetToGeneralMode() {
+    activeSelectedCourse = null;
+    document.querySelectorAll('.patient-course-card').forEach(el => el.classList.remove('active-course'));
+    document.getElementById('mode_course').style.display = 'none';
+    document.getElementById('mode_general').style.display = 'block';
+    document.getElementById('btn_save_emr').innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติการตรวจ';
+    document.getElementById('btn_save_emr').className = 'btn btn-success w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
   }
 
-  function switchTab(t) {
-    // 🌟 ดักไว้ว่าถ้ายังไม่มี HN และพยายามกดแท็บรูปถ่าย ให้เตือนและเด้งออก
-    if (!currentHN && t !== 'emr') {
-      return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อนครับ', 'warning');
-    }
-
-    document.getElementById('btn-tab-emr').classList.remove('active'); document.getElementById('btn-tab-gallery').classList.remove('active');
-    document.getElementById('emr-content').style.display = 'none'; document.getElementById('gallery-content').style.display = 'none';
-    document.getElementById(`btn-tab-${t}`).classList.add('active'); document.getElementById(`${t}-content`).style.display = 'block';
-    if(t==='gallery' && !canvas) {
-      canvas = document.getElementById('faceCanvas'); ctx = canvas.getContext('2d'); clearCanvas();
-      canvas.onmousedown = (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
-      canvas.onmousemove = (e) => { if(isDrawing){ ctx.lineTo(e.offsetX, e.offsetY); ctx.strokeStyle = document.getElementById('drawColor').value; ctx.lineWidth = 3; ctx.stroke(); }};
-      canvas.onmouseup = () => isDrawing = false;
-    }
-  }
-
-  function loadTemplate(type) {
-    let url = '';
-    if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
-    if(type === 'side') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Side';
-    if(type === 'body') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Body+Structure';
-    
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => { clearCanvas(); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
-    img.src = url;
-  }
-
-  async function openCompareMode() {
-    if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
-    const res = await fetch(`/api/patients/${currentHN}/photos`);
-    const data = await res.json();
-    const photos = data.data.filter(p => p.photo_type !== 'CONSENT');
-    if(photos.length < 2) return Swal.fire('ข้อมูลไม่พอ', 'ต้องมีรูปภาพหรือรูปมาร์กหน้าอย่างน้อย 2 รูป', 'warning');
-    
-    let options = photos.map(p => `<option value="${p.image_path}">${p.photo_type} - ${new Date(p.created_at).toLocaleDateString('th-TH')}</option>`).join('');
-    
-    Swal.fire({
-      title: '<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-code-compare me-2"></i>เปรียบเทียบภาพการรักษา</h4>',
-      width: '80%',
-      html: `
-        <div class="row mt-3">
-          <div class="col-6 border-end">
-            <span class="badge bg-secondary mb-2 fs-6">Before / รูปอดีต</span>
-            <select id="imgBefore" class="form-select mb-3 shadow-sm border-secondary" onchange="document.getElementById('previewBefore').src=this.value">${options}</select>
-            <img id="previewBefore" src="${photos[photos.length-1].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
-          </div>
-          <div class="col-6">
-            <span class="badge bg-success mb-2 fs-6">After / รูปปัจจุบัน</span>
-            <select id="imgAfter" class="form-select mb-3 shadow-sm border-success" onchange="document.getElementById('previewAfter').src=this.value">${options}</select>
-            <img id="previewAfter" src="${photos[0].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
-          </div>
-        </div>
-      `,
-      showCloseButton: true, showConfirmButton: false
-    });
-    document.getElementById('imgBefore').selectedIndex = photos.length - 1;
-    document.getElementById('imgAfter').selectedIndex = 0;
-  }
-
-  async function saveEMR(e) {
-    e.preventDefault(); if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
-    
-    let v_bp = document.getElementById('v_bp').innerText;
-    let v_pulse = document.getElementById('v_pulse').innerText;
-    let v_weight = document.getElementById('v_weight').innerText;
-    let v_height = document.getElementById('v_height').innerText;
-
-    let selectedTx = document.getElementById('emr_treatment').value;
-    let area = document.getElementById('emr_area').value;
-    let brand = document.getElementById('emr_brand').value;
-    let lot = document.getElementById('emr_lot').value;
-    let setting = document.getElementById('emr_setting').value;
-    let sideEffect = document.getElementById('emr_side_effect').value;
-    let doctorName = document.getElementById('emr_doctor_name').value;
-
-    // 🌟 แก้ไขการจัดการช่องว่างให้เว้นบรรทัดเดียว (ป้องกันการเกิดช่องว่างยาวๆ)
+  // 🌟 บันทึก EMR แยกตามโหมด
+  async function submitEMR() {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     let finalTxArray = [];
+    let sys_symptoms = 'ตรวจทั่วไป'; let sys_diagnosis = '-';
     
-    if(selectedTx) finalTxArray.push(selectedTx);
-    
-    let procedureDetails = [];
-    if(area) procedureDetails.push(`บริเวณ: ${area}`);
-    if(brand) procedureDetails.push(`ตัวยา/เครื่อง: ${brand}`);
-    if(lot) procedureDetails.push(`Lot: ${lot}`);
-    if(setting) procedureDetails.push(`Settings: ${setting}`);
-    if(procedureDetails.length > 0) finalTxArray.push(`[รายละเอียด] ` + procedureDetails.join(' | '));
-
-    if(pendingMeds.length > 0) {
-       finalTxArray.push(`[สั่งจ่ายยา]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit}`).join('\n'));
+    if (activeSelectedCourse) {
+       let deductQty = parseFloat(document.getElementById('mc_deduct_qty').value);
+       if (deductQty > activeSelectedCourse.remain) return Swal.fire('Error', 'หักเกินจำนวนคงเหลือไม่ได้', 'error');
+       
+       finalTxArray.push(`[หักสิทธิ์คอร์ส] ${activeSelectedCourse.name} (ใช้ไป ${deductQty} ${activeSelectedCourse.unit})`);
+       let area = document.getElementById('mc_area').value; let brand = document.getElementById('mc_brand').value; let setting = document.getElementById('mc_setting').value;
+       let details = []; if(area) details.push(`บริเวณ: ${area}`); if(brand) details.push(`ยี่ห้อ: ${brand}`); if(setting) details.push(`Settings: ${setting}`);
+       if(details.length > 0) finalTxArray.push(`[รายละเอียด] ` + details.join(' | '));
+       sys_symptoms = 'มารับบริการคอร์ส'; sys_diagnosis = 'บริการความงาม';
+    } else {
+       if (!document.getElementById('emr_symptoms').value) return Swal.fire('แจ้งเตือน', 'กรุณาระบุอาการ (CC)', 'warning');
+       sys_symptoms = document.getElementById('emr_symptoms').value;
+       sys_diagnosis = document.getElementById('emr_diagnosis').value;
     }
 
-    let summaryDetails = [];
-    if(sideEffect) summaryDetails.push(`อาการข้างเคียง: ${sideEffect}`);
-    if(doctorName) summaryDetails.push(`แพทย์ผู้ทำ: ${doctorName}`);
-    if(summaryDetails.length > 0) finalTxArray.push(`[สรุป] ` + summaryDetails.join(' | '));
-
-    // ใช้ \n แทน \n\n เพื่อลดช่องว่างเวลาแสดงผล
-    let finalTreatmentDetails = finalTxArray.filter(Boolean).join('\n');
+    if(pendingMeds.length > 0) finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit}`).join('\n'));
 
     const payload = {
-      patient_id: currentHN, 
-      symptoms: document.getElementById('emr_symptoms').value,
-      diagnosis: document.getElementById('emr_diagnosis').value, 
-      treatment_details: finalTreatmentDetails,
-      next_appointment_date: document.getElementById('emr_next_appointment_date').value, 
-      next_appointment_time: '10:00',
-      next_appointment_note: document.getElementById('emr_next_appointment_note').value,
-      bp: v_bp !== '-' ? v_bp : '', pulse: v_pulse !== '-' ? v_pulse : '',
-      weight: v_weight !== '-' ? v_weight : '', height: v_height !== '-' ? v_height : '',
+      patient_id: currentHN, symptoms: sys_symptoms, diagnosis: sys_diagnosis, 
+      treatment_details: finalTxArray.filter(Boolean).join('\n'),
+      bp: document.getElementById('v_bp').innerText !== '-' ? document.getElementById('v_bp').innerText : '', 
       prescribed_meds: pendingMeds 
     };
 
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     try {
-      Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-
-      if (pendingDeductions.length > 0) {
-        const deductPromises = pendingDeductions.map(item => 
-          fetch(`/api/courses/${item.course_id}/deduct`, { 
-            method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: item.deduct_amount}) 
-          })
-        );
-        await Promise.all(deductPromises); 
+      if (activeSelectedCourse) {
+         await fetch(`/api/courses/${activeSelectedCourse.course_id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({deduct_amount: parseFloat(document.getElementById('mc_deduct_qty').value)}) });
       }
-
-      document.getElementById('emrForm').reset();
-      document.getElementById('emr_med_list_display').value = ''; 
-      
-      const staffElem = document.getElementById('display-staff-name');
-      if (staffElem) document.getElementById('emr_doctor_name').value = staffElem.innerText;
-
-      pendingDeductions = []; 
-      pendingMeds = []; 
-      
-      loadEMRHistory(currentHN); 
-      renderEmrQueue();
-      selectPatient(currentHN); 
       Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-    } catch (err) {
-      Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error');
-    }
+      
+      // ลบออกจากคิวรอตรวจทันที
+      await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
+      document.getElementById('dynamicFormArea').style.opacity = '0.5'; document.getElementById('dynamicFormArea').style.pointerEvents = 'none';
+      renderEmrQueue();
+    } catch (err) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error'); }
   }
 
   async function loadEMRHistory(hn) {

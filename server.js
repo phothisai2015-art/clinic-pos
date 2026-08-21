@@ -90,220 +90,97 @@ app.put('/api/courses/:id/deduct', (req, res) => {
   });
 });
 
-// 🌟 API แตกโปรโมชั่น (นำราคาไปตั้งเป็นยอดหนี้ใน patient_bills ด้วย)
-app.post('/api/patients/:id/assign-promo', (req, res) => {
+// ==========================================
+// 🌟 Helper ฟังก์ชันป้องกันเซิร์ฟเวอร์ค้าง (Async DB)
+// ==========================================
+const dbGet = (sql, params) => new Promise((resolve, reject) => db.get(sql, params, (err, row) => err ? reject(err) : resolve(row)));
+const dbRun = (sql, params) => new Promise((resolve, reject) => db.run(sql, params, function(err) { err ? reject(err) : resolve(this) }));
+
+// 🌟 API แตกโปรโมชั่น (รอให้บันทึกเสร็จ 100% ก่อน)
+app.post('/api/patients/:id/assign-promo', async (req, res) => {
   const { product_id } = req.body;
   const patient_id = req.params.id;
-  db.get(`SELECT * FROM products WHERE id = ?`, [product_id], (err, prod) => {
-    if (err || !prod) return res.status(500).json({status: 'error'});
-    
+  try {
+    const prod = await dbGet(`SELECT * FROM products WHERE id = ?`, [product_id]);
+    if (!prod) return res.status(500).json({status: 'error', message: 'ไม่พบโปรโมชั่น'});
     const today = new Date().toISOString().split('T')[0];
-    
-    // ตั้งหนี้โปรโมชั่นในบิล
-    db.run(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status) VALUES (1, ?, ?, ?, ?, ?, 1, ?, 0, 'UNPAID')`,
-      [patient_id, today, prod.name, prod.type, prod.id, prod.price], function(errBill) {
-        
-        // แตกไอเท็มย่อยใส่คอร์สให้ลูกค้า
-        if (prod.type === 'PROMOTION') {
-          let items = [];
-          try { items = JSON.parse(prod.bundle_items || '[]'); } catch(e){}
-          if(items.length === 0) return res.json({status: 'success'});
-          let completed = 0;
-          items.forEach(item => {
-            db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [patient_id, item.id, item.qty], () => {
-              completed++; if (completed === items.length) res.json({status: 'success'});
-            });
-          });
-        } else {
-          db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id], () => { res.json({status: 'success'}); });
-        }
-    });
-  });
-});
 
-app.get('/reception.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reception.html')); });
-app.get('/doctor.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'doctor.html')); });
-app.get('/booking.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'booking.html')); });
-app.get('/patient.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'patient.html')); });
-app.get('/patients_list.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'patients_list.html')); });
-app.get('/inventory.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'inventory.html')); });
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+    // 1. ตั้งหนี้ในบิล
+    await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status) VALUES (1, ?, ?, ?, ?, ?, 1, ?, 0, 'UNPAID')`,
+      [patient_id, today, prod.name, prod.type, prod.id, prod.price]);
 
-app.get('/api/status', (req, res) => { res.json({ status: 'success' }); });
-
-app.post('/api/login', (req, res) => {
-  const { pin } = req.body;
-  db.get(`SELECT id, name, role, permissions FROM users WHERE pin = ?`, [pin], (err, row) => {
-    if (!row) return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
-    res.json({ status: 'success', user: row });
-  });
-});
-
-app.get('/api/patients', (req, res) => {
-  const search = req.query.search || '';
-  const sql = `SELECT * FROM patients WHERE full_name LIKE ? OR phone LIKE ? OR id LIKE ?`;
-  db.all(sql, [`%${search}%`, `%${search}%`, `%${search}%`], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-
-app.delete('/api/patients/:id', (req, res) => {
-  db.run(`DELETE FROM patients WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
-});
-
-app.get('/api/patients/:id', (req, res) => {
-  db.get(`SELECT * FROM patients WHERE id = ?`, [req.params.id], (err, row) => { res.json({ status: 'success', data: row }); });
-});
-
-app.post('/api/patients', (req, res) => {
-  const { id, full_name, id_card, phone, dob, allergies, congenital_disease } = req.body;
-  const created_at = new Date().toISOString();
-  let patientId = id || ('HN-' + Math.floor(100000 + Math.random() * 900000)); 
-  const sql = `INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name, id_card=excluded.id_card, phone=excluded.phone, dob=excluded.dob, allergies=excluded.allergies, congenital_disease=excluded.congenital_disease`;
-  db.run(sql, [patientId, full_name, id_card, phone, dob, allergies, congenital_disease, created_at], function(err) { res.json({ status: 'success', patient_id: patientId }); });
-});
-
-app.post('/api/emr', (req, res) => {
-  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height, prescribed_meds } = req.body;
-  const visit_date = new Date().toISOString();
-  
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height) VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  
-  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || ''], function(err) {
-    if (next_appointment_date) {
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, 1, ?, ?, ?)`, [patient_id, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
+    // 2. แตกไอเท็มย่อยใส่คอร์สให้ลูกค้า
+    if (prod.type === 'PROMOTION') {
+      let items = JSON.parse(prod.bundle_items || '[]');
+      if (items.length > 0) {
+        for (let item of items) { await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [patient_id, item.id, item.qty]); }
+      }
+    } else {
+      await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id]);
     }
-
-    // 🌟 โยนรายการยาที่หมอสั่ง เข้าไปตั้งหนี้ในระบบบิล
-    if (prescribed_meds && prescribed_meds.length > 0) {
-      prescribed_meds.forEach(med => {
-        const total = med.qty * med.price;
-        db.run(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, 'MEDICINE', ?, ?, ?, 0, 'UNPAID', 0)`,
-          [patient_id, visit_date.split('T')[0], med.name, med.product_id, med.qty, total]);
-      });
-    }
-
-    res.json({ status: 'success', message: 'บันทึก EMR สำเร็จ' });
-  });
+    res.json({status: 'success'});
+  } catch (err) { res.status(500).json({status: 'error'}); }
 });
 
-app.get('/api/emr/:patient_id', (req, res) => {
-  db.all(`SELECT * FROM emr_logs WHERE patient_id = ? ORDER BY id DESC`, [req.params.patient_id], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-
-// ==========================================
-// 📸 API รูปภาพ (ย่อโค้ด)
-// ==========================================
-app.post('/api/patients/photos', (req, res) => {
-  const { patient_id, photo_type, image_data } = req.body;
-  const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
-  const fileName = `photo_${patient_id}_${Date.now()}.png`;
-  fs.writeFileSync(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
-  db.run(`INSERT INTO patient_photos (patient_id, photo_type, image_path, created_at) VALUES (?, ?, ?, ?)`, [patient_id, photo_type || 'MARKING', `/uploads/${fileName}`, new Date().toISOString()], function(err) { res.json({ status: 'success' }); });
-});
-app.get('/api/patients/:id/photos', (req, res) => { db.all(`SELECT * FROM patient_photos WHERE patient_id = ? ORDER BY id DESC`, [req.params.id], (err, rows) => { res.json({ status: 'success', data: rows }); }); });
-app.delete('/api/patients/photos/:id', (req, res) => {
-  db.get(`SELECT image_path FROM patient_photos WHERE id = ?`, [req.params.id], (err, row) => {
-    if (row && fs.existsSync(path.join(__dirname, 'public', row.image_path))) fs.unlinkSync(path.join(__dirname, 'public', row.image_path));
-    db.run(`DELETE FROM patient_photos WHERE id = ?`, [req.params.id], () => { res.json({ status: 'success' }); });
-  });
-});
-
-// ==========================================
-// 🗓️ API คิวและการชำระเงิน
-// ==========================================
-app.get('/api/appointments', (req, res) => {
-  db.all(`SELECT a.id, a.appointment_date as date, a.appointment_time as time, a.patient_id as hn, p.full_name as name, p.phone, a.notes as note, a.status FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-app.put('/api/appointments/:id/status', (req, res) => {
-  db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [req.body.status, req.params.id], function(err) { res.json({ status: 'success' }); });
-});
-
-app.get('/api/queue', (req, res) => {
-  db.all(`SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time, a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'CHECKED_IN' ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-app.post('/api/queue/send-doctor', (req, res) => {
-  const { patient_id, bp, pulse, weight, height, notes } = req.body;
-  const today = new Date().toISOString().split('T')[0];
-  const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
-  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
-    if (row) { db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, [bp, pulse, weight, height, notes || 'Walk-in', row.id], () => res.json({status: 'success'})); } 
-    else { db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, [patient_id, today, timeStr, bp, pulse, weight, height, notes || 'Walk-in'], () => res.json({status: 'success'})); }
-  });
-});
-
-app.put('/api/pos/send/:hn', (req, res) => {
-  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND status = 'CHECKED_IN' ORDER BY id DESC LIMIT 1`, [req.params.hn], (err, row) => {
-    if (row) { db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id], () => res.json({ status: 'success' })); } 
-    else { res.json({ status: 'error', message: 'ไม่พบคิวที่กำลังตรวจ' }); }
-  });
-});
-
-app.get('/api/pos/queue', (req, res) => {
-  db.all(`SELECT a.id as appt_id, a.patient_id as hn, p.full_name as name, a.appointment_time as time FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'WAITING_PAYMENT' ORDER BY a.id ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-
-// 🌟 API ดึงบิลที่ค้างชำระทั้งหมดของคนไข้คนนี้
+// 🌟 API ดึงบิลค้างชำระ + บิลที่เพิ่งจ่ายครบวันนี้ (ให้ POS โชว์)
 app.get('/api/pos/bill/:hn', (req, res) => {
-  db.all(`SELECT * FROM patient_bills WHERE patient_id = ? AND status != 'PAID'`, [req.params.hn], (err, rows) => {
+  const today = new Date().toISOString().split('T')[0];
+  db.all(`SELECT * FROM patient_bills WHERE patient_id = ? AND (status != 'PAID' OR bill_date = ?) ORDER BY id ASC`, [req.params.hn, today], (err, rows) => {
     res.json({status: 'success', data: rows});
   });
 });
 
-// 🌟 API รับชำระเงิน (อัปเดตยอดแบ่งจ่าย และตัดสต็อกยา)
-app.put('/api/pos/pay/:hn', (req, res) => {
+// 🌟 API รับชำระเงิน POS (อัปเดตยอด + ตัดสต๊อก + คูณจำนวนคอร์ส)
+app.put('/api/pos/pay/:hn', async (req, res) => {
   const { sales_rep, payments, new_items } = req.body; 
-  const hn = req.params.hn;
-  const today = new Date().toISOString().split('T')[0];
+  const hn = req.params.hn; const today = new Date().toISOString().split('T')[0];
 
-  // 1. จัดการบิลที่ค้างอยู่ในระบบ (แบ่งจ่าย)
-  if (payments && payments.length > 0) {
-    payments.forEach(p => {
-      db.get(`SELECT * FROM patient_bills WHERE id = ?`, [p.bill_id], (err, bill) => {
+  try {
+    // อัปเดตรายการเก่าที่มาแบ่งจ่าย
+    if (payments && payments.length > 0) {
+      for (let p of payments) {
+        let bill = await dbGet(`SELECT * FROM patient_bills WHERE id = ?`, [p.bill_id]);
         if (bill) {
           let newPaid = bill.paid_amount + p.pay_amount;
           let newStatus = newPaid >= bill.total_price ? 'PAID' : 'PARTIAL';
-          db.run(`UPDATE patient_bills SET paid_amount = ?, status = ? WHERE id = ?`, [newPaid, newStatus, p.bill_id]);
+          await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ? WHERE id = ?`, [newPaid, newStatus, p.bill_id]);
 
-          // ตัดสต็อกคลังยา (ตัดครั้งเดียวเมื่อมีการจ่ายเงิน)
           if ((bill.type === 'MEDICINE' || bill.type === 'SKINCARE') && bill.stock_deducted === 0 && p.pay_amount > 0) {
-            db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [bill.qty, bill.product_id]);
-            db.run(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [p.bill_id]);
+            await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [bill.qty, bill.product_id]);
+            await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [p.bill_id]);
           }
         }
-      });
-    });
-  }
+      }
+    }
 
-  // 2. จัดการรายการที่พนักงานเพิ่งกดเพิ่มหน้าเคาน์เตอร์ POS
-  if (new_items && new_items.length > 0) {
-    new_items.forEach(item => {
-      let total = item.qty * item.price;
-      let newStatus = item.pay_amount >= total ? 'PAID' : 'PARTIAL';
-      
-      db.run(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [hn, today, item.name, item.type, item.product_id, item.qty, total, item.pay_amount, newStatus, 0], function(err) {
-          let newBillId = this.lastID;
+    // เพิ่มรายการใหม่จากหน้า POS
+    if (new_items && new_items.length > 0) {
+      for (let item of new_items) {
+        let total = item.qty * item.price;
+        let newStatus = item.pay_amount >= total ? 'PAID' : 'PARTIAL';
+        let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [hn, today, item.name, item.type, item.product_id, item.qty, total, item.pay_amount, newStatus, 0]);
           
-          if (item.is_new_course) {
-             db.get(`SELECT bundle_items FROM products WHERE id = ?`, [item.product_id], (err, prod) => {
-                if (prod && prod.bundle_items && prod.bundle_items !== '[]') {
-                   let bItems = JSON.parse(prod.bundle_items);
-                   bItems.forEach(b => { db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, b.id, b.qty]); });
-                } else {
-                   db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, item.product_id, item.qty]);
-                }
-             });
-          } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && item.pay_amount > 0) {
-             db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [item.qty, item.product_id]);
-             db.run(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [newBillId]);
-          }
-      });
-    });
-  }
+        if (item.is_new_course) {
+           let prod = await dbGet(`SELECT bundle_items FROM products WHERE id = ?`, [item.product_id]);
+           if (prod && prod.bundle_items && prod.bundle_items !== '[]') {
+              let bItems = JSON.parse(prod.bundle_items);
+              for (let b of bItems) { await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, b.id, b.qty * item.qty]); }
+           } else {
+              await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, item.product_id, item.qty]);
+           }
+        } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && item.pay_amount > 0) {
+           await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [item.qty, item.product_id]);
+           await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [insertRes.lastID]);
+        }
+      }
+    }
 
-  // เคลียร์คิวหน้าห้องการเงิน
-  db.run(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn], function(err) {
+    await dbRun(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn]);
     res.json({ status: 'success' });
-  });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 });
 
 app.get('/api/inventory', (req, res) => { db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); }); });

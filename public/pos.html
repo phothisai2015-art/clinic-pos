@@ -72,6 +72,11 @@
               </tr></thead>
               <tbody id="billItems"></tbody>
             </table>
+			<!-- 🌟 สรุปงานจากแพทย์ให้หน้า POS ทราบ -->
+            <div id="doctor_summary_box" class="mb-4 p-3 bg-info bg-opacity-10 border border-info rounded-3" style="display: none;">
+              <h6 class="fw-bold text-info mb-2"><i class="fa-solid fa-user-doctor me-1"></i> รายละเอียดการรักษาจากห้องแพทย์ (ล่าสุด)</h6>
+              <div id="doctor_summary_text" class="small fw-bold text-dark" style="white-space: pre-wrap;"></div>
+            </div>
             
             <div class="text-end mt-3 border-top pt-3">
               <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" onclick="openAddProductModal()"><i class="fa-solid fa-cart-plus me-1"></i> เพิ่มรายการขายหน้าเคาน์เตอร์</button>
@@ -158,25 +163,24 @@
   async function selectPosQueueByHN(hn) {
     Swal.showLoading();
     try {
-      const res = await fetch(`/api/patients/${hn}`);
-      const data = await res.json();
-      if(data.data) {
-        activeBill = { hn: data.data.id, name: data.data.full_name, bills: [], new_items: [], discount: 0 };
-        document.getElementById('posEmptyState').style.display = 'none'; 
-        document.getElementById('posBillState').style.display = 'flex';
-        document.getElementById('b_patient_name').innerText = activeBill.name; 
-        document.getElementById('b_patient_hn').innerText = activeBill.hn;
+      const [patientRes, billRes, emrRes] = await Promise.all([ fetch(`/api/patients/${hn}`), fetch(`/api/pos/bill/${hn}`), fetch(`/api/emr/${hn}`) ]);
+      const pData = await patientRes.json(); const bData = await billRes.json(); const eData = await emrRes.json();
+      
+      if(pData.data) {
+        activeBill = { hn: pData.data.id, name: pData.data.full_name, bills: bData.data || [], new_items: [], discount: 0 };
+        document.getElementById('posEmptyState').style.display = 'none'; document.getElementById('posBillState').style.display = 'flex';
+        document.getElementById('b_patient_name').innerText = activeBill.name; document.getElementById('b_patient_hn').innerText = activeBill.hn;
         
-        // 🌟 ดึงบิลทั้งหมดที่สถานะยังไม่จ่ายหรือจ่ายไม่ครบ
-        const billRes = await fetch(`/api/pos/bill/${hn}`);
-        const billData = await billRes.json();
-        activeBill.bills = billData.data || [];
-        
-        Swal.close();
-        renderBillItems();
-      } else {
-        Swal.fire('ไม่พบคนไข้', 'กรุณาตรวจสอบรหัส HN', 'warning');
-      }
+        // 🌟 ดึงข้อมูลสรุป EMR ล่าสุดของวันนี้มาโชว์ให้การเงินรู้
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todayEMR = eData.data ? eData.data.filter(log => log.visit_date.startsWith(todayStr)) : [];
+        if(todayEMR.length > 0 && todayEMR[0].treatment_details) {
+           document.getElementById('doctor_summary_box').style.display = 'block';
+           document.getElementById('doctor_summary_text').innerText = todayEMR[0].treatment_details;
+        } else { document.getElementById('doctor_summary_box').style.display = 'none'; }
+
+        renderBillItems(); Swal.close();
+      } else { Swal.fire('ไม่พบคนไข้', 'กรุณาตรวจสอบรหัส HN', 'warning'); }
     } catch(e) { Swal.close(); }
   }
 

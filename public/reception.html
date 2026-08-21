@@ -112,81 +112,92 @@
     } catch(e) {}
   }
 
-// 🌟 อัปเดต Pop-up คัดกรองให้เลือกโปรโมชั่นล่วงหน้าได้
+// 🌟 ฟังก์ชันส่งคิวคัดกรอง (ดึงคอร์สเดิมที่ยังใช้ไม่หมด + โปรโมชั่นใหม่)
   async function sendWalkinQueue() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
 
-    // ดึงข้อมูลสินค้า/โปรโมชั่นมาสร้าง Dropdown
-    let productOptions = '<option value="">-- ไม่ระบุ / ตรวจปรึกษาทั่วไป --</option>';
     try {
-      Swal.fire({ title: 'กำลังโหลดข้อมูล...', didOpen: () => Swal.showLoading() });
-      const pdRes = await fetch('/api/inventory');
-      const pdData = await pdRes.json();
+      Swal.fire({ title: 'กำลังเช็คข้อมูลคอร์ส...', didOpen: () => Swal.showLoading() });
+      const [pdRes, courseRes] = await Promise.all([ fetch('/api/inventory'), fetch(`/api/patients/${currentHN}/courses`) ]);
+      const pdData = await pdRes.json(); const courseData = await courseRes.json();
       Swal.close();
+
+      let optionsHTML = '<option value="">-- ปรึกษาหมอ / ตรวจทั่วไป (ไม่ระบุคอร์ส) --</option>';
+      
+      // ส่วนที่ 1: คอร์สเดิมของลูกค้าที่ยังเหลือ
+      let activeCourses = courseData.data ? courseData.data.filter(c => (c.total_qty - c.used_qty) > 0) : [];
+      if(activeCourses.length > 0) {
+        optionsHTML += `<optgroup label="✅ คอร์สคงเหลือของคนไข้">`;
+        activeCourses.forEach(c => {
+          let remain = c.total_qty - c.used_qty;
+          optionsHTML += `<option value="OLD_${c.id}" data-name="${c.product_name || c.product_id}">[ใช้คอร์สเดิม] ${c.product_name} (เหลือ ${remain})</option>`;
+        });
+        optionsHTML += `</optgroup>`;
+      }
+
+      // ส่วนที่ 2: ซื้อคอร์ส/โปรใหม่
+      optionsHTML += `<optgroup label="✨ ซื้อโปรโมชั่น / หัตถการใหม่">`;
       if(pdData.status === 'success') {
-        pdData.data.forEach(p => {
-          if(p.type === 'PROMOTION' || p.type === 'COURSE' || p.type === 'INJECTABLE') {
-             let typeLabel = p.type === 'PROMOTION' ? '🎁 [โปรโมชั่น]' : '💉 [หัตถการ]';
-             productOptions += `<option value="${p.id}" data-name="${p.name}">${typeLabel} ${p.name}</option>`;
-          }
+        pdData.data.filter(p => p.type === 'PROMOTION' || p.type === 'COURSE' || p.type === 'INJECTABLE').forEach(p => {
+          optionsHTML += `<option value="NEW_${p.id}" data-name="${p.name}">[ซื้อใหม่] ${p.name}</option>`;
         });
       }
-    } catch(e) { Swal.close(); }
+      optionsHTML += `</optgroup>`;
 
-    Swal.fire({
-      title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
-      html: `
-        <div class="text-start mt-3">
-          <div class="mb-3 p-3 bg-light border rounded border-info">
-             <label class="small fw-bold text-primary mb-1"><i class="fa-solid fa-bullseye me-1"></i> เลือกโปรโมชั่น / หัตถการล่วงหน้า</label>
-             <select id="swal-promo" class="form-select border-primary shadow-sm mb-2">${productOptions}</select>
-             <input id="swal-note" class="form-control" placeholder="พิมพ์ระบุอาการ/หมายเหตุเพิ่มเติม...">
-          </div>
-          <h6 class="fw-bold text-muted small border-bottom pb-1 mb-2 mt-3">ข้อมูล Vitals (คัดกรอง)</h6>
-          <div class="row g-2 mb-2">
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">SYS</label><input id="swal-sys" type="number" class="form-control" placeholder="120"></div>
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">DIA</label><input id="swal-dia" type="number" class="form-control" placeholder="80"></div>
-            <div class="col-4"><label class="small fw-bold text-muted mb-1">Pulse</label><input id="swal-pulse" type="number" class="form-control" placeholder="72"></div>
-          </div>
-          <div class="row g-2">
-            <div class="col-6"><label class="small fw-bold text-muted mb-1">น้ำหนัก (kg)</label><input id="swal-weight" type="number" class="form-control" placeholder="60"></div>
-            <div class="col-6"><label class="small fw-bold text-muted mb-1">ส่วนสูง (cm)</label><input id="swal-height" type="number" class="form-control" placeholder="170"></div>
-          </div>
-        </div>`,
-      showCancelButton: true, confirmButtonText: 'ส่งเข้าห้องตรวจ', confirmButtonColor: '#0dcaf0', cancelButtonText: 'ยกเลิก',
-      preConfirm: () => {
-        let sys = document.getElementById('swal-sys').value; let dia = document.getElementById('swal-dia').value;
-        let sel = document.getElementById('swal-promo');
-        let promoName = sel.value ? sel.options[sel.selectedIndex].getAttribute('data-name') : '';
-        let note = document.getElementById('swal-note').value;
-        
-        let finalNote = [];
-        if(promoName) finalNote.push(`ต้องการทำ: ${promoName}`);
-        if(note) finalNote.push(note);
+      Swal.fire({
+        title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
+        html: `
+          <div class="text-start mt-3">
+            <div class="mb-3 p-3 bg-light border rounded border-info">
+               <label class="small fw-bold text-primary mb-1"><i class="fa-solid fa-bullseye me-1"></i> วัตถุประสงค์ในการเข้าพบแพทย์</label>
+               <select id="swal-promo" class="form-select border-primary shadow-sm mb-2">${optionsHTML}</select>
+               <input id="swal-note" class="form-control" placeholder="พิมพ์ระบุอาการ/หมายเหตุเพิ่มเติม (ถ้ามี)...">
+            </div>
+            <h6 class="fw-bold text-muted small border-bottom pb-1 mb-2 mt-3">ข้อมูล Vitals (คัดกรอง)</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-4"><input id="swal-sys" type="number" class="form-control" placeholder="SYS (ความดัน)"></div>
+              <div class="col-4"><input id="swal-dia" type="number" class="form-control" placeholder="DIA"></div>
+              <div class="col-4"><input id="swal-pulse" type="number" class="form-control" placeholder="Pulse (ชีพจร)"></div>
+            </div>
+            <div class="row g-2">
+              <div class="col-6"><input id="swal-weight" type="number" class="form-control" placeholder="น้ำหนัก (kg)"></div>
+              <div class="col-6"><input id="swal-height" type="number" class="form-control" placeholder="ส่วนสูง (cm)"></div>
+            </div>
+          </div>`,
+        showCancelButton: true, confirmButtonText: 'ส่งเข้าห้องตรวจ', confirmButtonColor: '#0dcaf0', cancelButtonText: 'ยกเลิก',
+        preConfirm: () => {
+          let sel = document.getElementById('swal-promo');
+          let selectedText = sel.value ? sel.options[sel.selectedIndex].text : '';
+          let actionVal = sel.value; 
+          let note = document.getElementById('swal-note').value;
+          
+          let finalNote = [];
+          if(selectedText) finalNote.push(`${selectedText}`);
+          if(note) finalNote.push(note);
 
-        return { 
-          bp: (sys || dia) ? `${sys}/${dia}` : '', pulse: document.getElementById('swal-pulse').value, 
-          weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value,
-          notes: finalNote.join(' | ') || 'Walk-in',
-          promo_id: sel.value // 🌟 ส่ง ID ไปให้หลังบ้านแตกคอร์ส
+          return { 
+            bp: (document.getElementById('swal-sys').value || document.getElementById('swal-dia').value) ? `${document.getElementById('swal-sys').value}/${document.getElementById('swal-dia').value}` : '', 
+            pulse: document.getElementById('swal-pulse').value, weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value,
+            notes: finalNote.join(' | ') || 'ตรวจทั่วไป / ปรึกษาหมอ', action_val: actionVal
+          }
         }
-      }
-    }).then(async (res) => {
-      if (res.isConfirmed) {
-        Swal.fire({ title: 'กำลังจัดการคอร์สและคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
-        // 🌟 ถ้าพนักงานเลือกโปรโมชั่น ให้ยิง API ไปแตกคอร์สใส่ให้คนไข้ล่วงหน้าเลย
-        if(res.value.promo_id) {
-           await fetch(`/api/patients/${currentHN}/assign-promo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: res.value.promo_id }) });
-        }
+      }).then(async (res) => {
+        if (res.isConfirmed) {
+          Swal.fire({ title: 'กำลังจัดการคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+          
+          // ถ้าลูกค้าเลือกซื้อใหม่ ให้ยิง API ไปสร้างคอร์สให้ทันทีก่อนหมอตรวจ
+          if(res.value.action_val && res.value.action_val.startsWith('NEW_')) {
+             let promoId = res.value.action_val.replace('NEW_', '');
+             await fetch(`/api/patients/${currentHN}/assign-promo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: promoId }) });
+          }
 
-        // ส่งคิวไปห้องตรวจปกติ พร้อม Notes แจ้งหมอ
-        await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, ...res.value }) });
-        
-        Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-        clearForm();
-      }
-    });
+          // ส่งคิวไปห้องตรวจปกติ
+          await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, ...res.value }) });
+          Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+          clearForm();
+        }
+      });
+    } catch(e) {}
   }
 
   function clearForm() {
