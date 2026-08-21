@@ -1,3 +1,18 @@
+<style>
+  .service-card { transition: 0.2s ease-in-out; border: 2px solid #e2e8f0; cursor: pointer; border-radius: 16px; background-color: #ffffff; }
+  .service-card:hover { border-color: #93c5fd; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+  .service-card.selected { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 8px 20px rgba(59,130,246,0.2); }
+  .service-card.selected .card-title { color: #1d4ed8 !important; }
+  
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  .nav-pills-custom .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; margin-right: 8px; transition: 0.2s; border: 1px solid transparent; }
+  .nav-pills-custom .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+  .nav-pills-custom .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
+</style>
+
 <div class="container-fluid py-4" style="max-width: 1200px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-info m-0"><i class="fa-solid fa-clipboard-user me-2"></i> ลงทะเบียน & คัดกรองคนไข้</h3>
@@ -31,15 +46,16 @@
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control"></div>
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required></div>
             <div class="col-md-4">
-			<label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
-			<input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
-			</div>
+              <label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
+              <input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
+            </div>
             <div class="col-md-4"><label class="form-label fw-bold small text-muted">โรคประจำตัว</label><input type="text" id="p_disease" class="form-control"></div>
             <div class="col-12"><label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา (ระบุให้ชัดเจน)</label><textarea id="p_allergies" class="form-control" rows="2"></textarea></div>
             <div class="col-12 text-end mt-4 pt-3 border-top">
               <button type="button" class="btn btn-light rounded-pill px-4 me-2 fw-bold shadow-sm" onclick="clearForm()">เคลียร์ข้อมูล</button>
               <button type="submit" class="btn btn-primary rounded-pill px-4 me-2 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติ</button>
-              <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="sendWalkinQueue()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ (ซักประวัติ)</button>
+              <!-- 🌟 เปลี่ยนปุ่มตรงนี้ให้เปิด Modal -->
+              <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="openScreeningModal()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> เลือกโปรโมชั่น / ส่งตรวจ</button>
             </div>
           </div>
         </form>
@@ -48,8 +64,89 @@
   </div>
 </div>
 
+<!-- 🌟 Modal สำหรับเลือกโปรโมชั่นและซักประวัติ -->
+<div class="modal fade" id="screeningModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-info text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-hand-holding-medical me-2"></i> เลือกรับบริการ & จุดคัดกรองเบื้องต้น</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        <div class="row g-4">
+          <!-- 📦 ฝั่งซ้าย: เลือกบริการ (Tabs + Cards) -->
+          <div class="col-lg-8 border-end">
+            <h6 class="fw-bold text-secondary mb-3">กรุณาเลือกรายการที่คนไข้ต้องการรับบริการ</h6>
+            <ul class="nav nav-pills nav-pills-custom mb-3" id="serviceTabs">
+              <li class="nav-item"><button class="nav-link active" id="tabbtn-promo" onclick="switchServiceTab('promo')"><i class="fa-solid fa-gift me-1"></i> โปรโมชั่นจัดเซ็ต</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-general" onclick="switchServiceTab('general')"><i class="fa-solid fa-syringe me-1"></i> หัตถการ / สินค้าทั่วไป</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-active" onclick="switchServiceTab('active')"><i class="fa-solid fa-clipboard-check me-1"></i> คอร์สคงเหลือของคนไข้</button></li>
+            </ul>
+
+            <div class="custom-scrollbar px-2" style="height: 420px; overflow-y: auto;">
+              <!-- กล่องโปรโมชั่น -->
+              <div id="tab-promo" class="row g-3"></div>
+              <!-- กล่องสินค้าทั่วไป -->
+              <div id="tab-general" class="row g-3" style="display:none;"></div>
+              <!-- กล่องคอร์สคงเหลือ -->
+              <div id="tab-active" class="row g-3" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 🩺 ฝั่งขวา: สรุปและซักประวัติ -->
+          <div class="col-lg-4 d-flex flex-column">
+            <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+              <h6 class="fw-bold text-primary mb-2">บริการที่เลือก:</h6>
+              <div id="selected_service_display" class="text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center">
+                ปรึกษาแพทย์ (ไม่ได้เลือก)
+              </div>
+              <input type="hidden" id="selected_action_val" value="">
+              
+              <label class="form-label fw-bold small text-muted mt-2">ระบุอาการ / หมายเหตุเพิ่มเติม</label>
+              <textarea id="scr_note" class="form-control rounded-3" rows="2" placeholder="เช่น ต้องการปรึกษาเรื่องสิว, ปวดหัว..."></textarea>
+            </div>
+
+            <div class="bg-white p-3 rounded-4 shadow-sm border flex-grow-1">
+              <h6 class="fw-bold text-muted small mb-3 border-bottom pb-2">ข้อมูล Vitals (คัดกรอง)</h6>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="small text-muted mb-1">SYS (ความดัน)</label>
+                  <input id="scr_sys" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">DIA (ความดัน)</label>
+                  <input id="scr_dia" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">Pulse (ชีพจร)</label>
+                  <input id="scr_pulse" type="number" class="form-control rounded-3 text-center" placeholder="/min">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">น้ำหนัก (kg)</label>
+                  <input id="scr_weight" type="number" class="form-control rounded-3 text-center" placeholder="kg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">ส่วนสูง (cm)</label>
+                  <input id="scr_height" type="number" class="form-control rounded-3 text-center" placeholder="cm">
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-info w-100 mt-3 rounded-pill fw-bold text-white shadow-sm py-3 fs-5" onclick="submitScreening()">
+              <i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   var currentHN = '';
+  var screeningModalInstance = null;
+  var allInventoryForScreening = [];
+  var allCoursesForScreening = [];
   
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
@@ -86,12 +183,11 @@
     document.getElementById('p_idcard').value = p.id_card || '';
     document.getElementById('p_phone').value = p.phone || '';
     document.getElementById('p_dob').value = p.dob || '';
-	calculateAge();
+    calculateAge();
     document.getElementById('p_disease').value = p.congenital_disease || '';
     document.getElementById('p_allergies').value = p.allergies || '';
     document.getElementById('searchResultText').innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-check"></i> ดึงประวัติ ${p.full_name} เรียบร้อย</span>`;
-	
- }
+  }
 
   async function savePatient(e) {
     e.preventDefault();
@@ -112,105 +208,270 @@
     } catch(e) {}
   }
 
-// 🌟 ฟังก์ชันส่งคิวคัดกรอง (ดึงคอร์สเดิมที่ยังใช้ไม่หมด + โปรโมชั่นใหม่)
-  async function sendWalkinQueue() {
+  // ==========================================
+  // 🌟 ระบบ Modal เลือกโปรโมชั่น & คัดกรอง
+  // ==========================================
+  async function openScreeningModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
 
+    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', didOpen: () => Swal.showLoading() });
+    
     try {
-      Swal.fire({ title: 'กำลังเช็คข้อมูลคอร์ส...', didOpen: () => Swal.showLoading() });
+      // ดึงข้อมูลคลังสินค้า (โปรโมชั่นและอื่นๆ) และคอร์สที่คนไข้มี
       const [pdRes, courseRes] = await Promise.all([ fetch('/api/inventory'), fetch(`/api/patients/${currentHN}/courses`) ]);
-      const pdData = await pdRes.json(); const courseData = await courseRes.json();
-      Swal.close();
-
-      let optionsHTML = '<option value="">-- ปรึกษาหมอ / ตรวจทั่วไป (ไม่ระบุคอร์ส) --</option>';
+      const pdData = await pdRes.json(); 
+      const courseData = await courseRes.json();
       
-      // ส่วนที่ 1: คอร์สเดิมของลูกค้าที่ยังเหลือ
-      let activeCourses = courseData.data ? courseData.data.filter(c => (c.total_qty - c.used_qty) > 0) : [];
-      if(activeCourses.length > 0) {
-        optionsHTML += `<optgroup label="✅ คอร์สคงเหลือของคนไข้">`;
-        activeCourses.forEach(c => {
-          let remain = c.total_qty - c.used_qty;
-          optionsHTML += `<option value="OLD_${c.id}" data-name="${c.product_name || c.product_id}">[ใช้คอร์สเดิม] ${c.product_name} (เหลือ ${remain})</option>`;
-        });
-        optionsHTML += `</optgroup>`;
+      allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
+      allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
+      
+      // รีเซ็ตการเลือกกลับไปเป็น "ปรึกษาแพทย์"
+      resetSelection();
+      
+      // วาด UI ของแต่ละแท็บ
+      renderPromoCards();
+      renderGeneralCards();
+      renderActiveCourses();
+      
+      // เตรียม Modal และเปิดใช้งาน
+      if (!screeningModalInstance) {
+        screeningModalInstance = new bootstrap.Modal(document.getElementById('screeningModal'));
+      }
+      
+      Swal.close();
+      screeningModalInstance.show();
+      switchServiceTab('promo'); // เปิดมาหน้าแรกให้โชว์โปรโมชั่นก่อน
+
+    } catch (e) {
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
+  }
+
+  // --- สลับแท็บ ---
+  function switchServiceTab(tabName) {
+    document.querySelectorAll('.nav-pills-custom .nav-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tabbtn-${tabName}`).classList.add('active');
+
+    document.getElementById('tab-promo').style.display = 'none';
+    document.getElementById('tab-general').style.display = 'none';
+    document.getElementById('tab-active').style.display = 'none';
+
+    document.getElementById(`tab-${tabName}`).style.display = 'flex';
+  }
+
+  // --- วาดการ์ดโปรโมชั่น ---
+  function renderPromoCards() {
+    const container = document.getElementById('tab-promo');
+    let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
+    
+    if(promos.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลโปรโมชั่นในระบบ</div>`;
+      return;
+    }
+
+    let html = '';
+    promos.forEach(p => {
+      let bundleHtml = '';
+      try {
+        let bundles = JSON.parse(p.bundle_items || '[]');
+        if (bundles.length > 0) {
+          bundleHtml = bundles.map(b => `<div class="mb-1"><i class="fa-solid fa-check text-success me-1"></i> ${b.name} <span class="badge bg-secondary ms-1">x${b.qty}</span></div>`).join('');
+        } else {
+          bundleHtml = '<div class="text-muted small">- ไม่มีรายการของแถมย่อย</div>';
+        }
+      } catch (e) { bundleHtml = ''; }
+
+      let valStr = `NEW_${p.id}`;
+      html += `
+        <div class="col-md-6">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3">
+               <h6 class="fw-bold card-title text-dark mb-2"><i class="fa-solid fa-gift text-primary me-1"></i> ${p.name}</h6>
+               <div class="bg-light p-2 rounded border" style="font-size: 0.8rem;">
+                 <div class="fw-bold text-muted border-bottom pb-1 mb-2">สิ่งที่จะได้รับ:</div>
+                 ${bundleHtml}
+               </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // --- วาดการ์ดสินค้าทั่วไป (ไม่จัดเซ็ต) ---
+  function renderGeneralCards() {
+    const container = document.getElementById('tab-general');
+    let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE'); // แสดงเฉพาะหัตถการหรือกลุ่มฉีด
+    
+    if(generals.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลสินค้าทั่วไปที่ให้บริการได้</div>`;
+      return;
+    }
+
+    let html = '';
+    generals.forEach(p => {
+      let valStr = `NEW_${p.id}`;
+      let badgeType = p.type === 'INJECTABLE' ? 'bg-danger' : 'bg-info text-dark';
+      html += `
+        <div class="col-md-4">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3 text-center">
+               <span class="badge ${badgeType} mb-2">${p.type}</span>
+               <h6 class="fw-bold card-title text-dark m-0">${p.name}</h6>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // --- วาดการ์ดคอร์สคงเหลือของคนไข้ ---
+  function renderActiveCourses() {
+    const container = document.getElementById('tab-active');
+    let activeCourses = allCoursesForScreening.filter(c => (c.total_qty - c.used_qty) > 0);
+    
+    if(activeCourses.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีคอร์สคงเหลือ</div>`;
+      return;
+    }
+
+    let html = '';
+    activeCourses.forEach(c => {
+      let remain = c.total_qty - c.used_qty;
+      let valStr = `OLD_${c.id}`;
+      let displayName = c.product_name || c.product_id;
+      
+      html += `
+        <div class="col-md-6">
+          <div class="card h-100 service-card border-success" id="card_${valStr}" onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')">
+            <div class="card-body p-3">
+               <div class="d-flex justify-content-between align-items-start">
+                 <h6 class="fw-bold card-title text-success m-0"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> ${displayName}</h6>
+                 <span class="badge bg-success rounded-pill fs-6 px-3">เหลือ ${remain}</span>
+               </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // --- ระบบกดเลือกการ์ด ---
+  function selectService(actionVal, actionName) {
+    let currentVal = document.getElementById('selected_action_val').value;
+    
+    // ถ้ากดอันเดิมซ้ำ ให้ยกเลิกการเลือก (กลับไปเป็นปรึกษาแพทย์)
+    if (currentVal === actionVal) {
+      resetSelection();
+    } else {
+      // ลบ highlight เดิมออก
+      document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+      
+      // ใส่ highlight อันใหม่
+      let cardEl = document.getElementById(`card_${actionVal}`);
+      if(cardEl) cardEl.classList.add('selected');
+
+      // อัปเดต Display
+      document.getElementById('selected_action_val').value = actionVal;
+      let displayEl = document.getElementById('selected_service_display');
+      displayEl.innerText = actionName;
+      displayEl.className = "text-primary fw-bold fs-5 mb-2 px-3 py-2 bg-primary bg-opacity-10 rounded-3 border border-primary text-center";
+    }
+  }
+
+  function resetSelection() {
+    document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+    document.getElementById('selected_action_val').value = '';
+    
+    let displayEl = document.getElementById('selected_service_display');
+    displayEl.innerText = "ปรึกษาแพทย์ / ตรวจทั่วไป";
+    displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
+  }
+
+  // --- ยืนยันการส่งตัว (Submit) ---
+  async function submitScreening() {
+    let actionVal = document.getElementById('selected_action_val').value;
+    let selectedText = document.getElementById('selected_service_display').innerText;
+    let note = document.getElementById('scr_note').value.trim();
+    
+    // จัดการข้อความ Note สำหรับส่งไปห้องตรวจ
+    let finalNote = [];
+    if(actionVal) finalNote.push(`[บริการ] ${selectedText}`);
+    else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
+    if(note) finalNote.push(`[อาการ] ${note}`);
+
+    let payload = {
+      patient_id: currentHN,
+      bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
+      pulse: document.getElementById('scr_pulse').value, 
+      weight: document.getElementById('scr_weight').value, 
+      height: document.getElementById('scr_height').value,
+      notes: finalNote.join(' | ')
+    };
+
+    Swal.fire({ title: 'กำลังจัดการคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      // ถ้าเลือก "ซื้อใหม่" (โปรโมชั่น หรือสินค้าทั่วไป) ให้ระบบมอบคอร์ส/หักสต็อกล่วงหน้า ก่อนหมอตรวจ
+      if(actionVal && actionVal.startsWith('NEW_')) {
+         let productId = actionVal.replace('NEW_', '');
+         await fetch(`/api/patients/${currentHN}/assign-promo`, { 
+           method: 'POST', 
+           headers: { 'Content-Type': 'application/json' }, 
+           body: JSON.stringify({ product_id: productId }) 
+         });
       }
 
-      // ส่วนที่ 2: ซื้อคอร์ส/โปรใหม่
-      optionsHTML += `<optgroup label="✨ ซื้อโปรโมชั่น / หัตถการใหม่">`;
-      if(pdData.status === 'success') {
-        pdData.data.filter(p => p.type === 'PROMOTION' || p.type === 'COURSE' || p.type === 'INJECTABLE').forEach(p => {
-          optionsHTML += `<option value="NEW_${p.id}" data-name="${p.name}">[ซื้อใหม่] ${p.name}</option>`;
-        });
-      }
-      optionsHTML += `</optgroup>`;
-
-      Swal.fire({
-        title: '<h5 class="fw-bold text-info"><i class="fa-solid fa-heart-pulse me-2"></i> จุดคัดกรองเบื้องต้น</h5>',
-        html: `
-          <div class="text-start mt-3">
-            <div class="mb-3 p-3 bg-light border rounded border-info">
-               <label class="small fw-bold text-primary mb-1"><i class="fa-solid fa-bullseye me-1"></i> วัตถุประสงค์ในการเข้าพบแพทย์</label>
-               <select id="swal-promo" class="form-select border-primary shadow-sm mb-2">${optionsHTML}</select>
-               <input id="swal-note" class="form-control" placeholder="พิมพ์ระบุอาการ/หมายเหตุเพิ่มเติม (ถ้ามี)...">
-            </div>
-            <h6 class="fw-bold text-muted small border-bottom pb-1 mb-2 mt-3">ข้อมูล Vitals (คัดกรอง)</h6>
-            <div class="row g-2 mb-2">
-              <div class="col-4"><input id="swal-sys" type="number" class="form-control" placeholder="SYS (ความดัน)"></div>
-              <div class="col-4"><input id="swal-dia" type="number" class="form-control" placeholder="DIA"></div>
-              <div class="col-4"><input id="swal-pulse" type="number" class="form-control" placeholder="Pulse (ชีพจร)"></div>
-            </div>
-            <div class="row g-2">
-              <div class="col-6"><input id="swal-weight" type="number" class="form-control" placeholder="น้ำหนัก (kg)"></div>
-              <div class="col-6"><input id="swal-height" type="number" class="form-control" placeholder="ส่วนสูง (cm)"></div>
-            </div>
-          </div>`,
-        showCancelButton: true, confirmButtonText: 'ส่งเข้าห้องตรวจ', confirmButtonColor: '#0dcaf0', cancelButtonText: 'ยกเลิก',
-        preConfirm: () => {
-          let sel = document.getElementById('swal-promo');
-          let selectedText = sel.value ? sel.options[sel.selectedIndex].text : '';
-          let actionVal = sel.value; 
-          let note = document.getElementById('swal-note').value;
-          
-          let finalNote = [];
-          if(selectedText) finalNote.push(`${selectedText}`);
-          if(note) finalNote.push(note);
-
-          return { 
-            bp: (document.getElementById('swal-sys').value || document.getElementById('swal-dia').value) ? `${document.getElementById('swal-sys').value}/${document.getElementById('swal-dia').value}` : '', 
-            pulse: document.getElementById('swal-pulse').value, weight: document.getElementById('swal-weight').value, height: document.getElementById('swal-height').value,
-            notes: finalNote.join(' | ') || 'ตรวจทั่วไป / ปรึกษาหมอ', action_val: actionVal
-          }
-        }
-      }).then(async (res) => {
-        if (res.isConfirmed) {
-          Swal.fire({ title: 'กำลังจัดการคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-          
-          // ถ้าลูกค้าเลือกซื้อใหม่ ให้ยิง API ไปสร้างคอร์สให้ทันทีก่อนหมอตรวจ
-          if(res.value.action_val && res.value.action_val.startsWith('NEW_')) {
-             let promoId = res.value.action_val.replace('NEW_', '');
-             await fetch(`/api/patients/${currentHN}/assign-promo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: promoId }) });
-          }
-
-          // ส่งคิวไปห้องตรวจปกติ
-          await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, ...res.value }) });
-          Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-          clearForm();
-        }
+      // ส่งคิวไปห้องตรวจแพทย์
+      await fetch('/api/queue/send-doctor', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
       });
-    } catch(e) {}
+      
+      Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+      
+      // ปิด Modal และล้างฟอร์ม
+      screeningModalInstance.hide();
+      clearForm();
+      
+      // เคลียร์ Vitals form
+      document.getElementById('scr_sys').value = '';
+      document.getElementById('scr_dia').value = '';
+      document.getElementById('scr_pulse').value = '';
+      document.getElementById('scr_weight').value = '';
+      document.getElementById('scr_height').value = '';
+      document.getElementById('scr_note').value = '';
+
+    } catch (e) {
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
+    }
   }
 
   function clearForm() {
-    currentHN = ''; document.getElementById('patientForm').reset(); document.getElementById('p_hn').value = '';
+    currentHN = ''; 
+    document.getElementById('patientForm').reset(); 
+    document.getElementById('p_hn').value = '';
     document.getElementById('age_display').innerText = '';
-	document.getElementById('searchInput').value = ''; document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
+    document.getElementById('searchInput').value = ''; 
+    document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
   }
+
   function readSmartCard() {
     Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    setTimeout(() => { clearForm(); document.getElementById('p_name').value = 'สมชาย รักชาติ'; document.getElementById('p_idcard').value = '1100200300401'; document.getElementById('p_phone').value = '0891234567'; document.getElementById('p_dob').value = '1985-10-25'; Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); }, 1000);
+    setTimeout(() => { 
+      clearForm(); 
+      document.getElementById('p_name').value = 'สมชาย รักชาติ'; 
+      document.getElementById('p_idcard').value = '1100200300401'; 
+      document.getElementById('p_phone').value = '0891234567'; 
+      document.getElementById('p_dob').value = '1985-10-25'; 
+      Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); 
+    }, 1000);
   }
   
-  // 🌟 ฟังก์ชันคำนวณอายุอัตโนมัติ
   function calculateAge() {
     const dobStr = document.getElementById('p_dob').value;
     const ageDisplay = document.getElementById('age_display');
