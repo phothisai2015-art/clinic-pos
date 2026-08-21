@@ -35,6 +35,19 @@ db.serialize(() => {
   db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, () => {});
   db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, () => {});
   db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, () => {});
+  
+  // เพิ่มคอลัมน์ใหม่สำหรับตาราง clinics (ไม่ต้องกลัว Error ถ้ามีอยู่แล้ว)
+  db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, () => {});
+  db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, () => {});
+  db.run(`ALTER TABLE clinics ADD COLUMN bank_account_name TEXT`, () => {});
+  db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, () => {});
+  
+  // สร้างข้อมูลร้านค้าเริ่มต้นเอาไว้ ถ้ายังไม่มี
+  db.get("SELECT count(*) as count FROM clinics", (err, row) => {
+    if (row && row.count === 0) {
+      db.run(`INSERT INTO clinics (clinic_name, email, phone) VALUES ('Clinic Management System', 'admin@clinic.com', '-')`);
+    }
+  });
 
   // 🌟 ตารางใหม่: ระบบบิลและหนี้สิน (รองรับการแบ่งจ่าย)
   db.run(`CREATE TABLE IF NOT EXISTS patient_bills (
@@ -397,6 +410,35 @@ app.post('/api/setup-admin', (req, res) => {
         if (err) return res.json({ status: 'error', message: err.message });
         res.json({ status: 'success' });
     });
+  });
+});
+
+// ==========================================
+// 🏢 API ระบบข้อมูลคลินิก / สาขา (Clinic Settings)
+// ==========================================
+app.get('/api/clinic', (req, res) => {
+  db.get(`SELECT * FROM clinics ORDER BY id ASC LIMIT 1`, [], (err, row) => {
+    res.json({ status: 'success', data: row || {} });
+  });
+});
+
+app.put('/api/clinic', (req, res) => {
+  const { clinic_name, phone, promptpay, bank_account_name, address } = req.body;
+  db.run(`UPDATE clinics SET clinic_name=?, phone=?, promptpay=?, bank_account_name=?, address=? WHERE id=1`,
+    [clinic_name, phone, promptpay, bank_account_name, address], function(err) {
+      res.json({ status: 'success' });
+  });
+});
+
+app.post('/api/clinic/logo', (req, res) => {
+  const { image_data } = req.body;
+  const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
+  const fileName = `logo_${Date.now()}.png`;
+  fs.writeFileSync(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
+  const logo_url = `/uploads/${fileName}`;
+  
+  db.run(`UPDATE clinics SET logo_url = ? WHERE id = 1`, [logo_url], function(err) {
+    res.json({ status: 'success', logo_url });
   });
 });
 
