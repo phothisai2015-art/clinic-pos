@@ -87,17 +87,7 @@ db.serialize(() => {
   
   console.log("✅ Database tables initialized successfully.");
 
-  // 🌟 ย้ายมาอยู่ด้านในนี้ เพื่อรอให้ตารางสร้างเสร็จก่อนถึงจะเพิ่ม PIN
-  db.get("SELECT count(*) as count FROM users", (err, row) => {
-    if (err) {
-      console.error("Database Error:", err);
-      return;
-    }
-    if (row && row.count === 0) {
-      db.run(`INSERT INTO users (pin, name, role, permissions) VALUES ('1234', 'ผู้บริหาร (Admin)', 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`);
-      console.log("👤 สร้างผู้ใช้งานเริ่มต้นสำเร็จ: ใช้ PIN 1234 ในการเข้าสู่ระบบ");
-    }
-  });
+  // ❌ ส่วนที่เคยสร้างผู้ใช้งานเริ่มต้น PIN 1234 ถูกลบออกแล้ว เพื่อให้ไปสร้างจากหน้าเว็บแทน
 });
 
 module.exports = db;
