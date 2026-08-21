@@ -371,4 +371,30 @@ app.get('/api/reports/dashboard', (req, res) => {
   });
 });
 
+// ==========================================
+// 🚀 API สำหรับ First-time Setup (ตั้งค่าครั้งแรก)
+// ==========================================
+app.get('/api/check-setup', (req, res) => {
+  db.get("SELECT count(*) as count FROM users", (err, row) => {
+    if (err) return res.json({ status: 'error' });
+    // ถ้าพนักงานเป็น 0 ให้ส่ง needsSetup = true กลับไป
+    res.json({ status: 'success', needsSetup: row.count === 0 });
+  });
+});
+
+app.post('/api/setup-admin', (req, res) => {
+  const { name, pin } = req.body;
+  // ป้องกันการแอบยิง API เข้ามา ถ้ามีพนักงานอยู่แล้วจะไม่ยอมให้สร้าง
+  db.get("SELECT count(*) as count FROM users", (err, row) => {
+    if (row && row.count > 0) return res.json({ status: 'error', message: 'ระบบถูกตั้งค่าผู้ดูแลระบบไปแล้ว' });
+    
+    // บันทึก Admin คนแรกให้มีสิทธิ์ครบทุกเมนู (ADMIN)
+    db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`,
+      [pin, name], function(err) {
+        if (err) return res.json({ status: 'error', message: err.message });
+        res.json({ status: 'success' });
+    });
+  });
+});
+
 app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`); });
