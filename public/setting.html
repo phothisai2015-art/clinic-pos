@@ -11,10 +11,16 @@
   .user-card { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .user-card:hover { border-color: #94a3b8; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.03); }
   
-  /* Modern Permission UI (ไม่ซ้อนทับแน่นอน) */
   .perm-box { border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 15px; background: #ffffff; cursor: pointer; transition: 0.2s; display: flex; align-items: center; height: 100%; }
   .perm-box:hover { background: #eff6ff; border-color: #93c5fd; }
   .perm-box input:checked + label { color: #1d4ed8 !important; }
+
+  /* Style สำหรับส่วนตั้งค่าร้านค้า */
+  .clinic-logo-upload { width: 140px; height: 140px; border-radius: 20px; border: 2px dashed #cbd5e1; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; position: relative; background-color: #fff; transition: 0.2s; }
+  .clinic-logo-upload:hover { border-color: #3b82f6; background-color: #eff6ff; }
+  .clinic-logo-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none; }
+  .upload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: 0.2s; }
+  .clinic-logo-upload:hover .upload-overlay { opacity: 1; }
 </style>
 
 <div class="container-fluid h-100" style="max-width: 1400px;">
@@ -26,10 +32,10 @@
         <h4 class="fw-bold m-0 text-dark"><i class="fa-solid fa-gear me-2 text-secondary"></i> การตั้งค่า</h4>
       </div>
       
-      <div class="settings-menu-item active" onclick="switchSettingTab('users')">
+      <div id="nav-users" class="settings-menu-item active" onclick="switchSettingTab('users')">
         <i class="fa-solid fa-users-gear me-3 fs-5"></i> พนักงานและสิทธิ์ (Users)
       </div>
-      <div class="settings-menu-item text-muted" onclick="Swal.fire('Coming Soon','กำลังพัฒนาระบบข้อมูลคลินิก','info')">
+      <div id="nav-clinic" class="settings-menu-item" onclick="switchSettingTab('clinic')">
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
       
@@ -40,21 +46,71 @@
 
     <!-- รายละเอียดด้านขวา (Content) -->
     <div class="settings-content col-9 position-relative">
+      
+      <!-- TAB 1: พนักงาน -->
       <div id="tab-users" class="h-100 d-flex flex-column">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
           <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i> เพิ่มพนักงานใหม่</button>
         </div>
-        
         <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" id="usersList">
           <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
         </div>
       </div>
+
+      <!-- TAB 2: ข้อมูลร้านค้า -->
+      <div id="tab-clinic" class="h-100 flex-column" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="fw-bold text-primary m-0">ข้อมูลคลินิก / ร้านค้า</h4>
+          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveClinicData()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูลร้าน</button>
+        </div>
+        
+        <div class="bg-white p-4 rounded-4 shadow-sm border custom-scrollbar" style="overflow-y: auto; max-height: calc(100vh - 150px);">
+          
+          <div class="row align-items-center mb-4 border-bottom pb-4">
+            <div class="col-md-3 text-center">
+              <label class="fw-bold small text-muted mb-2 d-block">โลโก้ร้าน (คลิกเพื่อเปลี่ยน)</label>
+              <div class="clinic-logo-upload mx-auto" onclick="document.getElementById('clinicLogoInput').click()">
+                <div class="text-muted small"><i class="fa-solid fa-cloud-arrow-up fa-2x mb-1 d-block"></i> Upload Logo</div>
+                <img id="clinic_logo_preview" class="clinic-logo-img" src="">
+                <div class="upload-overlay"><i class="fa-solid fa-camera"></i><small>เปลี่ยนรูป</small></div>
+              </div>
+              <input type="file" id="clinicLogoInput" class="d-none" accept="image/png, image/jpeg, image/jpg" onchange="uploadClinicLogo(this)">
+            </div>
+            <div class="col-md-9">
+              <label class="form-label fw-bold small text-muted">ชื่อคลินิก / ชื่อร้าน *</label>
+              <input type="text" id="c_name" class="form-control form-control-lg fw-bold text-primary border-primary rounded-3" placeholder="ระบุชื่อคลินิกของคุณ">
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-address-book me-2"></i> ข้อมูลติดต่อ & การชำระเงิน</h6>
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ร้าน</label>
+              <input type="text" id="c_phone" class="form-control rounded-3" placeholder="เช่น 02-xxx-xxxx">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">ที่อยู่คลินิก</label>
+              <input type="text" id="c_address" class="form-control rounded-3" placeholder="เลขที่, ซอย, ถนน, แขวง, เขต, จังหวัด">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">เบอร์พร้อมเพย์ (PromptPay)</label>
+              <input type="text" id="c_promptpay" class="form-control rounded-3 border-success text-success fw-bold" placeholder="เบอร์โทร / เลขบัตร ปชช. / เลขนิติบุคคล">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">ชื่อบัญชีธนาคาร (แสดงตอนสแกน)</label>
+              <input type="text" id="c_bank_name" class="form-control rounded-3" placeholder="เช่น บจก. คลินิกความงาม">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน (UI ใหม่) -->
+<!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน -->
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -75,7 +131,7 @@
               </div>
               <div class="col-md-3">
                 <label class="form-label fw-bold small text-muted">PIN (ตัวเลข 4 หลัก) *</label>
-                <input type="text" id="u_pin" class="form-control rounded-3 border-primary text-center fw-bold" maxlength="4" pattern="[0-9]{4}" required>
+                <input type="text" id="u_pin" class="form-control rounded-3 border-primary text-center fw-bold" maxlength="4" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
               </div>
               <div class="col-md-3">
                 <label class="form-label fw-bold small text-muted">ตำแหน่ง (Role) *</label>
@@ -97,48 +153,13 @@
             </div>
             
             <div class="row g-2">
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="BOOKING" id="cb_1">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_1">1. นัดหมาย & คิว</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_1" id="cb_2">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_2">2. ลงทะเบียน & คัดกรอง</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_2" id="cb_3">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_3">3. ห้องตรวจแพทย์</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="POS" id="cb_4">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_4">4. ขาย & ชำระเงิน (POS)</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="STOCK" id="cb_5">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_5">5. คลังยา (Inventory)</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="DASH" id="cb_6">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_6">6. รายงานยอดขาย (Reports)</label>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="perm-box">
-                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_3" id="cb_7">
-                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_7">7. ฐานข้อมูลรายชื่อคนไข้</label>
-                </div>
-              </div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="BOOKING" id="cb_1"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_1">1. นัดหมาย & คิว</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_1" id="cb_2"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_2">2. ลงทะเบียน & คัดกรอง</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_2" id="cb_3"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_3">3. ห้องตรวจแพทย์</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="POS" id="cb_4"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_4">4. ขาย & ชำระเงิน (POS)</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="STOCK" id="cb_5"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_5">5. คลังยา (Inventory)</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="DASH" id="cb_6"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_6">6. รายงานยอดขาย (Reports)</label></div></div>
+              <div class="col-md-12"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_3" id="cb_7"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_7">7. ฐานข้อมูลรายชื่อคนไข้</label></div></div>
             </div>
           </div>
 
@@ -159,20 +180,98 @@
   function initSettings() { loadUsers(); }
   initSettings();
 
+  // --- 🌟 ระบบสลับ Tab ซ้ายมือ ---
+  function switchSettingTab(tab) {
+    document.querySelectorAll('.settings-menu-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('nav-' + tab).classList.add('active');
+    
+    document.getElementById('tab-users').style.display = 'none';
+    document.getElementById('tab-clinic').style.display = 'none';
+    
+    document.getElementById('tab-' + tab).style.display = 'flex';
+    if(tab === 'clinic') loadClinicData();
+  }
+
+  // --- 🌟 ระบบจัดการข้อมูลคลินิก ---
+  async function loadClinicData() {
+    try {
+      const res = await fetch('/api/clinic?t=' + new Date().getTime());
+      const data = await res.json();
+      if(data.status === 'success' && data.data) {
+        let c = data.data;
+        document.getElementById('c_name').value = c.clinic_name || '';
+        document.getElementById('c_phone').value = c.phone || '';
+        document.getElementById('c_promptpay').value = c.promptpay || '';
+        document.getElementById('c_bank_name').value = c.bank_account_name || '';
+        document.getElementById('c_address').value = c.address || '';
+        
+        if (c.logo_url) {
+          const img = document.getElementById('clinic_logo_preview');
+          img.src = c.logo_url;
+          img.style.display = 'block';
+        }
+      }
+    } catch(e) {}
+  }
+
+  async function saveClinicData() {
+    let payload = {
+      clinic_name: document.getElementById('c_name').value,
+      phone: document.getElementById('c_phone').value,
+      promptpay: document.getElementById('c_promptpay').value,
+      bank_account_name: document.getElementById('c_bank_name').value,
+      address: document.getElementById('c_address').value
+    };
+    if(!payload.clinic_name) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุชื่อคลินิก/ร้าน', 'warning');
+
+    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+    try {
+      await fetch('/api/clinic', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+      Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+    } catch(e) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+  }
+
+  // อัปโหลด Logo แบบ Base64
+  function uploadClinicLogo(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        
+        Swal.fire({ title: 'กำลังอัปโหลดรูปภาพ...', didOpen: () => Swal.showLoading() });
+        try {
+          const res = await fetch('/api/clinic/logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_data: base64Image })
+          });
+          const data = await res.json();
+          if (data.status === 'success') {
+            const img = document.getElementById('clinic_logo_preview');
+            img.src = data.logo_url;
+            img.style.display = 'block';
+            Swal.fire({ icon: 'success', title: 'อัปโหลดเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+          }
+        } catch(err) { Swal.fire('Error', 'อัปโหลดล้มเหลว', 'error'); }
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+
+  // --- ระบบจัดการพนักงาน (แบบเดิม) ---
   async function loadUsers() {
     try {
       const res = await fetch('/api/users');
       const data = await res.json();
       allUsers = data.data;
       renderUsers();
-    } catch(e) { console.error(e); }
+    } catch(e) {}
   }
 
   function renderUsers() {
     const list = document.getElementById('usersList');
     list.innerHTML = '';
-    
-    // ดึง ID ของคนที่กำลังใช้งานระบบอยู่ (จาก Session)
     const currentUserId = parseInt(sessionStorage.getItem('currentUserId'));
 
     allUsers.forEach(u => {
@@ -180,45 +279,29 @@
       let isAllPerm = u.permissions.includes('ADMIN');
       let permBadge = isAllPerm ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill">เข้าถึงได้ทุกเมนู (Full Access)</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill">กำหนดสิทธิ์เฉพาะส่วน</span>`;
       
-      // 🌟 ดักจับ: ถ้าเป็น ID ของตัวเอง ให้เปลี่ยนปุ่มลบเป็นไอคอนห้าม
-      let deleteBtnHtml = '';
-      if (u.id === currentUserId) {
-        deleteBtnHtml = `<button class="btn btn-sm btn-light text-muted rounded-circle" title="บัญชีของคุณ" onclick="Swal.fire('แจ้งเตือน', 'ไม่สามารถลบบัญชีของตัวเองขณะกำลังใช้งานได้', 'warning')"><i class="fa-solid fa-ban"></i></button>`;
-      } else {
-        deleteBtnHtml = `<button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteUser(${u.id}, '${u.name}')"><i class="fa-solid fa-trash"></i></button>`;
-      }
+      let deleteBtnHtml = (u.id === currentUserId) 
+        ? `<button class="btn btn-sm btn-light text-muted rounded-circle" title="บัญชีของคุณ" onclick="Swal.fire('แจ้งเตือน', 'ไม่สามารถลบบัญชีของตัวเองขณะกำลังใช้งานได้', 'warning')"><i class="fa-solid fa-ban"></i></button>`
+        : `<button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteUser(${u.id}, '${u.name}')"><i class="fa-solid fa-trash"></i></button>`;
 
       list.innerHTML += `
         <div class="user-card">
           <div class="d-flex align-items-center">
-            <div class="bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
-              ${u.name.substring(0, 1)}
-            </div>
+            <div class="bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">${u.name.substring(0, 1)}</div>
             <div>
               <h6 class="fw-bold m-0 text-dark mb-1">${u.name} <span class="badge bg-${roleColor} ms-2">${u.role}</span></h6>
-              <div class="small">
-                <span class="text-muted me-3"><i class="fa-solid fa-key me-1"></i> PIN: <b>${u.pin}</b></span>
-                ${permBadge}
-              </div>
+              <div class="small"><span class="text-muted me-3"><i class="fa-solid fa-key me-1"></i> PIN: <b>${u.pin}</b></span>${permBadge}</div>
             </div>
           </div>
-          <div>
-            <button class="btn btn-sm btn-outline-primary rounded-circle me-1" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>
-            ${deleteBtnHtml}
-          </div>
-        </div>
-      `;
+          <div><button class="btn btn-sm btn-outline-primary rounded-circle me-1" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>${deleteBtnHtml}</div>
+        </div>`;
     });
   }
 
-  function toggleAllPerms(checkbox) {
-    document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = checkbox.checked; cb.disabled = checkbox.checked; });
-  }
+  function toggleAllPerms(checkbox) { document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = checkbox.checked; cb.disabled = checkbox.checked; }); }
 
   function openUserModal(id = null) {
     const modalEl = document.getElementById('userModal');
     if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
-
     document.getElementById('userForm').reset();
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = false; cb.disabled = false; });
     
@@ -229,76 +312,41 @@
       document.getElementById('u_name').value = u.name;
       document.getElementById('u_pin').value = u.pin;
       document.getElementById('u_role').value = u.role;
-      
-      if(u.permissions.includes('ADMIN')) {
-        document.getElementById('perm_all').checked = true;
-        toggleAllPerms(document.getElementById('perm_all'));
-      } else {
-        const perms = u.permissions.split(',');
-        document.querySelectorAll('.perm-cb').forEach(cb => { if(perms.includes(cb.value)) cb.checked = true; });
-      }
+      if(u.permissions.includes('ADMIN')) { document.getElementById('perm_all').checked = true; toggleAllPerms(document.getElementById('perm_all')); } 
+      else { const perms = u.permissions.split(','); document.querySelectorAll('.perm-cb').forEach(cb => { if(perms.includes(cb.value)) cb.checked = true; }); }
     } else {
       document.getElementById('userModalTitle').innerHTML = '<i class="fa-solid fa-user-plus me-2"></i>เพิ่มพนักงานใหม่';
       document.getElementById('u_id').value = '';
     }
-
-    let existingModal = bootstrap.Modal.getInstance(modalEl);
-    if (existingModal) existingModal.dispose();
-    
-    userModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    userModal.show();
+    let existingModal = bootstrap.Modal.getInstance(modalEl); if (existingModal) existingModal.dispose();
+    userModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); userModal.show();
   }
 
   function closeUserModal() {
     if(userModal) {
        userModal.hide();
-       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-       document.body.classList.remove('modal-open');
-       document.body.style.overflow = '';
-       document.body.style.paddingRight = '';
+       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); document.body.classList.remove('modal-open'); document.body.style.overflow = ''; document.body.style.paddingRight = '';
     }
   }
 
   async function saveUser() {
-    let id = document.getElementById('u_id').value;
-    let name = document.getElementById('u_name').value;
-    let pin = document.getElementById('u_pin').value;
-    let role = document.getElementById('u_role').value;
-    
+    let id = document.getElementById('u_id').value; let name = document.getElementById('u_name').value; let pin = document.getElementById('u_pin').value; let role = document.getElementById('u_role').value;
     if(!name || pin.length !== 4) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและรหัส PIN 4 หลัก', 'warning');
-
     let permissions = [];
-    if(document.getElementById('perm_all').checked) {
-      permissions = ['ADMIN'];
-    } else {
-      document.querySelectorAll('.perm-cb:checked').forEach(cb => permissions.push(cb.value));
-    }
+    if(document.getElementById('perm_all').checked) { permissions = ['ADMIN']; } else { document.querySelectorAll('.perm-cb:checked').forEach(cb => permissions.push(cb.value)); }
     if(permissions.length === 0) return Swal.fire('สิทธิ์ไม่ถูกต้อง', 'กรุณาเลือกสิทธิ์อย่างน้อย 1 เมนู', 'warning');
 
     let payload = { name, pin, role, permissions: permissions.join(',') };
-    let method = id ? 'PUT' : 'POST';
-    let url = id ? `/api/users/${id}` : '/api/users';
-
+    let method = id ? 'PUT' : 'POST'; let url = id ? `/api/users/${id}` : '/api/users';
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
       const response = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
       const data = await response.json(); 
-      
-      if(data.status === 'success') {
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-        closeUserModal(); 
-        loadUsers();
-      } else {
-        Swal.fire('ข้อผิดพลาด', data.message, 'error'); 
-      }
+      if(data.status === 'success') { Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); closeUserModal(); loadUsers(); } 
+      else { Swal.fire('ข้อผิดพลาด', data.message, 'error'); }
     } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
   }
 
-  async function deleteUser(id, name) {
-    if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) {
-      await fetch(`/api/users/${id}`, { method: 'DELETE' });
-      loadUsers();
-    }
-  }
+  async function deleteUser(id, name) { if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
 </script>

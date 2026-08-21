@@ -30,15 +30,13 @@
     .num-btn:hover { background: #fff; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; }
     body.dark-theme .num-btn { background: rgba(30,41,59,0.8); color: #f1f5f9; border-color: rgba(255,255,255,0.05); }
 
-    /* Main Menu */
-    .menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 30px 20px; text-align: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    /* Main Menu แบบมี Subtext */
+    .menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 35px 20px; text-align: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
     .menu-card-btn:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-color: #cbd5e1; }
     body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; color: #fff; }
-    .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: 0.3s; }
+    .menu-icon-wrap { width: 75px; height: 75px; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 32px; transition: 0.3s; }
     
     .theme-toggle-btn { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; border: none; box-shadow: 0 10px 25px rgba(59,130,246,0.4); z-index: 10000; cursor: pointer; font-size: 20px; }
-
-    /* 🌟 เพิ่ม Class สำหรับเปลี่ยนสี Version เป็นสีดำในโหมดสว่าง และสีขาวในโหมดมืด */
     .version-text { color: #000000; }
     body.dark-theme .version-text { color: #cbd5e1; }
   </style>
@@ -70,74 +68,81 @@
   </div>
 
   <!-- 🏠 Main Menu -->
-  <div class="container py-5" id="main-menu" style="display: none; max-width: 800px;">
+  <div class="container py-5" id="main-menu" style="display: none; max-width: 900px;">
+    
+    <!-- ส่วนหัว: รูป Logo และชื่อร้าน -->
     <div class="text-center mb-5">
-      <h2 class="fw-bold"><i class="fa-solid fa-hospital text-primary me-2"></i> Clinic Management System</h2>
+      <div class="d-flex justify-content-center mb-3">
+        <img id="main-clinic-logo" src="" style="width: 100px; height: 100px; object-fit: cover; border-radius: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; background: #fff; padding: 5px;">
+      </div>
+      <h2 class="fw-bold text-dark" id="main-clinic-name"><i class="fa-solid fa-hospital text-primary me-2"></i> Clinic Management</h2>
       <div class="d-inline-flex align-items-center bg-white px-4 py-2 mt-2 rounded-pill shadow-sm border dark-bg-fix">
         <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
-        <span class="text-muted fw-bold small me-2">แพทย์/พนักงาน:</span> 
+        <span class="text-muted fw-bold small me-2">พนักงาน:</span> 
         <span id="display-staff-name" class="fw-bold text-primary">Admin</span>
       </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 justify-content-center">
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('booking.html')">
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">นัดหมาย & คิว</h6>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">นัดหมาย & คิว</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">จัดการตารางนัดหมาย</small>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('reception.html')">
           <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">ลงทะเบียน & คัดกรอง</h6>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">ลงทะเบียน & คัดกรอง</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">สร้างประวัติและซักถามอาการ</small>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('doctor.html')">
           <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-stethoscope"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">ห้องตรวจแพทย์</h6>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">ห้องตรวจแพทย์</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">บันทึกเวชระเบียน (EMR)</small>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('pos.html')">
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">ขาย & ชำระเงิน</h6>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">ขาย & ชำระเงิน</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">เปิดหน้าร้านและรับชำระเงิน</small>
         </button>
       </div>
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('inventory.html')">
-          <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">คลังยา (Inventory)</h6>
+          <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-box-open"></i></div>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">คลังสินค้า</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">จัดการสต็อกและรายการสินค้า</small>
         </button>
       </div>
-
-<!-- ปุ่มที่ 6 (รายงาน) -->
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('reports.html')">
-          <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-line"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">รายงาน (Reports)</h6>
+          <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-pie"></i></div>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">สถิติยอดขาย</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">ดูสรุปรายได้และบิลย้อนหลัง</small>
         </button>
       </div>
-
-      <!-- 🌟 ปุ่มที่ 7 ฐานข้อมูลคนไข้ (ต้องอยู่ก่อนแท็ก </div> ปิด row) -->
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100 h-100" onclick="openModule('patients_list.html')">
           <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
-          <h6 class="fw-bold mt-3 mb-1">ฐานข้อมูลคนไข้</h6>
+          <h6 class="fw-bold mt-3 mb-1 fs-5">ฐานข้อมูลคนไข้</h6>
+          <small class="text-muted" style="font-size: 0.8rem;">ค้นหาและจัดการข้อมูลคนไข้</small>
         </button>
       </div>
+    </div>
+  </div>
 
-    </div> <!-- 👈 นี่คือ </div> ปิดของ <div class="row g-4"> ต้องอยู่ล่างสุดเสมอ -->
-
- <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
+  <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
-    <span class="fw-bold version-text">Version 1.0.1</span>
+    <span class="fw-bold version-text">Version 1.0.2</span>
     <span class="mx-3 text-muted opacity-50">|</span>
     
-    <!-- 🌟 เพิ่ม id="btn-setting" ตรงนี้ -->
     <button id="btn-setting" class="btn btn-link text-secondary fw-bold p-0 text-decoration-none me-3" onclick="openModule('setting.html')" style="font-size: 1.05rem;">
-      <i class="fa-solid fa-gear me-1"></i> ตั้งค่า
+      <i class="fa-solid fa-gear me-1"></i> ตั้งค่าระบบ
     </button>
 
     <button class="btn btn-link text-danger fw-bold p-0 text-decoration-none" onclick="lockSystem()" style="font-size: 1.05rem;">
@@ -148,31 +153,48 @@
   <!-- Container สำหรับโหลดหน้าต่างๆ (Module) -->
   <div id="module-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8fafc; z-index: 1050; overflow-y: auto;"></div>
 
-<script>
+  <script>
     let currentPin = "";
     
-    // 1. ตรวจสอบตอนเปิดเว็บว่ามี Admin หรือยัง
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
+      loadGlobalClinicInfo(); // โหลดข้อมูลร้านค้ามาโชว์ที่หน้าแรก
     });
+
+    // โหลดชื่อคลินิกและรูปโลโก้มาแสดง
+    async function loadGlobalClinicInfo() {
+      try {
+        const res = await fetch('/api/clinic?t=' + new Date().getTime());
+        const data = await res.json();
+        if (data.status === 'success' && data.data) {
+          const c = data.data;
+          if (c.clinic_name) {
+            document.getElementById('main-clinic-name').innerText = c.clinic_name;
+            document.title = c.clinic_name;
+          }
+          if (c.logo_url) {
+            const logoImg = document.getElementById('main-clinic-logo');
+            logoImg.src = c.logo_url;
+            logoImg.style.display = 'block';
+          }
+        }
+      } catch (e) {}
+    }
 
     async function checkFirstSetup() {
       try {
-        console.log("กำลังตรวจสอบสถานะ Admin...");
         const res = await fetch('/api/check-setup?t=' + new Date().getTime());
         const data = await res.json();
         
         if (data.needsSetup === true) {
-          // ซ่อนหน้า Lock Screen ที่บังอยู่ออกไป
           document.getElementById('lock-screen').style.display = 'none'; 
-
           Swal.fire({
             title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
             html: `
               <p class="text-muted small">ระบบตรวจพบว่ายังไม่มีผู้ใช้งาน<br>กรุณาสร้างบัญชี Admin เพื่อเริ่มต้นใช้งานระบบ</p>
               <input type="text" id="setup_name" class="form-control mb-3 rounded-3" placeholder="ชื่อ - นามสกุล">
-              <input type="text" id="setup_pin" class="form-control mb-2 rounded-3 text-center fs-4 fw-bold" placeholder="ตั้งรหัส PIN 4 หลัก" maxlength="4" pattern="[0-9]*">
+              <input type="text" id="setup_pin" class="form-control mb-2 rounded-3 text-center fs-4 fw-bold" placeholder="ตั้งรหัส PIN 4 หลัก" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             `,
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -190,7 +212,6 @@
           }).then(async (result) => {
             if (result.isConfirmed) {
               Swal.fire({ title: 'กำลังสร้างระบบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-              
               const setupRes = await fetch('/api/setup-admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -199,23 +220,16 @@
               const setupData = await setupRes.json();
               
               if (setupData.status === 'success') {
-                Swal.fire({ 
-                  icon: 'success', title: 'ตั้งค่าสำเร็จ!', text: 'กรุณาใช้รหัส PIN เพื่อเข้าสู่ระบบได้เลยครับ', confirmButtonText: 'ตกลง' 
-                }).then(() => {
-                  window.location.reload(); 
-                });
+                Swal.fire({ icon: 'success', title: 'ตั้งค่าสำเร็จ!', text: 'กรุณาใช้รหัส PIN เพื่อเข้าสู่ระบบได้เลยครับ', confirmButtonText: 'ตกลง' }).then(() => { window.location.reload(); });
               } else {
                 Swal.fire('เกิดข้อผิดพลาด', setupData.message, 'error');
               }
             }
           });
         }
-      } catch(e) {
-        console.error('Error checking setup', e);
-      }
+      } catch(e) {}
     }
 
-    // 2. ระบบกดรหัส PIN
     function pressNum(val) {
       if(val === 'clear') currentPin = "";
       else if(val === 'del') currentPin = currentPin.slice(0, -1);
@@ -226,11 +240,7 @@
       if(currentPin.length === 4) {
         Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: currentPin })
-        })
+        fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: currentPin }) })
         .then(async res => {
           if (!res.ok) throw new Error(`เซิร์ฟเวอร์อาจกำลังรีสตาร์ท โปรดรอสักครู่`);
           return res.json();
@@ -239,30 +249,25 @@
           if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
             
-            // 🌟 สำคัญ: บันทึก ID ของคนที่ล็อกอินไว้ในระบบ เพื่อเอาไปเช็คไม่ให้ลบตัวเอง
             sessionStorage.setItem('currentUserId', data.user.id); 
-
             document.getElementById('display-staff-name').innerText = data.user.name;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'block';
             document.getElementById('footer-menu').style.display = 'flex'; 
             
             if(data.user.permissions) applyPermissions(data.user.permissions);
-
           } else {
             Swal.fire({ icon: 'error', title: 'รหัสผิดพลาด', text: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
           }
           currentPin = ""; updatePinDisplay();
         })
         .catch(err => {
-          console.error("Login Error:", err);
           Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
           currentPin = ""; updatePinDisplay();
         });
       }
     }
 
-    // 3. ฟังก์ชันปลดล็อกปุ่มตามสิทธิ์
     function applyPermissions(perms) {
       if (!perms) return; 
       let p = perms.toUpperCase();
@@ -288,22 +293,15 @@
         }
       }
 
-      // 🌟 จัดการปุ่ม "ตั้งค่า" (ให้มองเห็นได้เฉพาะ ADMIN)
       let settingBtn = document.getElementById('btn-setting');
       if (settingBtn) {
-        if (p.includes('ADMIN')) {
-          settingBtn.style.display = 'inline-block';
-        } else {
-          settingBtn.style.display = 'none';
-        }
+        settingBtn.style.display = p.includes('ADMIN') ? 'inline-block' : 'none';
       }
     }
 
     function updatePinDisplay() {
       let html = "";
-      for(let i=0; i<4; i++) {
-        html += i < currentPin.length ? '<div class="pin-dot filled"></div>' : '<div class="pin-dot"></div>';
-      }
+      for(let i=0; i<4; i++) { html += i < currentPin.length ? '<div class="pin-dot filled"></div>' : '<div class="pin-dot"></div>'; }
       document.getElementById('pin-display').innerHTML = html;
     }
 
@@ -351,8 +349,10 @@
       if(window.bookingInterval) clearInterval(window.bookingInterval);
       if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
       if(window.posQueueInterval) clearInterval(window.posQueueInterval);
+      
       document.getElementById('module-container').innerHTML = '';
       document.getElementById('module-container').style.display = 'none';
+      loadGlobalClinicInfo(); // อัปเดตโลโก้เผื่อตั้งค่ามาใหม่
     }
   </script>
 </body>
