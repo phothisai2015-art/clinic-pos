@@ -352,7 +352,12 @@
       }
     }
 
-    async function openModule(pageUrl) {
+   async function openModule(pageUrl) {
+      // ✅ 1. เคลียร์ Interval ของ Module เดิมทิ้งก่อนโหลดหน้าใหม่ (ป้องกัน API Spam)
+      if(window.bookingInterval) { clearInterval(window.bookingInterval); window.bookingInterval = null; }
+      if(window.emrQueueInterval) { clearInterval(window.emrQueueInterval); window.emrQueueInterval = null; }
+      if(window.posQueueInterval) { clearInterval(window.posQueueInterval); window.posQueueInterval = null; }
+
       Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       try {
         const response = await fetch('/' + pageUrl);
