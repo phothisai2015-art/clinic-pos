@@ -204,11 +204,16 @@
 
     async function checkFirstSetup() {
       try {
-        const res = await fetch('/api/check-setup');
+        console.log("กำลังตรวจสอบสถานะ Admin...");
+        // 🌟 เติม ?t=... เพื่อบังคับให้เบราว์เซอร์ดึงข้อมูลใหม่เสมอ ป้องกันปัญหา Cache
+        const res = await fetch('/api/check-setup?t=' + new Date().getTime());
         const data = await res.json();
         
-        // ถ้าเป็นแอปเปล่าๆ (ไม่มีพนักงานเลย)
-        if (data.needsSetup) {
+        console.log("ผลลัพธ์จาก Server:", data); // ดูค่าใน F12
+
+        // ถ้าพบว่าไม่มีพนักงานเลย ให้แสดงป๊อปอัป
+        if (data.needsSetup === true) {
+          console.log("ไม่มีพนักงาน -> แสดงป๊อปอัปสร้าง Admin");
           Swal.fire({
             title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
             html: `
@@ -252,6 +257,8 @@
               }
             }
           });
+        } else if (data.status === 'error') {
+          console.error("เกิดข้อผิดพลาดจากฐานข้อมูล:", data.message);
         }
       } catch(e) {
         console.error('Error checking setup', e);
