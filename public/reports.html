@@ -1,0 +1,131 @@
+<style>
+  .dashboard-card { background: #fff; border-radius: 20px; padding: 25px; border: 1px solid #e2e8f0; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
+  .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
+  .dash-icon-box { width: 60px; height: 60px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 24px; margin-bottom: 15px; }
+  
+  .value-text { font-size: 2rem; font-weight: 900; color: #1e293b; margin: 0; font-family: monospace; }
+  
+  body.dark-theme .dashboard-card { background: #1e293b; border-color: #334155; }
+  body.dark-theme .value-text { color: #f1f5f9; }
+</style>
+
+<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-secondary m-0"><i class="fa-solid fa-chart-line me-2"></i> รายงานภาพรวม (Dashboard)</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- กล่องสรุปยอดขายวันนี้ -->
+    <div class="col-md-4">
+      <div class="dashboard-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="dash-icon-box bg-success bg-opacity-10 text-success"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <h6 class="text-muted fw-bold">ยอดรับชำระวันนี้ (บาท)</h6>
+            <h2 class="value-text" id="dash_revenue">0.00</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- กล่องสรุปคิววันนี้ -->
+    <div class="col-md-4">
+      <div class="dashboard-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="dash-icon-box bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-users"></i></div>
+            <h6 class="text-muted fw-bold">คิวนัดหมาย / Walk-in วันนี้</h6>
+            <h2 class="value-text" id="dash_appt">0</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- กราฟรายได้ 7 วันย้อนหลัง -->
+  <div class="row g-4 flex-grow-1" style="min-height: 400px;">
+    <div class="col-md-8 h-100">
+      <div class="dashboard-card h-100 d-flex flex-column">
+        <h5 class="fw-bold text-primary mb-4"><i class="fa-solid fa-chart-bar me-2"></i> แนวโน้มยอดขาย 7 วันล่าสุด</h5>
+        <div class="flex-grow-1 position-relative" style="min-height: 300px;">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var revChart = null;
+
+  function initDashboard() {
+    loadDashboardData();
+  }
+  initDashboard();
+
+  async function loadDashboardData() {
+    Swal.fire({ title: 'กำลังสรุปข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      const res = await fetch('/api/reports/dashboard');
+      const data = await res.json();
+      
+      if(data.status === 'success') {
+        // อัปเดตตัวเลข
+        document.getElementById('dash_revenue').innerText = data.today_revenue.toLocaleString('th-TH', {minimumFractionDigits: 2});
+        document.getElementById('dash_appt').innerText = data.today_appt;
+        
+        // วาดกราฟ
+        renderChart(data.chart_data);
+        Swal.close();
+      }
+    } catch(e) {
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลรายงานได้', 'error');
+    }
+  }
+
+  function renderChart(chartData) {
+    // นำข้อมูลที่เรียงจากใหม่ไปเก่า มาสลับให้เป็นซ้ายไปขวา (เก่าไปใหม่)
+    chartData.reverse(); 
+    
+    const labels = chartData.map(d => {
+      const date = new Date(d.bill_date);
+      return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+    });
+    const revenues = chartData.map(d => d.revenue);
+
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    if (revChart) { revChart.destroy(); } // ลบกราฟเก่าออกก่อนวาดใหม่
+    
+    revChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'ยอดขาย (บาท)',
+          data: revenues,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#3b82f6',
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#e2e8f0', drawBorder: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+</script>

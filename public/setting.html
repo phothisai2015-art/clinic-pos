@@ -204,7 +204,6 @@
     } else {
       document.querySelectorAll('.perm-cb:checked').forEach(cb => permissions.push(cb.value));
     }
-
     if(permissions.length === 0) return Swal.fire('สิทธิ์ไม่ถูกต้อง', 'กรุณาเลือกสิทธิ์อย่างน้อย 1 เมนู', 'warning');
 
     let payload = { name, pin, role, permissions: permissions.join(',') };
@@ -214,11 +213,17 @@
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
-      await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-      userModal.hide();
-      loadUsers();
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+      const response = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+      const data = await response.json(); // อ่านค่ากลับมาจาก Server
+      
+      if(data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        userModal.hide();
+        loadUsers();
+      } else {
+        Swal.fire('ข้อผิดพลาด', data.message, 'error'); // โชว์แจ้งเตือนถ้า PIN ซ้ำ
+      }
+    } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
   }
 
   async function deleteUser(id, name) {
