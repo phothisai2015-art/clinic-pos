@@ -70,7 +70,7 @@
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header bg-info text-white rounded-top-4 py-3">
         <h5 class="modal-title fw-bold"><i class="fa-solid fa-hand-holding-medical me-2"></i> เลือกรับบริการ & จุดคัดกรองเบื้องต้น</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" onclick="closeScreeningModal()"></button>
       </div>
       <div class="modal-body p-4 bg-light bg-opacity-50">
         <div class="row g-4">
@@ -390,6 +390,21 @@
     displayEl.innerText = "ปรึกษาแพทย์ / ตรวจทั่วไป";
     displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
   }
+  
+  // 🌟 ฟังก์ชันบังคับปิดป๊อปอัพและเคลียร์ฉากหลังที่ค้าง
+  function closeScreeningModal() {
+    if (screeningModalInstance) {
+      screeningModalInstance.hide();
+    }
+    // บังคับลบฉากหลังสีดำที่อาจค้างอยู่
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 200);
+  }
+  
 
   // --- ยืนยันการส่งตัว (Submit) ---
   async function submitScreening() {
@@ -415,7 +430,6 @@
     Swal.fire({ title: 'กำลังจัดการคิว...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
-      // ถ้าเลือก "ซื้อใหม่" (โปรโมชั่น หรือสินค้าทั่วไป) ให้ระบบมอบคอร์ส/หักสต็อกล่วงหน้า ก่อนหมอตรวจ
       if(actionVal && actionVal.startsWith('NEW_')) {
          let productId = actionVal.replace('NEW_', '');
          await fetch(`/api/patients/${currentHN}/assign-promo`, { 
@@ -425,7 +439,6 @@
          });
       }
 
-      // ส่งคิวไปห้องตรวจแพทย์
       await fetch('/api/queue/send-doctor', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -434,8 +447,8 @@
       
       Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       
-      // ปิด Modal และล้างฟอร์ม
-      screeningModalInstance.hide();
+      // 🌟 เรียกใช้ฟังก์ชันปิดที่อัปเดตใหม่
+      closeScreeningModal();
       clearForm();
       
       // เคลียร์ Vitals form
@@ -448,6 +461,7 @@
 
     } catch (e) {
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
+      closeScreeningModal(); // ถ้า Error ก็ต้องสั่งปิดด้วย
     }
   }
 
