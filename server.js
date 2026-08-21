@@ -15,31 +15,38 @@ app.use(express.static(path.join(__dirname, 'public')));
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) { fs.mkdirSync(uploadDir, { recursive: true }); }
 
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, () => {});
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, () => {});
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, () => {});
+// ✅ เพิ่มฟังก์ชันช่วยกรอง Error แจ้งเตือนเฉพาะเรื่องที่ผิดปกติจริงๆ
+const alterLog = (err) => { 
+  if (err && !err.message.includes('duplicate column')) {
+    console.warn('⚠️ Database Warning:', err.message); 
+  }
+};
+
+db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, alterLog);
+db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, alterLog);
+db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, alterLog);
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS patient_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT, photo_type TEXT, image_path TEXT, created_at TEXT)`);
-  db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, () => {});
-  db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, () => {});
-  db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, () => {});
-  db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, () => {});
-  db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, () => {});
-  db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, () => {});
-  db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, () => {});
-  db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, () => {});
-  db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, () => {});
+  db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, alterLog);
+  db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, alterLog);
+  db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, alterLog);
+  db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, alterLog);
+  db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, alterLog);
+  db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, alterLog);
+  db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, alterLog);
+  db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, alterLog);
+  db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, alterLog);
   
-  db.run(`ALTER TABLE emr_logs ADD COLUMN bp TEXT`, () => {});
-  db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, () => {});
-  db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, () => {});
-  db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, () => {});
+  db.run(`ALTER TABLE emr_logs ADD COLUMN bp TEXT`, alterLog);
+  db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, alterLog);
+  db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, alterLog);
+  db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, alterLog);
   
-  db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, () => {});
-  db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, () => {});
-  db.run(`ALTER TABLE clinics ADD COLUMN bank_account_name TEXT`, () => {});
-  db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, () => {});
+  db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, alterLog);
+  db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, alterLog);
+  db.run(`ALTER TABLE clinics ADD COLUMN bank_account_name TEXT`, alterLog);
+  db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, alterLog);
   
   db.get("SELECT count(*) as count FROM clinics", (err, row) => {
     if (row && row.count === 0) {
@@ -135,8 +142,18 @@ app.put('/api/courses/:id/deduct', (req, res) => {
   const deductVal = parseFloat(req.body.deduct_amount);
   db.get(`SELECT product_id FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
     if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
+    
     db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [deductVal, req.params.id], function(err2) {
-      db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err3) { res.json({ status: 'success' }); });
+      // ✅ เช็คประเภทสินค้าก่อนหักสต็อก ป้องกันสต็อกคอร์ส/โปรโมชั่นติดลบ
+      db.get(`SELECT type FROM products WHERE id = ?`, [course.product_id], (err3, prod) => {
+        if (prod && (prod.type === 'INJECTABLE' || prod.type === 'MEDICINE' || prod.type === 'SKINCARE')) {
+          db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err4) { 
+            res.json({ status: 'success' }); 
+          });
+        } else {
+          res.json({ status: 'success' }); // หักแค่สิทธิ์คอร์ส ไม่หักสต็อกโกดัง
+        }
+      });
     });
   });
 });
@@ -266,21 +283,28 @@ app.get('/api/pos/bill/:hn', (req, res) => {
   });
 });
 
-// 🌟 API รับชำระเงิน POS (Async)
+// 🌟 API รับชำระเงิน POS (Async + Transaction & Validation)
 app.put('/api/pos/pay/:hn', async (req, res) => {
   const { sales_rep, payments, new_items } = req.body; 
-  const hn = req.params.hn; const today = new Date().toISOString().split('T')[0];
+  const hn = req.params.hn; 
+  const today = new Date().toISOString().split('T')[0];
 
   try {
+    await dbRun("BEGIN TRANSACTION"); // ✅ ป้องกันข้อมูลพังหาก Error กลางทาง
+
     if (payments && payments.length > 0) {
       for (let p of payments) {
         let bill = await dbGet(`SELECT * FROM patient_bills WHERE id = ?`, [p.bill_id]);
         if (bill) {
-          let newPaid = bill.paid_amount + p.pay_amount;
+          // ✅ ป้องกันการกรอกตัวเลขจ่ายเกินยอดคงเหลือ (Overpay Validation)
+          let balance = bill.total_price - bill.paid_amount;
+          let safePayAmount = p.pay_amount > balance ? balance : p.pay_amount;
+
+          let newPaid = bill.paid_amount + safePayAmount;
           let newStatus = newPaid >= bill.total_price ? 'PAID' : 'PARTIAL';
           await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ? WHERE id = ?`, [newPaid, newStatus, p.bill_id]);
 
-          if ((bill.type === 'MEDICINE' || bill.type === 'SKINCARE') && bill.stock_deducted === 0 && p.pay_amount > 0) {
+          if ((bill.type === 'MEDICINE' || bill.type === 'SKINCARE') && bill.stock_deducted === 0 && safePayAmount > 0) {
             await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [bill.qty, bill.product_id]);
             await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [p.bill_id]);
           }
@@ -291,9 +315,11 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
     if (new_items && new_items.length > 0) {
       for (let item of new_items) {
         let total = item.qty * item.price;
-        let newStatus = item.pay_amount >= total ? 'PAID' : 'PARTIAL';
+        let safePayAmount = item.pay_amount > total ? total : item.pay_amount; // ✅ ป้องกัน Overpay
+        let newStatus = safePayAmount >= total ? 'PAID' : 'PARTIAL';
+        
         let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [hn, today, item.name, item.type, item.product_id, item.qty, total, item.pay_amount, newStatus, 0]);
+          [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0]);
           
         if (item.is_new_course) {
            let prod = await dbGet(`SELECT bundle_items FROM products WHERE id = ?`, [item.product_id]);
@@ -303,7 +329,7 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
            } else {
               await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, item.product_id, item.qty]);
            }
-        } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && item.pay_amount > 0) {
+        } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && safePayAmount > 0) {
            await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [item.qty, item.product_id]);
            await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [insertRes.lastID]);
         }
@@ -311,8 +337,11 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
     }
 
     await dbRun(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn]);
+    
+    await dbRun("COMMIT"); // ✅ ยืนยันการบันทึกเมื่อทุกอย่างสมบูรณ์
     res.json({ status: 'success' });
   } catch (err) {
+    await dbRun("ROLLBACK").catch(() => {}); // ✅ ย้อนกลับข้อมูลทั้งหมดถ้ามี Error
     res.status(500).json({ status: 'error', message: err.message });
   }
 });

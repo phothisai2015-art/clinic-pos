@@ -5,11 +5,15 @@ console.log('กำลังล้างข้อมูลระบบ...');
 
 // 1. ลบไฟล์ฐานข้อมูล (clinic.db)
 const dbPath = path.join(__dirname, 'clinic.db');
-if (fs.existsSync(dbPath)) {
-  fs.unlinkSync(dbPath);
-  console.log('✅ ลบฐานข้อมูล (clinic.db) สำเร็จ');
-} else {
-  console.log('⚠️ ไม่พบไฟล์ฐานข้อมูล (อาจจะถูกลบไปแล้ว)');
+try {
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    console.log('✅ ลบฐานข้อมูล (clinic.db) สำเร็จ');
+  } else {
+    console.log('⚠️ ไม่พบไฟล์ฐานข้อมูล (อาจจะถูกลบไปแล้ว)');
+  }
+} catch (err) {
+  console.error('❌ ไม่สามารถลบฐานข้อมูลได้! โปรดปิดเซิร์ฟเวอร์ (Ctrl+C) ใน Terminal ก่อนรันคำสั่งนี้ครับ', err.message);
 }
 
 // 2. ลบรูปภาพทั้งหมดในโฟลเดอร์ public/uploads
