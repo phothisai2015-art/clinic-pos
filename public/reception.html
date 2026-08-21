@@ -54,7 +54,6 @@
             <div class="col-12 text-end mt-4 pt-3 border-top">
               <button type="button" class="btn btn-light rounded-pill px-4 me-2 fw-bold shadow-sm" onclick="clearForm()">เคลียร์ข้อมูล</button>
               <button type="submit" class="btn btn-primary rounded-pill px-4 me-2 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติ</button>
-              <!-- 🌟 เปลี่ยนปุ่มตรงนี้ให้เปิด Modal -->
               <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="openScreeningModal()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> เลือกโปรโมชั่น / ส่งตรวจ</button>
             </div>
           </div>
@@ -64,7 +63,7 @@
   </div>
 </div>
 
-<!-- 🌟 Modal สำหรับเลือกโปรโมชั่นและซักประวัติ -->
+<!-- 🌟 Modal เลือกโปรโมชั่น -->
 <div class="modal fade" id="screeningModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -74,7 +73,7 @@
       </div>
       <div class="modal-body p-4 bg-light bg-opacity-50">
         <div class="row g-4">
-          <!-- 📦 ฝั่งซ้าย: เลือกบริการ (Tabs + Cards) -->
+          <!-- 📦 ฝั่งซ้าย: เลือกบริการ -->
           <div class="col-lg-8 border-end">
             <h6 class="fw-bold text-secondary mb-3">กรุณาเลือกรายการที่คนไข้ต้องการรับบริการ</h6>
             <ul class="nav nav-pills nav-pills-custom mb-3" id="serviceTabs">
@@ -84,11 +83,8 @@
             </ul>
 
             <div class="custom-scrollbar px-2" style="height: 420px; overflow-y: auto;">
-              <!-- กล่องโปรโมชั่น -->
               <div id="tab-promo" class="row g-3"></div>
-              <!-- กล่องสินค้าทั่วไป -->
               <div id="tab-general" class="row g-3" style="display:none;"></div>
-              <!-- กล่องคอร์สคงเหลือ -->
               <div id="tab-active" class="row g-3" style="display:none;"></div>
             </div>
           </div>
@@ -208,10 +204,7 @@
     } catch(e) {}
   }
 
-  // ==========================================
-  // 🌟 ระบบ Modal เลือกโปรโมชั่น & คัดกรอง
-  // ==========================================
-// 🌟 1. อัปเดตฟังก์ชันเปิด Modal (เพิ่ม Delay ป้องกันฉากหลังชนกัน)
+  // 🌟 เปิด Modal พร้อมย้าย Element ออกมาที่ body
   async function openScreeningModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
 
@@ -230,23 +223,29 @@
       renderGeneralCards();
       renderActiveCourses();
       
-      if (!screeningModalInstance) {
-        screeningModalInstance = new bootstrap.Modal(document.getElementById('screeningModal'));
+      // 🌟 ย้าย Modal ออกมาที่ document.body เพื่อไม่ให้ z-index ของ #module-container ทับ
+      const modalEl = document.getElementById('screeningModal');
+      if (modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
       }
       
-      // 🌟 ปิด Loading แล้ว "หน่วงเวลา 400ms" ค่อยเปิดป๊อปอัป
+      let existingModal = bootstrap.Modal.getInstance(modalEl);
+      if (existingModal) {
+        existingModal.dispose();
+      }
+      screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      
       Swal.close();
       setTimeout(() => {
         screeningModalInstance.show();
         switchServiceTab('promo');
-      }, 400); 
+      }, 200);
 
     } catch (e) {
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
     }
   }
 
-  // --- สลับแท็บ ---
   function switchServiceTab(tabName) {
     document.querySelectorAll('.nav-pills-custom .nav-link').forEach(el => el.classList.remove('active'));
     document.getElementById(`tabbtn-${tabName}`).classList.add('active');
@@ -258,7 +257,6 @@
     document.getElementById(`tab-${tabName}`).style.display = 'flex';
   }
 
-  // --- วาดการ์ดโปรโมชั่น ---
   function renderPromoCards() {
     const container = document.getElementById('tab-promo');
     let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
@@ -298,10 +296,9 @@
     container.innerHTML = html;
   }
 
-  // --- วาดการ์ดสินค้าทั่วไป (ไม่จัดเซ็ต) ---
   function renderGeneralCards() {
     const container = document.getElementById('tab-general');
-    let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE'); // แสดงเฉพาะหัตถการหรือกลุ่มฉีด
+    let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE');
     
     if(generals.length === 0) {
       container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลสินค้าทั่วไปที่ให้บริการได้</div>`;
@@ -326,7 +323,6 @@
     container.innerHTML = html;
   }
 
-  // --- วาดการ์ดคอร์สคงเหลือของคนไข้ ---
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
     let activeCourses = allCoursesForScreening.filter(c => (c.total_qty - c.used_qty) > 0);
@@ -358,22 +354,17 @@
     container.innerHTML = html;
   }
 
-  // --- ระบบกดเลือกการ์ด ---
   function selectService(actionVal, actionName) {
     let currentVal = document.getElementById('selected_action_val').value;
     
-    // ถ้ากดอันเดิมซ้ำ ให้ยกเลิกการเลือก (กลับไปเป็นปรึกษาแพทย์)
     if (currentVal === actionVal) {
       resetSelection();
     } else {
-      // ลบ highlight เดิมออก
       document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
       
-      // ใส่ highlight อันใหม่
       let cardEl = document.getElementById(`card_${actionVal}`);
       if(cardEl) cardEl.classList.add('selected');
 
-      // อัปเดต Display
       document.getElementById('selected_action_val').value = actionVal;
       let displayEl = document.getElementById('selected_service_display');
       displayEl.innerText = actionName;
@@ -390,22 +381,18 @@
     displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
   }
   
-  // 🌟 ฟังก์ชันบังคับปิดป๊อปอัพและเคลียร์ฉากหลังที่ค้าง
   function closeScreeningModal() {
     if (screeningModalInstance) {
       screeningModalInstance.hide();
     }
-    // บังคับลบฉากหลังสีดำที่อาจค้างอยู่
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-    }, 200);
+    }, 150);
   }
-  
 
- // 🌟 2. อัปเดตฟังก์ชันตอนกด "ส่งเข้าห้องตรวจ" (เปลี่ยน Loading ไปไว้ที่ปุ่มแทน)
   async function submitScreening() {
     let actionVal = document.getElementById('selected_action_val').value;
     let selectedText = document.getElementById('selected_service_display').innerText;
@@ -425,11 +412,12 @@
       notes: finalNote.join(' | ')
     };
 
-    // 🌟 เปลี่ยนปุ่มให้เป็นสถานะกำลังโหลด (ป้องกันการคลิกซ้ำ และไม่ให้ฉากหลังตีกัน)
     let btn = document.querySelector('#screeningModal .btn-info');
-    let originalBtnText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...';
-    btn.disabled = true;
+    let originalBtnText = btn ? btn.innerHTML : '';
+    if(btn) {
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...';
+      btn.disabled = true;
+    }
     
     try {
       if(actionVal && actionVal.startsWith('NEW_')) {
@@ -447,13 +435,13 @@
         body: JSON.stringify(payload) 
       });
       
-      // 🌟 ปิด Modal เคลียร์ฟอร์ม และคืนค่าปุ่ม
       closeScreeningModal();
       clearForm();
-      btn.innerHTML = originalBtnText;
-      btn.disabled = false;
+      if(btn) {
+        btn.innerHTML = originalBtnText;
+        btn.disabled = false;
+      }
       
-      // เคลียร์ช่องกรอก Vitals
       document.getElementById('scr_sys').value = '';
       document.getElementById('scr_dia').value = '';
       document.getElementById('scr_pulse').value = '';
@@ -461,14 +449,15 @@
       document.getElementById('scr_height').value = '';
       document.getElementById('scr_note').value = '';
       
-      // 🌟 โชว์แจ้งเตือนสำเร็จหลังจาก Modal ปิดไปแล้ว
       setTimeout(() => {
         Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-      }, 400);
+      }, 300);
 
     } catch (e) {
-      btn.innerHTML = originalBtnText;
-      btn.disabled = false;
+      if(btn) {
+        btn.innerHTML = originalBtnText;
+        btn.disabled = false;
+      }
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
     }
   }
