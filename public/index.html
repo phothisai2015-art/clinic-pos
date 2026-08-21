@@ -196,37 +196,65 @@
       }
     }
 
-    // ซ่อนแถบเมนูด้านล่างตอนอยู่หน้า Lock Screen ตั้งแต่เริ่ม
+    // เมื่อเปิดหน้าเว็บมา ให้เช็คก่อนว่ามีพนักงานในระบบหรือยัง
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
+      checkFirstSetup();
     });
 
-    // ฟังก์ชันเปิด/ปิดปุ่มตามสิทธิ์ (Role-based Access)
-    function applyPermissions(perms) {
-      let p = perms.toUpperCase();
-      
-      // 🌟 อัปเดต Map ปุ่มให้ครบ 7 ปุ่ม
-      let buttons = {
-        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   // 1. นัดหมาย
-        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], // 2. Reception
-        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], // 3. Doctor
-        'POS': document.querySelectorAll('.menu-card-btn')[3],       // 4. ขาย & ชำระเงิน
-        'STOCK': document.querySelectorAll('.menu-card-btn')[4],     // 5. คลังยา
-        'DASH': document.querySelectorAll('.menu-card-btn')[5],      // 6. รายงาน
-        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[6]  // 🌟 7. ฐานข้อมูลคนไข้ (ปุ่มใหม่)
-      };
-
-      for (const [key, btn] of Object.entries(buttons)) {
-        if (btn) {
-          // ถ้าคีย์มีคำว่า PATIENT ให้รวบใช้สิทธิ์ PATIENT เดียวกัน
-          let checkKey = key.includes('PATIENT') ? 'PATIENT' : key;
-          
-          if (p.includes('ADMIN') || p.includes(checkKey)) {
-            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
-          } else {
-            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
-          }
+    async function checkFirstSetup() {
+      try {
+        const res = await fetch('/api/check-setup');
+        const data = await res.json();
+        
+        // ถ้าเป็นแอปเปล่าๆ (ไม่มีพนักงานเลย)
+        if (data.needsSetup) {
+          Swal.fire({
+            title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
+            html: `
+              <p class="text-muted small">ระบบตรวจพบว่ายังไม่มีผู้ใช้งาน<br>กรุณาสร้างบัญชี Admin เพื่อเริ่มต้นใช้งานระบบ</p>
+              <input type="text" id="setup_name" class="form-control mb-3 rounded-3" placeholder="ชื่อ - นามสกุล">
+              <input type="text" id="setup_pin" class="form-control mb-2 rounded-3 text-center fs-4 fw-bold" placeholder="ตั้งรหัส PIN 4 หลัก" maxlength="4" pattern="[0-9]*">
+            `,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            confirmButtonText: 'บันทึกข้อมูล',
+            confirmButtonColor: '#3b82f6',
+            preConfirm: () => {
+              const name = document.getElementById('setup_name').value.trim();
+              const pin = document.getElementById('setup_pin').value.trim();
+              if (!name || pin.length !== 4 || isNaN(pin)) {
+                Swal.showValidationMessage('กรุณากรอกชื่อ และตั้งรหัส PIN เป็นตัวเลข 4 หลัก');
+                return false;
+              }
+              return { name, pin };
+            }
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              Swal.fire({ title: 'กำลังสร้างระบบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+              
+              const setupRes = await fetch('/api/setup-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result.value)
+              });
+              const setupData = await setupRes.json();
+              
+              if (setupData.status === 'success') {
+                Swal.fire({ 
+                  icon: 'success', 
+                  title: 'ตั้งค่าสำเร็จ!', 
+                  text: 'กรุณาใช้รหัส PIN ที่คุณตั้งไว้ เพื่อเข้าสู่ระบบได้เลยครับ', 
+                  confirmButtonText: 'ตกลง' 
+                });
+              } else {
+                Swal.fire('เกิดข้อผิดพลาด', setupData.message, 'error');
+              }
+            }
+          });
         }
+      } catch(e) {
+        console.error('Error checking setup', e);
       }
     }
 
