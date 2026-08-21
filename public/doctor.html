@@ -548,6 +548,7 @@
     }
   }
 
+  // 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (จับคู่ EMR แต่ละรอบกับลำดับคิวประจำวันแบบ 1 ต่อ 1)
   async function loadEMRHistory(hn) {
     const tl = document.getElementById('emrTimeline'); 
     tl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div></div>';
@@ -558,22 +559,30 @@
       if (data.data.length === 0) return tl.innerHTML = '<div class="text-muted text-center py-4">ไม่มีประวัติการรักษา</div>';
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const emrsToday = data.data.filter(l => l.visit_date.startsWith(todayStr));
-      const apptsToday = appts.filter(a => a.date === todayStr);
+      
+      // เรียง EMR ของวันนี้ตามลำดับเวลาการตรวจ (เก่าไปใหม่)
+      const emrsTodayASC = data.data.filter(l => l.visit_date.startsWith(todayStr)).reverse();
+      // เรียงคิวของวันนี้ตามลำดับการเข้าตรวจ (เก่าไปใหม่)
+      const apptsTodayASC = appts.filter(a => a.date === todayStr);
 
       let html = '';
-      data.data.forEach((log, index) => {
+      data.data.forEach((log) => {
          const dateStr = new Date(log.visit_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
          let paymentBtn = '';
          
-         if (log.visit_date.startsWith(todayStr) && index === 0) {
-           const latestAppt = apptsToday[apptsToday.length - 1];
-           if (latestAppt && latestAppt.status === 'WAITING_PAYMENT') {
-             paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
-           } else if (latestAppt && latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) {
-             paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double"></i> ชำระเงินเสร็จสิ้น</button>`;
-           } else {
-             paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar"></i> ส่งไปชำระเงิน / รับยา</button>`;
+         if (log.visit_date.startsWith(todayStr)) {
+           // หา ลำดับรอบการตรวจ ของ EMR log นี้ในวันนี้ (รอบที่ 1, 2, 3...)
+           const emrIndex = emrsTodayASC.findIndex(e => e.id === log.id);
+           const matchedAppt = apptsTodayASC[emrIndex];
+
+           if (matchedAppt) {
+             if (matchedAppt.status === 'WAITING_PAYMENT') {
+               paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
+             } else if (matchedAppt.status === 'PAID') {
+               paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น</button>`;
+             } else if (matchedAppt.status === 'COMPLETED' || matchedAppt.status === 'CHECKED_IN') {
+               paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา</button>`;
+             }
            }
          }
          
