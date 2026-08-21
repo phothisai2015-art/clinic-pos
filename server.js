@@ -302,4 +302,37 @@ app.post('/api/inventory', (req, res) => {
 app.put('/api/inventory/:id/stock', (req, res) => { db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id], () => res.json({status: 'success'})); });
 app.delete('/api/inventory/:id', (req, res) => { db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], () => res.json({status: 'success'})); });
 
+// ==========================================
+// ⚙️ API ระบบตั้งค่า (Settings - Users)
+// ==========================================
+app.get('/setting.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'setting.html')); });
+
+app.get('/api/users', (req, res) => {
+  db.all(`SELECT id, name, pin, role, permissions FROM users ORDER BY id ASC`, [], (err, rows) => {
+    res.json({ status: 'success', data: rows });
+  });
+});
+
+app.post('/api/users', (req, res) => {
+  const { name, pin, role, permissions } = req.body;
+  db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, ?, ?)`,
+    [pin, name, role, permissions], function(err) {
+      res.json({ status: 'success', user_id: this.lastID });
+  });
+});
+
+app.put('/api/users/:id', (req, res) => {
+  const { name, pin, role, permissions } = req.body;
+  db.run(`UPDATE users SET name=?, pin=?, role=?, permissions=? WHERE id=?`,
+    [name, pin, role, permissions, req.params.id], function(err) {
+      res.json({ status: 'success' });
+  });
+});
+
+app.delete('/api/users/:id', (req, res) => {
+  db.run(`DELETE FROM users WHERE id=?`, [req.params.id], function(err) {
+    res.json({ status: 'success' });
+  });
+}); 
+
 app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`); });
