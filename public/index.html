@@ -214,6 +214,7 @@
         // ถ้าพบว่าไม่มีพนักงานเลย ให้แสดงป๊อปอัป
         if (data.needsSetup === true) {
           console.log("ไม่มีพนักงาน -> แสดงป๊อปอัปสร้าง Admin");
+		  document.getElementById('lock-screen').style.display = 'none';
           Swal.fire({
             title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
             html: `
@@ -251,6 +252,9 @@
                   title: 'ตั้งค่าสำเร็จ!', 
                   text: 'กรุณาใช้รหัส PIN ที่คุณตั้งไว้ เพื่อเข้าสู่ระบบได้เลยครับ', 
                   confirmButtonText: 'ตกลง' 
+                }).then(() => {
+                  // 🌟 2. รีเฟรชหน้าเว็บ เพื่อให้กลับไปหน้า Lock Screen ให้เราล็อกอิน
+                  window.location.reload(); 
                 });
               } else {
                 Swal.fire('เกิดข้อผิดพลาด', setupData.message, 'error');
