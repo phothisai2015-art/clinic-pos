@@ -266,6 +266,14 @@
     pendingMeds = []; 
     activePromoInfo = null;
     currentSubItems = [];
+	
+	// 🌟 ปลดล็อกฟอร์มและรีเซ็ตปุ่มบันทึกเมื่อเลือกคนไข้ใหม่
+    let btnSave = document.getElementById('btn_save_emr');
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.className = 'btn btn-success w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
+      btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูลการตรวจ';
+    }
 
     document.getElementById('emr_med_list_display').value = ''; 
     document.getElementById('dynamicFormArea').style.opacity = '1'; 
@@ -464,10 +472,18 @@
     sel.value = ''; qtyInput.value = ''; sigInput.value = '';
   }
 
-// 🌟 อัปเดตฟังก์ชัน submitEMR() ให้ดึง Vitals ครบทุกค่า (BP, Pulse, Weight, Height)
+// 🌟 บล็อกการกดซ้ำ และล็อกฟอร์มทันทีที่บันทึกสำเร็จ
   async function submitEMR() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
+    let btnSave = document.getElementById('btn_save_emr');
+    if (btnSave.disabled) return; // 🛑 ป้องกันการกดซ้ำซ้อน
+
+    // 🛑 1) บล็อกปุ่มทันทีขณะกำลังบันทึก
+    btnSave.disabled = true;
+    let originalBtnHtml = btnSave.innerHTML;
+    btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังบันทึกข้อมูล...';
+
     let finalTxArray = [];
     let sys_symptoms = 'ตรวจทั่วไป'; 
     let sys_diagnosis = '-';
@@ -495,7 +511,11 @@
        if(details.length > 0) finalTxArray.push(`[รายละเอียด] ` + details.join(' | '));
 
     } else {
-       if (!document.getElementById('emr_symptoms').value) return Swal.fire('แจ้งเตือน', 'กรุณาระบุอาการแรกรับ (CC)', 'warning');
+       if (!document.getElementById('emr_symptoms').value) {
+         btnSave.disabled = false;
+         btnSave.innerHTML = originalBtnHtml;
+         return Swal.fire('แจ้งเตือน', 'กรุณาระบุอาการแรกรับ (CC)', 'warning');
+       }
        sys_symptoms = document.getElementById('emr_symptoms').value;
        sys_diagnosis = document.getElementById('emr_diagnosis').value || '-';
     }
@@ -504,13 +524,11 @@
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit} (${m.sig})`).join('\n'));
     }
 
-    // 🌟 Helper อ่านค่า Vitals จากหน้าจอ
     const getVitalVal = (id) => {
       let el = document.getElementById(id);
       return (el && el.innerText !== '-') ? el.innerText : '';
     };
 
-    // 🌟 อัปเดต Payload ให้ดึง BP, HR (pulse), W (weight), H (height) ส่งไปพร้อมกัน
     const payload = {
       patient_id: currentHN, 
       symptoms: sys_symptoms, 
@@ -523,12 +541,11 @@
       prescribed_meds: pendingMeds 
     };
 
-    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     try {
-      // 1. บันทึก EMR
+      // 2) ส่งข้อมูลบันทึก EMR
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
-      // 2. หักคอร์สตามจำนวนที่ทำจริงวันนี้
+      // 3) หักคอร์สตามจำนวนที่ทำจริงวันนี้
       if (isPromoModeActive) {
         let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
         for (let item of doneItems) {
@@ -542,19 +559,25 @@
 
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       
-      // 3. อัปเดตรายการประวัติย้อนหลังทันที
+      // 4) อัปเดตประวัติย้อนหลังทางขวามือ
       await loadEMRHistory(currentHN);
 
-      // 4. เคลียร์ช่องป้อนข้อมูลในฟอร์ม
-      pendingMeds = [];
-      document.getElementById('emr_med_list_display').value = '';
-      document.getElementById('emr_symptoms').value = '';
-      document.getElementById('emr_diagnosis').value = '';
-      if(document.getElementById('mc_area')) document.getElementById('mc_area').value = '';
-      if(document.getElementById('mc_setting')) document.getElementById('mc_setting').value = '';
+      // 🛑 5) ล็อกฟอร์มป้อนข้อมูลฝั่งซ้ายมือทันที (ป้องกันการกดบันทึกหรือหักคอร์สซ้ำ)
+      let formArea = document.getElementById('dynamicFormArea');
+      if (formArea) {
+        formArea.style.opacity = '0.5';
+        formArea.style.pointerEvents = 'none';
+      }
+
+      // 🛑 6) เปลี่ยนสถานะปุ่มเป็น "บันทึกข้อมูลเรียบร้อยแล้ว"
+      btnSave.disabled = true;
+      btnSave.className = 'btn btn-secondary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
+      btnSave.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> บันทึกข้อมูลเรียบร้อยแล้ว';
 
     } catch (err) { 
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error'); 
+      btnSave.disabled = false;
+      btnSave.innerHTML = originalBtnHtml;
     }
   }
 
