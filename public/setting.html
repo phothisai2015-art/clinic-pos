@@ -11,11 +11,10 @@
   .user-card { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .user-card:hover { border-color: #94a3b8; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.03); }
   
-  /* Permission Grid */
-  .perm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-  .perm-item { border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; background: #f8fafc; cursor: pointer; transition: 0.2s; }
-  .perm-item:hover { background: #eff6ff; border-color: #93c5fd; }
-  .form-check-input:checked + .form-check-label { font-weight: bold; color: #1d4ed8; }
+  /* Modern Permission UI (ไม่ซ้อนทับแน่นอน) */
+  .perm-box { border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 15px; background: #ffffff; cursor: pointer; transition: 0.2s; display: flex; align-items: center; height: 100%; }
+  .perm-box:hover { background: #eff6ff; border-color: #93c5fd; }
+  .perm-box input:checked + label { color: #1d4ed8 !important; }
 </style>
 
 <div class="container-fluid h-100" style="max-width: 1400px;">
@@ -34,7 +33,6 @@
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
       
-      <!-- 🌟 เพิ่มคำสั่งลบ Modal ทิ้งตอนกดออกจากหน้าตั้งค่า เพื่อคืนทรัพยากรระบบ -->
       <div class="settings-menu-item text-muted text-danger mt-auto border-top pt-3" style="position:absolute; bottom: 30px; width: calc(25% - 40px);" onclick="closeModule(); document.getElementById('userModal')?.remove();">
         <i class="fa-solid fa-arrow-right-from-bracket me-3 fs-5"></i> ออกจากการตั้งค่า
       </div>
@@ -56,7 +54,7 @@
   </div>
 </div>
 
-<!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน -->
+<!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน (UI ใหม่) -->
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -64,49 +62,91 @@
         <h5 class="modal-title fw-bold text-primary" id="userModalTitle"><i class="fa-solid fa-user-pen me-2"></i>สร้าง/แก้ไขพนักงาน</h5>
         <button type="button" class="btn-close" onclick="closeUserModal()"></button>
       </div>
-      <div class="modal-body p-4">
+      <div class="modal-body p-4 bg-light bg-opacity-50">
         <form id="userForm">
           <input type="hidden" id="u_id">
           
-          <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">ข้อมูลทั่วไป</h6>
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label>
-              <input type="text" id="u_name" class="form-control rounded-3" required>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small text-muted">PIN (ตัวเลข 4 หลัก) *</label>
-              <input type="text" id="u_pin" class="form-control rounded-3" maxlength="4" pattern="[0-9]{4}" required>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small text-muted">ตำแหน่ง (Role) *</label>
-              <select id="u_role" class="form-select rounded-3">
-                <option value="ADMIN">ผู้บริหาร (Admin)</option>
-                <option value="DOCTOR">แพทย์ (Doctor)</option>
-                <option value="STAFF">พนักงาน (Staff)</option>
-              </select>
+          <div class="bg-white p-3 rounded-4 shadow-sm border mb-4">
+            <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">ข้อมูลทั่วไป</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label>
+                <input type="text" id="u_name" class="form-control rounded-3 border-primary" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">PIN (ตัวเลข 4 หลัก) *</label>
+                <input type="text" id="u_pin" class="form-control rounded-3 border-primary text-center fw-bold" maxlength="4" pattern="[0-9]{4}" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">ตำแหน่ง (Role) *</label>
+                <select id="u_role" class="form-select rounded-3">
+                  <option value="ADMIN">ผู้บริหาร (Admin)</option>
+                  <option value="DOCTOR">แพทย์ (Doctor)</option>
+                  <option value="STAFF">พนักงาน (Staff)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">สิทธิ์การเข้าใช้งานเมนู</h6>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="perm_all" onchange="toggleAllPerms(this)">
-            <label class="form-check-label fw-bold text-danger">ผู้ดูแลระบบ (เข้าถึงได้ทุกเมนู)</label>
+          <div class="bg-white p-3 rounded-4 shadow-sm border">
+            <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">สิทธิ์การเข้าใช้งานเมนู</h6>
+            
+            <div class="form-check mb-3 bg-danger bg-opacity-10 p-3 rounded-3 border border-danger d-flex align-items-center">
+              <input class="form-check-input ms-1 me-3" type="checkbox" id="perm_all" onchange="toggleAllPerms(this)" style="transform: scale(1.3);">
+              <label class="form-check-label fw-bold text-danger m-0" for="perm_all">ผู้ดูแลระบบ (Admin) - เข้าถึงได้ทุกเมนูโดยอัตโนมัติ</label>
+            </div>
+            
+            <div class="row g-2">
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="BOOKING" id="cb_1">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_1">1. นัดหมาย & คิว</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_1" id="cb_2">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_2">2. ลงทะเบียน & คัดกรอง</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_2" id="cb_3">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_3">3. ห้องตรวจแพทย์</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="POS" id="cb_4">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_4">4. ขาย & ชำระเงิน (POS)</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="STOCK" id="cb_5">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_5">5. คลังยา (Inventory)</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="DASH" id="cb_6">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_6">6. รายงานยอดขาย (Reports)</label>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="perm-box">
+                  <input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_3" id="cb_7">
+                  <label class="form-check-label w-100 text-secondary fw-bold" for="cb_7">7. ฐานข้อมูลรายชื่อคนไข้</label>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="perm-grid">
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="BOOKING"> <span class="form-check-label">1. นัดหมาย & คิว</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="PATIENT_1"> <span class="form-check-label">2. ลงทะเบียน & คัดกรอง</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="PATIENT_2"> <span class="form-check-label">3. ห้องตรวจแพทย์</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="POS"> <span class="form-check-label">4. ขาย & ชำระเงิน</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="STOCK"> <span class="form-check-label">5. คลังยา (Inventory)</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="DASH"> <span class="form-check-label">6. รายงาน (Reports)</span></label>
-            <label class="perm-item form-check"><input class="form-check-input perm-cb" type="checkbox" value="PATIENT_3"> <span class="form-check-label">7. ฐานข้อมูลคนไข้</span></label>
-          </div>
+
         </form>
       </div>
-      <div class="modal-footer border-top-0 bg-light rounded-bottom-4 p-3">
+      <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeUserModal()">ยกเลิก</button>
-        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูลพนักงาน</button>
       </div>
     </div>
   </div>
@@ -132,11 +172,22 @@
     const list = document.getElementById('usersList');
     list.innerHTML = '';
     
+    // ดึง ID ของคนที่กำลังใช้งานระบบอยู่ (จาก Session)
+    const currentUserId = parseInt(sessionStorage.getItem('currentUserId'));
+
     allUsers.forEach(u => {
       let roleColor = u.role === 'ADMIN' ? 'danger' : (u.role === 'DOCTOR' ? 'info' : 'success');
       let isAllPerm = u.permissions.includes('ADMIN');
       let permBadge = isAllPerm ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill">เข้าถึงได้ทุกเมนู (Full Access)</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill">กำหนดสิทธิ์เฉพาะส่วน</span>`;
       
+      // 🌟 ดักจับ: ถ้าเป็น ID ของตัวเอง ให้เปลี่ยนปุ่มลบเป็นไอคอนห้าม
+      let deleteBtnHtml = '';
+      if (u.id === currentUserId) {
+        deleteBtnHtml = `<button class="btn btn-sm btn-light text-muted rounded-circle" title="บัญชีของคุณ" onclick="Swal.fire('แจ้งเตือน', 'ไม่สามารถลบบัญชีของตัวเองขณะกำลังใช้งานได้', 'warning')"><i class="fa-solid fa-ban"></i></button>`;
+      } else {
+        deleteBtnHtml = `<button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteUser(${u.id}, '${u.name}')"><i class="fa-solid fa-trash"></i></button>`;
+      }
+
       list.innerHTML += `
         <div class="user-card">
           <div class="d-flex align-items-center">
@@ -153,7 +204,7 @@
           </div>
           <div>
             <button class="btn btn-sm btn-outline-primary rounded-circle me-1" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteUser(${u.id}, '${u.name}')"><i class="fa-solid fa-trash"></i></button>
+            ${deleteBtnHtml}
           </div>
         </div>
       `;
@@ -166,11 +217,7 @@
 
   function openUserModal(id = null) {
     const modalEl = document.getElementById('userModal');
-    
-    // 🌟 พระเอกของเรา: ย้าย Modal ออกมาไว้ที่ชั้นนอกสุดของหน้าจอ เพื่อไม่ให้โดนฉากหลังสีดำบัง!
-    if (modalEl && modalEl.parentNode !== document.body) {
-      document.body.appendChild(modalEl);
-    }
+    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
 
     document.getElementById('userForm').reset();
     document.querySelectorAll('.perm-cb').forEach(cb => { cb.checked = false; cb.disabled = false; });
@@ -205,7 +252,6 @@
   function closeUserModal() {
     if(userModal) {
        userModal.hide();
-       // ล้างฉากหลังสีดำให้สะอาด เผื่อมีค้าง
        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
        document.body.classList.remove('modal-open');
        document.body.style.overflow = '';

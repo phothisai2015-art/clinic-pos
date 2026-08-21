@@ -130,13 +130,13 @@
 
     </div> <!-- 👈 นี่คือ </div> ปิดของ <div class="row g-4"> ต้องอยู่ล่างสุดเสมอ -->
 
-  <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
+ <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
     <span class="fw-bold version-text">Version 1.0.1</span>
     <span class="mx-3 text-muted opacity-50">|</span>
     
-    <!-- 🌟 ปุ่มตั้งค่าที่เพิ่มเข้ามา -->
-    <button class="btn btn-link text-secondary fw-bold p-0 text-decoration-none me-3" onclick="openModule('setting.html')" style="font-size: 1.05rem;">
+    <!-- 🌟 เพิ่ม id="btn-setting" ตรงนี้ -->
+    <button id="btn-setting" class="btn btn-link text-secondary fw-bold p-0 text-decoration-none me-3" onclick="openModule('setting.html')" style="font-size: 1.05rem;">
       <i class="fa-solid fa-gear me-1"></i> ตั้งค่า
     </button>
 
@@ -239,6 +239,9 @@
           if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
             
+            // 🌟 สำคัญ: บันทึก ID ของคนที่ล็อกอินไว้ในระบบ เพื่อเอาไปเช็คไม่ให้ลบตัวเอง
+            sessionStorage.setItem('currentUserId', data.user.id); 
+
             document.getElementById('display-staff-name').innerText = data.user.name;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'block';
@@ -259,7 +262,7 @@
       }
     }
 
-    // 3. ฟังก์ชันปลดล็อกปุ่มตามสิทธิ์ (ที่หาไม่เจอ ผมใส่มาให้แล้วครับ!)
+    // 3. ฟังก์ชันปลดล็อกปุ่มตามสิทธิ์
     function applyPermissions(perms) {
       if (!perms) return; 
       let p = perms.toUpperCase();
@@ -282,6 +285,16 @@
           } else {
             btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
           }
+        }
+      }
+
+      // 🌟 จัดการปุ่ม "ตั้งค่า" (ให้มองเห็นได้เฉพาะ ADMIN)
+      let settingBtn = document.getElementById('btn-setting');
+      if (settingBtn) {
+        if (p.includes('ADMIN')) {
+          settingBtn.style.display = 'inline-block';
+        } else {
+          settingBtn.style.display = 'none';
         }
       }
     }
