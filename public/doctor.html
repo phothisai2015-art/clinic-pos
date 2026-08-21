@@ -464,7 +464,7 @@
     sel.value = ''; qtyInput.value = ''; sigInput.value = '';
   }
 
-  // 🌟 บันทึก EMR + อัปเดตประวัติย้อนหลัง (ยังไม่ปิดคิว เพื่อให้หมอกดส่งชำระเงินได้)
+// 🌟 อัปเดตฟังก์ชัน submitEMR() ให้ดึง Vitals ครบทุกค่า (BP, Pulse, Weight, Height)
   async function submitEMR() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
@@ -504,12 +504,22 @@
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit} (${m.sig})`).join('\n'));
     }
 
+    // 🌟 Helper อ่านค่า Vitals จากหน้าจอ
+    const getVitalVal = (id) => {
+      let el = document.getElementById(id);
+      return (el && el.innerText !== '-') ? el.innerText : '';
+    };
+
+    // 🌟 อัปเดต Payload ให้ดึง BP, HR (pulse), W (weight), H (height) ส่งไปพร้อมกัน
     const payload = {
       patient_id: currentHN, 
       symptoms: sys_symptoms, 
       diagnosis: sys_diagnosis, 
       treatment_details: finalTxArray.filter(Boolean).join('\n\n'),
-      bp: document.getElementById('v_bp').innerText !== '-' ? document.getElementById('v_bp').innerText : '', 
+      bp: getVitalVal('v_bp'),
+      pulse: getVitalVal('v_pulse'),
+      weight: getVitalVal('v_weight'),
+      height: getVitalVal('v_height'),
       prescribed_meds: pendingMeds 
     };
 
@@ -518,7 +528,7 @@
       // 1. บันทึก EMR
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
-      // 2. หักคอร์สตามจำนวนที่ทำจริงวันนี้ (`used_today`)
+      // 2. หักคอร์สตามจำนวนที่ทำจริงวันนี้
       if (isPromoModeActive) {
         let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
         for (let item of doneItems) {
@@ -532,7 +542,7 @@
 
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       
-      // 3. 🌟 อัปเดตรายการประวัติย้อนหลังทันที โดยยังคงคิวคนไข้ไว้เพื่อรอส่งการเงิน
+      // 3. อัปเดตรายการประวัติย้อนหลังทันที
       await loadEMRHistory(currentHN);
 
       // 4. เคลียร์ช่องป้อนข้อมูลในฟอร์ม
