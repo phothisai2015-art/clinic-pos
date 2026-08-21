@@ -10,7 +10,6 @@
   .allergy-alert-box { background: #fff1f2; border-left: 5px solid #e11d48; border-radius: 12px; padding: 12px 20px; color: #9f1239; }
   .vitals-banner { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 15px; color: #0369a1; display: none; }
   
-  /* การ์ดรายการยิบย่อยในโปรโมชั่น */
   .sub-item-card { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; transition: 0.2s; position: relative; }
   .sub-item-card:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
   .sub-item-card.removed { opacity: 0.45; background: #f8fafc; border-style: dashed; }
@@ -465,6 +464,7 @@
     sel.value = ''; qtyInput.value = ''; sigInput.value = '';
   }
 
+  // 🌟 บันทึก EMR + อัปเดตประวัติย้อนหลัง (ยังไม่ปิดคิว เพื่อให้หมอกดส่งชำระเงินได้)
   async function submitEMR() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
@@ -515,8 +515,10 @@
 
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     try {
+      // 1. บันทึก EMR
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
+      // 2. หักคอร์สตามจำนวนที่ทำจริงวันนี้ (`used_today`)
       if (isPromoModeActive) {
         let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
         for (let item of doneItems) {
@@ -528,14 +530,19 @@
         }
       }
 
-      await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
-
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       
-      document.getElementById('dynamicFormArea').style.opacity = '0.5'; 
-      document.getElementById('dynamicFormArea').style.pointerEvents = 'none';
-      currentHN = '';
-      renderEmrQueue();
+      // 3. 🌟 อัปเดตรายการประวัติย้อนหลังทันที โดยยังคงคิวคนไข้ไว้เพื่อรอส่งการเงิน
+      await loadEMRHistory(currentHN);
+
+      // 4. เคลียร์ช่องป้อนข้อมูลในฟอร์ม
+      pendingMeds = [];
+      document.getElementById('emr_med_list_display').value = '';
+      document.getElementById('emr_symptoms').value = '';
+      document.getElementById('emr_diagnosis').value = '';
+      if(document.getElementById('mc_area')) document.getElementById('mc_area').value = '';
+      if(document.getElementById('mc_setting')) document.getElementById('mc_setting').value = '';
+
     } catch (err) { 
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error'); 
     }
@@ -587,6 +594,7 @@
     } catch(e) {}
   }
 
+  // 🌟 เมื่อกดส่งไปชำระเงิน จะทำการเปลี่ยนสถานะคิว ล้างหน้าจอ และรีเฟรชรายการคิวฝั่งซ้ายมือ
   async function sendToPayment(hn, btn) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ส่ง...'; 
     btn.disabled = true;
