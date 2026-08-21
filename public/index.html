@@ -14,6 +14,30 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
+  /* 🌟 เอฟเฟกต์จุดสีเขียวออนไลน์ (Pulse) */
+    .online-dot {
+      width: 12px;
+      height: 12px;
+      background-color: #10b981; /* สีเขียว */
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
     body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; transition: 0.3s; }
     body.dark-theme { background-color: #0f172a; color: #f1f5f9; }
     
@@ -162,21 +186,33 @@
       loadGlobalClinicInfo(); // โหลดข้อมูลร้านค้ามาโชว์ที่หน้าแรก
     });
 
-    // โหลดชื่อคลินิกและรูปโลโก้มาแสดง
+    // โหลดชื่อคลินิกและรูปโลโก้มาแสดง (พร้อมเปลี่ยนไอคอนบนแท็บเบราว์เซอร์)
     async function loadGlobalClinicInfo() {
       try {
         const res = await fetch('/api/clinic?t=' + new Date().getTime());
         const data = await res.json();
         if (data.status === 'success' && data.data) {
           const c = data.data;
+          
           if (c.clinic_name) {
             document.getElementById('main-clinic-name').innerText = c.clinic_name;
-            document.title = c.clinic_name;
+            // เปลี่ยนชื่อบนแท็บเบราว์เซอร์
+            document.title = c.clinic_name; 
           }
+          
           if (c.logo_url) {
             const logoImg = document.getElementById('main-clinic-logo');
             logoImg.src = c.logo_url;
             logoImg.style.display = 'block';
+
+            // 🌟 สร้างหรืออัปเดตไอคอน Favicon บนแท็บเบราว์เซอร์
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+              link = document.createElement('link');
+              link.rel = 'icon';
+              document.head.appendChild(link);
+            }
+            link.href = c.logo_url;
           }
         }
       } catch (e) {}
