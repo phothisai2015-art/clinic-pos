@@ -553,15 +553,83 @@
     } catch (err) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
   }
 
-  function checkInPatient(id, name) {
-    Swal.fire({ title: `ส่งคิว ${name}?`, text: "ระบบจะอัปเดตสถานะเป็น 'รอเข้าห้องตรวจ'", icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน Check-in', confirmButtonColor: '#0dcaf0' }).then(async (result) => {
+  // 🌟 ฟังก์ชัน Check-in พร้อมป๊อปอัปกรอก Vitals สไตล์หน้าจุดคัดกรอง
+  function checkInPatient(id) {
+    // ดึงข้อมูลนัดหมายเดิมมาแสดง
+    const appt = clinicAppointments.find(a => a.id === id);
+    if(!appt) return;
+
+    const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
+    const patientHN = appt.hn !== '-' ? appt.hn : 'ไม่มี HN';
+    const defaultNote = appt.note || '';
+
+    Swal.fire({
+      title: '<h5 class="fw-bold text-info m-0"><i class="fa-solid fa-stethoscope me-2"></i>จุดคัดกรองเบื้องต้น (Check-in)</h5>',
+      html: `
+        <div class="text-start mt-3">
+          <div class="mb-3 px-3 py-2 bg-light rounded border">
+            <span class="fw-bold text-primary">คนไข้:</span> ${patientName} <span class="badge bg-secondary ms-1">${patientHN}</span>
+          </div>
+          <h6 class="fw-bold text-muted small mb-2 border-bottom pb-2">ข้อมูล Vitals (คัดกรอง)</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="small text-muted mb-1">SYS / DIA (ความดัน)</label>
+              <div class="input-group input-group-sm">
+                <input id="swal_sys" type="number" class="form-control text-center" placeholder="SYS">
+                <span class="input-group-text bg-light border-0">/</span>
+                <input id="swal_dia" type="number" class="form-control text-center" placeholder="DIA">
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="small text-muted mb-1">Pulse (ชีพจร)</label>
+              <input id="swal_pulse" type="number" class="form-control form-control-sm text-center" placeholder="/min">
+            </div>
+            <div class="col-6">
+              <label class="small text-muted mb-1">น้ำหนัก (kg)</label>
+              <input id="swal_weight" type="number" class="form-control form-control-sm text-center" placeholder="kg">
+            </div>
+            <div class="col-6">
+              <label class="small text-muted mb-1">ส่วนสูง (cm)</label>
+              <input id="swal_height" type="number" class="form-control form-control-sm text-center" placeholder="cm">
+            </div>
+          </div>
+          <div class="mb-2">
+              <label class="small text-muted mb-1 fw-bold">ระบุอาการ / หมายเหตุที่จะส่งให้แพทย์</label>
+              <textarea id="swal_note" class="form-control" rows="2">${defaultNote}</textarea>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#0dcaf0',
+      width: '500px',
+      preConfirm: () => {
+        const sys = document.getElementById('swal_sys').value;
+        const dia = document.getElementById('swal_dia').value;
+        return {
+          bp: (sys || dia) ? `${sys}/${dia}` : '',
+          pulse: document.getElementById('swal_pulse').value,
+          weight: document.getElementById('swal_weight').value,
+          height: document.getElementById('swal_height').value,
+          notes: document.getElementById('swal_note').value
+        }
+      }
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'กำลังส่งข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-          await fetch(`/api/appointments/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'CHECKED_IN' }) });
-          Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าคิวเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+          await fetch(`/api/appointments/${id}/checkin`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(result.value)
+          });
+          
+          Swal.fire({ icon: 'success', title: 'ส่งคนไข้เข้าห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
           fetchAppointments(); 
-        } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
+        } catch(e) {
+          Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+        }
       }
     });
   }
