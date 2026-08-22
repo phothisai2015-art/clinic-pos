@@ -129,25 +129,20 @@
     renderPatientTable(filtered);
   }
 
-  // 🌟 ป๊อปอัปดูประวัติการรักษา
-// 🌟 ป๊อปอัปดูประวัติการรักษา (แก้ไขบั๊กกดซ้ำไม่ได้)
+// 🌟 ป๊อปอัปดูประวัติการรักษา (แก้ไขตัวกรองให้แม่นยำขึ้น ไม่ดึงคำขยะ)
   async function openHistoryModal(hn, name) {
-    // 🛑 ไม่ลบ Modal ทิ้งแล้ว แต่ใช้การย้ายและเคลียร์ฉากหลังแทน
     const modalEl = document.getElementById('historyModal');
     if (!modalEl) return;
     
-    // ย้าย Modal ออกมาที่ body เพื่อป้องกันซ้อนทับกัน
     if (modalEl.parentNode !== document.body) {
       document.body.appendChild(modalEl);
     }
     
-    // ค้นหาว่ามี Modal เดิมอยู่ไหม ถ้าไม่มีก็สร้างใหม่
     let modalInstance = bootstrap.Modal.getInstance(modalEl);
     if (!modalInstance) {
       modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
     }
     
-    // เคลียร์ฉากหลังสีดำที่อาจจะค้างอยู่
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
     
     document.getElementById('historyModalName').innerText = `${name} (${hn})`;
@@ -160,20 +155,26 @@
       const data = await res.json();
       currentHistoryData = data.data || [];
       
-      // 🌟 ดึงรายชื่อโปรโมชั่น/คอร์สที่ไม่ซ้ำกัน จากประวัติการรักษา
+      // 🌟 ดึงรายชื่อโปรโมชั่น/คอร์สที่ "ทำจริง" เท่านั้น กรองคำทั่วไปออก
       let promos = new Set();
       currentHistoryData.forEach(log => {
         let cc = log.symptoms || '';
+        
+        // 1. ดึงจากโหมดโปรโมชั่น (ห้องแพทย์)
         if (cc.includes('มารับบริการโปรโมชั่น:')) {
-          promos.add(cc.replace('มารับบริการโปรโมชั่น:', '').trim());
-        } else if (cc.includes('[บริการ]')) {
+          let pName = cc.replace('มารับบริการโปรโมชั่น:', '').trim();
+          if (pName) promos.add(pName);
+        } 
+        // 2. ดึงจากจุดคัดกรอง (Reception / Booking)
+        else if (cc.includes('[บริการ]')) {
           let parts = cc.split('|');
           let srvPart = parts.find(p => p.includes('[บริการ]'));
           if (srvPart) {
-            let promoName = srvPart.replace('[บริการ]', '').trim();
-            if (!promoName.includes('ปรึกษาแพทย์')) {
-              promoName = promoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim();
-              promos.add(promoName);
+            let pName = srvPart.replace('[บริการ]', '').trim();
+            // ข้ามบริการทั่วไปที่ไม่ใช่คอร์ส/โปร (แก้บั๊กคำขยะ)
+            if (pName && !pName.includes('ปรึกษาแพทย์') && !pName.includes('ตรวจทั่วไป')) {
+              pName = pName.replace(/\s*\(คอร์สเดิม\)$/, '').trim();
+              if (pName) promos.add(pName);
             }
           }
         }
@@ -181,7 +182,7 @@
       
       let filterHtml = '<option value="ALL">-- ดูประวัติการรักษาทั้งหมด --</option>';
       promos.forEach(p => {
-        filterHtml += `<option value="${p}">เฉพาะ: ${p}</option>`;
+        if (p) filterHtml += `<option value="${p}">เฉพาะคอร์ส/โปร: ${p}</option>`;
       });
       document.getElementById('historyFilter').innerHTML = filterHtml;
       
@@ -192,21 +193,24 @@
     }
   }
 
-  // 🌟 แสดงผลไทม์ไลน์ตามตัวกรอง
+// 🌟 แสดงผลไทม์ไลน์ตามตัวกรอง (แก้บั๊กกดแล้วแสดงทั้งหมด)
   function renderHistoryTimeline() {
     const filter = document.getElementById('historyFilter').value;
     const container = document.getElementById('historyTimeline');
     
     let filtered = currentHistoryData;
-    if (filter !== 'ALL') {
-      filtered = currentHistoryData.filter(log => 
-        (log.symptoms && log.symptoms.includes(filter)) || 
-        (log.treatment_details && log.treatment_details.includes(filter))
-      );
+    
+    // 🌟 ถ้าไม่ใช่ ALL และค่าไม่ว่างเปล่า ถึงจะทำการกรองจริงๆ
+    if (filter !== 'ALL' && filter.trim() !== '') {
+      filtered = currentHistoryData.filter(log => {
+        let cc = log.symptoms || '';
+        let tx = log.treatment_details || '';
+        return cc.includes(filter) || tx.includes(filter);
+      });
     }
     
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-folder-open fa-2x mb-3 opacity-50"></i><br>ไม่พบประวัติการรักษา</div>';
+      container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-folder-open fa-2x mb-3 opacity-50"></i><br>ไม่พบประวัติการรักษาในคอร์สนี้</div>';
       return;
     }
     
