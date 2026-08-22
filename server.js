@@ -119,8 +119,32 @@ app.post('/api/patients', (req, res) => {
   const { id, full_name, id_card, phone, dob, allergies, congenital_disease } = req.body;
   const created_at = new Date().toISOString();
   let patientId = id || ('HN-' + Math.floor(100000 + Math.random() * 900000)); 
-  const sql = `INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name, id_card=excluded.id_card, phone=excluded.phone, dob=excluded.dob, allergies=excluded.allergies, congenital_disease=excluded.congenital_disease`;
-  db.run(sql, [patientId, full_name, id_card, phone, dob, allergies, congenital_disease, created_at], function(err) { res.json({ status: 'success', patient_id: patientId }); });
+  
+  // 🌟 ฟังก์ชันบันทึกข้อมูล (แยกออกมาเพื่อเรียกใช้ทีหลัง)
+  const proceedToSave = () => {
+    const sql = `INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name, id_card=excluded.id_card, phone=excluded.phone, dob=excluded.dob, allergies=excluded.allergies, congenital_disease=excluded.congenital_disease`;
+    db.run(sql, [patientId, full_name, id_card, phone, dob, allergies, congenital_disease, created_at], function(err) { 
+      res.json({ status: 'success', patient_id: patientId }); 
+    });
+  };
+
+  // 🌟 ดักเช็คเลขบัตรประชาชนซ้ำ (ต้องมีเลขส่งมา และต้องไม่ใช่ HN ตัวเองกรณีแก้ไขประวัติ)
+  if (id_card && id_card.trim() !== '') {
+    db.get(`SELECT id, full_name FROM patients WHERE id_card = ? AND id != ?`, [id_card, patientId], (err, row) => {
+      if (row) {
+        // ถ้าเจอเลขบัตรซ้ำ ส่งข้อความ Error กลับไปหาหน้าเว็บ
+        return res.json({ 
+          status: 'error', 
+          message: `เลขบัตรประชาชนนี้ถูกลงทะเบียนไว้แล้วในชื่อ:<br><b class="text-primary fs-5">${row.full_name} (${row.id})</b><br><br><small class="text-muted">กรุณาใช้ช่องค้นหาด้านซ้ายมือเพื่อดึงประวัติคนไข้</small>` 
+        });
+      } else {
+        proceedToSave();
+      }
+    });
+  } else {
+    // ถ้าไม่ได้กรอกเลขบัตรมา (เช่น ต่างชาติ หรือเด็ก) ให้ข้ามไปเซฟเลย
+    proceedToSave();
+  }
 });
 
 app.delete('/api/patients/:id', (req, res) => {
