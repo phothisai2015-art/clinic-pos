@@ -47,6 +47,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, alterLog);
   db.run(`ALTER TABLE clinics ADD COLUMN bank_account_name TEXT`, alterLog);
   db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, alterLog);
+  db.run(`ALTER TABLE patient_bills ADD COLUMN payment_method TEXT DEFAULT 'CASH'`, alterLog);
   
   db.get("SELECT count(*) as count FROM clinics", (err, row) => {
     if (row && row.count === 0) {
@@ -318,11 +319,17 @@ app.get('/api/pos/queue', (req, res) => {
   db.all(`SELECT a.id as appt_id, a.patient_id as hn, p.full_name as name, a.appointment_time as time FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'WAITING_PAYMENT' ORDER BY a.id ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
 });
 
-// 🌟 API ดึงบิลค้างชำระ + บิลที่เพิ่งจ่ายครบวันนี้
-app.get('/api/pos/bill/:hn', (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  db.all(`SELECT * FROM patient_bills WHERE patient_id = ? AND (status != 'PAID' OR bill_date = ?) ORDER BY id ASC`, [req.params.hn, today], (err, rows) => {
-    res.json({status: 'success', data: rows});
+// 🌟 API ค้นหาบิลคนไข้รองรับทั้ง HN, ชื่อ, เบอร์โทร และเลขบัตร ปชช.
+app.get('/api/pos/patient-search', (req, res) => {
+  const search = req.query.search || '';
+  const sql = `SELECT * FROM patients WHERE id = ? OR full_name LIKE ? OR phone = ? OR id_card = ? LIMIT 1`;
+  db.get(sql, [search, `%${search}%`, search, search], (err, patient) => {
+    if (err || !patient) return res.json({ status: 'error', message: 'ไม่พบข้อมูลคนไข้ในระบบ' });
+    
+    const today = new Date().toISOString().split('T')[0];
+    db.all(`SELECT * FROM patient_bills WHERE patient_id = ? AND (status != 'PAID' OR bill_date = ?) ORDER BY id ASC`, [patient.id, today], (err2, bills) => {
+      res.json({ status: 'success', patient: patient, data: bills || [] });
+    });
   });
 });
 
