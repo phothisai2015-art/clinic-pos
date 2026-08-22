@@ -205,19 +205,13 @@
     } catch(e) {}
   }
 
-  // ==========================================
-  // 🌟 เปิด Modal พร้อมเคลียร์บั๊ก Ghost Modal
-  // ==========================================
+ // 🌟 เปิด Modal อย่างปลอดภัย ป้องกันบั๊กฉากหลังทับและกดไม่ได้
   async function openScreeningModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
-
-    // 🌟 ลบ Ghost Modal ที่ค้างอยู่ในหน้าจอออกให้หมด (แก้บั๊กกดไม่ได้ครั้งแรก)
-    document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
 
     Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
-      // 🌟 ดึงข้อมูลคลัง, คอร์สคนไข้ และบิลค้างชำระของคนไข้ เพื่อเช็กว่าจ่ายเงินครบหรือยัง
       const [pdRes, courseRes, billRes] = await Promise.all([ 
         fetch('/api/inventory'), 
         fetch(`/api/patients/${currentHN}/courses`),
@@ -235,18 +229,23 @@
       resetSelection();
       renderPromoCards();
       renderGeneralCards();
-      renderActiveCourses(); // วาดคอร์สใหม่
+      renderActiveCourses();
       
+      // 🌟 นำ Modal ไปไว้ที่ body (แค่ครั้งแรก) และเรียกใช้ใหม่เสมอ แทนที่จะลบทิ้ง
       const modalEl = document.getElementById('screeningModal');
       if (modalEl && modalEl.parentNode !== document.body) {
         document.body.appendChild(modalEl);
       }
       
       let existingModal = bootstrap.Modal.getInstance(modalEl);
-      if (existingModal) {
-        existingModal.dispose();
+      if (!existingModal) {
+        screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      } else {
+        screeningModalInstance = existingModal;
       }
-      screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      
+      // ลบฉากหลังที่อาจค้างอยู่ก่อนเปิด
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       
       Swal.close();
       setTimeout(() => {

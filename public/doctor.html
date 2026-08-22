@@ -350,34 +350,52 @@ async function selectPatient(hn) {
     // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (รองรับทั้งโปรซื้อใหม่ และ โปรทำต่อ)
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
       let rawPromoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
-      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); // ลบคำว่า (คอร์สเดิม) ทิ้ง
+      let isOldCourse = rawPromoName.endsWith('(คอร์สเดิม)');
+      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); 
       
       let matchedProd = invData.find(x => x.name === cleanPromoName);
       activePromoInfo = { name: cleanPromoName, prod: matchedProd };
 
       let rawBundleItems = [];
-      // 🌟 แตกของแถมเสมอ ถ้ามี (ไม่ว่าจะเป็นซื้อใหม่ หรือคนไข้เก่ามาทำต่อ)
+      // 🌟 แตกของแถมเสมอ ไม่ว่าจะเป็นโปรซื้อใหม่หรือคอร์สเก่า
       if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
         try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
       } else {
-        // ถ้าเป็นคอร์สเดี่ยว หรือเป็นสินค้าทั่วไป (ไม่มีของแถม)
         rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: cleanPromoName, qty: 1 }];
       }
 
-      currentSubItems = rawBundleItems.map(b => {
+      currentSubItems = [];
+      rawBundleItems.forEach(b => {
+        // หาคอร์สที่เหลืออยู่ของคนไข้
         let matchedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
-        let remain = matchedCourse ? (matchedCourse.total_qty - matchedCourse.used_qty) : b.qty;
         
-        return {
-          id: b.id,
-          name: b.name,
-          remain_qty: remain,
-          used_today: remain > 0 ? 1 : 0,
-          course_id: matchedCourse ? matchedCourse.id : null
-        };
+        if (matchedCourse) {
+           let remain = matchedCourse.total_qty - matchedCourse.used_qty;
+           currentSubItems.push({
+             id: b.id,
+             name: matchedCourse.product_name || b.name,
+             remain_qty: remain,
+             used_today: remain > 0 ? 1 : 0,
+             course_id: matchedCourse.id
+           });
+        } else if (!isOldCourse) {
+           // กรณีซื้อใหม่แต่ API อาจโหลดไม่ทัน ให้สร้างไว้รอก่อน
+           currentSubItems.push({
+             id: b.id,
+             name: b.name,
+             remain_qty: b.qty,
+             used_today: b.qty > 0 ? 1 : 0,
+             course_id: null
+           });
+        }
       });
 
-      switchToPromoMode();
+      if(currentSubItems.length > 0) {
+        switchToPromoMode();
+      } else {
+        switchToGeneralMode();
+        document.getElementById('btn_switch_to_promo').style.display = 'none';
+      }
     } else {
       switchToGeneralMode();
       document.getElementById('btn_switch_to_promo').style.display = 'none';
