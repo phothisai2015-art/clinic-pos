@@ -227,42 +227,58 @@
     activeBill.bills.forEach((b, index) => {
       let balance = b.total_price - b.paid_amount;
       let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
+      
+      // 🌟 1. เช็คว่าเป็นยาหรือสกินแคร์หรือไม่ (เพื่อล็อกช่อง)
+      let isMed = (b.type === 'MEDICINE' || b.type === 'SKINCARE');
+      
       let badge = isPromo ? '<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span>' : '<span class="badge bg-secondary ms-1">ยา/บริการ</span>';
-      let methodBadge = b.payment_method ? `<span class="badge bg-light text-dark border">${b.payment_method}</span>` : '-';
+      
+      // 🌟 2. โชว์วิธีชำระเฉพาะรายการที่เคยจ่ายมาแล้วเท่านั้น ถ้ายอดจ่ายเป็น 0 ให้ขึ้น -
+      let methodBadge = (b.paid_amount > 0 && b.payment_method) 
+        ? `<span class="badge bg-light text-dark border"><i class="fa-solid fa-clock-rotate-left text-muted me-1"></i>${b.payment_method}</span>` 
+        : '<span class="text-muted small">-</span>';
       
       let statusStyle = balance <= 0 ? 'text-muted' : 'text-danger fw-bold';
 
-      // 🌟 เช็คว่าถ้าจ่ายครบแล้ว (balance <= 0) ให้โชว์ป้ายชำระเรียบร้อย แต่ถ้ายังค้างจ่ายค่อยโชว์ช่อง input
+      // 🌟 3. ล็อกช่องจ่ายเงินถ้ายา/สกินแคร์ (บังคับจ่ายเต็ม) หรือโชว์ป้ายชำระครบแล้ว
+      let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
+      let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
+      
       let payInputHtml = balance <= 0 
         ? `<span class="badge bg-light text-muted border py-2 px-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระเรียบร้อย</span>`
-        : `<input type="number" class="form-control form-control-sm text-end pay-today-input border-success fw-bold text-success" 
+        : `<input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
                    data-index="${index}" data-type="db" data-balance="${balance}" 
-                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()">`;
+                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()" ${inputAttr}>`;
 
       tbody.innerHTML += `
         <tr>
           <td class="fw-bold text-dark" style="font-size: 0.9rem;">${b.item_name} ${badge}</td>
           <td class="text-end">${b.total_price.toLocaleString()}</td>
-          <td class="text-end text-success">${b.paid_amount.toLocaleString()}</td>
+          <td class="text-end ${b.paid_amount > 0 ? 'text-success fw-bold' : 'text-muted'}">${b.paid_amount.toLocaleString()}</td>
           <td class="text-end ${statusStyle}">${balance <= 0 ? 'ชำระครบแล้ว' : balance.toLocaleString()}</td>
           <td class="text-center">${methodBadge}</td>
           <td class="text-end">${payInputHtml}</td>
         </tr>`;
     });
 
+    // สำหรับรายการที่พนักงานเพิ่มหน้าเคาน์เตอร์ POS ใหม่
     activeBill.new_items.forEach((item, index) => {
       let lineTotal = item.qty * item.price;
+      let isMed = (item.type === 'MEDICINE' || item.type === 'SKINCARE');
+      let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
+      let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
+
       tbody.innerHTML += `
         <tr>
           <td class="fw-bold text-dark" style="font-size: 0.9rem;">${item.name} <span class="badge bg-info">เพิ่มหน้าเคาน์เตอร์</span></td>
           <td class="text-end">${lineTotal.toLocaleString()}</td>
-          <td class="text-end text-success">0</td>
+          <td class="text-end text-muted">0</td>
           <td class="text-end text-danger fw-bold">${lineTotal.toLocaleString()}</td>
-          <td class="text-center"><span class="badge bg-warning text-dark">ใหม่</span></td>
+          <td class="text-center"><span class="badge bg-warning text-dark">บิลใหม่</span></td>
           <td class="text-end">
-            <input type="number" class="form-control form-control-sm text-end pay-today-input border-success fw-bold text-success" 
+            <input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
                    data-index="${index}" data-type="new" data-balance="${lineTotal}" 
-                   value="${lineTotal}" max="${lineTotal}" min="0" oninput="calculatePosTotal()">
+                   value="${lineTotal}" max="${lineTotal}" min="0" oninput="calculatePosTotal()" ${inputAttr}>
           </td>
         </tr>`;
     });
