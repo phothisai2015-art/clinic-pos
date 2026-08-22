@@ -285,6 +285,9 @@
   var allBillsForScreening = [];
   var currentCheckInHN = '';
   var currentCheckInApptId = null;
+  
+  document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+  document.querySelectorAll('body > #addApptModal').forEach(m => m.remove());
 
   function initBookingModule() {
     fetchAppointments();

@@ -145,6 +145,8 @@
   var allCoursesForScreening = [];
   var allBillsForScreening = []; // 🌟 ตัวแปรใหม่สำหรับเก็บประวัติบิล
   
+  document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+  
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ข้อความ', 'warning');
