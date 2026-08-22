@@ -150,6 +150,46 @@
                 </div>
 
                 <input type="hidden" id="emr_doctor_name">
+				<!-- 🌟 กล่องระบบนัดหมายใหม่ -->
+                <div class="mb-3 border border-primary p-3 rounded-3 bg-light">
+                  <label class="form-label fw-bold small text-primary mb-2"><i class="fa-regular fa-calendar-check me-1"></i> วันนัดถัดไป (Appointment)</label>
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <input type="date" id="emr_next_appointment_date" class="form-control border-primary rounded-3 text-center">
+                    </div>
+                    <div class="col-md-3">
+                      <select id="emr_next_appointment_time" class="form-select border-primary rounded-3 text-center fw-bold text-dark">
+                        <option value="09:00">09:00 น.</option>
+                        <option value="09:30">09:30 น.</option>
+                        <option value="10:00" selected>10:00 น.</option>
+                        <option value="10:30">10:30 น.</option>
+                        <option value="11:00">11:00 น.</option>
+                        <option value="11:30">11:30 น.</option>
+                        <option value="12:00">12:00 น.</option>
+                        <option value="12:30">12:30 น.</option>
+                        <option value="13:00">13:00 น.</option>
+                        <option value="13:30">13:30 น.</option>
+                        <option value="14:00">14:00 น.</option>
+                        <option value="14:30">14:30 น.</option>
+                        <option value="15:00">15:00 น.</option>
+                        <option value="15:30">15:30 น.</option>
+                        <option value="16:00">16:00 น.</option>
+                        <option value="16:30">16:30 น.</option>
+                        <option value="17:00">17:00 น.</option>
+                        <option value="17:30">17:30 น.</option>
+                        <option value="18:00">18:00 น.</option>
+                        <option value="18:30">18:30 น.</option>
+                        <option value="19:00">19:00 น.</option>
+                        <option value="19:30">19:30 น.</option>
+                        <option value="20:00">20:00 น.</option>
+                      </select>
+                    </div>
+                    <div class="col-md-5">
+                      <input type="text" id="emr_next_appointment_note" class="form-control border-primary rounded-3" placeholder="หมายเหตุ (เช่น ดูอาการ, ทำเลเซอร์ต่อ)">
+                    </div>
+                  </div>
+                </div>
+                <!-- 🌟 สิ้นสุดกล่องระบบนัดหมาย -->
                 <button type="button" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-3 fs-5" id="btn_save_emr" onclick="submitEMR()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูลการตรวจ</button>
 
               </div>
@@ -523,9 +563,8 @@ async function selectPatient(hn) {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
     let btnSave = document.getElementById('btn_save_emr');
-    if (btnSave.disabled) return; // 🛑 ป้องกันการกดซ้ำซ้อน
+    if (btnSave.disabled) return; 
 
-    // 🛑 1) บล็อกปุ่มทันทีขณะกำลังบันทึก
     btnSave.disabled = true;
     let originalBtnHtml = btnSave.innerHTML;
     btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังบันทึกข้อมูล...';
@@ -549,7 +588,6 @@ async function selectPatient(hn) {
          finalTxArray.push(`[รายการที่ยังไม่ทำวันนี้]\n` + skippedItems.map(s => `- ${s.name} (คงเหลือสิทธิ์ ${s.remain_qty} ครั้ง)`).join('\n'));
        }
 
-       // 🌟 ดึงข้อมูลจาก 3 ช่อง (Area, Setting และช่องหมายเหตุเพิ่มเติมใหม่)
        let area = document.getElementById('mc_area').value; 
        let setting = document.getElementById('mc_setting').value;
        let additional_note = document.getElementById('mc_additional_note') ? document.getElementById('mc_additional_note').value : '';
@@ -557,7 +595,7 @@ async function selectPatient(hn) {
        let details = []; 
        if(area) details.push(`บริเวณ: ${area}`); 
        if(setting) details.push(`Settings: ${setting}`);
-       if(additional_note) details.push(`หมายเหตุ: ${additional_note}`); // แทรกหมายเหตุใหม่
+       if(additional_note) details.push(`หมายเหตุ: ${additional_note}`); 
        
        if(details.length > 0) finalTxArray.push(`[รายละเอียด] ` + details.join(' | '));
 
@@ -570,7 +608,6 @@ async function selectPatient(hn) {
        sys_symptoms = document.getElementById('emr_symptoms').value;
        sys_diagnosis = document.getElementById('emr_diagnosis').value || '-';
        
-       // 🌟 เพิ่มท่อนนี้ เพื่อเก็บข้อมูลจากช่อง Tx ส่งไปบันทึก
        let manual_tx = document.getElementById('emr_treatment') ? document.getElementById('emr_treatment').value : '';
        if (manual_tx) {
          finalTxArray.push(`[หัตถการ / การรักษา]\n${manual_tx}`);
@@ -586,6 +623,7 @@ async function selectPatient(hn) {
       return (el && el.innerText !== '-') ? el.innerText : '';
     };
 
+    // 🌟 เพิ่มข้อมูลนัดหมายเข้า Payload
     const payload = {
       patient_id: currentHN, 
       symptoms: sys_symptoms, 
@@ -595,14 +633,15 @@ async function selectPatient(hn) {
       pulse: getVitalVal('v_pulse'),
       weight: getVitalVal('v_weight'),
       height: getVitalVal('v_height'),
-      prescribed_meds: pendingMeds 
+      prescribed_meds: pendingMeds,
+      next_appointment_date: document.getElementById('emr_next_appointment_date') ? document.getElementById('emr_next_appointment_date').value : '',
+      next_appointment_time: document.getElementById('emr_next_appointment_time') ? document.getElementById('emr_next_appointment_time').value : '',
+      next_appointment_note: document.getElementById('emr_next_appointment_note') ? document.getElementById('emr_next_appointment_note').value : ''
     };
 
     try {
-      // 2) ส่งข้อมูลบันทึก EMR
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
-      // 3) หักคอร์สตามจำนวนที่ทำจริงวันนี้
       if (isPromoModeActive) {
         let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
         for (let item of doneItems) {
@@ -616,17 +655,14 @@ async function selectPatient(hn) {
 
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       
-      // 4) อัปเดตประวัติย้อนหลังทางขวามือ
       await loadEMRHistory(currentHN);
 
-      // 🛑 5) ล็อกฟอร์มป้อนข้อมูลฝั่งซ้ายมือทันที
       let formArea = document.getElementById('dynamicFormArea');
       if (formArea) {
         formArea.style.opacity = '0.5';
         formArea.style.pointerEvents = 'none';
       }
 
-      // 🛑 6) เคลียร์ช่องป้อนข้อมูลในฟอร์ม (รวมถึงช่องใหม่ที่สร้างด้วย)
       pendingMeds = [];
       document.getElementById('emr_med_list_display').value = '';
       document.getElementById('emr_symptoms').value = '';
@@ -634,9 +670,13 @@ async function selectPatient(hn) {
       if(document.getElementById('mc_area')) document.getElementById('mc_area').value = '';
       if(document.getElementById('mc_setting')) document.getElementById('mc_setting').value = '';
       if(document.getElementById('mc_additional_note')) document.getElementById('mc_additional_note').value = '';
-	  if(document.getElementById('emr_treatment')) document.getElementById('emr_treatment').value = ''; // 🌟 ล้างช่อง Tx
+      if(document.getElementById('emr_treatment')) document.getElementById('emr_treatment').value = ''; 
+      
+      // 🌟 เคลียร์กล่องนัดหมาย
+      if(document.getElementById('emr_next_appointment_date')) document.getElementById('emr_next_appointment_date').value = '';
+      if(document.getElementById('emr_next_appointment_time')) document.getElementById('emr_next_appointment_time').value = '10:00';
+      if(document.getElementById('emr_next_appointment_note')) document.getElementById('emr_next_appointment_note').value = '';
 
-      // 🛑 7) เปลี่ยนสถานะปุ่มเป็น "บันทึกข้อมูลเรียบร้อยแล้ว"
       btnSave.disabled = true;
       btnSave.className = 'btn btn-secondary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
       btnSave.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> บันทึกข้อมูลเรียบร้อยแล้ว';
