@@ -251,6 +251,13 @@ app.post('/api/appointments', (req, res) => {
 app.delete('/api/appointments/:id', (req, res) => {
   db.run(`DELETE FROM appointments WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
 });
+// 🌟 API สำหรับ Check-in นัดหมายพร้อมบันทึกข้อมูล Vitals
+app.put('/api/appointments/:id/checkin', (req, res) => {
+  const { bp, pulse, weight, height, notes } = req.body;
+  db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
+    [bp || '', pulse || '', weight || '', height || '', notes || '', req.params.id], 
+    function(err) { res.json({ status: 'success' }); });
+});
 app.put('/api/appointments/:id/status', (req, res) => {
   db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [req.body.status, req.params.id], function(err) { res.json({ status: 'success' }); });
 });
