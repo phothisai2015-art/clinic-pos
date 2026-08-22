@@ -105,9 +105,21 @@
                   <div id="promo_sub_items_list" class="row g-2 mb-3"></div>
                   
                   <div class="row g-3 mb-3">
-                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">บริเวณที่ทำ (Area)</label><input type="text" id="mc_area" class="form-control" placeholder="เช่น ทั่วหน้า, กรอบหน้า"></div>
-                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">พลังงาน/ยี่ห้อ/Settings</label><input type="text" id="mc_setting" class="form-control" placeholder="เช่น 200 Shots, Xeomin"></div>
-                  </div>
+					<div class="col-md-6">
+					<label class="form-label fw-bold small text-muted">บริเวณที่ทำ (Area)</label>
+					<input type="text" id="mc_area" class="form-control" placeholder="เช่น ทั่วหน้า, กรอบหน้า">
+					</div>
+					<div class="col-md-6">
+					<label class="form-label fw-bold small text-muted">พลังงาน/ยี่ห้อ/Settings</label>
+					<input type="text" id="mc_setting" class="form-control" placeholder="เช่น 200 Shots, Xeomin">
+				  </div>
+				  </div>
+  
+  <!-- 🌟 ช่องที่เพิ่มเข้ามาใหม่ (เต็มบรรทัด) -->
+  <div class="col-12">
+    <label class="form-label fw-bold small text-muted">หมายเหตุเพิ่มเติม (Additional Notes)</label>
+    <input type="text" id="mc_additional_note" class="form-control" placeholder="ระบุรายละเอียด หรือข้อควรระวังเพิ่มเติม (ถ้ามี)...">
+  </div>
                 </div>
 
                 <!-- 🩺 โหมด 2: ตรวจรักษาทั่วไป / สั่งยา -->
@@ -510,11 +522,16 @@ async function selectPatient(hn) {
          finalTxArray.push(`[รายการที่ยังไม่ทำวันนี้]\n` + skippedItems.map(s => `- ${s.name} (คงเหลือสิทธิ์ ${s.remain_qty} ครั้ง)`).join('\n'));
        }
 
+       // 🌟 ดึงข้อมูลจาก 3 ช่อง (Area, Setting และช่องหมายเหตุเพิ่มเติมใหม่)
        let area = document.getElementById('mc_area').value; 
        let setting = document.getElementById('mc_setting').value;
+       let additional_note = document.getElementById('mc_additional_note') ? document.getElementById('mc_additional_note').value : '';
+
        let details = []; 
        if(area) details.push(`บริเวณ: ${area}`); 
        if(setting) details.push(`Settings: ${setting}`);
+       if(additional_note) details.push(`หมายเหตุ: ${additional_note}`); // แทรกหมายเหตุใหม่
+       
        if(details.length > 0) finalTxArray.push(`[รายละเอียด] ` + details.join(' | '));
 
     } else {
@@ -569,14 +586,23 @@ async function selectPatient(hn) {
       // 4) อัปเดตประวัติย้อนหลังทางขวามือ
       await loadEMRHistory(currentHN);
 
-      // 🛑 5) ล็อกฟอร์มป้อนข้อมูลฝั่งซ้ายมือทันที (ป้องกันการกดบันทึกหรือหักคอร์สซ้ำ)
+      // 🛑 5) ล็อกฟอร์มป้อนข้อมูลฝั่งซ้ายมือทันที
       let formArea = document.getElementById('dynamicFormArea');
       if (formArea) {
         formArea.style.opacity = '0.5';
         formArea.style.pointerEvents = 'none';
       }
 
-      // 🛑 6) เปลี่ยนสถานะปุ่มเป็น "บันทึกข้อมูลเรียบร้อยแล้ว"
+      // 🛑 6) เคลียร์ช่องป้อนข้อมูลในฟอร์ม (รวมถึงช่องใหม่ที่สร้างด้วย)
+      pendingMeds = [];
+      document.getElementById('emr_med_list_display').value = '';
+      document.getElementById('emr_symptoms').value = '';
+      document.getElementById('emr_diagnosis').value = '';
+      if(document.getElementById('mc_area')) document.getElementById('mc_area').value = '';
+      if(document.getElementById('mc_setting')) document.getElementById('mc_setting').value = '';
+      if(document.getElementById('mc_additional_note')) document.getElementById('mc_additional_note').value = '';
+
+      // 🛑 7) เปลี่ยนสถานะปุ่มเป็น "บันทึกข้อมูลเรียบร้อยแล้ว"
       btnSave.disabled = true;
       btnSave.className = 'btn btn-secondary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5';
       btnSave.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> บันทึกข้อมูลเรียบร้อยแล้ว';
