@@ -49,6 +49,8 @@ db.serialize(() => {
   db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, alterLog);
   db.run(`ALTER TABLE patient_bills ADD COLUMN payment_method TEXT DEFAULT 'CASH'`, alterLog);
   
+  db.run(`ALTER TABLE patient_bills ADD COLUMN payment_history TEXT DEFAULT '[]'`, alterLog);
+  
   db.get("SELECT count(*) as count FROM clinics", (err, row) => {
     if (row && row.count === 0) {
       db.run(`INSERT INTO clinics (clinic_name, email, phone) VALUES ('Clinic Management System', 'admin@clinic.com', '-')`);
@@ -362,26 +364,36 @@ app.get('/api/pos/patient-search', (req, res) => {
   });
 });
 
-// 🌟 API รับชำระเงิน POS (Async + Transaction & Validation)
+// 🌟 API รับชำระเงิน POS (อัปเดตระบบบันทึกประวัติแบ่งจ่าย)
 app.put('/api/pos/pay/:hn', async (req, res) => {
-  const { sales_rep, payments, new_items } = req.body; 
+  const { sales_rep, payments, new_items, payment_method } = req.body; 
   const hn = req.params.hn; 
   const today = new Date().toISOString().split('T')[0];
+  const currentPayMethod = payment_method || 'CASH'; // รับค่าช่องทางชำระเงิน
 
   try {
-    await dbRun("BEGIN TRANSACTION"); // ✅ ป้องกันข้อมูลพังหาก Error กลางทาง
+    await dbRun("BEGIN TRANSACTION");
 
     if (payments && payments.length > 0) {
       for (let p of payments) {
         let bill = await dbGet(`SELECT * FROM patient_bills WHERE id = ?`, [p.bill_id]);
         if (bill) {
-          // ✅ ป้องกันการกรอกตัวเลขจ่ายเกินยอดคงเหลือ (Overpay Validation)
           let balance = bill.total_price - bill.paid_amount;
           let safePayAmount = p.pay_amount > balance ? balance : p.pay_amount;
 
           let newPaid = bill.paid_amount + safePayAmount;
           let newStatus = newPaid >= bill.total_price ? 'PAID' : 'PARTIAL';
-          await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ? WHERE id = ?`, [newPaid, newStatus, p.bill_id]);
+          
+          // 🌟 สร้างประวัติการแบ่งจ่าย
+          let history = [];
+          try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
+          if(safePayAmount > 0) {
+            history.push({ date: new Date().toISOString(), amount: safePayAmount, method: p.payment_method || currentPayMethod });
+          }
+
+          // 🌟 อัปเดตทั้งยอดเงิน สถานะ และยัดประวัติการจ่ายเก็บไว้ในช่อง payment_history
+          await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ?, payment_method = ?, payment_history = ? WHERE id = ?`, 
+            [newPaid, newStatus, p.payment_method || currentPayMethod, JSON.stringify(history), p.bill_id]);
 
           if ((bill.type === 'MEDICINE' || bill.type === 'SKINCARE') && bill.stock_deducted === 0 && safePayAmount > 0) {
             await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [bill.qty, bill.product_id]);
@@ -394,11 +406,16 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
     if (new_items && new_items.length > 0) {
       for (let item of new_items) {
         let total = item.qty * item.price;
-        let safePayAmount = item.pay_amount > total ? total : item.pay_amount; // ✅ ป้องกัน Overpay
+        let safePayAmount = item.pay_amount > total ? total : item.pay_amount;
         let newStatus = safePayAmount >= total ? 'PAID' : 'PARTIAL';
         
-        let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0]);
+        let history = [];
+        if(safePayAmount > 0) {
+          history.push({ date: new Date().toISOString(), amount: safePayAmount, method: item.payment_method || currentPayMethod });
+        }
+
+        let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted, payment_method, payment_history) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0, item.payment_method || currentPayMethod, JSON.stringify(history)]);
           
         if (item.is_new_course) {
            let prod = await dbGet(`SELECT bundle_items FROM products WHERE id = ?`, [item.product_id]);
@@ -417,10 +434,10 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
 
     await dbRun(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn]);
     
-    await dbRun("COMMIT"); // ✅ ยืนยันการบันทึกเมื่อทุกอย่างสมบูรณ์
+    await dbRun("COMMIT");
     res.json({ status: 'success' });
   } catch (err) {
-    await dbRun("ROLLBACK").catch(() => {}); // ✅ ย้อนกลับข้อมูลทั้งหมดถ้ามี Error
+    await dbRun("ROLLBACK").catch(() => {});
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
