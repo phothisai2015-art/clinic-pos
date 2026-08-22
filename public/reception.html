@@ -205,34 +205,56 @@
     } catch(e) {}
   }
 
-// 🌟 แก้ไข: เปิด Modal อย่างปลอดภัย ป้องกันฉากหลังบังจอกดไม่ได้
+  // ==========================================
+  // 🌟 เปิด Modal พร้อมเคลียร์บั๊ก Ghost Modal
+  // ==========================================
   async function openScreeningModal() {
-    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาคนไข้ก่อน', 'warning');
-    Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
+
+    document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+
+    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
       const [pdRes, courseRes, billRes] = await Promise.all([ 
-        fetch('/api/inventory'), fetch(`/api/patients/${currentHN}/courses`), fetch(`/api/pos/bill/${currentHN}`)
+        fetch('/api/inventory'), 
+        fetch(`/api/patients/${currentHN}/courses`),
+        fetch(`/api/pos/bill/${currentHN}`)
       ]);
       
-      allInventoryForScreening = (await pdRes.json()).data || [];
-      allCoursesForScreening = (await courseRes.json()).data || [];
-      allBillsForScreening = (await billRes.json()).data || [];
+      const pdData = await pdRes.json(); 
+      const courseData = await courseRes.json();
+      const billData = await billRes.json();
+      
+      allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
+      allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
+      allBillsForScreening = billData.status === 'success' ? billData.data : [];
       
       resetSelection();
       renderPromoCards();
       renderGeneralCards();
-      renderActiveCourses();
+      renderActiveCourses(); 
       
       const modalEl = document.getElementById('screeningModal');
-      if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl); 
+      if (modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+      }
       
-      if (!screeningModalInstance) screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      let existingModal = bootstrap.Modal.getInstance(modalEl);
+      if (existingModal) {
+        existingModal.dispose();
+      }
+      screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
       
       Swal.close();
-      screeningModalInstance.show();
-      switchServiceTab('promo');
-    } catch (e) { Swal.fire('Error', 'โหลดข้อมูลล้มเหลว', 'error'); }
+      setTimeout(() => {
+        screeningModalInstance.show();
+        switchServiceTab('promo');
+      }, 200);
+
+    } catch (e) {
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
   }
 
   function switchServiceTab(tabName) {
@@ -312,7 +334,7 @@
     container.innerHTML = html;
   }
 
-// 🌟 แก้ไข: จัดรูปแบบ UI ให้คอร์สเดี่ยวมีกล่องรายละเอียดเหมือนโปรโมชั่น และเคลียร์โค้ดที่ซ้ำซ้อน
+  // 🌟 จัดรูปแบบ UI ให้คอร์สเดี่ยวมีกล่องรายละเอียดเหมือนโปรโมชั่น
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
     if(allCoursesForScreening.length === 0) {
@@ -402,7 +424,6 @@
         let valStr = `OLD_${c.id}`;
         let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
         
-        // 🌟 เพิ่มกล่องรายละเอียดให้คอร์สเดี่ยวเหมือนโปรโมชั่นเป๊ะๆ
         let bundleHtml = `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
                             <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
                             <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
@@ -416,32 +437,6 @@
                      </div>
                      <h6 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-1"></i> ${displayName}</h6>
                      <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
-                   </div></div></div>`;
-      }
-    });
-    
-    container.innerHTML = html;
-  }
-    
-    // 🌟 โชว์รายการที่เหลือ (เศษคอร์ส หรือคอร์สเดี่ยวๆ ที่ไม่ได้มาจากการจัดเซ็ตโปรโมชั่น)
-    allCoursesForScreening.forEach(c => {
-      if (!displayedCourseIds.has(c.id)) {
-        let remain = c.total_qty - c.used_qty;
-        let displayName = c.product_name || c.product_id;
-        let isUnpaid = allBillsForScreening.some(bill => (bill.product_id === c.product_id || bill.item_name === displayName) && bill.status !== 'PAID');
-        let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
-        let isUsedUp = remain <= 0;
-        let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
-        let valStr = `OLD_${c.id}`;
-        let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
-        
-        html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
-                   <div class="card-body p-3">
-                     <div class="d-flex justify-content-between align-items-start mb-2">
-                       <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว'}</span>
-                       <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-wand-magic-sparkles text-success me-1"></i> ${displayName}</h6></div>
-                       <div class="text-end"><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} rounded-pill mb-1">เหลือ ${remain} / ${c.total_qty}</span><br>${payBadge}</div>
-                     </div>
                    </div></div></div>`;
       }
     });
