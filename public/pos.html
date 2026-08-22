@@ -296,9 +296,9 @@
       let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
       let isMed = (b.type === 'MEDICINE' || b.type === 'SKINCARE');
       
-      // 🌟 เพิ่มปุ่มเช็คคอร์สข้างๆ ป้ายกำกับ
+      // 🌟 ส่ง product_id และ item_name ไปด้วย เพื่อกรองให้แสดงเฉพาะคอร์สของบิลนี้
       let badge = isPromo 
-        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientCourses()"><i class="fa-solid fa-magnifying-glass"></i> เช็คคอร์ส</button>` 
+        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}')"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
         : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
       
       // 🌟 เปลี่ยนป้ายวิธีชำระเป็น "ปุ่มดูประวัติ"
@@ -471,74 +471,54 @@
   }
   
  // ==========================================
-  // 🌟 ฟังก์ชันดูคอร์สคงเหลือของคนไข้ (POS) - อัปเดตจัดกลุ่มโปรซ้ำ
+  // 🌟 ฟังก์ชันดูคอร์สคงเหลือ แยกเฉพาะรายการที่กดดู (POS)
   // ==========================================
-  async function viewPatientCourses() {
+  async function viewPatientSpecificCourse(productId, itemName) {
     if (!activeBill || !activeBill.hn) return;
-    
     let hn = activeBill.hn;
-    let name = activeBill.name;
-    
-    Swal.fire({ title: 'กำลังโหลดข้อมูลคอร์ส...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    
+
+    Swal.fire({ title: 'กำลังเช็คสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
     try {
-      // 🌟 ดึงข้อมูลคอร์สและคลังสินค้า (เพื่อเอามาเช็คของแถมในโปรโมชั่น)
       const [courseRes, invRes] = await Promise.all([
         fetch(`/api/patients/${hn}/courses`),
         fetch('/api/inventory')
       ]);
       const courseData = await courseRes.json();
       const invData = await invRes.json();
-      
+
       let allCourses = courseData.status === 'success' ? courseData.data : [];
       let inventory = invData.status === 'success' ? invData.data : [];
-      
-      // 🌟 เรียงคอร์สจากใหม่ไปเก่า เพื่อจับกลุ่มของใหม่ล่าสุดก่อนเสมอ
+
+      // หาข้อมูลสินค้าที่กดดู
+      let productDef = inventory.find(p => p.id === productId);
+      if (!productDef) {
+         return Swal.fire('ข้อมูลไม่พบ', 'ไม่พบข้อมูลสินค้านี้ในระบบ', 'error');
+      }
+
       let sortedCourses = [...allCourses].sort((a, b) => b.id - a.id);
-      let promos = inventory.filter(p => p.type === 'PROMOTION');
-      
-      let displayedCourseIds = new Set();
       let activeHtml = '';
       let completedHtml = '';
-      
-      // 1. จัดการ โปรโมชั่น (จัดเซ็ต)
-      promos.forEach(promo => {
-        let bundles = [];
-        try { bundles = JSON.parse(promo.bundle_items || '[]'); } catch(e) {}
-        if(bundles.length === 0) return;
-        
-        let findingMatch = true;
-        while(findingMatch) {
-          let activeBundles = [];
-          let tempConsumedIds = new Set();
-          let hasAllItems = true;
-          
-          // 🌟 PASS 1: พยายามจับคู่คอร์สที่ "ยังคงเหลือสิทธิ์" ก่อน (กันไปดึงคอร์สเก่าที่ทำเสร็จแล้วมาโชว์)
-          for (let b of bundles) {
-            let found = sortedCourses.find(c => 
-                (c.product_id === b.id || c.product_name === b.name) && 
-                c.total_qty === b.qty && 
-                (c.total_qty - c.used_qty) > 0 && 
-                !displayedCourseIds.has(c.id) &&
-                !tempConsumedIds.has(c.id)
-            );
-            if (found) {
-              activeBundles.push({ ...b, course_data: found });
-              tempConsumedIds.add(found.id);
-            } else {
-              hasAllItems = false; break;
-            }
-          }
-          
-          // 🌟 PASS 2: ถ้าหาไม่ครบ ให้หาจากของที่ "ใช้หมดแล้ว" (เพื่อให้โปรเก่าที่เสร็จแล้ว ลงไปอยู่หมวดทำครบแล้ว)
-          if (!hasAllItems) {
-            activeBundles = [];
-            tempConsumedIds.clear();
-            hasAllItems = true;
+
+      // 🌟 1. กรณีเป็น "โปรโมชั่นจัดเซ็ต"
+      if (productDef.type === 'PROMOTION') {
+         let bundles = [];
+         try { bundles = JSON.parse(productDef.bundle_items || '[]'); } catch(e) {}
+
+         let findingMatch = true;
+         let displayedCourseIds = new Set();
+         
+         while(findingMatch && bundles.length > 0) {
+            let activeBundles = [];
+            let tempConsumedIds = new Set();
+            let hasAllItems = true;
+            
+            // จับคู่ของใหม่ที่ยังมีสิทธิ์เหลือ
             for (let b of bundles) {
               let found = sortedCourses.find(c => 
                   (c.product_id === b.id || c.product_name === b.name) && 
                   c.total_qty === b.qty && 
+                  (c.total_qty - c.used_qty) > 0 && 
                   !displayedCourseIds.has(c.id) &&
                   !tempConsumedIds.has(c.id)
               );
@@ -549,80 +529,97 @@
                 hasAllItems = false; break;
               }
             }
-          }
-          
-          if (hasAllItems) {
-            tempConsumedIds.forEach(id => displayedCourseIds.add(id));
-            let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
             
-            let bundleHtml = activeBundles.map(ab => {
-              let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-              return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
-                        <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
-                        <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
-                      </div>`;
-            }).join('');
-
-            let cardHtml = `
-              <div class="card mb-2 border ${isAllUsed ? 'border-secondary opacity-75' : 'border-primary'} shadow-sm">
-                <div class="card-body p-2">
-                  <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-primary'} mb-2"><i class="fa-solid fa-gift me-1"></i> ${promo.name} ${isAllUsed ? '(ทำครบแล้ว)' : ''}</div>
-                  <div class="bg-light p-2 rounded">${bundleHtml}</div>
-                </div>
-              </div>`;
+            // ถ้าไม่ครบเซ็ต ให้ไปดึงของเก่าที่ใช้หมดแล้วมาโชว์
+            if (!hasAllItems) {
+              activeBundles = [];
+              tempConsumedIds.clear();
+              hasAllItems = true;
+              for (let b of bundles) {
+                let found = sortedCourses.find(c => 
+                    (c.product_id === b.id || c.product_name === b.name) && 
+                    c.total_qty === b.qty && 
+                    !displayedCourseIds.has(c.id) &&
+                    !tempConsumedIds.has(c.id)
+                );
+                if (found) {
+                  activeBundles.push({ ...b, course_data: found });
+                  tempConsumedIds.add(found.id);
+                } else {
+                  hasAllItems = false; break;
+                }
+              }
+            }
+            
+            if (hasAllItems) {
+              tempConsumedIds.forEach(id => displayedCourseIds.add(id));
+              let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
               
-            if (isAllUsed) completedHtml += cardHtml;
-            else activeHtml += cardHtml;
+              let bundleHtml = activeBundles.map(ab => {
+                let remain = ab.course_data.total_qty - ab.course_data.used_qty;
+                return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+                          <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
+                          <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
+                        </div>`;
+              }).join('');
+
+              let cardHtml = `
+                <div class="card mb-2 border ${isAllUsed ? 'border-secondary opacity-75' : 'border-primary'} shadow-sm">
+                  <div class="card-body p-2">
+                    <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-primary'} mb-2"><i class="fa-solid fa-gift me-1"></i> เซ็ตโปรโมชั่น ${isAllUsed ? '(ใช้สิทธิ์ครบแล้ว)' : ''}</div>
+                    <div class="bg-light p-2 rounded">${bundleHtml}</div>
+                  </div>
+                </div>`;
+                
+              if (isAllUsed) completedHtml += cardHtml;
+              else activeHtml += cardHtml;
+            } else {
+              findingMatch = false; 
+            }
+         }
+      } 
+      // 🌟 2. กรณีเป็น "คอร์สเดี่ยว / หัตถการ"
+      else {
+         let specificCourses = sortedCourses.filter(c => c.product_id === productId || c.product_name === itemName);
+         specificCourses.forEach(c => {
+            let remain = c.total_qty - c.used_qty;
+            let isUsedUp = remain <= 0;
             
-          } else {
-            findingMatch = false; 
-          }
-        }
-      });
-      
-      // 2. จัดการ คอร์สเดี่ยวที่เหลือ
-      sortedCourses.forEach(c => {
-        if (!displayedCourseIds.has(c.id)) {
-          let remain = c.total_qty - c.used_qty;
-          let displayName = c.product_name || c.product_id;
-          let isUsedUp = remain <= 0;
-          
-          let cardHtml = `
-              <div class="card mb-2 border ${isUsedUp ? 'border-secondary opacity-75' : 'border-success'} shadow-sm">
-                <div class="card-body p-2">
-                  <div class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-success'} mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> ${displayName} ${isUsedUp ? '(ทำครบแล้ว)' : '(คอร์สเดี่ยว)'}</div>
-                  <div class="bg-light p-2 rounded">
-                    <div class="d-flex justify-content-between small">
-                      <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
-                      <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
+            let cardHtml = `
+                <div class="card mb-2 border ${isUsedUp ? 'border-secondary opacity-75' : 'border-success'} shadow-sm">
+                  <div class="card-body p-2">
+                    <div class="bg-light p-2 rounded">
+                      <div class="d-flex justify-content-between small">
+                        <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${itemName}</span>
+                        <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>`;
-              
-          if (isUsedUp) completedHtml += cardHtml;
-          else activeHtml += cardHtml;
-        }
-      });
-      
-      if (!activeHtml) activeHtml = '<div class="text-muted small py-2 text-center">- ไม่มีคอร์สคงเหลือ -</div>';
-      if (!completedHtml) completedHtml = '<div class="text-muted small py-2 text-center">- ไม่มีประวัติคอร์สที่ทำครบแล้ว -</div>';
+                </div>`;
+                
+            if (isUsedUp) completedHtml += cardHtml;
+            else activeHtml += cardHtml;
+         });
+      }
 
+      if (!activeHtml && !completedHtml) {
+         activeHtml = '<div class="text-muted small py-2 text-center">- ไม่มีสิทธิ์ในระบบ หรือถูกยกเลิกไปแล้ว -</div>';
+      }
+
+      // แสดงผลเฉพาะของที่เลือก
       Swal.fire({
-        title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-user me-2"></i>${name}</h5><div class="fs-6 text-muted mt-1">HN: ${hn}</div>`,
-        html: `<div class="text-start mt-3" style="max-height: 450px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
-                 <h6 class="fw-bold text-success border-bottom pb-2 mb-2 position-sticky top-0 bg-white" style="z-index:1;"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> คอร์ส / โปรโมชั่นที่คงเหลือ (ทำยังไม่ครบ)</h6>
-                 <div class="mb-4">${activeHtml}</div>
-                 <h6 class="fw-bold text-secondary border-bottom pb-2 mb-2 position-sticky top-0 bg-white" style="z-index:1;"><i class="fa-solid fa-clock-rotate-left me-1"></i> คอร์สที่ใช้ครบแล้ว (ประวัติ)</h6>
-                 <div>${completedHtml}</div>
+        title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์</h5><div class="fs-6 text-muted mt-1">${itemName}</div>`,
+        html: `<div class="text-start mt-3" style="max-height: 400px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                 ${activeHtml ? `<h6 class="fw-bold text-success border-bottom pb-2 mb-2">สิทธิ์ที่คงเหลือ</h6>${activeHtml}` : ''}
+                 ${completedHtml ? `<h6 class="fw-bold text-secondary border-bottom pb-2 mb-2 mt-3">สิทธิ์ที่ใช้ครบแล้ว (ประวัติเก่า)</h6>${completedHtml}` : ''}
                </div>`,
-        width: '550px', 
+        width: '500px', 
         showCloseButton: true, 
         showConfirmButton: false
       });
-      
-    } catch (err) { 
-      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error'); 
+
+    } catch (err) {
+       Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error');
     }
   }
   
