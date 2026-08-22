@@ -316,11 +316,9 @@
       let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
       let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
       
-      let payInputHtml = balance <= 0 
-        ? `<span class="badge bg-light text-muted border py-2 px-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระเรียบร้อย</span>`
-        : `<input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
-                   data-index="${index}" data-type="db" data-balance="${balance}" 
-                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()" ${inputAttr}>`;
+      let badge = isPromo 
+        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}', ${b.id})"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
+        : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
 
       tbody.innerHTML += `
         <tr>
@@ -471,151 +469,125 @@
   }
   
  // ==========================================
-  // 🌟 ฟังก์ชันดูคอร์สคงเหลือ แยกเฉพาะรายการที่กดดู (POS)
+  // 🌟 ฟังก์ชันดูคอร์สคงเหลือ แยกเฉพาะรายการที่กดดูตามบิล (POS)
   // ==========================================
-  async function viewPatientSpecificCourse(productId, itemName) {
+  async function viewPatientSpecificCourse(productId, itemName, billId) {
     if (!activeBill || !activeBill.hn) return;
     let hn = activeBill.hn;
 
     Swal.fire({ title: 'กำลังเช็คสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-      const [courseRes, invRes] = await Promise.all([
+      // 🌟 ดึงข้อมูลคอร์สทั้งหมด, คลังสินค้า, และประวัติบิลทั้งหมดของคนไข้
+      const [courseRes, invRes, billRes] = await Promise.all([
         fetch(`/api/patients/${hn}/courses`),
-        fetch('/api/inventory')
+        fetch('/api/inventory'),
+        fetch(`/api/pos/bill/${hn}`)
       ]);
       const courseData = await courseRes.json();
       const invData = await invRes.json();
+      const billData = await billRes.json();
 
       let allCourses = courseData.status === 'success' ? courseData.data : [];
       let inventory = invData.status === 'success' ? invData.data : [];
+      let allBills = billData.status === 'success' ? billData.data : [];
 
-      // หาข้อมูลสินค้าที่กดดู
       let productDef = inventory.find(p => p.id === productId);
-      if (!productDef) {
-         return Swal.fire('ข้อมูลไม่พบ', 'ไม่พบข้อมูลสินค้านี้ในระบบ', 'error');
-      }
+      if (!productDef) return Swal.fire('ข้อมูลไม่พบ', 'ไม่พบข้อมูลสินค้านี้ในระบบ', 'error');
 
-      let sortedCourses = [...allCourses].sort((a, b) => b.id - a.id);
-      let activeHtml = '';
-      let completedHtml = '';
+      // 🌟 เรียงคอร์สและบิลจากเก่าไปใหม่ (ASC) เพื่อนำมาจับคู่กันตามลำดับการซื้อ
+      let tempCourses = [...allCourses].sort((a,b) => a.id - b.id);
+      let productBills = allBills.filter(b => b.product_id === productId).sort((a,b) => a.id - b.id);
+      
+      // หาว่าบิลที่เรากดดู เป็นการซื้อครั้งที่เท่าไหร่ของสินค้านี้
+      let billIndex = productBills.findIndex(b => b.id === billId);
+      
+      let sets = [];
 
-      // 🌟 1. กรณีเป็น "โปรโมชั่นจัดเซ็ต"
+      // 1. จัดกลุ่มคอร์สกรณีเป็น "โปรโมชั่นจัดเซ็ต"
       if (productDef.type === 'PROMOTION') {
          let bundles = [];
          try { bundles = JSON.parse(productDef.bundle_items || '[]'); } catch(e) {}
+         if (bundles.length === 0) bundles = [{id: productDef.id, name: productDef.name, qty: 1}]; 
 
          let findingMatch = true;
-         let displayedCourseIds = new Set();
-         
          while(findingMatch && bundles.length > 0) {
-            let activeBundles = [];
-            let tempConsumedIds = new Set();
+            let currentSet = [];
             let hasAllItems = true;
+            let usedIndices = new Set();
             
-            // จับคู่ของใหม่ที่ยังมีสิทธิ์เหลือ
+            // ค่อยๆ กวาดคอร์สที่ตรงกับของแถมทีละเซ็ต ตามลำดับเก่าไปใหม่
             for (let b of bundles) {
-              let found = sortedCourses.find(c => 
-                  (c.product_id === b.id || c.product_name === b.name) && 
-                  c.total_qty === b.qty && 
-                  (c.total_qty - c.used_qty) > 0 && 
-                  !displayedCourseIds.has(c.id) &&
-                  !tempConsumedIds.has(c.id)
+              let foundIdx = tempCourses.findIndex((c, idx) => 
+                  !usedIndices.has(idx) && 
+                  (c.product_id === b.id || c.product_name === b.name)
               );
-              if (found) {
-                activeBundles.push({ ...b, course_data: found });
-                tempConsumedIds.add(found.id);
+              if (foundIdx !== -1) {
+                currentSet.push({ ...b, course_data: tempCourses[foundIdx] });
+                usedIndices.add(foundIdx);
               } else {
                 hasAllItems = false; break;
               }
             }
             
-            // ถ้าไม่ครบเซ็ต ให้ไปดึงของเก่าที่ใช้หมดแล้วมาโชว์
-            if (!hasAllItems) {
-              activeBundles = [];
-              tempConsumedIds.clear();
-              hasAllItems = true;
-              for (let b of bundles) {
-                let found = sortedCourses.find(c => 
-                    (c.product_id === b.id || c.product_name === b.name) && 
-                    c.total_qty === b.qty && 
-                    !displayedCourseIds.has(c.id) &&
-                    !tempConsumedIds.has(c.id)
-                );
-                if (found) {
-                  activeBundles.push({ ...b, course_data: found });
-                  tempConsumedIds.add(found.id);
-                } else {
-                  hasAllItems = false; break;
-                }
-              }
-            }
-            
             if (hasAllItems) {
-              tempConsumedIds.forEach(id => displayedCourseIds.add(id));
-              let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
-              
-              let bundleHtml = activeBundles.map(ab => {
-                let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-                return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
-                          <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
-                          <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
-                        </div>`;
-              }).join('');
-
-              let cardHtml = `
-                <div class="card mb-2 border ${isAllUsed ? 'border-secondary opacity-75' : 'border-primary'} shadow-sm">
-                  <div class="card-body p-2">
-                    <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-primary'} mb-2"><i class="fa-solid fa-gift me-1"></i> เซ็ตโปรโมชั่น ${isAllUsed ? '(ใช้สิทธิ์ครบแล้ว)' : ''}</div>
-                    <div class="bg-light p-2 rounded">${bundleHtml}</div>
-                  </div>
-                </div>`;
-                
-              if (isAllUsed) completedHtml += cardHtml;
-              else activeHtml += cardHtml;
+              sets.push(currentSet);
+              // เอาคอร์สที่ถูกจัดกลุ่มเป็นเซ็ตแล้ว ออกจากกอง
+              tempCourses = tempCourses.filter((_, idx) => !usedIndices.has(idx));
             } else {
-              findingMatch = false; 
+              findingMatch = false;
             }
          }
       } 
-      // 🌟 2. กรณีเป็น "คอร์สเดี่ยว / หัตถการ"
+      // 2. จัดกลุ่มกรณีเป็น "คอร์สเดี่ยว / หัตถการ"
       else {
-         let specificCourses = sortedCourses.filter(c => c.product_id === productId || c.product_name === itemName);
+         let specificCourses = tempCourses.filter(c => c.product_id === productId || c.product_name === itemName);
          specificCourses.forEach(c => {
-            let remain = c.total_qty - c.used_qty;
-            let isUsedUp = remain <= 0;
-            
-            let cardHtml = `
-                <div class="card mb-2 border ${isUsedUp ? 'border-secondary opacity-75' : 'border-success'} shadow-sm">
-                  <div class="card-body p-2">
-                    <div class="bg-light p-2 rounded">
-                      <div class="d-flex justify-content-between small">
-                        <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${itemName}</span>
-                        <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>`;
-                
-            if (isUsedUp) completedHtml += cardHtml;
-            else activeHtml += cardHtml;
+            sets.push([{ name: itemName, course_data: c }]);
          });
       }
 
-      if (!activeHtml && !completedHtml) {
-         activeHtml = '<div class="text-muted small py-2 text-center">- ไม่มีสิทธิ์ในระบบ หรือถูกยกเลิกไปแล้ว -</div>';
+      // 🌟 นำเซ็ตคอร์สที่จับกลุ่มได้ มาแมปเข้ากับบิลที่เรากำลังกดดู
+      let targetSet = null;
+      if (billIndex !== -1 && sets[billIndex]) {
+          targetSet = sets[billIndex];
       }
 
-      // แสดงผลเฉพาะของที่เลือก
+      if (!targetSet) {
+          return Swal.fire('ไม่พบสิทธิ์', 'ระบบไม่พบข้อมูลสิทธิ์ที่ผูกกับบิลนี้ (อาจเป็นข้อมูลเก่า หรือไม่สมบูรณ์)', 'warning');
+      }
+
+      let isAllUsed = targetSet.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
+      
+      let bundleHtml = targetSet.map(ab => {
+          let remain = ab.course_data.total_qty - ab.course_data.used_qty;
+          return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-success'} me-1"></i> ${ab.name}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
+                  </div>`;
+      }).join('');
+
+      let statusBadge = isAllUsed 
+          ? `<span class="badge bg-secondary mb-1">ใช้สิทธิ์ครบแล้ว</span>` 
+          : `<span class="badge bg-success mb-1">ยังมีสิทธิ์คงเหลือ</span>`;
+
+      let cardHtml = `
+          <div class="card border ${isAllUsed ? 'border-secondary opacity-75' : 'border-success'} shadow-sm">
+              <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-success'}"><i class="fa-solid ${productDef.type === 'PROMOTION' ? 'fa-gift' : 'fa-wand-magic-sparkles'} me-1"></i> ${itemName}</div>
+                      ${statusBadge}
+                  </div>
+                  <div class="bg-light p-2 rounded">${bundleHtml}</div>
+              </div>
+          </div>`;
+
       Swal.fire({
-        title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์</h5><div class="fs-6 text-muted mt-1">${itemName}</div>`,
-        html: `<div class="text-start mt-3" style="max-height: 400px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
-                 ${activeHtml ? `<h6 class="fw-bold text-success border-bottom pb-2 mb-2">สิทธิ์ที่คงเหลือ</h6>${activeHtml}` : ''}
-                 ${completedHtml ? `<h6 class="fw-bold text-secondary border-bottom pb-2 mb-2 mt-3">สิทธิ์ที่ใช้ครบแล้ว (ประวัติเก่า)</h6>${completedHtml}` : ''}
-               </div>`,
-        width: '500px', 
-        showCloseButton: true, 
-        showConfirmButton: false
+          title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์ตามบิล</h5>`,
+          html: `<div class="text-start mt-3">${cardHtml}</div>`,
+          width: '500px', 
+          showCloseButton: true, 
+          showConfirmButton: false
       });
 
     } catch (err) {
