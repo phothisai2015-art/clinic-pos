@@ -277,11 +277,15 @@ app.delete('/api/appointments/:id', (req, res) => {
   db.run(`DELETE FROM appointments WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
 });
 // 🌟 API สำหรับ Check-in นัดหมายพร้อมบันทึกข้อมูล Vitals
+// 🌟 API Check-in ส่งเข้าห้องตรวจ (หน้า Booking)
 app.put('/api/appointments/:id/checkin', (req, res) => {
   const { bp, pulse, weight, height, notes } = req.body;
   db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
     [bp || '', pulse || '', weight || '', height || '', notes || '', req.params.id], 
-    function(err) { res.json({ status: 'success' }); });
+    function(err) { 
+      if (err) return res.status(500).json({ status: 'error', message: err.message });
+      res.json({ status: 'success' }); 
+    });
 });
 app.put('/api/appointments/:id/status', (req, res) => {
   db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [req.body.status, req.params.id], function(err) { res.json({ status: 'success' }); });
@@ -290,13 +294,30 @@ app.put('/api/appointments/:id/status', (req, res) => {
 app.get('/api/queue', (req, res) => {
   db.all(`SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time, a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'CHECKED_IN' ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
 });
+// 🌟 API ส่งคนไข้เข้าห้องตรวจ (หน้า Reception) - เพิ่มตัวดัก Error กันค้าง
 app.post('/api/queue/send-doctor', (req, res) => {
   const { patient_id, bp, pulse, weight, height, notes } = req.body;
   const today = new Date().toISOString().split('T')[0];
   const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+  
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
-    if (row) { db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, [bp, pulse, weight, height, notes || 'Walk-in', row.id], () => res.json({status: 'success'})); } 
-    else { db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, [patient_id, today, timeStr, bp, pulse, weight, height, notes || 'Walk-in'], () => res.json({status: 'success'})); }
+    if (err) return res.status(500).json({ status: 'error', message: err.message });
+    
+    if (row) {
+      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
+        [bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in', row.id], 
+        (err2) => {
+          if (err2) return res.status(500).json({ status: 'error', message: err2.message });
+          res.json({ status: 'success' });
+        });
+    } else {
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, 
+        [patient_id, today, timeStr, bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in'], 
+        (err2) => {
+          if (err2) return res.status(500).json({ status: 'error', message: err2.message });
+          res.json({ status: 'success' });
+        });
+    }
   });
 });
 app.put('/api/queue/complete/:hn', (req, res) => {
