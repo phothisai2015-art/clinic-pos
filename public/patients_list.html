@@ -193,24 +193,37 @@
     }
   }
 
-// 🌟 แสดงผลไทม์ไลน์ตามตัวกรอง (แก้บั๊กกดแล้วแสดงทั้งหมด)
+// 🌟 แสดงผลไทม์ไลน์ตามตัวกรอง (แก้บั๊กชื่อคอร์สเดี่ยวปนกับโปรโมชั่นแบบ 100%)
   function renderHistoryTimeline() {
     const filter = document.getElementById('historyFilter').value;
     const container = document.getElementById('historyTimeline');
     
     let filtered = currentHistoryData;
     
-    // 🌟 ถ้าไม่ใช่ ALL และค่าไม่ว่างเปล่า ถึงจะทำการกรองจริงๆ
+    // 🌟 ถ้าไม่ใช่ ALL ให้ทำการกรองแบบเจาะจงชื่อ (Exact Match)
     if (filter !== 'ALL' && filter.trim() !== '') {
       filtered = currentHistoryData.filter(log => {
         let cc = log.symptoms || '';
-        let tx = log.treatment_details || '';
-        return cc.includes(filter) || tx.includes(filter);
+        let extractedName = '';
+
+        // สกัดชื่อบริการออกมาเทียบแบบเป๊ะๆ เพื่อตัดปัญหาคำซ้อนกัน
+        if (cc.includes('มารับบริการโปรโมชั่น:')) {
+          extractedName = cc.replace('มารับบริการโปรโมชั่น:', '').split('|')[0].trim();
+        } 
+        else if (cc.includes('[บริการ]')) {
+          let srvPart = cc.split('|').find(p => p.includes('[บริการ]'));
+          if (srvPart) {
+            extractedName = srvPart.replace('[บริการ]', '').replace(/\s*\(คอร์สเดิม\)$/, '').trim();
+          }
+        }
+        
+        // เทียบชื่อให้ตรงเป๊ะ 100% (ร้อยไหม ก็ต้องร้อยไหม ไม่ใช่ โปรโมชั่นร้อยไหม)
+        return extractedName === filter;
       });
     }
     
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-folder-open fa-2x mb-3 opacity-50"></i><br>ไม่พบประวัติการรักษาในคอร์สนี้</div>';
+      container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-folder-open fa-2x mb-3 opacity-50"></i><br>ไม่พบประวัติการรักษาในรายการที่เลือก</div>';
       return;
     }
     
