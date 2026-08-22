@@ -189,7 +189,7 @@
     searchPosPatient();
   }
 
-  // 🌟 2. โหลดบิลและข้อมูลประวัติการชำระเงินของคนไข้
+// 🌟 โหลดบิลและข้อมูลประวัติการชำระเงินของคนไข้
   function loadPatientBillData(patient, bills) {
     activeBill = { 
       hn: patient.id, 
@@ -200,7 +200,8 @@
       new_items: [] 
     };
 
-    document.getElementById('posEmptyState').style.display = 'none'; 
+    // 🛑 สั่งซ่อนหน้าว่าง (Empty State) และเปิดหน้าบิลชำระเงิน
+    document.getElementById('posEmptyState').style.setProperty('display', 'none', 'important'); 
     document.getElementById('posBillState').style.display = 'flex';
     
     document.getElementById('b_patient_name').innerText = activeBill.name; 
@@ -372,7 +373,7 @@
       Swal.fire({ icon: 'success', title: 'บันทึกการชำระเงินเรียบร้อย', text: `ประทับตราการจ่ายด้วย ${currentPayMethod} ลงประวัติคนไข้แล้ว`, confirmButtonColor: '#3b82f6' }).then(() => {
         activeBill = null; 
         document.getElementById('posBillState').style.display = 'none'; 
-        document.getElementById('posEmptyState').style.display = 'flex'; 
+        document.getElementById('posEmptyState').style.setProperty('display', 'flex', 'important'); // 🌟 โชว์หน้าว่างกลับมา
         document.getElementById('posSearchInput').value = '';
         fetchPosQueue(); 
       });
