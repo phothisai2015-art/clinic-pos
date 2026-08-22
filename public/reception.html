@@ -237,12 +237,10 @@
   }
 
   // ==========================================
-  // 🌟 เปิด Modal พร้อมเคลียร์บั๊ก Ghost Modal
+  // 🌟 เปิด Modal พร้อมเคลียร์บั๊กกดครั้งที่ 2 แล้ว Error
   // ==========================================
   async function openScreeningModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
-
-    document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
 
     Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
@@ -267,15 +265,17 @@
       renderActiveCourses(); 
       
       const modalEl = document.getElementById('screeningModal');
-      if (modalEl && modalEl.parentNode !== document.body) {
+      if (!modalEl) return; // ป้องกันหาป๊อปอัปไม่เจอ
+      
+      if (modalEl.parentNode !== document.body) {
         document.body.appendChild(modalEl);
       }
       
       let existingModal = bootstrap.Modal.getInstance(modalEl);
-      if (existingModal) {
-        existingModal.dispose();
+      if (!existingModal) {
+        existingModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
       }
-      screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      screeningModalInstance = existingModal;
       
       Swal.close();
       setTimeout(() => {
@@ -284,7 +284,7 @@
       }, 200);
 
     } catch (e) {
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลป๊อปอัปได้', 'error');
     }
   }
 

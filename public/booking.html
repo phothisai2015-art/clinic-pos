@@ -640,7 +640,7 @@
     } catch (err) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
   }
 
-  // =========================================================
+// =========================================================
   // 🌟 ฟังก์ชัน Check-in พร้อมเลือกโปรโมชั่น (ดึงมาจาก Reception)
   // =========================================================
   async function checkInPatient(id, name) {
@@ -651,8 +651,6 @@
 
     currentCheckInHN = appt.hn;
     currentCheckInApptId = id;
-
-    document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
 
     Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
@@ -677,15 +675,17 @@
       renderActiveCourses(); 
       
       const modalEl = document.getElementById('screeningModal');
-      if (modalEl && modalEl.parentNode !== document.body) {
+      if (!modalEl) return;
+      
+      if (modalEl.parentNode !== document.body) {
         document.body.appendChild(modalEl);
       }
       
       let existingModal = bootstrap.Modal.getInstance(modalEl);
-      if (existingModal) {
-        existingModal.dispose();
+      if (!existingModal) {
+        existingModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
       }
-      screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      screeningModalInstance = existingModal;
       
       document.getElementById('scr_note').value = appt.note || '';
 
@@ -696,7 +696,7 @@
       }, 200);
 
     } catch (e) {
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลป๊อปอัปได้', 'error');
     }
   }
 
