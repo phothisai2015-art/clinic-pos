@@ -216,14 +216,16 @@ app.post('/api/patients/:id/assign-promo', async (req, res) => {
 // 📝 API ระบบเวชระเบียน (EMR)
 // ==========================================
 app.post('/api/emr', (req, res) => {
-  const { patient_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height, prescribed_meds } = req.body;
+  // 🌟 เพิ่มการรับค่า doctor_id เข้ามา
+  const { patient_id, doctor_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height, prescribed_meds } = req.body;
   const visit_date = new Date().toISOString();
   
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height) VALUES (1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  // 🌟 เปลี่ยนจากฟิกซ์เลข 1 ให้ใช้ค่า doctor_id หรือ 1 เป็นค่าเริ่มต้น
+  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
-  db.run(sql, [patient_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || ''], function(err) {
+  db.run(sql, [patient_id, doctor_id || 1, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || ''], function(err) {
     if (next_appointment_date) {
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, 1, ?, ?, ?)`, [patient_id, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
+      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, ?, ?, ?, ?)`, [patient_id, doctor_id || 1, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
     }
 
     if (prescribed_meds && prescribed_meds.length > 0) {
@@ -239,7 +241,15 @@ app.post('/api/emr', (req, res) => {
 });
 
 app.get('/api/emr/:patient_id', (req, res) => {
-  db.all(`SELECT * FROM emr_logs WHERE patient_id = ? ORDER BY id DESC`, [req.params.patient_id], (err, rows) => { res.json({ status: 'success', data: rows }); });
+  // 🌟 เพิ่มคำสั่ง JOIN เพื่อดึงชื่อผู้ตรวจจากตาราง users
+  const sql = `
+    SELECT e.*, u.name as doctor_name 
+    FROM emr_logs e 
+    LEFT JOIN users u ON e.doctor_id = u.id 
+    WHERE e.patient_id = ? 
+    ORDER BY e.id DESC
+  `;
+  db.all(sql, [req.params.patient_id], (err, rows) => { res.json({ status: 'success', data: rows }); });
 });
 
 // ==========================================
