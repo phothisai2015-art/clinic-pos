@@ -43,8 +43,8 @@
           <div class="row g-3">
             <div class="col-md-3"><label class="form-label fw-bold small text-muted">รหัสคนไข้ (HN)</label><input type="text" id="p_hn" class="form-control bg-light" placeholder="ระบบสร้างให้อัตโนมัติ" readonly></div>
             <div class="col-md-5"><label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label><input type="text" id="p_name" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control" maxlength="13" placeholder="ตัวเลข 13 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required maxlength="10" placeholder="ตัวเลข 10 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
               <input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
@@ -188,11 +188,23 @@
 
   async function savePatient(e) {
     e.preventDefault();
+    
+    const id_card_val = document.getElementById('p_idcard').value.trim();
+    const phone_val = document.getElementById('p_phone').value.trim();
+
+    // 🌟 ดักเช็คจำนวนหลัก
+    if (id_card_val !== '' && id_card_val.length !== 13) {
+      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก', 'warning');
+    }
+    if (phone_val.length !== 10) {
+      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
+    }
+
     const payload = {
       id: document.getElementById('p_hn').value,
       full_name: document.getElementById('p_name').value, 
-      id_card: document.getElementById('p_idcard').value,
-      phone: document.getElementById('p_phone').value, 
+      id_card: id_card_val,
+      phone: phone_val, 
       dob: document.getElementById('p_dob').value,
       congenital_disease: document.getElementById('p_disease').value, 
       allergies: document.getElementById('p_allergies').value
@@ -211,7 +223,7 @@
         if(!payload.id) payload.id = data.patient_id; 
         loadPatientProfile(payload);
       } else {
-        // 🌟 ถ้าระบบหลังบ้านแจ้งว่าบัตรซ้ำ ให้เด้งเตือนพนักงาน
+        // ถ้าระบบหลังบ้านแจ้งว่าบัตรซ้ำ ให้เด้งเตือนพนักงาน
         Swal.fire({
           icon: 'warning',
           title: 'ข้อมูลซ้ำซ้อน!',
