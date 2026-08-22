@@ -256,10 +256,17 @@
        let vitalsLog = (log.bp || log.pulse || log.weight || log.height) ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>` : '';
        let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
        
+       // 🌟 1. เพิ่มตัวแปรดึงชื่อหมอ
+       let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ'; 
+       
+       // 🌟 2. ปรับโครงสร้าง HTML ให้มีกล่องโชว์ชื่อหมออยู่มุมขวา
        html += `
         <div class="border-start border-3 border-primary ps-3 pb-4 mb-3 position-relative">
           <div class="position-absolute top-0 start-0 translate-middle rounded-circle bg-primary" style="width: 12px; height: 12px; margin-top: 5px;"></div>
-          <div class="fw-bold text-primary"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</div>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+             <span class="fw-bold text-primary"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span>
+             <span class="badge bg-light text-dark border shadow-sm"><i class="fa-solid fa-user-doctor me-1 text-primary"></i> ${docName}</span>
+          </div>
           <div class="fw-bold text-dark mt-2"><span class="text-muted">Dx:</span> ${log.diagnosis || '-'}</div>
           <div class="small text-muted mt-1"><span class="fw-bold">CC:</span> ${log.symptoms || '-'}</div>
           <div class="small text-muted mt-2 p-2 bg-light rounded border"><span class="fw-bold">Tx (การรักษา):</span><br>${formattedTx}</div>
