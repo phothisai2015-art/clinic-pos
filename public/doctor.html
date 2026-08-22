@@ -687,7 +687,7 @@ async function selectPatient(hn) {
       btnSave.innerHTML = originalBtnHtml;
     }
   }
-// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (แก้ไขบักลูกค้ารักษา 2 รอบในวันเดียวกัน)
+// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (แก้ไขบั๊กปุ่มส่งชำระเงินหาย ถ้ารักษาซ้อนกันหลายรอบในวันเดียว)
   async function loadEMRHistory(hn) {
     const tl = document.getElementById('emrTimeline'); 
     tl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div></div>';
@@ -707,28 +707,34 @@ async function selectPatient(hn) {
       const apptsToday = appts.filter(a => a.date === todayStrLocal);
 
       let html = '';
-      data.data.forEach((log) => {
+      data.data.forEach((log, index) => {
          const dateStr = new Date(log.visit_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
          const logDateOnly = log.visit_date.split('T')[0]; 
          
          let paymentBtn = '';
          
-         if (logDateOnly === todayStrLocal) {
-           // หาตำแหน่งของ EMR ใบนี้ (0 คือใหม่สุด)
-           const emrTodayIndex = emrsToday.findIndex(e => e.id === log.id);
-           
-           // 🌟 จับคู่กับคิวอย่างแม่นยำ: (จำนวน EMR วันนี้ - 1) - ลำดับ EMR 
-           const matchedApptIndex = (emrsToday.length - 1) - emrTodayIndex;
-           const matchedAppt = apptsToday[matchedApptIndex];
+         // 🌟 ตรวจสอบปุ่มชำระเงิน เฉพาะประวัติ "ล่าสุดของวันนี้" (ใบบนสุด index === 0) เท่านั้น!
+         if (logDateOnly === todayStrLocal && index === 0) {
+           const latestAppt = apptsToday[apptsToday.length - 1]; // ดึงคิวล่าสุดของวันนี้มาเช็คสถานะ
 
-           if (matchedAppt) {
-             if (matchedAppt.status === 'WAITING_PAYMENT') {
-               paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
-             } else if (matchedAppt.status === 'PAID') {
-               paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น</button>`;
-             } else if (matchedAppt.status === 'COMPLETED' || matchedAppt.status === 'CHECKED_IN') {
-               paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา</button>`;
+           let isAlreadyPaid = false;
+           let isWaitingPayment = false;
+
+           if (latestAppt) {
+             if (latestAppt.status === 'WAITING_PAYMENT') {
+               isWaitingPayment = true;
+             } else if (latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) {
+               isAlreadyPaid = true;
              }
+           }
+
+           if (isWaitingPayment) {
+             paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
+           } else if (isAlreadyPaid) {
+             paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น</button>`;
+           } else {
+             // ถ้าเป็นคิวใหม่เอี่ยมที่เพิ่งตรวจเสร็จ ปุ่มจะเด้งขึ้นมาให้กดเสมอ!
+             paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา</button>`;
            }
          }
          
