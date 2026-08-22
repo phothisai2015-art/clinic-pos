@@ -347,21 +347,20 @@ async function selectPatient(hn) {
     let serviceNote = queueInfo ? queueInfo.notes || '' : '';
     
     // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (ป้องกันการจับคู่ผิดตัว)
+    // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (รองรับทั้งโปรซื้อใหม่ และ โปรทำต่อ)
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
       let rawPromoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
-      let isOldCourse = rawPromoName.endsWith('(คอร์สเดิม)');
-      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); // ลบคำว่า (คอร์สเดิม) ทิ้งเพื่อหาชื่อสินค้าจริงๆ
+      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); // ลบคำว่า (คอร์สเดิม) ทิ้ง
       
-      // 🌟 ใช้ === เพื่อให้ชื่อตรงเป๊ะ 100% ไม่จับคู่ผิด
       let matchedProd = invData.find(x => x.name === cleanPromoName);
       activePromoInfo = { name: cleanPromoName, prod: matchedProd };
 
       let rawBundleItems = [];
-      // ถ้าเป็นโปรโมชั่นใหม่ (ไม่ใช่คอร์สเดิม) ให้แตกของแถมออกมา
-      if (!isOldCourse && matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
+      // 🌟 แตกของแถมเสมอ ถ้ามี (ไม่ว่าจะเป็นซื้อใหม่ หรือคนไข้เก่ามาทำต่อ)
+      if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
         try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
       } else {
-        // ถ้าเป็นคอร์สเดิม หรือเป็นสินค้าทั่วไป (ไม่มีของแถม)
+        // ถ้าเป็นคอร์สเดี่ยว หรือเป็นสินค้าทั่วไป (ไม่มีของแถม)
         rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: cleanPromoName, qty: 1 }];
       }
 
