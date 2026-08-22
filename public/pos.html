@@ -232,6 +232,13 @@
       
       let statusStyle = balance <= 0 ? 'text-muted' : 'text-danger fw-bold';
 
+      // 🌟 เช็คว่าถ้าจ่ายครบแล้ว (balance <= 0) ให้โชว์ป้ายชำระเรียบร้อย แต่ถ้ายังค้างจ่ายค่อยโชว์ช่อง input
+      let payInputHtml = balance <= 0 
+        ? `<span class="badge bg-light text-muted border py-2 px-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระเรียบร้อย</span>`
+        : `<input type="number" class="form-control form-control-sm text-end pay-today-input border-success fw-bold text-success" 
+                   data-index="${index}" data-type="db" data-balance="${balance}" 
+                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()">`;
+
       tbody.innerHTML += `
         <tr>
           <td class="fw-bold text-dark" style="font-size: 0.9rem;">${b.item_name} ${badge}</td>
@@ -239,11 +246,7 @@
           <td class="text-end text-success">${b.paid_amount.toLocaleString()}</td>
           <td class="text-end ${statusStyle}">${balance <= 0 ? 'ชำระครบแล้ว' : balance.toLocaleString()}</td>
           <td class="text-center">${methodBadge}</td>
-          <td class="text-end">
-            <input type="number" class="form-control form-control-sm text-end pay-today-input border-success fw-bold text-success" 
-                   data-index="${index}" data-type="db" data-balance="${balance}" 
-                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()">
-          </td>
+          <td class="text-end">${payInputHtml}</td>
         </tr>`;
     });
 
