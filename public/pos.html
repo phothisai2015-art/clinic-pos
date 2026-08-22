@@ -316,9 +316,17 @@
       let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
       let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
       
+      // 🌟 ปุ่มเช็คสิทธิ์ (ของคุณทำถูกแล้ว)
       let badge = isPromo 
         ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}', ${b.id})"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
         : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
+
+      // ⚠️ ตัวแปรนี้ที่หายไปในรูปของคุณครับ!
+      let payInputHtml = balance <= 0 
+        ? `<span class="badge bg-light text-muted border py-2 px-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระเรียบร้อย</span>`
+        : `<input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
+                   data-index="${index}" data-type="db" data-balance="${balance}" 
+                   value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()" ${inputAttr}>`;
 
       tbody.innerHTML += `
         <tr>
@@ -329,28 +337,6 @@
           <td class="text-center">${methodBadge}</td>
           <td class="text-end">${payInputHtml}</td>
         </tr>`;
-    });
-
-    activeBill.new_items.forEach((item, index) => {
-      let lineTotal = item.qty * item.price;
-      let isMed = (item.type === 'MEDICINE' || item.type === 'SKINCARE');
-      let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
-      let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
-
-      tbody.innerHTML += `
-        <tr>
-          <td class="fw-bold text-dark" style="font-size: 0.9rem;">${item.name} <span class="badge bg-info">เพิ่มหน้าเคาน์เตอร์</span></td>
-          <td class="text-end">${lineTotal.toLocaleString()}</td>
-          <td class="text-end text-muted">0</td>
-          <td class="text-end text-danger fw-bold">${lineTotal.toLocaleString()}</td>
-          <td class="text-center"><span class="badge bg-warning text-dark">บิลใหม่</span></td>
-          <td class="text-end">
-            <input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
-                   data-index="${index}" data-type="new" data-balance="${lineTotal}" 
-                   value="${lineTotal}" max="${lineTotal}" min="0" oninput="calculatePosTotal()" ${inputAttr}>
-          </td>
-        </tr>`;
-    });
 
     if (activeBill.bills.length === 0 && activeBill.new_items.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">ไม่มียอดค้างชำระในระบบ</td></tr>`;
