@@ -190,19 +190,38 @@
     e.preventDefault();
     const payload = {
       id: document.getElementById('p_hn').value,
-      full_name: document.getElementById('p_name').value, id_card: document.getElementById('p_idcard').value,
-      phone: document.getElementById('p_phone').value, dob: document.getElementById('p_dob').value,
-      congenital_disease: document.getElementById('p_disease').value, allergies: document.getElementById('p_allergies').value
+      full_name: document.getElementById('p_name').value, 
+      id_card: document.getElementById('p_idcard').value,
+      phone: document.getElementById('p_phone').value, 
+      dob: document.getElementById('p_dob').value,
+      congenital_disease: document.getElementById('p_disease').value, 
+      allergies: document.getElementById('p_allergies').value
     };
+    
     try {
-      const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch('/api/patients', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
       const data = await res.json();
+      
       if (data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         if(!payload.id) payload.id = data.patient_id; 
         loadPatientProfile(payload);
+      } else {
+        // 🌟 ถ้าระบบหลังบ้านแจ้งว่าบัตรซ้ำ ให้เด้งเตือนพนักงาน
+        Swal.fire({
+          icon: 'warning',
+          title: 'ข้อมูลซ้ำซ้อน!',
+          html: data.message,
+          confirmButtonColor: '#3b82f6'
+        });
       }
-    } catch(e) {}
+    } catch(e) {
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
   }
 
   // ==========================================
