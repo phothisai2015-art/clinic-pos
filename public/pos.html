@@ -221,26 +221,64 @@
     renderBillItems();
   }
 
+ // 🌟 ฟังก์ชันเปิดดูประวัติชำระเงินของบิลนั้นๆ
+  window.viewPaymentHistory = function(index) {
+     let b = activeBill.bills[index];
+     let history = [];
+     try { history = JSON.parse(b.payment_history || '[]'); } catch(e){}
+     
+     if(history.length === 0) {
+        return Swal.fire('ข้อมูลชำระเงิน', 'ประวัติเก่าไม่ได้บันทึกด้วยระบบใหม่', 'info');
+     }
+
+     let tableHtml = `<table class="table table-sm mt-3 text-start">
+       <thead><tr class="table-light"><th>ครั้งที่</th><th>วันเวลา</th><th>วิธีชำระ</th><th class="text-end">ยอด (฿)</th></tr></thead><tbody>`;
+     
+     let total = 0;
+     history.forEach((h, i) => {
+        let d = new Date(h.date).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'short' });
+        let m = h.method === 'CASH' ? 'เงินสด' : (h.method === 'QR' ? 'โอน/QR' : (h.method === 'CREDIT' ? 'บัตรเครดิต' : h.method));
+        let badgeClass = h.method === 'CASH' ? 'success' : (h.method === 'QR' ? 'primary' : 'warning text-dark');
+        tableHtml += `<tr>
+          <td>${i+1}</td>
+          <td>${d}</td>
+          <td><span class="badge bg-${badgeClass}">${m}</span></td>
+          <td class="text-end text-success fw-bold">${h.amount.toLocaleString()}</td>
+        </tr>`;
+        total += h.amount;
+     });
+     tableHtml += `<tr><td colspan="3" class="text-end fw-bold">รวมชำระแล้ว:</td><td class="text-end fw-bold text-success">${total.toLocaleString()}</td></tr>`;
+     tableHtml += `</tbody></table>`;
+
+     Swal.fire({
+       title: `<h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>ประวัติชำระเงิน</h5>`,
+       html: `<div class="text-start mt-2"><div class="fw-bold text-dark border-bottom pb-2">${b.item_name}</div>${tableHtml}</div>`,
+       width: '600px',
+       confirmButtonText: 'ปิด'
+     });
+  }
+
   function renderBillItems() {
     const tbody = document.getElementById('billItems'); tbody.innerHTML = ''; 
 
     activeBill.bills.forEach((b, index) => {
       let balance = b.total_price - b.paid_amount;
       let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
-      
-      // 🌟 1. เช็คว่าเป็นยาหรือสกินแคร์หรือไม่ (เพื่อล็อกช่อง)
       let isMed = (b.type === 'MEDICINE' || b.type === 'SKINCARE');
-      
       let badge = isPromo ? '<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span>' : '<span class="badge bg-secondary ms-1">ยา/บริการ</span>';
       
-      // 🌟 2. โชว์วิธีชำระเฉพาะรายการที่เคยจ่ายมาแล้วเท่านั้น ถ้ายอดจ่ายเป็น 0 ให้ขึ้น -
-      let methodBadge = (b.paid_amount > 0 && b.payment_method) 
-        ? `<span class="badge bg-light text-dark border"><i class="fa-solid fa-clock-rotate-left text-muted me-1"></i>${b.payment_method}</span>` 
-        : '<span class="text-muted small">-</span>';
+      // 🌟 เปลี่ยนป้ายวิธีชำระเป็น "ปุ่มดูประวัติ"
+      let methodBadge = '<span class="text-muted small">-</span>';
+      if (b.paid_amount > 0) {
+        methodBadge = `
+          <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-bold shadow-sm" onclick="viewPaymentHistory(${index})">
+            <i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติ
+          </button>`;
+      }
       
       let statusStyle = balance <= 0 ? 'text-muted' : 'text-danger fw-bold';
 
-      // 🌟 3. ล็อกช่องจ่ายเงินถ้ายา/สกินแคร์ (บังคับจ่ายเต็ม) หรือโชว์ป้ายชำระครบแล้ว
+      // 🌟 ล็อกค่ายาเปลี่ยนตัวเลขไม่ได้ บังคับจ่ายเต็ม
       let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
       let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
       
@@ -261,7 +299,6 @@
         </tr>`;
     });
 
-    // สำหรับรายการที่พนักงานเพิ่มหน้าเคาน์เตอร์ POS ใหม่
     activeBill.new_items.forEach((item, index) => {
       let lineTotal = item.qty * item.price;
       let isMed = (item.type === 'MEDICINE' || item.type === 'SKINCARE');
