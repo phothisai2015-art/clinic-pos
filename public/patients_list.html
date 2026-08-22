@@ -130,18 +130,30 @@
   }
 
   // 🌟 ป๊อปอัปดูประวัติการรักษา
+// 🌟 ป๊อปอัปดูประวัติการรักษา (แก้ไขบั๊กกดซ้ำไม่ได้)
   async function openHistoryModal(hn, name) {
-    document.querySelectorAll('body > #historyModal').forEach(m => m.remove());
+    // 🛑 ไม่ลบ Modal ทิ้งแล้ว แต่ใช้การย้ายและเคลียร์ฉากหลังแทน
+    const modalEl = document.getElementById('historyModal');
+    if (!modalEl) return;
+    
+    // ย้าย Modal ออกมาที่ body เพื่อป้องกันซ้อนทับกัน
+    if (modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+    
+    // ค้นหาว่ามี Modal เดิมอยู่ไหม ถ้าไม่มีก็สร้างใหม่
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!modalInstance) {
+      modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    }
+    
+    // เคลียร์ฉากหลังสีดำที่อาจจะค้างอยู่
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
     
     document.getElementById('historyModalName').innerText = `${name} (${hn})`;
-    
-    const modalEl = document.getElementById('historyModal');
-    if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
-    
-    let modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    modalInstance.show();
-    
     document.getElementById('historyTimeline').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    
+    modalInstance.show();
     
     try {
       const res = await fetch(`/api/emr/${hn}`);
