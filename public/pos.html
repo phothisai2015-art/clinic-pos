@@ -1,28 +1,34 @@
 <style>
-  .pos-queue-card { transition: all 0.2s; cursor: pointer; border-left: 4px solid #cbd5e1; }
-  .pos-queue-card:hover { transform: translateX(5px); border-left-color: #3b82f6; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-  .pos-queue-card.active { border-left-color: #3b82f6; background-color: #eff6ff !important; }
+  /* 🌟 Modern UI Styles */
+  .pos-queue-card { transition: all 0.25s ease; cursor: pointer; border-left: 4px solid transparent; border-radius: 16px; background-color: #ffffff; }
+  .pos-queue-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+  .pos-queue-card.active { border-left-color: #3b82f6; background-color: #eff6ff !important; box-shadow: 0 10px 25px rgba(59,130,246,0.1); }
   
-  .bill-header { background: linear-gradient(135deg, #1e293b, #334155); color: #fff; padding: 20px; }
-  .bill-table th { font-weight: bold; color: #64748b; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; padding: 12px; }
-  .bill-table td { padding: 12px; vertical-align: middle; border-bottom: 1px dashed #e2e8f0; }
+  .bill-header { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 24px 30px; border-radius: 20px 20px 0 0; }
   
-  .payment-box { background: #f8fafc; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; }
-  .total-amount-display { font-size: 2.5rem; font-weight: 800; color: #0f172a; text-align: right; font-family: monospace; }
+  .bill-table th { font-weight: bold; color: #64748b; font-size: 0.9rem; border-bottom: 2px solid #e2e8f0; padding: 16px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .bill-table td { padding: 16px 12px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
   
-  .pay-method-btn { border: 2px solid #e2e8f0; border-radius: 12px; background: #fff; color: #64748b; font-weight: bold; transition: 0.2s; }
-  .pay-method-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
-  .pay-method-btn.selected { border-color: #3b82f6; background: #3b82f6; color: #fff; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
+  .payment-box { background: #ffffff; border-radius: 20px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(0,0,0,0.03); }
+  .total-amount-display { font-size: 3.5rem; font-weight: 800; color: #0f172a; text-align: right; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; }
+  
+  .pay-method-btn { border: 2px solid #e2e8f0; border-radius: 16px; background: #fff; color: #64748b; font-weight: bold; transition: all 0.2s ease; padding: 15px; }
+  .pay-method-btn:hover { border-color: #93c5fd; color: #3b82f6; background: #f8fafc; transform: translateY(-2px); }
+  .pay-method-btn.selected { border-color: #3b82f6; background: #3b82f6; color: #fff; box-shadow: 0 8px 20px rgba(59,130,246,0.3); transform: translateY(-2px); }
 
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
 <div class="container-fluid py-4 px-lg-5" style="max-width: 1800px; height: 100vh; display: flex; flex-direction: column;">
+  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-success m-0"><i class="fa-solid fa-cash-register me-2"></i> ขาย & ชำระเงิน (POS)</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
+      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
+    </button>
   </div>
 
   <div class="row g-4 flex-grow-1" style="min-height: 0;">
@@ -30,16 +36,15 @@
     <!-- 📋 ฝั่งซ้าย: คิวรอชำระเงิน & ช่องค้นหาดึงประวัติ -->
     <div class="col-lg-4 col-md-5 h-100">
       <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold m-0"><i class="fa-solid fa-users me-2 text-primary"></i> คิวรอชำระเงิน</h5>
-          <span class="badge bg-danger rounded-pill" id="posQueueCount">0 คิว</span>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-users me-2 text-primary"></i> คิวรอชำระเงิน</h5>
+          <span class="badge bg-danger rounded-pill px-3 py-2" id="posQueueCount">0 คิว</span>
         </div>
         
-        <!-- 🌟 1. ช่องค้นหา ชื่อ, HN, เบอร์โทร, บัตรประชาชน -->
-        <div class="input-group mb-3 shadow-sm rounded-3">
-          <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-          <input type="text" id="posSearchInput" class="form-control border-start-0 bg-light fw-bold" placeholder="ค้นหา ชื่อ, HN, เบอร์โทร, เลขบัตร ปชช..." onkeypress="if(event.key === 'Enter') searchPosPatient()">
-          <button class="btn btn-primary" onclick="searchPosPatient()"><i class="fa-solid fa-search"></i></button>
+        <div class="input-group mb-4 shadow-sm rounded-4 overflow-hidden border">
+          <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+          <input type="text" id="posSearchInput" class="form-control border-0 bg-light py-2" placeholder="ค้นหา ชื่อ, HN, เบอร์โทร..." onkeypress="if(event.key === 'Enter') searchPosPatient()">
+          <button class="btn btn-primary px-4 fw-bold" onclick="searchPosPatient()">ค้นหา</button>
         </div>
         
         <div id="posQueueList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;"></div>
@@ -48,85 +53,105 @@
 
     <!-- 💳 ฝั่งขวา: รายละเอียดบิล & ชำระเงิน -->
     <div class="col-lg-8 col-md-7 h-100">
-      <div class="bg-white p-0 rounded-4 shadow-sm border h-100 d-flex flex-column position-relative" id="posMainArea">
+      <div class="bg-white p-0 rounded-4 shadow-sm border h-100 d-flex flex-column position-relative overflow-hidden" id="posMainArea">
+        
+        <!-- หน้าจอว่าง (Empty State) -->
         <div class="d-flex flex-column justify-content-center align-items-center h-100 text-muted" id="posEmptyState">
-          <i class="fa-solid fa-cash-register fa-4x mb-3 opacity-25"></i>
-          <h5>กรุณาเลือกคิวคนไข้ หรือค้นหาประวัติชำระเงินจากซ้ายมือ</h5>
+          <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mb-4" style="width: 120px; height: 120px;">
+            <i class="fa-solid fa-cash-register fa-3x text-secondary opacity-50"></i>
+          </div>
+          <h4 class="fw-bold text-dark opacity-75">ยังไม่ได้เลือกรายการ</h4>
+          <p class="text-muted">กรุณาเลือกคิวคนไข้ หรือค้นหาประวัติชำระเงินจากซ้ายมือ</p>
         </div>
 
+        <!-- หน้าจอบิล (Bill State) -->
         <div id="posBillState" style="display: none; flex-direction: column; height: 100%;">
-          <div class="bill-header d-flex justify-content-between align-items-center">
+          
+          <div class="bill-header d-flex justify-content-between align-items-center shadow-sm">
             <div>
-              <h4 class="fw-bold m-0 text-white" id="b_patient_name">ชื่อคนไข้</h4>
-              <div class="small opacity-75 mt-1">
-                <i class="fa-solid fa-address-card me-1"></i> <span id="b_patient_hn">HN-XXXXXX</span> | 
-                <i class="fa-solid fa-id-card me-1"></i> ปชช: <span id="b_patient_idcard">-</span> | 
+              <h3 class="fw-bold m-0 text-white mb-1" id="b_patient_name">ชื่อคนไข้</h3>
+              <div class="opacity-75 fs-6">
+                <i class="fa-solid fa-address-card me-1"></i> <span id="b_patient_hn">HN-XXXXXX</span> <span class="mx-2">|</span> 
                 <i class="fa-solid fa-phone me-1"></i> <span id="b_patient_phone">-</span>
               </div>
             </div>
           </div>
 
-          <div class="p-4 custom-scrollbar" style="overflow-y: auto; flex-grow: 1;">
-            <!-- 🌟 2. แสดงประวัติการชำระเงิน รายการตกค้าง และชำระแล้วกี่บาท -->
-            <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-file-invoice-dollar me-1"></i> รายการบิล / ประวัติการชำระเงินคนไข้</h6>
-            <table class="table bill-table w-100 mb-0">
-              <thead>
-                <tr>
-                  <th width="30%">รายการ</th>
-                  <th width="15%" class="text-end">ยอดเต็ม</th>
-                  <th width="15%" class="text-end">ชำระแล้ว</th>
-                  <th width="15%" class="text-end">ค้างชำระ</th>
-                  <th width="10%" class="text-center">วิธีชำระเดิม</th>
-                  <th width="15%" class="text-end text-success">ชำระรอบนี้ (฿)</th>
-                </tr>
-              </thead>
-              <tbody id="billItems"></tbody>
-            </table>
+          <div class="p-4 custom-scrollbar" style="overflow-y: auto; flex-grow: 1; background-color: #f8fafc;">
+            <div class="bg-white p-4 rounded-4 shadow-sm border">
+              <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i> รายการบิล / ประวัติการชำระเงิน</h5>
+              <table class="table bill-table w-100 mb-0">
+                <thead>
+                  <tr>
+                    <th width="35%">รายการ</th>
+                    <th width="12%" class="text-end">ยอดเต็ม</th>
+                    <th width="12%" class="text-end">ชำระแล้ว</th>
+                    <th width="12%" class="text-end">ค้างชำระ</th>
+                    <th width="14%" class="text-center">ประวัติเดิม</th>
+                    <th width="15%" class="text-end text-success">ชำระรอบนี้ (฿)</th>
+                  </tr>
+                </thead>
+                <tbody id="billItems"></tbody>
+              </table>
 
-            <div id="doctor_summary_box" class="mt-4 p-3 bg-info bg-opacity-10 border border-info rounded-3" style="display: none;">
-              <h6 class="fw-bold text-info mb-2"><i class="fa-solid fa-user-doctor me-1"></i> รายละเอียดการรักษาจากห้องแพทย์ (ล่าสุด)</h6>
-              <div id="doctor_summary_text" class="small fw-bold text-dark" style="white-space: pre-wrap;"></div>
-            </div>
-            
-            <div class="text-end mt-3 border-top pt-3">
-              <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" onclick="openAddProductModal()"><i class="fa-solid fa-cart-plus me-1"></i> เพิ่มรายการขายหน้าเคาน์เตอร์</button>
+              <div id="doctor_summary_box" class="mt-4 p-3 bg-info bg-opacity-10 border border-info rounded-3" style="display: none;">
+                <h6 class="fw-bold text-info mb-2"><i class="fa-solid fa-user-doctor me-1"></i> รายละเอียดการรักษาจากห้องแพทย์ (ล่าสุด)</h6>
+                <div id="doctor_summary_text" class="small fw-bold text-dark" style="white-space: pre-wrap;"></div>
+              </div>
+              
+              <div class="text-end mt-4 border-top pt-4">
+                <button class="btn btn-outline-primary fw-bold rounded-pill shadow-sm px-4 py-2" onclick="openAddProductModal()">
+                  <i class="fa-solid fa-cart-plus me-1"></i> เพิ่มรายการขายหน้าเคาน์เตอร์
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="payment-box m-3 shadow-sm">
-            <div class="row">
-              <div class="col-md-6 border-end">
-                <div class="d-flex justify-content-between mb-2 small fw-bold text-muted"><span>ยอดรวมรับชำระรอบนี้:</span> <span id="b_subtotal">0.00</span></div>
-                <div class="d-flex justify-content-between mb-2 small fw-bold text-danger"><span>ส่วนลดเพิ่มเติม:</span> <span>- <input type="number" id="b_discount_input" class="form-control form-control-sm d-inline-block text-end fw-bold text-danger border-danger" style="width: 90px;" value="0" min="0" oninput="calculatePosTotal()"></span></div>
-                <hr class="my-2 border-secondary">
-                <div class="d-flex justify-content-between small text-muted"><span>ค่าแพทย์ (DF 10%):</span> <span id="b_df">0.00</span></div>
+          <div class="payment-box m-4 mt-0">
+            <div class="row align-items-center">
+              <div class="col-md-5 border-end pe-4">
+                <div class="d-flex justify-content-between mb-2 fs-6 fw-bold text-muted"><span>ยอดรวมรอบนี้:</span> <span id="b_subtotal">0.00</span></div>
+                <div class="d-flex justify-content-between mb-3 fs-6 fw-bold text-danger align-items-center">
+                  <span>ส่วนลดเพิ่มเติม:</span> 
+                  <div class="input-group input-group-sm w-50">
+                    <span class="input-group-text bg-white border-danger text-danger fw-bold">-</span>
+                    <input type="number" id="b_discount_input" class="form-control text-end fw-bold text-danger border-danger" value="0" min="0" oninput="calculatePosTotal()">
+                  </div>
+                </div>
+                <hr class="my-3 border-secondary opacity-25">
+                <div class="d-flex justify-content-between small text-muted mb-1"><span>ค่าแพทย์ (DF 10%):</span> <span id="b_df">0.00</span></div>
                 <div class="d-flex justify-content-between small text-muted"><span>ค่าคอมฯ เซลล์ (3%):</span> <span id="b_comm">0.00</span></div>
               </div>
-              <div class="col-md-6 ps-4 d-flex flex-column justify-content-center">
-                <div class="text-end text-muted fw-bold small mb-1">ยอดสุทธิรับชำระรอบนี้ (บาท)</div>
+              
+              <div class="col-md-7 ps-4 d-flex flex-column justify-content-center">
+                <div class="text-end text-muted fw-bold mb-1">ยอดสุทธิรับชำระรอบนี้ (THB)</div>
                 <div class="total-amount-display" id="b_net_total">0.00</div>
               </div>
             </div>
 
-            <div class="mt-4">
-              <div class="mb-3 pt-3 border-top">
-                <label class="fw-bold text-muted small mb-1"><i class="fa-solid fa-headset text-primary"></i> พนักงานขาย / เซลล์ผู้ดูแล:</label>
-                <select id="sales_rep_select" class="form-select bg-light">
-                  <option value="">-- ไม่ระบุเซลล์ --</option>
-                  <option value="น้องส้ม (เซลล์)">น้องส้ม (เซลล์)</option>
-                  <option value="น้องฟ้า (เซลล์)">น้องฟ้า (เซลล์)</option>
-                  <option value="หมอขายเอง">แพทย์ปิดการขายเอง</option>
-                </select>
-              </div> 
-              
-              <!-- 🌟 3. วิธีการชำระเงินที่จะถูกประทับลงในบิล -->
-              <h6 class="fw-bold text-muted small mb-2">เลือกวิธีชำระเงินในรอบนี้ (ประทับลงบิล)</h6>
-              <div class="d-flex gap-2 mb-3">
-                <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectPayMethod('CASH')"><i class="fa-solid fa-money-bill-wave d-block fs-4 mb-1"></i> เงินสด</button>
-                <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectPayMethod('QR')"><i class="fa-solid fa-qrcode d-block fs-4 mb-1"></i> โอน / QR</button>
-                <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectPayMethod('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-4 mb-1"></i> บัตรเครดิต</button>
+            <div class="mt-4 pt-4 border-top">
+              <div class="row g-3 align-items-end mb-4">
+                <div class="col-md-4">
+                  <label class="fw-bold text-muted small mb-2"><i class="fa-solid fa-headset text-primary me-1"></i> พนักงานขาย / เซลล์:</label>
+                  <select id="sales_rep_select" class="form-select form-select-lg bg-light rounded-3 fs-6">
+                    <option value="">-- ไม่ระบุเซลล์ --</option>
+                    <option value="น้องส้ม (เซลล์)">น้องส้ม (เซลล์)</option>
+                    <option value="น้องฟ้า (เซลล์)">น้องฟ้า (เซลล์)</option>
+                    <option value="หมอขายเอง">แพทย์ปิดการขายเอง</option>
+                  </select>
+                </div>
+                <div class="col-md-8">
+                  <label class="fw-bold text-muted small mb-2">วิธีรับชำระเงิน (ประทับลงบิล):</label>
+                  <div class="d-flex gap-2">
+                    <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectPayMethod('CASH')"><i class="fa-solid fa-money-bill-wave d-block fs-5 mb-1"></i> เงินสด</button>
+                    <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectPayMethod('QR')"><i class="fa-solid fa-qrcode d-block fs-5 mb-1"></i> โอน / QR</button>
+                    <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectPayMethod('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-5 mb-1"></i> บัตรเครดิต</button>
+                  </div>
+                </div>
               </div>
-              <button class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm fs-5" onclick="completeBill()"><i class="fa-solid fa-check-circle me-1"></i> บันทึกรับชำระเงินและประทับบิล</button>
+              <button class="btn btn-success w-100 py-3 rounded-4 fw-bold shadow fs-5" onclick="completeBill()" style="letter-spacing: 1px;">
+                <i class="fa-solid fa-check-circle me-2"></i> บันทึกรับชำระเงิน
+              </button>
             </div>
           </div>
           
@@ -137,14 +162,21 @@
 </div>
 
 <script>
-  var posQueues = []; var activeBill = null; var currentPayMethod = 'CASH';
+  var posQueues = []; 
+  var activeBill = null; 
+  var currentPayMethod = 'CASH';
 
-  function initPOS() { fetchPosQueue(); if(window.posQueueInterval) clearInterval(window.posQueueInterval); window.posQueueInterval = setInterval(fetchPosQueue, 5000); }
+  function initPOS() { 
+    fetchPosQueue(); 
+    if(window.posQueueInterval) clearInterval(window.posQueueInterval); 
+    window.posQueueInterval = setInterval(fetchPosQueue, 5000); 
+  }
   initPOS();
 
   async function fetchPosQueue() {
     try {
-      const res = await fetch('/api/pos/queue'); const data = await res.json();
+      const res = await fetch('/api/pos/queue'); 
+      const data = await res.json();
       if (data.status === 'success') {
         posQueues = data.data;
         renderPosQueue();
@@ -154,14 +186,26 @@
 
   function renderPosQueue() {
     const list = document.getElementById('posQueueList'); if(!list) return;
-    document.getElementById('posQueueCount').innerText = `${posQueues.length} คิว`; list.innerHTML = '';
+    document.getElementById('posQueueCount').innerText = `${posQueues.length} คิว`; 
+    list.innerHTML = '';
+    
     if (posQueues.length === 0) {
-      list.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-check-double fa-2x mb-2 opacity-50"></i><br>ไม่มีคิวรอชำระเงินวันนี้</div>`;
+      list.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-check-double fa-3x mb-3 opacity-25"></i><br>ไม่มีคิวรอชำระเงิน</div>`;
       return;
     }
+    
     posQueues.forEach(q => {
       const isActive = (activeBill && activeBill.hn === q.hn) ? 'active' : '';
-      list.innerHTML += `<div class="card pos-queue-card ${isActive} mb-2 border-0 bg-light" onclick="selectPosQueueByHN('${q.hn}')"><div class="card-body p-3 d-flex justify-content-between align-items-center"><div><h6 class="fw-bold text-primary m-0 mb-1">${q.name}</h6><small class="text-muted"><i class="fa-solid fa-address-card me-1"></i> ${q.hn}</small></div><div class="text-end"><span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i> รอชำระเงิน</span></div></div></div>`;
+      list.innerHTML += `
+        <div class="card pos-queue-card ${isActive} mb-3 shadow-sm border" onclick="selectPosQueueByHN('${q.hn}')">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="fw-bold text-dark m-0">${q.name}</h6>
+              <span class="badge bg-warning text-dark rounded-pill px-2"><i class="fa-solid fa-hourglass-half me-1"></i> รอชำระ</span>
+            </div>
+            <div class="small text-muted"><i class="fa-solid fa-address-card me-1 text-primary"></i> ${q.hn}</div>
+          </div>
+        </div>`;
     });
   }
 
@@ -171,7 +215,6 @@
      
      Swal.showLoading();
      try {
-       // เปลี่ยนไปใช้ API กลางเพื่อดึงรายชื่อทั้งหมดที่ตรงกับคำค้นหา
        const res = await fetch(`/api/patients?search=${encodeURIComponent(searchVal)}`);
        const data = await res.json();
        
@@ -179,15 +222,13 @@
          Swal.close();
          Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้รายนี้ในระบบ', 'warning');
        } else if (data.data.length === 1) {
-         // ถ้าเจอคนเดียว ดึงข้อมูลบิลมาโชว์เลย
          selectPosPatientFromList(data.data[0].id);
        } else {
-         // 🌟 ถ้าเจอหลายคน โชว์ป๊อปอัปให้เลือกชื่อที่ถูกต้อง
          Swal.close();
-         let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+         let html = '<div class="list-group text-start mt-3 custom-scrollbar" style="max-height:300px; overflow-y:auto;">';
          data.data.forEach(p => { 
-           html += `<button class="list-group-item list-group-item-action py-3" onclick="selectPosPatientFromList('${p.id}')">
-                      <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id}</small></div>
+           html += `<button class="list-group-item list-group-item-action py-3 border-bottom" onclick="selectPosPatientFromList('${p.id}')">
+                      <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><span class="badge bg-light text-dark border">${p.id}</span></div>
                       <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${p.phone}</small>
                     </button>`; 
          });
@@ -199,10 +240,9 @@
 
   async function selectPosQueueByHN(hn) {
     document.getElementById('posSearchInput').value = hn;
-    selectPosPatientFromList(hn); // วิ่งตรงเข้าฟังก์ชันดึงบิลเลย
+    selectPosPatientFromList(hn); 
   }
   
-  // 🌟 ฟังก์ชันใหม่: ดึงข้อมูลบิลชำระเงินหลังจากได้ HN ที่แน่นอนแล้ว
   async function selectPosPatientFromList(hn) {
      Swal.showLoading();
      try {
@@ -219,7 +259,6 @@
      } catch(e) { Swal.close(); }
   }
 
-// 🌟 โหลดบิลและข้อมูลประวัติการชำระเงินของคนไข้
   function loadPatientBillData(patient, bills) {
     activeBill = { 
       hn: patient.id, 
@@ -230,13 +269,11 @@
       new_items: [] 
     };
 
-    // 🛑 สั่งซ่อนหน้าว่าง (Empty State) และเปิดหน้าบิลชำระเงิน
     document.getElementById('posEmptyState').style.setProperty('display', 'none', 'important'); 
     document.getElementById('posBillState').style.display = 'flex';
     
     document.getElementById('b_patient_name').innerText = activeBill.name; 
     document.getElementById('b_patient_hn').innerText = activeBill.hn;
-    document.getElementById('b_patient_idcard').innerText = activeBill.id_card;
     document.getElementById('b_patient_phone').innerText = activeBill.phone;
 
     fetch(`/api/emr/${patient.id}`).then(r => r.json()).then(eData => {
@@ -251,7 +288,6 @@
     renderBillItems();
   }
 
- // 🌟 ฟังก์ชันเปิดดูประวัติชำระเงินของบิลนั้นๆ
   window.viewPaymentHistory = function(index) {
      let b = activeBill.bills[index];
      let history = [];
@@ -261,8 +297,8 @@
         return Swal.fire('ข้อมูลชำระเงิน', 'ประวัติเก่าไม่ได้บันทึกด้วยระบบใหม่', 'info');
      }
 
-     let tableHtml = `<table class="table table-sm mt-3 text-start">
-       <thead><tr class="table-light"><th>ครั้งที่</th><th>วันเวลา</th><th>วิธีชำระ</th><th class="text-end">ยอด (฿)</th></tr></thead><tbody>`;
+     let tableHtml = `<table class="table table-hover mt-3 text-start border rounded overflow-hidden">
+       <thead class="table-light"><tr><th class="py-2">ครั้งที่</th><th class="py-2">วันเวลา</th><th class="py-2 text-center">วิธีชำระ</th><th class="text-end py-2">ยอด (฿)</th></tr></thead><tbody>`;
      
      let total = 0;
      history.forEach((h, i) => {
@@ -270,76 +306,95 @@
         let m = h.method === 'CASH' ? 'เงินสด' : (h.method === 'QR' ? 'โอน/QR' : (h.method === 'CREDIT' ? 'บัตรเครดิต' : h.method));
         let badgeClass = h.method === 'CASH' ? 'success' : (h.method === 'QR' ? 'primary' : 'warning text-dark');
         tableHtml += `<tr>
-          <td>${i+1}</td>
-          <td>${d}</td>
-          <td><span class="badge bg-${badgeClass}">${m}</span></td>
-          <td class="text-end text-success fw-bold">${h.amount.toLocaleString()}</td>
+          <td class="py-2 text-muted fw-bold">${i+1}</td>
+          <td class="py-2">${d}</td>
+          <td class="py-2 text-center"><span class="badge bg-${badgeClass} px-2">${m}</span></td>
+          <td class="py-2 text-end text-dark fw-bold">${h.amount.toLocaleString()}</td>
         </tr>`;
         total += h.amount;
      });
-     tableHtml += `<tr><td colspan="3" class="text-end fw-bold">รวมชำระแล้ว:</td><td class="text-end fw-bold text-success">${total.toLocaleString()}</td></tr>`;
+     tableHtml += `<tr class="table-light"><td colspan="3" class="text-end fw-bold py-3 text-secondary">รวมชำระแล้วทั้งหมด:</td><td class="text-end fw-bold text-success fs-5 py-3">${total.toLocaleString()}</td></tr>`;
      tableHtml += `</tbody></table>`;
 
      Swal.fire({
-       title: `<h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>ประวัติชำระเงิน</h5>`,
-       html: `<div class="text-start mt-2"><div class="fw-bold text-dark border-bottom pb-2">${b.item_name}</div>${tableHtml}</div>`,
+       title: `<h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>ประวัติแบ่งชำระเงิน</h5>`,
+       html: `<div class="text-start mt-3"><div class="fw-bold text-dark fs-6 mb-2"><i class="fa-solid fa-tag me-1 text-muted"></i> ${b.item_name}</div>${tableHtml}</div>`,
        width: '600px',
-       confirmButtonText: 'ปิด'
+       confirmButtonText: 'ปิดหน้าต่าง',
+       confirmButtonColor: '#64748b'
      });
   }
 
+  // 🌟 ฟังก์ชันเรนเดอร์บิลที่อัปเดตและแก้บั๊กแล้ว
   function renderBillItems() {
-    const tbody = document.getElementById('billItems'); tbody.innerHTML = ''; 
+    const tbody = document.getElementById('billItems'); 
+    tbody.innerHTML = ''; 
 
     activeBill.bills.forEach((b, index) => {
       let balance = b.total_price - b.paid_amount;
       let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
       let isMed = (b.type === 'MEDICINE' || b.type === 'SKINCARE');
       
-      // 🌟 ส่ง product_id และ item_name ไปด้วย เพื่อกรองให้แสดงเฉพาะคอร์สของบิลนี้
+      // 🌟 ส่ง product_id, item_name และ b.id ไปด้วย เพื่อกรองสิทธิ์ที่ผูกกับบิลนี้เท่านั้น
       let badge = isPromo 
-        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}')"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
-        : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
+        ? `<span class="badge bg-primary ms-2 px-2 py-1">คอร์ส/โปรโมชั่น</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.75rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}', ${b.id})"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
+        : `<span class="badge bg-secondary ms-2 px-2 py-1">ยา/บริการ</span>`;
       
-      // 🌟 เปลี่ยนป้ายวิธีชำระเป็น "ปุ่มดูประวัติ"
+      // 🌟 ปุ่มดูประวัติการจ่าย
       let methodBadge = '<span class="text-muted small">-</span>';
       if (b.paid_amount > 0) {
         methodBadge = `
-          <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-bold shadow-sm" onclick="viewPaymentHistory(${index})">
-            <i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติ
+          <button class="btn btn-sm btn-light text-primary border rounded-pill px-3 py-1 fw-bold shadow-sm" style="font-size: 0.75rem;" onclick="viewPaymentHistory(${index})">
+            <i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติ
           </button>`;
       }
       
       let statusStyle = balance <= 0 ? 'text-muted' : 'text-danger fw-bold';
 
-      // 🌟 ล็อกค่ายาเปลี่ยนตัวเลขไม่ได้ บังคับจ่ายเต็ม
+      // 🌟 ล็อกค่ายาเปลี่ยนตัวเลขไม่ได้
       let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
       let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
       
-      // 🌟 ปุ่มเช็คสิทธิ์ (ของคุณทำถูกแล้ว)
-      let badge = isPromo 
-        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientSpecificCourse('${b.product_id}', '${b.item_name}', ${b.id})"><i class="fa-solid fa-magnifying-glass"></i> เช็คสิทธิ์</button>` 
-        : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
-
-      // ⚠️ ตัวแปรนี้ที่หายไปในรูปของคุณครับ!
       let payInputHtml = balance <= 0 
-        ? `<span class="badge bg-light text-muted border py-2 px-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระเรียบร้อย</span>`
-        : `<input type="number" class="form-control form-control-sm text-end pay-today-input fw-bold ${inputBg}" 
+        ? `<span class="badge bg-light text-muted border py-2 px-3 w-100 rounded-3"><i class="fa-solid fa-check me-1 text-success"></i> ชำระครบแล้ว</span>`
+        : `<input type="number" class="form-control text-end pay-today-input fw-bold ${inputBg} rounded-3" 
                    data-index="${index}" data-type="db" data-balance="${balance}" 
                    value="${balance}" max="${balance}" min="0" oninput="calculatePosTotal()" ${inputAttr}>`;
 
       tbody.innerHTML += `
         <tr>
-          <td class="fw-bold text-dark" style="font-size: 0.9rem;">${b.item_name} ${badge}</td>
-          <td class="text-end">${b.total_price.toLocaleString()}</td>
+          <td class="text-dark"><span class="fw-bold fs-6">${b.item_name}</span><br>${badge}</td>
+          <td class="text-end fw-bold text-secondary">${b.total_price.toLocaleString()}</td>
           <td class="text-end ${b.paid_amount > 0 ? 'text-success fw-bold' : 'text-muted'}">${b.paid_amount.toLocaleString()}</td>
-          <td class="text-end ${statusStyle}">${balance <= 0 ? 'ชำระครบแล้ว' : balance.toLocaleString()}</td>
+          <td class="text-end ${statusStyle}">${balance <= 0 ? '-' : balance.toLocaleString()}</td>
           <td class="text-center">${methodBadge}</td>
-          <td class="text-end">${payInputHtml}</td>
+          <td class="text-end" style="width: 150px;">${payInputHtml}</td>
         </tr>`;
+    }); 
+
+    activeBill.new_items.forEach((item, index) => {
+      let lineTotal = item.qty * item.price;
+      let isMed = (item.type === 'MEDICINE' || item.type === 'SKINCARE');
+      let inputAttr = isMed ? 'readonly title="รายการยาบังคับชำระเต็มจำนวน" style="cursor: not-allowed;"' : '';
+      let inputBg = isMed ? 'bg-light text-secondary border-secondary' : 'border-success text-success';
+
+      tbody.innerHTML += `
+        <tr class="bg-light">
+          <td class="text-dark"><span class="fw-bold fs-6">${item.name}</span><br><span class="badge bg-info text-dark ms-2 px-2 py-1">เพิ่มหน้าเคาน์เตอร์</span></td>
+          <td class="text-end fw-bold text-secondary">${lineTotal.toLocaleString()}</td>
+          <td class="text-end text-muted">0</td>
+          <td class="text-end text-danger fw-bold">${lineTotal.toLocaleString()}</td>
+          <td class="text-center"><span class="badge bg-warning text-dark border">บิลใหม่</span></td>
+          <td class="text-end" style="width: 150px;">
+            <input type="number" class="form-control text-end pay-today-input fw-bold ${inputBg} rounded-3" 
+                   data-index="${index}" data-type="new" data-balance="${lineTotal}" 
+                   value="${lineTotal}" max="${lineTotal}" min="0" oninput="calculatePosTotal()" ${inputAttr}>
+          </td>
+        </tr>`;
+    });
 
     if (activeBill.bills.length === 0 && activeBill.new_items.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">ไม่มียอดค้างชำระในระบบ</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa-solid fa-folder-open fa-2x mb-3 opacity-25"></i><br>ไม่มียอดค้างชำระในระบบ</td></tr>`;
     }
 
     calculatePosTotal();
@@ -370,15 +425,20 @@
     Swal.fire({ title: 'กำลังดึงข้อมูลคลัง...', didOpen: () => Swal.showLoading() });
     const res = await fetch('/api/inventory'); const data = await res.json(); Swal.close();
     
-    let options = '<option value="">-- เลือกสินค้า / โปรโมชั่น --</option>';
-    data.data.forEach(p => { options += `<option value="${p.id}" data-name="${p.name}" data-price="${p.price}" data-type="${p.type}">${p.name} (คงเหลือ: ${p.stock}) - ฿${p.price}</option>`; });
+    let options = '<option value="">-- ค้นหาและเลือกรายการ... --</option>';
+    data.data.forEach(p => { options += `<option value="${p.id}" data-name="${p.name}" data-price="${p.price}" data-type="${p.type}">${p.name} (คงเหลือ: ${p.stock}) - ฿${p.price.toLocaleString()}</option>`; });
 
     Swal.fire({
-      title: '<h5 class="fw-bold text-primary">เพิ่มรายการลงบิล</h5>',
-      html: `<select id="swal_product" class="form-select mb-3" onchange="updateSwalPrice(this)">${options}</select>
-             <div class="row"><div class="col-6"><label class="small fw-bold">จำนวน</label><input type="number" id="swal_qty" class="form-control" value="1" step="0.1"></div>
-             <div class="col-6"><label class="small fw-bold">ราคา/หน่วย</label><input type="number" id="swal_price" class="form-control" value="0"></div></div>`,
-      showCancelButton: true, confirmButtonText: 'เพิ่มเข้าบิล', confirmButtonColor: '#3b82f6',
+      title: '<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-cart-plus me-2"></i>เพิ่มรายการลงบิล</h5>',
+      html: `<div class="text-start mt-3">
+               <label class="fw-bold small text-muted mb-1">เลือกสินค้า / บริการ</label>
+               <select id="swal_product" class="form-select mb-3 border-primary" onchange="updateSwalPrice(this)">${options}</select>
+               <div class="row g-2">
+                 <div class="col-6"><label class="fw-bold small text-muted mb-1">จำนวน</label><input type="number" id="swal_qty" class="form-control text-center fw-bold" value="1" step="0.1"></div>
+                 <div class="col-6"><label class="fw-bold small text-muted mb-1">ราคา/หน่วย (บาท)</label><input type="number" id="swal_price" class="form-control text-end fw-bold text-success" value="0"></div>
+               </div>
+             </div>`,
+      showCancelButton: true, confirmButtonText: 'เพิ่มเข้าบิล', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#3b82f6',
       preConfirm: () => {
          const sel = document.getElementById('swal_product'); const opt = sel.options[sel.selectedIndex];
          if(!opt.value) return false;
@@ -414,7 +474,6 @@
     if(method === 'CREDIT') document.getElementById('pay_credit').classList.add('selected');
   }
 
-  // 🌟 4. บันทึกข้อมูลกลับเข้าตัวคนไข้รายนั้นๆ พร้อมประทับวิธีชำระเงิน
   async function completeBill() {
     Swal.fire({ title: 'กำลังบันทึกบิลลงประวัติคนไข้...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const salesRep = document.getElementById('sales_rep_select').value;
@@ -447,14 +506,14 @@
       Swal.fire({ icon: 'success', title: 'บันทึกการชำระเงินเรียบร้อย', text: `ประทับตราการจ่ายด้วย ${currentPayMethod} ลงประวัติคนไข้แล้ว`, confirmButtonColor: '#3b82f6' }).then(() => {
         activeBill = null; 
         document.getElementById('posBillState').style.display = 'none'; 
-        document.getElementById('posEmptyState').style.setProperty('display', 'flex', 'important'); // 🌟 โชว์หน้าว่างกลับมา
+        document.getElementById('posEmptyState').style.setProperty('display', 'flex', 'important'); 
         document.getElementById('posSearchInput').value = '';
         fetchPosQueue(); 
       });
     } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
   }
   
- // ==========================================
+  // ==========================================
   // 🌟 ฟังก์ชันดูคอร์สคงเหลือ แยกเฉพาะรายการที่กดดูตามบิล (POS)
   // ==========================================
   async function viewPatientSpecificCourse(productId, itemName, billId) {
@@ -464,7 +523,6 @@
     Swal.fire({ title: 'กำลังเช็คสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-      // 🌟 ดึงข้อมูลคอร์สทั้งหมด, คลังสินค้า, และประวัติบิลทั้งหมดของคนไข้
       const [courseRes, invRes, billRes] = await Promise.all([
         fetch(`/api/patients/${hn}/courses`),
         fetch('/api/inventory'),
@@ -481,16 +539,12 @@
       let productDef = inventory.find(p => p.id === productId);
       if (!productDef) return Swal.fire('ข้อมูลไม่พบ', 'ไม่พบข้อมูลสินค้านี้ในระบบ', 'error');
 
-      // 🌟 เรียงคอร์สและบิลจากเก่าไปใหม่ (ASC) เพื่อนำมาจับคู่กันตามลำดับการซื้อ
       let tempCourses = [...allCourses].sort((a,b) => a.id - b.id);
       let productBills = allBills.filter(b => b.product_id === productId).sort((a,b) => a.id - b.id);
       
-      // หาว่าบิลที่เรากดดู เป็นการซื้อครั้งที่เท่าไหร่ของสินค้านี้
       let billIndex = productBills.findIndex(b => b.id === billId);
-      
       let sets = [];
 
-      // 1. จัดกลุ่มคอร์สกรณีเป็น "โปรโมชั่นจัดเซ็ต"
       if (productDef.type === 'PROMOTION') {
          let bundles = [];
          try { bundles = JSON.parse(productDef.bundle_items || '[]'); } catch(e) {}
@@ -502,7 +556,6 @@
             let hasAllItems = true;
             let usedIndices = new Set();
             
-            // ค่อยๆ กวาดคอร์สที่ตรงกับของแถมทีละเซ็ต ตามลำดับเก่าไปใหม่
             for (let b of bundles) {
               let foundIdx = tempCourses.findIndex((c, idx) => 
                   !usedIndices.has(idx) && 
@@ -518,22 +571,18 @@
             
             if (hasAllItems) {
               sets.push(currentSet);
-              // เอาคอร์สที่ถูกจัดกลุ่มเป็นเซ็ตแล้ว ออกจากกอง
               tempCourses = tempCourses.filter((_, idx) => !usedIndices.has(idx));
             } else {
               findingMatch = false;
             }
          }
-      } 
-      // 2. จัดกลุ่มกรณีเป็น "คอร์สเดี่ยว / หัตถการ"
-      else {
+      } else {
          let specificCourses = tempCourses.filter(c => c.product_id === productId || c.product_name === itemName);
          specificCourses.forEach(c => {
             sets.push([{ name: itemName, course_data: c }]);
          });
       }
 
-      // 🌟 นำเซ็ตคอร์สที่จับกลุ่มได้ มาแมปเข้ากับบิลที่เรากำลังกดดู
       let targetSet = null;
       if (billIndex !== -1 && sets[billIndex]) {
           targetSet = sets[billIndex];
@@ -547,29 +596,29 @@
       
       let bundleHtml = targetSet.map(ab => {
           let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-          return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+          return `<div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
                       <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-success'} me-1"></i> ${ab.name}</span>
-                      <span class="${remain <= 0 ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-success fw-bold'} badge bg-light border px-2 py-1">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
                   </div>`;
       }).join('');
 
       let statusBadge = isAllUsed 
-          ? `<span class="badge bg-secondary mb-1">ใช้สิทธิ์ครบแล้ว</span>` 
-          : `<span class="badge bg-success mb-1">ยังมีสิทธิ์คงเหลือ</span>`;
+          ? `<span class="badge bg-secondary px-3 py-2"><i class="fa-solid fa-check-double me-1"></i> ใช้สิทธิ์ครบแล้ว</span>` 
+          : `<span class="badge bg-success px-3 py-2"><i class="fa-solid fa-check me-1"></i> ยังมีสิทธิ์คงเหลือ</span>`;
 
       let cardHtml = `
-          <div class="card border ${isAllUsed ? 'border-secondary opacity-75' : 'border-success'} shadow-sm">
-              <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-success'}"><i class="fa-solid ${productDef.type === 'PROMOTION' ? 'fa-gift' : 'fa-wand-magic-sparkles'} me-1"></i> ${itemName}</div>
-                      ${statusBadge}
-                  </div>
-                  <div class="bg-light p-2 rounded">${bundleHtml}</div>
+          <div class="card border-0 shadow-sm ${isAllUsed ? 'opacity-75' : ''}">
+              <div class="card-header bg-white border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                  <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-success'} fs-6"><i class="fa-solid ${productDef.type === 'PROMOTION' ? 'fa-gift' : 'fa-wand-magic-sparkles'} me-2"></i> ${itemName}</div>
+              </div>
+              <div class="card-body">
+                  <div class="mb-3">${statusBadge}</div>
+                  <div class="bg-light p-3 rounded-3 border">${bundleHtml}</div>
               </div>
           </div>`;
 
       Swal.fire({
-          title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์ตามบิล</h5>`,
+          title: `<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์</h4>`,
           html: `<div class="text-start mt-3">${cardHtml}</div>`,
           width: '500px', 
           showCloseButton: true, 
@@ -580,5 +629,4 @@
        Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error');
     }
   }
-  
 </script>
