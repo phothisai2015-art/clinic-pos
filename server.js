@@ -307,6 +307,14 @@ app.put('/api/queue/complete/:hn', (req, res) => {
 
 // ==========================================
 // 💳 API ระบบ POS และการชำระเงิน
+// 🌟 API ดึงข้อมูลบิลคนไข้ตาม HN (สำหรับจุดคัดกรอง Reception และ Booking)
+app.get('/api/pos/bill/:hn', (req, res) => {
+  db.all(`SELECT * FROM patient_bills WHERE patient_id = ?`, [req.params.hn], (err, rows) => {
+    if (err) return res.json({ status: 'error', data: [] });
+    res.json({ status: 'success', data: rows || [] });
+  });
+});
+
 // ==========================================
 app.put('/api/pos/send/:hn', (req, res) => {
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn], (err, row) => {
