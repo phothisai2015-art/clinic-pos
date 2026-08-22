@@ -312,7 +312,7 @@
     container.innerHTML = html;
   }
 
-// 🌟 แก้ไข: จัดรูปแบบ UI ของคอร์สเดี่ยวให้แสดงกล่องรายละเอียดเหมือนกับโปรโมชั่น
+// 🌟 แก้ไข: จัดรูปแบบ UI ให้คอร์สเดี่ยวมีกล่องรายละเอียดเหมือนโปรโมชั่น และเคลียร์โค้ดที่ซ้ำซ้อน
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
     if(allCoursesForScreening.length === 0) {
@@ -402,7 +402,7 @@
         let valStr = `OLD_${c.id}`;
         let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
         
-        // 🌟 เพิ่มกล่องรายละเอียดให้คอร์สเดี่ยว
+        // 🌟 เพิ่มกล่องรายละเอียดให้คอร์สเดี่ยวเหมือนโปรโมชั่นเป๊ะๆ
         let bundleHtml = `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
                             <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
                             <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
