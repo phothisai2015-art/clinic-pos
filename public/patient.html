@@ -409,6 +409,7 @@
 
     const payload = {
       patient_id: currentHN,
+	  doctor_id: sessionStorage.getItem('currentUserId') || 1, // 🌟 ดึง ID หมอจากการล็อกอิน PIN
       symptoms: document.getElementById('emr_symptoms').value,
       diagnosis: document.getElementById('emr_diagnosis').value,
       treatment_details: document.getElementById('emr_treatment').value,
@@ -525,6 +526,8 @@
               </div>`;
            }
          }
+		 
+		 let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ';
 
          html += `
           <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">

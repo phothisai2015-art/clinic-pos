@@ -625,7 +625,8 @@ async function selectPatient(hn) {
 
     // 🌟 เพิ่มข้อมูลนัดหมายเข้า Payload
     const payload = {
-      patient_id: currentHN, 
+      patient_id: currentHN,
+	  doctor_id: sessionStorage.getItem('currentUserId')	  
       symptoms: sys_symptoms, 
       diagnosis: sys_diagnosis, 
       treatment_details: finalTxArray.filter(Boolean).join('\n\n'),
@@ -738,12 +739,18 @@ async function selectPatient(hn) {
            }
          }
          
+         // 🌟 สร้างตัวแปรเก็บชื่อหมอ
+         let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ';
+         
          let vitalsLog = (log.bp || log.pulse || log.weight || log.height) ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>` : '';
          let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
 
          html += `
           <div class="border-start border-3 border-danger ps-3 pb-3 mb-4">
-            <span class="fw-bold text-danger">${dateStr} น.</span>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-danger">${dateStr} น.</span>
+              <span class="badge bg-light text-dark border"><i class="fa-solid fa-user-doctor me-1 text-primary"></i> ${docName}</span>
+            </div>
             <div class="fw-bold text-dark mt-2">Dx: ${log.diagnosis || '-'}</div>
             <div class="small text-muted mt-1">CC: ${log.symptoms || '-'}</div>
             <div class="small text-muted mt-1">Tx:<br>${formattedTx}</div>
