@@ -122,17 +122,18 @@
   </div>
                 </div>
 
-                <!-- 🩺 โหมด 2: ตรวจรักษาทั่วไป / สั่งยา -->
                 <div id="mode_general" style="display: block;">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-stethoscope me-2"></i> ตรวจรักษาทั่วไป / สั่งยา</h5>
-                    <button id="btn_switch_to_promo" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" style="display:none;" onclick="switchToPromoMode()">
-                      <i class="fa-solid fa-gift me-1"></i> กลับไปโหมดโปรโมชั่น
-                    </button>
-                  </div>
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="2" placeholder="ระบุอาการคนไข้..."></textarea></div>
-                  <div class="mb-3"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="2" placeholder="ระบุผลวินิจฉัย..."></textarea></div>
-                </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-stethoscope me-2"></i> ตรวจรักษาทั่วไป / สั่งยา</h5>
+    <button id="btn_switch_to_promo" class="btn btn-sm btn-outline-primary rounded-pill fw-bold" style="display:none;" onclick="switchToPromoMode()">
+      <i class="fa-solid fa-gift me-1"></i> กลับไปโหมดโปรโมชั่น
+    </button>
+  </div>
+  <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="emr_symptoms" class="form-control" rows="2" placeholder="ระบุอาการคนไข้..."></textarea></div>
+  <div class="mb-3"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="emr_diagnosis" class="form-control" rows="2" placeholder="ระบุผลวินิจฉัย..."></textarea></div>
+  <!-- 🌟 ช่องที่เพิ่มมาใหม่ -->
+  <div class="mb-3"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="emr_treatment" class="form-control" rows="2" placeholder="ระบุหัตถการที่ทำ หรือคำแนะนำเพิ่มเติม..."></textarea></div>
+</div>
 
                 <hr class="my-3">
                 
@@ -542,6 +543,12 @@ async function selectPatient(hn) {
        }
        sys_symptoms = document.getElementById('emr_symptoms').value;
        sys_diagnosis = document.getElementById('emr_diagnosis').value || '-';
+       
+       // 🌟 เพิ่มท่อนนี้ เพื่อเก็บข้อมูลจากช่อง Tx ส่งไปบันทึก
+       let manual_tx = document.getElementById('emr_treatment') ? document.getElementById('emr_treatment').value : '';
+       if (manual_tx) {
+         finalTxArray.push(`[หัตถการ / การรักษา]\n${manual_tx}`);
+       }
     }
 
     if(pendingMeds.length > 0) {
@@ -601,6 +608,7 @@ async function selectPatient(hn) {
       if(document.getElementById('mc_area')) document.getElementById('mc_area').value = '';
       if(document.getElementById('mc_setting')) document.getElementById('mc_setting').value = '';
       if(document.getElementById('mc_additional_note')) document.getElementById('mc_additional_note').value = '';
+	  if(document.getElementById('emr_treatment')) document.getElementById('emr_treatment').value = ''; // 🌟 ล้างช่อง Tx
 
       // 🛑 7) เปลี่ยนสถานะปุ่มเป็น "บันทึกข้อมูลเรียบร้อยแล้ว"
       btnSave.disabled = true;
