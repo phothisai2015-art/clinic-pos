@@ -648,7 +648,7 @@ async function selectPatient(hn) {
     }
   }
 
-  // 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (จับคู่ EMR แต่ละรอบกับลำดับคิวประจำวันแบบ 1 ต่อ 1)
+// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (แก้ไขให้แสดงปุ่มส่งชำระเงินเสมอ แม้จะบันทึกประวัติหลายรอบ)
   async function loadEMRHistory(hn) {
     const tl = document.getElementById('emrTimeline'); 
     tl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div></div>';
@@ -656,31 +656,33 @@ async function selectPatient(hn) {
       const [res1, res2] = await Promise.all([fetch(`/api/emr/${hn}`), fetch('/api/appointments')]);
       const data = await res1.json(); 
       const appts = (await res2.json()).data.filter(a => a.hn === hn);
+      
       if (data.data.length === 0) return tl.innerHTML = '<div class="text-muted text-center py-4">ไม่มีประวัติการรักษา</div>';
 
-      const todayStr = new Date().toISOString().split('T')[0];
+      // เช็ควันที่ให้เป็น Timezone ปัจจุบัน
+      const now = new Date();
+      const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       
-      // เรียง EMR ของวันนี้ตามลำดับเวลาการตรวจ (เก่าไปใหม่)
-      const emrsTodayASC = data.data.filter(l => l.visit_date.startsWith(todayStr)).reverse();
-      // เรียงคิวของวันนี้ตามลำดับการเข้าตรวจ (เก่าไปใหม่)
-      const apptsTodayASC = appts.filter(a => a.date === todayStr);
+      const emrsToday = data.data.filter(l => l.visit_date.startsWith(todayStrLocal));
+      const apptsToday = appts.filter(a => a.date === todayStrLocal);
 
       let html = '';
-      data.data.forEach((log) => {
+      data.data.forEach((log, index) => {
          const dateStr = new Date(log.visit_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+         const logDateOnly = log.visit_date.split('T')[0]; 
+         
          let paymentBtn = '';
          
-         if (log.visit_date.startsWith(todayStr)) {
-           // หา ลำดับรอบการตรวจ ของ EMR log นี้ในวันนี้ (รอบที่ 1, 2, 3...)
-           const emrIndex = emrsTodayASC.findIndex(e => e.id === log.id);
-           const matchedAppt = apptsTodayASC[emrIndex];
+         // 🌟 แสดงปุ่มเฉพาะ "ประวัติใบบนสุด (ล่าสุด)" ของวันนี้เท่านั้น
+         if (logDateOnly === todayStrLocal && index === 0) {
+           const latestAppt = apptsToday[apptsToday.length - 1]; // คิวล่าสุดของวันนี้
 
-           if (matchedAppt) {
-             if (matchedAppt.status === 'WAITING_PAYMENT') {
+           if (latestAppt) {
+             if (latestAppt.status === 'WAITING_PAYMENT') {
                paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
-             } else if (matchedAppt.status === 'PAID') {
+             } else if (latestAppt.status === 'PAID') {
                paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น</button>`;
-             } else if (matchedAppt.status === 'COMPLETED' || matchedAppt.status === 'CHECKED_IN') {
+             } else if (latestAppt.status === 'COMPLETED' || latestAppt.status === 'CHECKED_IN') {
                paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา</button>`;
              }
            }
@@ -700,9 +702,10 @@ async function selectPatient(hn) {
           </div>`;
       });
       tl.innerHTML = html;
-    } catch(e) {}
+    } catch(e) {
+      tl.innerHTML = '<div class="text-danger text-center py-4">โหลดประวัติล้มเหลว</div>';
+    }
   }
-
   // 🌟 เมื่อกดส่งไปชำระเงิน จะทำการเปลี่ยนสถานะคิว ล้างหน้าจอ และรีเฟรชรายการคิวฝั่งซ้ายมือ
   async function sendToPayment(hn, btn) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ส่ง...'; 
