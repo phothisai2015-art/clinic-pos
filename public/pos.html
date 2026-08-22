@@ -165,28 +165,58 @@
     });
   }
 
-  // 🌟 1. ค้นหาได้ทั้ง ชื่อ, HN, เบอร์โทร และ เลขบัตรประชาชน
   async function searchPosPatient() {
      let searchVal = document.getElementById('posSearchInput').value.trim();
      if(!searchVal) return;
      
      Swal.showLoading();
      try {
-       const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(searchVal)}`);
+       // เปลี่ยนไปใช้ API กลางเพื่อดึงรายชื่อทั้งหมดที่ตรงกับคำค้นหา
+       const res = await fetch(`/api/patients?search=${encodeURIComponent(searchVal)}`);
        const data = await res.json();
-       Swal.close();
        
-       if (data.status === 'success' && data.patient) {
-         loadPatientBillData(data.patient, data.data);
+       if (data.data.length === 0) {
+         Swal.close();
+         Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้รายนี้ในระบบ', 'warning');
+       } else if (data.data.length === 1) {
+         // ถ้าเจอคนเดียว ดึงข้อมูลบิลมาโชว์เลย
+         selectPosPatientFromList(data.data[0].id);
        } else {
-         Swal.fire('ไม่พบข้อมูล', data.message || 'ไม่พบประวัติคนไข้รายนี้', 'warning');
+         // 🌟 ถ้าเจอหลายคน โชว์ป๊อปอัปให้เลือกชื่อที่ถูกต้อง
+         Swal.close();
+         let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+         data.data.forEach(p => { 
+           html += `<button class="list-group-item list-group-item-action py-3" onclick="selectPosPatientFromList('${p.id}')">
+                      <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id}</small></div>
+                      <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${p.phone}</small>
+                    </button>`; 
+         });
+         html += '</div>';
+         Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
        }
      } catch(e) { Swal.close(); }
   }
 
   async function selectPosQueueByHN(hn) {
     document.getElementById('posSearchInput').value = hn;
-    searchPosPatient();
+    selectPosPatientFromList(hn); // วิ่งตรงเข้าฟังก์ชันดึงบิลเลย
+  }
+  
+  // 🌟 ฟังก์ชันใหม่: ดึงข้อมูลบิลชำระเงินหลังจากได้ HN ที่แน่นอนแล้ว
+  async function selectPosPatientFromList(hn) {
+     Swal.showLoading();
+     try {
+       const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(hn)}`);
+       const data = await res.json();
+       Swal.close();
+       
+       if (data.status === 'success' && data.patient) {
+         document.getElementById('posSearchInput').value = hn; 
+         loadPatientBillData(data.patient, data.data);
+       } else {
+         Swal.fire('ไม่พบข้อมูล', data.message || 'ไม่พบประวัติคนไข้รายนี้', 'warning');
+       }
+     } catch(e) { Swal.close(); }
   }
 
 // 🌟 โหลดบิลและข้อมูลประวัติการชำระเงินของคนไข้
