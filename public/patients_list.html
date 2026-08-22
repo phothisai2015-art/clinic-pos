@@ -6,7 +6,7 @@
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
 
-<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
+<div class="container-fluid py-4 px-lg-5" style="max-width: 1800px; height: 100vh; display: flex; flex-direction: column;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-users me-2"></i> ฐานข้อมูลคนไข้ทั้งหมด</h3>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
@@ -25,11 +25,13 @@
       <table class="table patient-table w-100 mb-0">
         <thead style="position: sticky; top: 0; background: white; z-index: 1;">
           <tr>
-            <th width="15%">รหัสคนไข้ (HN)</th>
-            <th width="25%">ชื่อ - นามสกุล</th>
-            <th width="15%">เบอร์โทรศัพท์</th>
-            <th width="15%">ข้อมูลแพ้ยา</th>
-            <th width="30%" class="text-center">จัดการข้อมูล</th>
+            <th width="10%">รหัสคนไข้ (HN)</th>
+            <th width="15%">เลขบัตร ปชช.</th>
+            <th width="20%">ชื่อ - นามสกุล</th>
+            <th width="10%">เบอร์โทรศัพท์</th>
+            <th width="10%">อายุ (วันเกิด)</th>
+            <th width="15%">โรคประจำตัว / แพ้ยา</th>
+            <th width="20%" class="text-center">จัดการข้อมูล</th>
           </tr>
         </thead>
         <tbody id="patientListBody">
@@ -94,23 +96,42 @@
     tbody.innerHTML = '';
     
     if(items.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">ไม่พบข้อมูลคนไข้</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">ไม่พบข้อมูลคนไข้</td></tr>`;
       return;
     }
 
     items.forEach(p => {
+      // 1. จัดการข้อมูลแพ้ยาและโรคประจำตัวให้โชว์เป็น Badge สีสันสวยงาม
       let allergyBadge = (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') 
-        ? `<span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation"></i> ${p.allergies}</span>` 
-        : '<span class="text-muted small">ไม่มี</span>';
+        ? `<div class="badge bg-danger text-white mb-1"><i class="fa-solid fa-triangle-exclamation"></i> แพ้: ${p.allergies}</div>` 
+        : '';
+      let diseaseBadge = (p.congenital_disease && p.congenital_disease !== '-' && p.congenital_disease !== 'ไม่มี')
+        ? `<div class="badge bg-warning text-dark"><i class="fa-solid fa-virus"></i> โรค: ${p.congenital_disease}</div>`
+        : '';
+      
+      let healthInfo = (allergyBadge || diseaseBadge) ? `${allergyBadge}<br>${diseaseBadge}` : '<span class="text-muted small">ไม่มี</span>';
+
+      // 2. คำนวณอายุจากวันเกิด
+      let ageText = '-';
+      let dobText = '';
+      if (p.dob) {
+        const dob = new Date(p.dob);
+        const diff = Date.now() - dob.getTime();
+        const age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+        ageText = `${age} ปี`;
+        dobText = `<br><small class="text-muted">${dob.toLocaleDateString('th-TH')}</small>`;
+      }
 
       tbody.innerHTML += `
         <tr>
           <td class="fw-bold text-muted">${p.id}</td>
+          <td class="text-secondary">${p.id_card || '-'}</td>
           <td class="fw-bold text-primary">${p.full_name}</td>
           <td>${p.phone}</td>
-          <td>${allergyBadge}</td>
+          <td><span class="fw-bold text-dark">${ageText}</span>${dobText}</td>
+          <td>${healthInfo}</td>
           <td class="text-center">
-            <button class="btn btn-sm btn-primary rounded-pill px-3 me-1 fw-bold shadow-sm" onclick="openHistoryModal('${p.id}', '${p.full_name}')"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติรักษา</button>
+            <button class="btn btn-sm btn-primary rounded-pill px-3 me-1 fw-bold shadow-sm" onclick="openHistoryModal('${p.id}', '${p.full_name}')"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติ</button>
             <button class="btn btn-sm btn-outline-info rounded-pill px-3 me-1 fw-bold" onclick="openEditPatient('${p.id}')"><i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข</button>
             <button class="btn btn-sm btn-light text-danger rounded-circle" title="ลบข้อมูล" onclick="deletePatientData('${p.id}')"><i class="fa-solid fa-trash"></i></button>
           </td>
