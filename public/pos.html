@@ -295,7 +295,11 @@
       let balance = b.total_price - b.paid_amount;
       let isPromo = (b.type === 'PROMOTION' || b.type === 'COURSE' || b.type === 'INJECTABLE');
       let isMed = (b.type === 'MEDICINE' || b.type === 'SKINCARE');
-      let badge = isPromo ? '<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span>' : '<span class="badge bg-secondary ms-1">ยา/บริการ</span>';
+      
+      // 🌟 เพิ่มปุ่มเช็คคอร์สข้างๆ ป้ายกำกับ
+      let badge = isPromo 
+        ? `<span class="badge bg-primary ms-1">โปรโมชั่น/คอร์ส</span> <button class="btn btn-sm btn-outline-primary py-0 px-2 ms-1 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="viewPatientCourses()"><i class="fa-solid fa-magnifying-glass"></i> เช็คคอร์ส</button>` 
+        : `<span class="badge bg-secondary ms-1">ยา/บริการ</span>`;
       
       // 🌟 เปลี่ยนป้ายวิธีชำระเป็น "ปุ่มดูประวัติ"
       let methodBadge = '<span class="text-muted small">-</span>';
@@ -465,4 +469,58 @@
       });
     } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
   }
+  
+  // ==========================================
+  // 🌟 ฟังก์ชันดูคอร์สคงเหลือของคนไข้ (POS)
+  // ==========================================
+  async function viewPatientCourses() {
+    if (!activeBill || !activeBill.hn) return;
+    
+    let hn = activeBill.hn;
+    let name = activeBill.name;
+    
+    Swal.fire({ title: 'กำลังโหลดข้อมูลคอร์ส...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      const res = await fetch(`/api/patients/${hn}/courses`);
+      const data = await res.json();
+      
+      let activeCourses = ''; 
+      let completedCourses = '';
+      
+      if (data.status === 'success' && data.data.length > 0) {
+        data.data.forEach(c => {
+          let remain = c.total_qty - c.used_qty;
+          let displayName = c.product_name || c.product_id;
+          let unitName = c.unit || 'ครั้ง';
+          
+          if (remain > 0) {
+            activeCourses += `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><span class="text-success fw-bold"><i class="fa-solid fa-syringe me-1"></i> ${displayName}</span><span class="badge bg-success rounded-pill" style="font-size:0.8rem;">เหลือ ${remain} / ${c.total_qty} ${unitName}</span></div>`;
+          } else {
+            completedCourses += `<div class="d-flex justify-content-between align-items-center border-bottom py-2 text-muted"><span><i class="fa-solid fa-check-double me-1"></i> ${displayName}</span><span style="font-size:0.8rem;">ใช้ครบแล้ว (${c.total_qty} ${unitName})</span></div>`;
+          }
+        });
+      }
+      
+      if (!activeCourses) activeCourses = '<div class="text-muted small py-2 text-center">- ไม่มีคอร์สคงเหลือ -</div>';
+      if (!completedCourses) completedCourses = '<div class="text-muted small py-2 text-center">- ไม่มีประวัติคอร์สที่ใช้หมดแล้ว -</div>';
+
+      Swal.fire({
+        title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-user me-2"></i>${name}</h5><div class="fs-6 text-muted mt-1">HN: ${hn}</div>`,
+        html: `<div class="text-start mt-3">
+                 <h6 class="fw-bold text-success border-bottom pb-2 mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> คอร์ส / โปรโมชั่นที่คงเหลือ</h6>
+                 <div class="mb-4">${activeCourses}</div>
+                 <h6 class="fw-bold text-secondary border-bottom pb-2 mb-2"><i class="fa-solid fa-clock-rotate-left me-1"></i> คอร์สที่ใช้ครบแล้ว</h6>
+                 <div>${completedCourses}</div>
+               </div>`,
+        width: '500px', 
+        showCloseButton: true, 
+        showConfirmButton: false
+      });
+      
+    } catch (err) { 
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error'); 
+    }
+  }
+  
 </script>
