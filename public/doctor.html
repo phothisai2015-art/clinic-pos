@@ -623,12 +623,12 @@ async function selectPatient(hn) {
       return (el && el.innerText !== '-') ? el.innerText : '';
     };
 
-    // 🌟 เพิ่มข้อมูลนัดหมายเข้า Payload
+   // 🌟 เพิ่มข้อมูลนัดหมายเข้า Payload
     const payload = {
       patient_id: currentHN,
-	  doctor_id: sessionStorage.getItem('currentUserId')	  
+      doctor_id: sessionStorage.getItem('currentUserId') || 1, // <--- เติม || 1 ป้องกันเผื่อหลุด และเติมลูกน้ำ (,) ตรงนี้
       symptoms: sys_symptoms, 
-      diagnosis: sys_diagnosis, 
+      diagnosis: sys_diagnosis,
       treatment_details: finalTxArray.filter(Boolean).join('\n\n'),
       bp: getVitalVal('v_bp'),
       pulse: getVitalVal('v_pulse'),
