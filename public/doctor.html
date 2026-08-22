@@ -261,13 +261,13 @@
     } catch(e) {}
   }
 
-  async function selectPatient(hn) {
+async function selectPatient(hn) {
     currentHN = hn; 
     pendingMeds = []; 
     activePromoInfo = null;
     currentSubItems = [];
-	
-	// 🌟 ปลดล็อกฟอร์มและรีเซ็ตปุ่มบันทึกเมื่อเลือกคนไข้ใหม่
+    
+    // 🌟 ปลดล็อกฟอร์มและรีเซ็ตปุ่มบันทึกเมื่อเลือกคนไข้ใหม่
     let btnSave = document.getElementById('btn_save_emr');
     if (btnSave) {
       btnSave.disabled = false;
@@ -333,16 +333,23 @@
 
     let serviceNote = queueInfo ? queueInfo.notes || '' : '';
     
+    // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (ป้องกันการจับคู่ผิดตัว)
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
-      let promoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0];
-      let matchedProd = invData.find(x => promoName.includes(x.name));
-      activePromoInfo = { name: promoName, prod: matchedProd };
+      let rawPromoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
+      let isOldCourse = rawPromoName.endsWith('(คอร์สเดิม)');
+      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); // ลบคำว่า (คอร์สเดิม) ทิ้งเพื่อหาชื่อสินค้าจริงๆ
+      
+      // 🌟 ใช้ === เพื่อให้ชื่อตรงเป๊ะ 100% ไม่จับคู่ผิด
+      let matchedProd = invData.find(x => x.name === cleanPromoName);
+      activePromoInfo = { name: cleanPromoName, prod: matchedProd };
 
       let rawBundleItems = [];
-      if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
+      // ถ้าเป็นโปรโมชั่นใหม่ (ไม่ใช่คอร์สเดิม) ให้แตกของแถมออกมา
+      if (!isOldCourse && matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
         try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
       } else {
-        rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: promoName, qty: 1 }];
+        // ถ้าเป็นคอร์สเดิม หรือเป็นสินค้าทั่วไป (ไม่มีของแถม)
+        rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: cleanPromoName, qty: 1 }];
       }
 
       currentSubItems = rawBundleItems.map(b => {
