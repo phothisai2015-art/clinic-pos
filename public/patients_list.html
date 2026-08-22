@@ -72,6 +72,8 @@
 <script>
   var allPatients = [];
   var currentHistoryData = [];
+  
+  document.querySelectorAll('body > #historyModal').forEach(m => m.remove());
 
   function initPatientList() {
     loadAllPatients();
