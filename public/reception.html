@@ -205,57 +205,34 @@
     } catch(e) {}
   }
 
- // 🌟 เปิด Modal อย่างปลอดภัย ป้องกันบั๊กฉากหลังทับและกดไม่ได้
+// 🌟 แก้ไข: เปิด Modal อย่างปลอดภัย ป้องกันฉากหลังบังจอกดไม่ได้
   async function openScreeningModal() {
-    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
-
-    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาคนไข้ก่อน', 'warning');
+    Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
       const [pdRes, courseRes, billRes] = await Promise.all([ 
-        fetch('/api/inventory'), 
-        fetch(`/api/patients/${currentHN}/courses`),
-        fetch(`/api/pos/bill/${currentHN}`)
+        fetch('/api/inventory'), fetch(`/api/patients/${currentHN}/courses`), fetch(`/api/pos/bill/${currentHN}`)
       ]);
       
-      const pdData = await pdRes.json(); 
-      const courseData = await courseRes.json();
-      const billData = await billRes.json();
-      
-      allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
-      allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
-      allBillsForScreening = billData.status === 'success' ? billData.data : [];
+      allInventoryForScreening = (await pdRes.json()).data || [];
+      allCoursesForScreening = (await courseRes.json()).data || [];
+      allBillsForScreening = (await billRes.json()).data || [];
       
       resetSelection();
       renderPromoCards();
       renderGeneralCards();
       renderActiveCourses();
       
-      // 🌟 นำ Modal ไปไว้ที่ body (แค่ครั้งแรก) และเรียกใช้ใหม่เสมอ แทนที่จะลบทิ้ง
       const modalEl = document.getElementById('screeningModal');
-      if (modalEl && modalEl.parentNode !== document.body) {
-        document.body.appendChild(modalEl);
-      }
+      if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl); 
       
-      let existingModal = bootstrap.Modal.getInstance(modalEl);
-      if (!existingModal) {
-        screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-      } else {
-        screeningModalInstance = existingModal;
-      }
-      
-      // ลบฉากหลังที่อาจค้างอยู่ก่อนเปิด
-      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      if (!screeningModalInstance) screeningModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
       
       Swal.close();
-      setTimeout(() => {
-        screeningModalInstance.show();
-        switchServiceTab('promo');
-      }, 200);
-
-    } catch (e) {
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
-    }
+      screeningModalInstance.show();
+      switchServiceTab('promo');
+    } catch (e) { Swal.fire('Error', 'โหลดข้อมูลล้มเหลว', 'error'); }
   }
 
   function switchServiceTab(tabName) {
@@ -335,13 +312,11 @@
     container.innerHTML = html;
   }
 
-  // 🌟 อัปเดต: โชว์คอร์สทั้งหมด พร้อมบอกสถานะจ่ายเงิน และปิดไม่ให้กดถ้าใช้ครบแล้ว
+// 🌟 แก้ไข: แสดงคอร์สทั้งหมด (รวมที่จบแล้ว), บอกจำนวนที่เหลือ, และสถานะชำระเงิน
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
-    let activeCourses = allCoursesForScreening; // 🌟 ดึงคอร์สทั้งหมดรวมถึงที่ใช้หมดแล้ว
-    
-    if(activeCourses.length === 0) {
-      container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
+    if(allCoursesForScreening.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีประวัติคอร์สในระบบ</div>`;
       return;
     }
 
@@ -353,100 +328,64 @@
       let bundles = [];
       try { bundles = JSON.parse(promo.bundle_items || '[]'); } catch(e) {}
       if(bundles.length === 0) return;
-
+      
       let activeBundles = [];
       bundles.forEach(b => {
-        let found = activeCourses.find(c => (c.product_id === b.id || c.product_name === b.name) && !displayedCourseIds.has(c.id));
+        let found = allCoursesForScreening.find(c => (c.product_id === b.id || c.product_name === b.name) && !displayedCourseIds.has(c.id));
         if (found) activeBundles.push({ ...b, course_data: found });
       });
-
+      
       if (activeBundles.length > 0) {
-        // 🌟 ตรวจสอบว่ามีบิลค้างชำระของโปรนี้หรือไม่
         let isUnpaid = allBillsForScreening.some(bill => bill.product_id === promo.id && bill.status !== 'PAID');
-        let paymentBadge = isUnpaid ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-triangle-exclamation"></i> ค้างชำระ</span>` : `<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> ชำระครบแล้ว</span>`;
-
-        // ตรวจสอบว่าคอร์สนี้ใช้หมดหรือยัง
+        let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
         let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
-        let cardOpacity = isAllUsed ? 'opacity-50 bg-light' : '';
-        let cardBorder = isAllUsed ? 'border-secondary' : 'border-primary';
-
+        let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+        
         let bundleHtml = activeBundles.map(ab => {
           let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-          let total = ab.course_data.total_qty;
-          let textClass = remain > 0 ? 'text-primary fw-bold' : 'text-muted';
-          let iconClass = remain > 0 ? 'text-success' : 'text-muted';
           return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
-                    <span><i class="fa-solid fa-check ${iconClass} me-1"></i> ${ab.name}</span>
-                    <span class="${textClass}">เหลือ ${remain} / ${total}</span>
+                    <span><i class="fa-solid fa-check text-success me-1"></i> ${ab.name}</span>
+                    <span class="${remain > 0 ? 'text-primary fw-bold' : 'text-muted'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
                   </div>`;
         }).join('');
-
-        let valStr = `OLD_PROMO_${promo.id}`;
-        // ถ้ายอดหมดแล้ว ปิดไม่ให้กดส่งคิวได้
-        let onclickAttr = isAllUsed ? '' : `onclick="selectService('${valStr}', '${promo.name} (คอร์สเดิม)')"`;
-        let cursorStyle = isAllUsed ? 'cursor: not-allowed;' : 'cursor: pointer;';
-
-        html += `
-          <div class="col-md-6">
-            <div class="card h-100 service-card ${cardBorder} ${cardOpacity}" id="card_${valStr}" style="${cursorStyle}" ${onclickAttr}>
-              <div class="card-body p-3">
-                 <div class="mb-2 d-flex justify-content-between align-items-start">
-                   <div>
-                     <span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'โปรโมชั่นที่ซื้อไว้'}</span>
-                     <h6 class="fw-bold card-title ${isAllUsed ? 'text-secondary' : 'text-primary'} m-0"><i class="fa-solid fa-gift me-1"></i> ${promo.name}</h6>
-                   </div>
-                 </div>
-                 <div class="mb-2">${paymentBadge}</div>
-                 <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">
-                   ${bundleHtml}
-                 </div>
-              </div>
-            </div>
-          </div>
-        `;
         
+        let valStr = `OLD_PROMO_${promo.id}`;
+        let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${promo.name} (คอร์สเดิม)')"`;
+        
+        html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
+                   <div class="card-body p-3">
+                     <div class="d-flex justify-content-between">
+                       <span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'โปรโมชั่นที่ซื้อไว้'}</span>
+                       ${payBadge}
+                     </div>
+                     <h6 class="fw-bold text-dark m-0 mt-1 mb-2">${promo.name}</h6>
+                     <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
+                   </div></div></div>`;
         activeBundles.forEach(ab => displayedCourseIds.add(ab.course_data.id));
       }
     });
-
-    // 🌟 2. แสดงคอร์สเดี่ยวๆ
-    activeCourses.forEach(c => {
+    
+    allCoursesForScreening.forEach(c => {
       if (!displayedCourseIds.has(c.id)) {
         let remain = c.total_qty - c.used_qty;
-        let total = c.total_qty;
-        let valStr = `OLD_${c.id}`;
         let displayName = c.product_name || c.product_id;
-        
         let isUnpaid = allBillsForScreening.some(bill => (bill.product_id === c.product_id || bill.item_name === displayName) && bill.status !== 'PAID');
-        let paymentBadge = isUnpaid ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-triangle-exclamation"></i> ค้างชำระ</span>` : `<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> ชำระครบแล้ว</span>`;
-
+        let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
         let isUsedUp = remain <= 0;
-        let cardOpacity = isUsedUp ? 'opacity-50 bg-light' : '';
-        let cardBorder = isUsedUp ? 'border-secondary' : 'border-success';
-        let onclickAttr = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
-        let cursorStyle = isUsedUp ? 'cursor: not-allowed;' : 'cursor: pointer;';
-
-        html += `
-          <div class="col-md-6">
-            <div class="card h-100 service-card ${cardBorder} ${cardOpacity}" id="card_${valStr}" style="${cursorStyle}" ${onclickAttr}>
-              <div class="card-body p-3">
-                 <div class="d-flex justify-content-between align-items-start mb-2">
-                   <div>
-                     <span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว'}</span>
-                     <h6 class="fw-bold card-title ${isUsedUp ? 'text-secondary' : 'text-success'} m-0"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> ${displayName}</h6>
-                   </div>
-                   <div class="text-end">
-                     <div class="mt-1"><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} rounded-pill fs-6 px-3">เหลือ ${remain} / ${total}</span></div>
-                   </div>
-                 </div>
-                 <div class="mt-2">${paymentBadge}</div>
-              </div>
-            </div>
-          </div>
-        `;
+        let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
+        let valStr = `OLD_${c.id}`;
+        let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
+        
+        html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
+                   <div class="card-body p-3">
+                     <div class="d-flex justify-content-between align-items-start mb-2">
+                       <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว'}</span>
+                       <h6 class="fw-bold text-dark m-0">${displayName}</h6></div>
+                       <div class="text-end"><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} rounded-pill mb-1">เหลือ ${remain} / ${c.total_qty}</span><br>${payBadge}</div>
+                     </div>
+                   </div></div></div>`;
       }
     });
-
     container.innerHTML = html;
   }
 

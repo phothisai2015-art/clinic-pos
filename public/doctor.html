@@ -348,16 +348,17 @@ async function selectPatient(hn) {
     
     // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (ป้องกันการจับคู่ผิดตัว)
     // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (รองรับทั้งโปรซื้อใหม่ และ โปรทำต่อ)
+  // 🌟 แก้ไข: ระบบดึงของแถมโปรโมชั่นแบบ 100% (กันบั๊กชื่อเว้นวรรค และดึงของแถมครบแม้จะใช้สิทธิ์หมดแล้ว)
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
       let rawPromoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
       let isOldCourse = rawPromoName.endsWith('(คอร์สเดิม)');
       let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); 
       
-      let matchedProd = invData.find(x => x.name === cleanPromoName);
+      // 🛑 เพิ่ม .trim() ตอนหาชื่อสินค้า เพื่อป้องกันบั๊กพิมพ์เว้นวรรคในฐานข้อมูล
+      let matchedProd = invData.find(x => x.name.trim() === cleanPromoName);
       activePromoInfo = { name: cleanPromoName, prod: matchedProd };
 
       let rawBundleItems = [];
-      // 🌟 แตกของแถมเสมอ ไม่ว่าจะเป็นโปรซื้อใหม่หรือคอร์สเก่า
       if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
         try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
       } else {
@@ -366,20 +367,21 @@ async function selectPatient(hn) {
 
       currentSubItems = [];
       rawBundleItems.forEach(b => {
-        // หาคอร์สที่เหลืออยู่ของคนไข้
-        let matchedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
-        
+        // 🛑 ค้นหาคอร์ส ทั้งแบบที่เหลือสิทธิ์ และแบบที่หมดแล้ว เพื่อโชว์ให้หมอเห็นครบทุกรายการในเซ็ต!
+        let availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
+        let exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id));
+        let matchedCourse = availableCourse || exhaustedCourse;
+
         if (matchedCourse) {
            let remain = matchedCourse.total_qty - matchedCourse.used_qty;
            currentSubItems.push({
              id: b.id,
              name: matchedCourse.product_name || b.name,
              remain_qty: remain,
-             used_today: remain > 0 ? 1 : 0,
+             used_today: remain > 0 ? 1 : 0, // ถ้าสิทธิ์หมด (0) ระบบจะปรับให้กดทำวันนี้ไม่ได้เอง
              course_id: matchedCourse.id
            });
         } else if (!isOldCourse) {
-           // กรณีซื้อใหม่แต่ API อาจโหลดไม่ทัน ให้สร้างไว้รอก่อน
            currentSubItems.push({
              id: b.id,
              name: b.name,
