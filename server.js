@@ -239,6 +239,18 @@ app.delete('/api/patients/photos/:id', (req, res) => {
 app.get('/api/appointments', (req, res) => {
   db.all(`SELECT a.id, a.appointment_date as date, a.appointment_time as time, a.patient_id as hn, p.full_name as name, p.phone, a.notes as note, a.status FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
 });
+// 🌟 API สำหรับสร้างนัดหมายใหม่ด้วยตัวเอง (Manual Booking)
+app.post('/api/appointments', (req, res) => {
+  const { patient_id, appointment_date, appointment_time, notes } = req.body;
+  db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, notes) VALUES (1, ?, 1, ?, ?, 'WAITING', ?)`, 
+    [patient_id, appointment_date, appointment_time, notes || 'นัดหมายล่วงหน้า'], 
+    function(err) { res.json({ status: 'success', id: this.lastID }); });
+});
+
+// 🌟 API สำหรับลบ/ยกเลิกนัดหมาย
+app.delete('/api/appointments/:id', (req, res) => {
+  db.run(`DELETE FROM appointments WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
+});
 app.put('/api/appointments/:id/status', (req, res) => {
   db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [req.body.status, req.params.id], function(err) { res.json({ status: 'success' }); });
 });
