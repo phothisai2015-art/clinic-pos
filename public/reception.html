@@ -312,11 +312,11 @@
     container.innerHTML = html;
   }
 
-// 🌟 แก้ไข: แสดงคอร์สทั้งหมด (รวมที่จบแล้ว), บอกจำนวนที่เหลือ, และสถานะชำระเงิน
+// 🌟 แก้ไข: จัดกลุ่มโปรโมชั่นอย่างแม่นยำ (ต้องมีของแถมครบและจำนวนตรงเป๊ะ ถึงจะรวมเป็นโปรได้)
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
     if(allCoursesForScreening.length === 0) {
-      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีประวัติคอร์สในระบบ</div>`;
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
       return;
     }
 
@@ -329,42 +329,67 @@
       try { bundles = JSON.parse(promo.bundle_items || '[]'); } catch(e) {}
       if(bundles.length === 0) return;
       
-      let activeBundles = [];
-      bundles.forEach(b => {
-        let found = allCoursesForScreening.find(c => (c.product_id === b.id || c.product_name === b.name) && !displayedCourseIds.has(c.id));
-        if (found) activeBundles.push({ ...b, course_data: found });
-      });
-      
-      if (activeBundles.length > 0) {
-        let isUnpaid = allBillsForScreening.some(bill => bill.product_id === promo.id && bill.status !== 'PAID');
-        let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
-        let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
-        let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+      let findingMatch = true;
+      while(findingMatch) {
+        let activeBundles = [];
+        let tempConsumedIds = new Set();
+        let hasAllItems = true;
         
-        let bundleHtml = activeBundles.map(ab => {
-          let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-          return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
-                    <span><i class="fa-solid fa-check text-success me-1"></i> ${ab.name}</span>
-                    <span class="${remain > 0 ? 'text-primary fw-bold' : 'text-muted'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
-                  </div>`;
-        }).join('');
+        for (let b of bundles) {
+          // 🛑 หัวใจสำคัญ: ต้องตรงทั้งชื่อ และ "จำนวนดั้งเดิม" ที่ได้จากโปรโมชั่น
+          let found = allCoursesForScreening.find(c => 
+              (c.product_id === b.id || c.product_name === b.name) && 
+              c.total_qty === b.qty && 
+              !displayedCourseIds.has(c.id) &&
+              !tempConsumedIds.has(c.id)
+          );
+          
+          if (found) {
+            activeBundles.push({ ...b, course_data: found });
+            tempConsumedIds.add(found.id);
+          } else {
+            hasAllItems = false;
+            break;
+          }
+        }
         
-        let valStr = `OLD_PROMO_${promo.id}`;
-        let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${promo.name} (คอร์สเดิม)')"`;
-        
-        html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
-                   <div class="card-body p-3">
-                     <div class="d-flex justify-content-between">
-                       <span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'โปรโมชั่นที่ซื้อไว้'}</span>
-                       ${payBadge}
-                     </div>
-                     <h6 class="fw-bold text-dark m-0 mt-1 mb-2">${promo.name}</h6>
-                     <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
-                   </div></div></div>`;
-        activeBundles.forEach(ab => displayedCourseIds.add(ab.course_data.id));
+        if (hasAllItems) {
+          // ถ้ามีของครบถ้วนแปลว่าซื้อโปรนี้จริง ให้ผูกติดกันเป็นการ์ดโปรโมชั่น
+          tempConsumedIds.forEach(id => displayedCourseIds.add(id));
+          
+          let isUnpaid = allBillsForScreening.some(bill => bill.product_id === promo.id && bill.status !== 'PAID');
+          let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
+          
+          let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
+          let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+          
+          let bundleHtml = activeBundles.map(ab => {
+            let remain = ab.course_data.total_qty - ab.course_data.used_qty;
+            return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+                      <span><i class="fa-solid fa-check text-success me-1"></i> ${ab.name}</span>
+                      <span class="${remain > 0 ? 'text-primary fw-bold' : 'text-muted'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
+                    </div>`;
+          }).join('');
+          
+          let valStr = `OLD_PROMO_${promo.id}_${Array.from(tempConsumedIds).join('_')}`;
+          let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${promo.name} (คอร์สเดิม)')"`;
+          
+          html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'โปรโมชั่นที่ซื้อไว้'}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold text-dark m-0 mt-1 mb-2"><i class="fa-solid fa-gift text-primary me-1"></i> ${promo.name}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
+                     </div></div></div>`;
+        } else {
+          findingMatch = false; // ถ้าหาแล้วได้ของแถมมาไม่ครบ แปลว่าหมดโควตาของโปรนี้แล้ว
+        }
       }
     });
     
+    // 🌟 โชว์รายการที่เหลือ (เศษคอร์ส หรือคอร์สเดี่ยวๆ ที่ไม่ได้มาจากการจัดเซ็ตโปรโมชั่น)
     allCoursesForScreening.forEach(c => {
       if (!displayedCourseIds.has(c.id)) {
         let remain = c.total_qty - c.used_qty;
@@ -380,12 +405,13 @@
                    <div class="card-body p-3">
                      <div class="d-flex justify-content-between align-items-start mb-2">
                        <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว'}</span>
-                       <h6 class="fw-bold text-dark m-0">${displayName}</h6></div>
+                       <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-wand-magic-sparkles text-success me-1"></i> ${displayName}</h6></div>
                        <div class="text-end"><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} rounded-pill mb-1">เหลือ ${remain} / ${c.total_qty}</span><br>${payBadge}</div>
                      </div>
                    </div></div></div>`;
       }
     });
+    
     container.innerHTML = html;
   }
 

@@ -367,9 +367,15 @@ async function selectPatient(hn) {
 
       currentSubItems = [];
       rawBundleItems.forEach(b => {
-        // 🛑 ค้นหาคอร์ส ทั้งแบบที่เหลือสิทธิ์ และแบบที่หมดแล้ว เพื่อโชว์ให้หมอเห็นครบทุกรายการในเซ็ต!
-        let availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
-        let exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id));
+        // 🌟 ปรับให้หาแบบระบุเจาะจงเหมือนหน้าจุดคัดกรองเป๊ะๆ
+        let availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && c.total_qty === b.qty && (c.total_qty - c.used_qty) > 0);
+        // ถ้าหาแบบตรงเป๊ะไม่เจอ ก็ยอมให้หาแบบชื่อตรงอย่างเดียวที่ยังมีสิทธิ์เหลือ
+        if (!availableCourse) availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
+        
+        // ถ้าคอร์สหมดแล้ว ก็ดึงมาโชว์เฉยๆ หมอจะได้รู้
+        let exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && c.total_qty === b.qty);
+        if (!exhaustedCourse) exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id));
+        
         let matchedCourse = availableCourse || exhaustedCourse;
 
         if (matchedCourse) {
@@ -378,10 +384,11 @@ async function selectPatient(hn) {
              id: b.id,
              name: matchedCourse.product_name || b.name,
              remain_qty: remain,
-             used_today: remain > 0 ? 1 : 0, // ถ้าสิทธิ์หมด (0) ระบบจะปรับให้กดทำวันนี้ไม่ได้เอง
+             used_today: remain > 0 ? 1 : 0,
              course_id: matchedCourse.id
            });
         } else if (!isOldCourse) {
+           // กรณีเปิดบิลใหม่
            currentSubItems.push({
              id: b.id,
              name: b.name,
