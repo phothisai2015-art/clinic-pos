@@ -367,8 +367,7 @@
     container.innerHTML = html;
   }
 
-  // 🌟 จัดรูปแบบ UI ให้คอร์สเดี่ยวมีกล่องรายละเอียดเหมือนโปรโมชั่น
-  function renderActiveCourses() {
+function renderActiveCourses() {
     const container = document.getElementById('tab-active');
     if(allCoursesForScreening.length === 0) {
       container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
@@ -376,104 +375,65 @@
     }
 
     let html = '';
-    let displayedCourseIds = new Set();
-    let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
+    let sortedCourses = [...allCoursesForScreening].sort((a, b) => b.id - a.id);
     
-    // 1. จัดการ โปรโมชั่น (จัดเซ็ต)
-    promos.forEach(promo => {
-      let bundles = [];
-      try { bundles = JSON.parse(promo.bundle_items || '[]'); } catch(e) {}
-      if(bundles.length === 0) return;
-      
-      let findingMatch = true;
-      while(findingMatch) {
-        let activeBundles = [];
-        let tempConsumedIds = new Set();
-        let hasAllItems = true;
-        
-        for (let b of bundles) {
-          let found = allCoursesForScreening.find(c => 
-              (c.product_id === b.id || c.product_name === b.name) && 
-              c.total_qty === b.qty && 
-              !displayedCourseIds.has(c.id) &&
-              !tempConsumedIds.has(c.id)
-          );
-          
-          if (found) {
-            activeBundles.push({ ...b, course_data: found });
-            tempConsumedIds.add(found.id);
-          } else {
-            hasAllItems = false;
-            break;
-          }
-        }
-        
-        if (hasAllItems) {
-          tempConsumedIds.forEach(id => displayedCourseIds.add(id));
-          
-          let isUnpaid = allBillsForScreening.some(bill => bill.product_id === promo.id && bill.status !== 'PAID');
-          let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
-          
-          let isAllUsed = activeBundles.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
-          let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
-          
-          let bundleHtml = activeBundles.map(ab => {
-            let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-            let isZero = remain <= 0;
+    sortedCourses.forEach(c => {
+       let prodDef = allInventoryForScreening.find(p => p.id === c.product_id);
+       let displayName = c.product_name || c.product_id;
+       let isPromo = prodDef && prodDef.type === 'PROMOTION';
+       
+       let isUnpaid = allBillsForScreening.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
+       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
+
+       if (isPromo) {
+          let state = JSON.parse(c.bundle_state || '[]');
+          if (state.length === 0) return; // ซ่อนข้อมูลผีที่ไม่มีกล่อง
+          let isAllUsed = state.every(item => item.total - item.used <= 0);
+
+          let bundleHtml = state.map(ab => {
+            let remain = ab.total - ab.used;
             return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
-                      <span class="${isZero ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isZero ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
-                      <span class="${isZero ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.total}</span>
                     </div>`;
           }).join('');
-          
-          let valStr = `OLD_PROMO_${promo.id}_${Array.from(tempConsumedIds).join('_')}`;
-          let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${promo.name} (คอร์สเดิม)')"`;
-          
+
+          let valStr = `OLD_BOX_${c.id}`;
+          let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+
           html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
                      <div class="card-body p-3">
                        <div class="d-flex justify-content-between align-items-start">
-                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'โปรโมชั่นที่ซื้อไว้'}</span></div>
+                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
                          ${payBadge}
                        </div>
-                       <h6 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-1"></i> ${promo.name}</h6>
+                       <h6 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-1"></i> ${displayName}</h6>
                        <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
                      </div></div></div>`;
-        } else {
-          findingMatch = false; 
-        }
-      }
-    });
-    
-    // 2. จัดการ คอร์สเดี่ยว
-    allCoursesForScreening.forEach(c => {
-      if (!displayedCourseIds.has(c.id)) {
-        let remain = c.total_qty - c.used_qty;
-        let displayName = c.product_name || c.product_id;
-        let isUnpaid = allBillsForScreening.some(bill => (bill.product_id === c.product_id || bill.item_name === displayName) && bill.status !== 'PAID');
-        let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
-        
-        let isUsedUp = remain <= 0;
-        let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
-        let valStr = `OLD_${c.id}`;
-        let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName} (คอร์สเดิม)')"`;
-        
-        let bundleHtml = `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+       } else {
+          let remain = c.total_qty - c.used_qty;
+          let isUsedUp = remain <= 0;
+          let valStr = `OLD_${c.id}`;
+          let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
+
+          html += `<div class="col-md-4"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว #' + c.id}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-1"></i> ${displayName}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">
+                          <div class="d-flex justify-content-between small">
                             <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
                             <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
-                          </div>`;
-
-        html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
-                   <div class="card-body p-3">
-                     <div class="d-flex justify-content-between align-items-start">
-                       <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว'}</span></div>
-                       ${payBadge}
-                     </div>
-                     <h6 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-1"></i> ${displayName}</h6>
-                     <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
-                   </div></div></div>`;
-      }
+                          </div>
+                       </div>
+                     </div></div></div>`;
+       }
     });
-    
     container.innerHTML = html;
   }
 
@@ -516,73 +476,71 @@
     }, 150);
   }
 
-  async function submitScreening() {
+async function submitScreening() {
     let actionVal = document.getElementById('selected_action_val').value;
     let selectedText = document.getElementById('selected_service_display').innerText;
     let note = document.getElementById('scr_note').value.trim();
-    
-    let finalNote = [];
-    if(actionVal) finalNote.push(`[บริการ] ${selectedText}`);
-    else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
-    if(note) finalNote.push(`[อาการ] ${note}`);
-
-    let payload = {
-      patient_id: currentHN,
-      bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
-      pulse: document.getElementById('scr_pulse').value, 
-      weight: document.getElementById('scr_weight').value, 
-      height: document.getElementById('scr_height').value,
-      notes: finalNote.join(' | ')
-    };
 
     let btn = document.querySelector('#screeningModal .btn-info');
     let originalBtnText = btn ? btn.innerHTML : '';
-    if(btn) {
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...';
-      btn.disabled = true;
-    }
-    
+    if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...'; btn.disabled = true; }
+
+    let serviceName = selectedText;
+    let checkInHN = (typeof currentCheckInHN !== 'undefined' && currentCheckInHN) ? currentCheckInHN : currentHN;
+
     try {
       if(actionVal && actionVal.startsWith('NEW_')) {
          let productId = actionVal.replace('NEW_', '');
-         await fetch(`/api/patients/${currentHN}/assign-promo`, { 
-           method: 'POST', 
-           headers: { 'Content-Type': 'application/json' }, 
-           body: JSON.stringify({ product_id: productId }) 
+         let resp = await fetch(`/api/patients/${checkInHN}/assign-promo`, { 
+           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId }) 
          });
+         let data = await resp.json();
+         if(data.course_id) serviceName = `${selectedText} (กล่อง #${data.course_id})`;
+      } else if (actionVal && actionVal.startsWith('OLD_BOX_')) {
+         let boxId = actionVal.replace('OLD_BOX_', '');
+         serviceName = `${selectedText} (กล่อง #${boxId})`;
+      } else if (actionVal && actionVal.startsWith('OLD_')) {
+         let cId = actionVal.replace('OLD_', '');
+         serviceName = `${selectedText} (คอร์ส #${cId})`;
       }
 
-      await fetch('/api/queue/send-doctor', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
-      });
-      
-      closeScreeningModal();
-      clearForm();
-      if(btn) {
-        btn.innerHTML = originalBtnText;
-        btn.disabled = false;
+      let finalNote = [];
+      if(actionVal) finalNote.push(`[บริการ] ${serviceName}`);
+      else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
+      if(note) finalNote.push(`[อาการ] ${note}`);
+
+      let payload = {
+        patient_id: checkInHN,
+        bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
+        pulse: document.getElementById('scr_pulse').value, 
+        weight: document.getElementById('scr_weight').value, 
+        height: document.getElementById('scr_height').value,
+        notes: finalNote.join(' | ')
+      };
+
+      if (typeof currentCheckInApptId !== 'undefined' && currentCheckInApptId) {
+          await fetch(`/api/appointments/${currentCheckInApptId}/checkin`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      } else {
+          await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       }
       
-      document.getElementById('scr_sys').value = '';
-      document.getElementById('scr_dia').value = '';
-      document.getElementById('scr_pulse').value = '';
-      document.getElementById('scr_weight').value = '';
-      document.getElementById('scr_height').value = '';
-      document.getElementById('scr_note').value = '';
+      closeScreeningModal();
+      if(typeof clearForm === 'function') clearForm();
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+      
+      document.getElementById('scr_sys').value = ''; document.getElementById('scr_dia').value = ''; document.getElementById('scr_pulse').value = ''; document.getElementById('scr_weight').value = ''; document.getElementById('scr_height').value = ''; document.getElementById('scr_note').value = '';
       
       setTimeout(() => {
         Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+        if(typeof fetchAppointments === 'function') fetchAppointments();
+        if(typeof renderEmrQueue === 'function') renderEmrQueue();
       }, 300);
 
     } catch (e) {
-      if(btn) {
-        btn.innerHTML = originalBtnText;
-        btn.disabled = false;
-      }
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
     }
+  
   }
 
   function clearForm() {
