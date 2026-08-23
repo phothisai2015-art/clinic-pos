@@ -439,8 +439,7 @@
     }
   }
 
-  // 🌟 ฟังก์ชันดึงประวัติพร้อมปุ่มจ่ายเงินที่เช็คสถานะฐานข้อมูลจริงๆ
-// 🌟 ฟังก์ชันดึงประวัติพร้อมปุ่มจ่ายเงินที่เช็คสถานะฐานข้อมูลจริงๆ
+// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (หน้าทะเบียนคนไข้) - ดึงสถานะจาก Database 100%
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -449,67 +448,28 @@
       const res = await fetch(`/api/emr/${hn}`);
       const data = await res.json();
       
-      const apptRes = await fetch('/api/appointments');
-      const apptData = await apptRes.json();
-      const patientAppts = apptData.data ? apptData.data.filter(a => a.hn === hn) : [];
-
       if (data.data.length === 0) {
         timeline.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษา</div>';
         return;
       }
 
-      // 🌟 นับจำนวนประวัติ EMR และจำนวนคิว POS ของ "วันนี้"
-      const now = new Date();
-      const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      
-      const emrsToday = data.data.filter(l => l.visit_date.startsWith(todayStrLocal));
-      const apptsToday = patientAppts.filter(a => a.date === todayStrLocal);
-
       let html = '';
-      // 🌟 ใช้ index เข้ามาช่วย เพื่อให้ปุ่มโชว์แค่ในประวัติ "ล่าสุด" (บนสุด) เท่านั้น
       data.data.forEach((log, index) => {
          const dateObj = new Date(log.visit_date);
          const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-         const logDateOnly = log.visit_date.split('T')[0]; 
          
-         let apptBadge = '';
-         if (log.next_appointment_date) {
-           const apptDateObj = new Date(log.next_appointment_date);
-           const apptDateStr = apptDateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-           const timeStr = log.next_appointment_time ? ` เวลา ${log.next_appointment_time} น.` : '';
-           const noteStr = log.next_appointment_note ? ` (${log.next_appointment_note})` : '';
-           
-           apptBadge = `<div class="mt-2 p-2 rounded-3 bg-primary bg-opacity-10 text-primary small fw-bold">
-                          <i class="fa-regular fa-calendar-check me-1"></i> วันนัดถัดไป: ${apptDateStr}${timeStr}${noteStr}
-                        </div>`;
-         }
-
          let paymentBtnHtml = '';
 
-         // 🌟 ตรวจสอบปุ่มชำระเงิน เฉพาะประวัติ "ล่าสุดของวันนี้" (index === 0) เท่านั้น!
-         if (logDateOnly === todayStrLocal && index === 0) {
-           const latestAppt = apptsToday[apptsToday.length - 1]; // ดึงคิวล่าสุดของวันนี้
-
-           let isAlreadyPaid = false;
-           let isWaitingPayment = false;
-
-           if (latestAppt) {
-             if (latestAppt.status === 'WAITING_PAYMENT') {
-               isWaitingPayment = true;
-             } else if (latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) {
-               // ถ้าจำนวนประวัติวันนี้ ไม่ได้เยอะกว่าจำนวนคิว (แปลว่าไม่มีประวัติ Walk-in ใหม่ซ้อน)
-               isAlreadyPaid = true;
-             }
-           }
-
-           if (isWaitingPayment) {
+         // 🌟 โชว์ปุ่มเฉพาะประวัติใบบนสุด (ล่าสุด) และเช็คสถานะการจ่ายเงินจาก Database
+         if (index === 0) {
+           if (log.payment_status === 'SENT' || log.payment_status === 'WAITING_PAYMENT') {
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
                   <i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว
                 </button>
               </div>`;
-           } else if (isAlreadyPaid) {
+           } else if (log.payment_status === 'PAID') {
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-secondary text-white fw-bold rounded-pill px-3 shadow-sm" disabled>
@@ -517,7 +477,6 @@
                 </button>
               </div>`;
            } else {
-             // ถ้าเป็นประวัติใหม่เอี่ยม ปุ่มส่งชำระเงินจะเด้งขึ้นมาให้กดเสมอ!
              paymentBtnHtml = `
               <div class="mt-3">
                 <button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm" onclick="sendToPayment('${hn}', this)">
@@ -526,8 +485,10 @@
               </div>`;
            }
          }
-		 
-		 let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ';
+         
+         let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ';
+         let vitalsLog = (log.bp || log.pulse || log.weight || log.height) ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>` : '';
+         let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
 
          html += `
           <div class="border-start border-3 border-primary ps-3 pb-3 mb-4">
@@ -535,10 +496,10 @@
               <span class="fw-bold text-primary"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span>
               <span class="badge bg-light text-dark border shadow-sm"><i class="fa-solid fa-user-doctor me-1 text-primary"></i> ${docName}</span>
             </div>
-            <div class="fw-bold text-dark mt-2">วินิจฉัย: ${log.diagnosis}</div>
-            <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms}</div>
-            <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details}</div>
-            ${apptBadge}
+            <div class="fw-bold text-dark mt-2">วินิจฉัย: ${log.diagnosis || '-'}</div>
+            <div class="small text-muted mt-1"><span class="fw-bold">อาการ (CC):</span> ${log.symptoms || '-'}</div>
+            <div class="small text-muted mt-1"><span class="fw-bold">หัตถการ:</span> ${log.treatment_details || '-'}</div>
+            ${vitalsLog}
             ${paymentBtnHtml}
           </div>`;
       });

@@ -688,58 +688,36 @@ async function selectPatient(hn) {
       btnSave.innerHTML = originalBtnHtml;
     }
   }
-// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (แก้ไขบั๊กปุ่มส่งชำระเงินหาย ถ้ารักษาซ้อนกันหลายรอบในวันเดียว)
+// 🌟 ฟังก์ชันดึงประวัติย้อนหลัง (ห้องแพทย์) - ดึงสถานะจาก Database 100%
   async function loadEMRHistory(hn) {
     const tl = document.getElementById('emrTimeline'); 
     tl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div></div>';
     try {
-      const [res1, res2] = await Promise.all([fetch(`/api/emr/${hn}`), fetch('/api/appointments')]);
-      const data = await res1.json(); 
-      const appts = (await res2.json()).data.filter(a => a.hn === hn);
+      // 🌟 ดึงข้อมูลจาก API EMR แค่ตัวเดียวพอ เพราะมี payment_status อยู่ในนั้นแล้ว
+      const res = await fetch(`/api/emr/${hn}`);
+      const data = await res.json(); 
       
       if (data.data.length === 0) return tl.innerHTML = '<div class="text-muted text-center py-4">ไม่มีประวัติการรักษา</div>';
 
-      const now = new Date();
-      const todayStrLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      
-      // EMR เรียงจาก ใหม่ -> เก่า
-      const emrsToday = data.data.filter(l => l.visit_date.startsWith(todayStrLocal));
-      // Appts (คิว) เรียงจาก เก่า -> ใหม่
-      const apptsToday = appts.filter(a => a.date === todayStrLocal);
-
       let html = '';
       data.data.forEach((log, index) => {
-         const dateStr = new Date(log.visit_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-         const logDateOnly = log.visit_date.split('T')[0]; 
+         const dateObj = new Date(log.visit_date);
+         const dateStr = dateObj.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
          
          let paymentBtn = '';
          
-         // 🌟 ตรวจสอบปุ่มชำระเงิน เฉพาะประวัติ "ล่าสุดของวันนี้" (ใบบนสุด index === 0) เท่านั้น!
-         if (logDateOnly === todayStrLocal && index === 0) {
-           const latestAppt = apptsToday[apptsToday.length - 1]; // ดึงคิวล่าสุดของวันนี้มาเช็คสถานะ
-
-           let isAlreadyPaid = false;
-           let isWaitingPayment = false;
-
-           if (latestAppt) {
-             if (latestAppt.status === 'WAITING_PAYMENT') {
-               isWaitingPayment = true;
-             } else if (latestAppt.status === 'PAID' && emrsToday.length <= apptsToday.length) {
-               isAlreadyPaid = true;
-             }
-           }
-
-           if (isWaitingPayment) {
+         // 🌟 โชว์ปุ่มเฉพาะประวัติใบบนสุด (ล่าสุด) และเช็คสถานะการจ่ายเงินจาก Database
+         if (index === 0) { 
+           if (log.payment_status === 'SENT' || log.payment_status === 'WAITING_PAYMENT') {
              paymentBtn = `<button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check me-1"></i> ส่งไปชำระเงินเรียบร้อยแล้ว</button>`;
-           } else if (isAlreadyPaid) {
+           } else if (log.payment_status === 'PAID') {
              paymentBtn = `<button class="btn btn-sm btn-secondary rounded-pill px-3 shadow-sm mt-3" disabled><i class="fa-solid fa-check-double me-1"></i> ชำระเงินเสร็จสิ้น</button>`;
            } else {
-             // ถ้าเป็นคิวใหม่เอี่ยมที่เพิ่งตรวจเสร็จ ปุ่มจะเด้งขึ้นมาให้กดเสมอ!
+             // ถ้ายังไม่ส่ง (WAITING) ก็ให้ขึ้นปุ่มส่งได้เลย
              paymentBtn = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm mt-3" onclick="sendToPayment('${hn}', this)"><i class="fa-solid fa-hand-holding-dollar me-1"></i> ส่งไปชำระเงิน / รับยา</button>`;
            }
          }
          
-         // 🌟 สร้างตัวแปรเก็บชื่อหมอ
          let docName = log.doctor_name ? log.doctor_name : 'ไม่ระบุผู้ตรวจ';
          
          let vitalsLog = (log.bp || log.pulse || log.weight || log.height) ? `<div class="small text-muted mt-2 px-2 py-1 bg-light rounded d-inline-block border"><i class="fa-solid fa-heart-pulse text-danger me-1"></i> BP: <b>${log.bp||'-'}</b> | HR: <b>${log.pulse||'-'}</b> | W: <b>${log.weight||'-'}</b> | H: <b>${log.height||'-'}</b></div>` : '';
@@ -749,7 +727,7 @@ async function selectPatient(hn) {
           <div class="border-start border-3 border-danger ps-3 pb-3 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="fw-bold text-danger">${dateStr} น.</span>
-              <span class="badge bg-light text-dark border"><i class="fa-solid fa-user-doctor me-1 text-primary"></i> ${docName}</span>
+              <span class="badge bg-light text-dark border shadow-sm"><i class="fa-solid fa-user-doctor me-1 text-primary"></i> ${docName}</span>
             </div>
             <div class="fw-bold text-dark mt-2">Dx: ${log.diagnosis || '-'}</div>
             <div class="small text-muted mt-1">CC: ${log.symptoms || '-'}</div>
