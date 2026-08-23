@@ -1,0 +1,957 @@
+<style>
+  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; cursor: pointer; }
+  .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+  .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
+  
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+  .calendar-day-name { font-weight: bold; color: #64748b; font-size: 0.85rem; padding-bottom: 10px; }
+  .calendar-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 10px; cursor: pointer; transition: 0.2s; background: #f8fafc; border: 1px solid #e2e8f0; position: relative; }
+  .calendar-cell:hover { background: #e0f2fe; border-color: #bae6fd; }
+  .calendar-cell.empty { background: transparent; border: none; cursor: default; }
+  .calendar-cell.active { background: #3b82f6; color: white; border-color: #2563eb; font-weight: bold; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+  .calendar-cell.active .appt-dot { background-color: #fff; }
+  .appt-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 4px; display: none; }
+  .has-appt .appt-dot { display: block; }
+
+  .appt-card { border-left: 4px solid #3b82f6; transition: 0.2s; cursor: default; }
+  .appt-card:hover { transform: translateX(3px); box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+  .appt-card.confirmed-card { border-left-color: #10b981; }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* 🌟 เพิ่ม Style สำหรับ Card เลือกโปรโมชั่น */
+  .service-card { transition: 0.2s ease-in-out; border: 2px solid #e2e8f0; cursor: pointer; border-radius: 16px; background-color: #ffffff; }
+  .service-card:hover { border-color: #93c5fd; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+  .service-card.selected { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 8px 20px rgba(59,130,246,0.2); }
+  .service-card.selected .card-title { color: #1d4ed8 !important; }
+  .nav-pills-custom .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; margin-right: 8px; transition: 0.2s; border: 1px solid transparent; }
+  .nav-pills-custom .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+  .nav-pills-custom .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
+
+  body.dark-theme #module-container { background-color: #0f172a !important; color: #f1f5f9; }
+  body.dark-theme .bg-white, body.dark-theme .bg-light { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9; }
+  body.dark-theme .calendar-cell { background: #0f172a; border-color: #334155; }
+  body.dark-theme .calendar-cell:hover { background: #1e293b; }
+  body.dark-theme .appt-card { background: #0f172a !important; border-color: #334155 !important; }
+</style>
+
+<div class="container-fluid py-4" style="max-width: 1400px; display: flex; flex-direction: column;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary m-0"><i class="fa-regular fa-calendar-days me-2"></i> ระบบนัดหมาย</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()">
+      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
+    </button>
+  </div>
+
+  <ul class="nav nav-pills clinic-nav-pills mb-4">
+    <li class="nav-item">
+      <button class="nav-link active" id="btn-tab-calendar" onclick="switchBookingTab('calendar')">
+        <i class="fa-solid fa-calendar-week me-1"></i> ปฏิทินตารางนัดหมาย
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="btn-tab-tomorrow" onclick="switchBookingTab('tomorrow')">
+        <i class="fa-solid fa-phone-volume me-1"></i> คิวโทรยืนยันวันพรุ่งนี้ 
+        <span class="badge bg-danger rounded-pill ms-1" id="tomorrowCountBadge">0</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane-custom" id="calendar-content" style="display: block;">
+      <div class="row g-4">
+        <!-- ปฏิทิน -->
+        <div class="col-lg-7 col-md-12">
+          <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+            <div class="calendar-header">
+              <button class="btn btn-light rounded-circle shadow-sm" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <h5 class="fw-bold m-0 text-primary" id="calendarMonthYear">กำลังโหลด...</h5>
+              <button class="btn btn-light rounded-circle shadow-sm" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="calendar-grid mt-3">
+              <div class="calendar-day-name text-danger">อา</div>
+              <div class="calendar-day-name">จ</div>
+              <div class="calendar-day-name">อ</div>
+              <div class="calendar-day-name">พ</div>
+              <div class="calendar-day-name">พฤ</div>
+              <div class="calendar-day-name">ศ</div>
+              <div class="calendar-day-name text-primary">ส</div>
+            </div>
+            <div class="calendar-grid" id="calendarDays"></div>
+          </div>
+        </div>
+
+        <!-- รายชื่อคิว -->
+        <div class="col-lg-5 col-md-12">
+          <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <div>
+                <h5 class="fw-bold m-0"><i class="fa-solid fa-clipboard-list text-primary me-2"></i> คิววันที่เลือก</h5>
+                <span class="badge bg-primary rounded-pill px-3 mt-2" id="selectedDateBadge">กำลังโหลด...</span>
+              </div>
+              <button class="btn btn-sm btn-primary fw-bold rounded-pill shadow-sm px-3" onclick="openAddApptModal()">
+                <i class="fa-solid fa-plus me-1"></i> เพิ่มนัดใหม่
+              </button>
+            </div>
+            
+            <div class="input-group mb-3 shadow-sm rounded-3">
+              <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-primary"></i></span>
+              <input type="text" id="searchApptInput" class="form-control border-start-0 bg-light fw-bold text-primary" placeholder="ค้นหาชื่อ หรือ เบอร์โทรคนไข้..." onkeyup="searchAppointments()">
+            </div>
+
+            <div id="selectedApptList" class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; max-height: 500px; padding-right: 5px;">
+              <div class="text-center py-5 text-muted">กำลังโหลดข้อมูลนัดหมาย...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- โทรคอนเฟิร์มวันพรุ่งนี้ -->
+    <div class="tab-pane-custom" id="tomorrow-content" style="display: none;">
+      <div class="bg-white p-4 rounded-4 shadow-sm border" style="background: linear-gradient(to bottom, #ffffff, #f0fdf4);">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-success">
+          <h5 class="fw-bold m-0 text-success"><i class="fa-solid fa-bell me-2"></i> รายการที่ต้องโทรยืนยันคิว สำหรับวันพรุ่งนี้</h5>
+          <span class="badge bg-success rounded-pill px-3" id="tomorrowDateBadge">...</span>
+        </div>
+        <div class="row g-3" id="tomorrowApptList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal เพิ่มนัดหมายใหม่ (Manual Booking) -->
+<div class="modal fade" id="addApptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-calendar-plus me-2"></i> สร้างนัดหมายใหม่</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeAddApptModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        
+        <div class="mb-3">
+          <label class="fw-bold small text-muted">ค้นหาคนไข้ (ชื่อ, เบอร์โทร, HN)</label>
+          <div class="input-group">
+            <input type="text" id="newApptSearch" class="form-control" placeholder="ค้นหาคนไข้..." onkeypress="if(event.key === 'Enter') searchNewApptPatient()">
+            <button class="btn btn-secondary" onclick="searchNewApptPatient()"><i class="fa-solid fa-search"></i></button>
+          </div>
+          <div id="newApptPatientResult" class="mt-2 small text-primary fw-bold"></div>
+          <input type="hidden" id="newApptHN">
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="fw-bold small text-muted">วันที่นัดหมาย</label>
+            <input type="date" id="newApptDate" class="form-control fw-bold">
+          </div>
+          <div class="col-6">
+            <label class="fw-bold small text-muted">เวลานัดหมาย</label>
+            <select id="newApptTime" class="form-select fw-bold text-center text-dark">
+                <option value="09:00">09:00 น.</option>
+                <option value="09:30">09:30 น.</option>
+                <option value="10:00" selected>10:00 น.</option>
+                <option value="10:30">10:30 น.</option>
+                <option value="11:00">11:00 น.</option>
+                <option value="11:30">11:30 น.</option>
+                <option value="12:00">12:00 น.</option>
+                <option value="12:30">12:30 น.</option>
+                <option value="13:00">13:00 น.</option>
+                <option value="13:30">13:30 น.</option>
+                <option value="14:00">14:00 น.</option>
+                <option value="14:30">14:30 น.</option>
+                <option value="15:00">15:00 น.</option>
+                <option value="15:30">15:30 น.</option>
+                <option value="16:00">16:00 น.</option>
+                <option value="16:30">16:30 น.</option>
+                <option value="17:00">17:00 น.</option>
+                <option value="17:30">17:30 น.</option>
+                <option value="18:00">18:00 น.</option>
+                <option value="18:30">18:30 น.</option>
+                <option value="19:00">19:00 น.</option>
+                <option value="19:30">19:30 น.</option>
+                <option value="20:00">20:00 น.</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="fw-bold small text-muted">หมายเหตุ / บริการที่ทำ</label>
+          <input type="text" id="newApptNote" class="form-control" placeholder="เช่น เลเซอร์หน้าใส, ติดตามผล...">
+        </div>
+        
+        <button class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2" onclick="saveNewAppointment()">
+          <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกนัดหมาย
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal เลือกโปรโมชั่น & Vitals (สำหรับหน้าจอนัดหมาย) -->
+<div class="modal fade" id="screeningModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-info text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-hand-holding-medical me-2"></i> เลือกรับบริการ & จุดคัดกรองเบื้องต้น</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeScreeningModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        <div class="row g-4">
+          <!-- 📦 ฝั่งซ้าย: เลือกบริการ -->
+          <div class="col-lg-8 border-end">
+            <h6 class="fw-bold text-secondary mb-3">กรุณาเลือกรายการที่คนไข้ต้องการรับบริการ</h6>
+            <ul class="nav nav-pills nav-pills-custom mb-3" id="serviceTabs">
+              <li class="nav-item"><button class="nav-link active" id="tabbtn-promo" onclick="switchServiceTab('promo')"><i class="fa-solid fa-gift me-1"></i> โปรโมชั่นจัดเซ็ต</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-general" onclick="switchServiceTab('general')"><i class="fa-solid fa-syringe me-1"></i> หัตถการ / สินค้าทั่วไป</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-active" onclick="switchServiceTab('active')"><i class="fa-solid fa-clipboard-check me-1"></i> คอร์สคงเหลือของคนไข้</button></li>
+            </ul>
+
+            <div class="custom-scrollbar px-2" style="height: 420px; overflow-y: auto;">
+              <div id="tab-promo" class="row g-3"></div>
+              <div id="tab-general" class="row g-3" style="display:none;"></div>
+              <div id="tab-active" class="row g-3" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 🩺 ฝั่งขวา: สรุปและซักประวัติ -->
+          <div class="col-lg-4 d-flex flex-column">
+            <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+              <h6 class="fw-bold text-primary mb-2">บริการที่เลือก:</h6>
+              <div id="selected_service_display" class="text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center">
+                ปรึกษาแพทย์ (ไม่ได้เลือก)
+              </div>
+              <input type="hidden" id="selected_action_val" value="">
+              
+              <label class="form-label fw-bold small text-muted mt-2">ระบุอาการ / หมายเหตุเพิ่มเติม</label>
+              <textarea id="scr_note" class="form-control rounded-3" rows="2" placeholder="เช่น ต้องการปรึกษาเรื่องสิว, ปวดหัว..."></textarea>
+            </div>
+
+            <div class="bg-white p-3 rounded-4 shadow-sm border flex-grow-1">
+              <h6 class="fw-bold text-muted small mb-3 border-bottom pb-2">ข้อมูล Vitals (คัดกรอง)</h6>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="small text-muted mb-1">SYS (ความดัน)</label>
+                  <input id="scr_sys" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">DIA (ความดัน)</label>
+                  <input id="scr_dia" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">Pulse (ชีพจร)</label>
+                  <input id="scr_pulse" type="number" class="form-control rounded-3 text-center" placeholder="/min">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">น้ำหนัก (kg)</label>
+                  <input id="scr_weight" type="number" class="form-control rounded-3 text-center" placeholder="kg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">ส่วนสูง (cm)</label>
+                  <input id="scr_height" type="number" class="form-control rounded-3 text-center" placeholder="cm">
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-info w-100 mt-3 rounded-pill fw-bold text-white shadow-sm py-3 fs-5" onclick="submitScreening()">
+              <i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var clinicAppointments = [];
+  var _todayDate = new Date();
+  var currentMonth = _todayDate.getMonth();
+  var currentYear = _todayDate.getFullYear();
+  var activeSelectedDate = `${_todayDate.getFullYear()}-${String(_todayDate.getMonth() + 1).padStart(2, '0')}-${String(_todayDate.getDate()).padStart(2, '0')}`;
+  var thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+  var addApptModalInstance = null; 
+
+  // 🌟 ตัวแปรสำหรับป๊อปอัป Check-in แบบเดียวกับหน้า Reception
+  var screeningModalInstance = null;
+  var allInventoryForScreening = [];
+  var allCoursesForScreening = [];
+  var allBillsForScreening = [];
+  var currentCheckInHN = '';
+  var currentCheckInApptId = null;
+  
+  document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+  document.querySelectorAll('body > #addApptModal').forEach(m => m.remove());
+
+  function initBookingModule() {
+    fetchAppointments();
+    if(window.bookingInterval) clearInterval(window.bookingInterval);
+    window.bookingInterval = setInterval(fetchAppointments, 5000);
+  }
+  initBookingModule();
+
+  function switchBookingTab(tabName) {
+    document.getElementById('btn-tab-calendar').classList.remove('active');
+    document.getElementById('btn-tab-tomorrow').classList.remove('active');
+    document.getElementById('calendar-content').style.display = 'none';
+    document.getElementById('tomorrow-content').style.display = 'none';
+
+    document.getElementById(`btn-tab-${tabName}`).classList.add('active');
+    document.getElementById(`${tabName}-content`).style.display = 'block';
+
+    if (tabName === 'calendar') {
+      renderCalendar();
+      renderApptList(activeSelectedDate, 'selectedApptList');
+    }
+  }
+
+  async function fetchAppointments() {
+    try {
+      const res = await fetch('/api/appointments');
+      const data = await res.json();
+      if (data.status === 'success') {
+        clinicAppointments = data.data;
+        renderCalendar();
+        
+        const searchInput = document.getElementById('searchApptInput');
+        renderApptList(activeSelectedDate, 'selectedApptList', searchInput ? searchInput.value : '');
+        renderTomorrowList();
+      }
+    } catch (err) {}
+  }
+
+  function renderCalendar() {
+    const daysContainer = document.getElementById('calendarDays');
+    const monthYearTitle = document.getElementById('calendarMonthYear');
+    if(!daysContainer) return; 
+    
+    daysContainer.innerHTML = '';
+    monthYearTitle.innerText = `${thaiMonths[currentMonth]} ${currentYear}`;
+    
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+      daysContainer.innerHTML += `<div class="calendar-cell empty"></div>`;
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      let checkDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      let hasAppt = clinicAppointments.some(a => a.date === checkDateStr) ? 'has-appt' : '';
+      let isSelected = (checkDateStr === activeSelectedDate) ? 'active' : '';
+
+      daysContainer.innerHTML += `
+        <div class="calendar-cell ${isSelected} ${hasAppt}" onclick="selectDate(this, '${checkDateStr}')">
+          <span class="fw-bold">${i}</span>
+          <div class="appt-dot"></div>
+        </div>
+      `;
+    }
+  }
+
+  function changeMonth(step) {
+    currentMonth += step;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
+  }
+
+  function selectDate(element, dateStr) {
+    document.querySelectorAll('.calendar-cell').forEach(el => el.classList.remove('active'));
+    element.classList.add('active');
+    activeSelectedDate = dateStr;
+    
+    const dateObj = new Date(dateStr);
+    const thDateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+    document.getElementById('selectedDateBadge').innerText = `${thDateStr}`;
+
+    const searchInput = document.getElementById('searchApptInput');
+    if(searchInput) searchInput.value = '';
+
+    renderApptList(dateStr, 'selectedApptList');
+  }
+
+  function searchAppointments() {
+    renderApptList(activeSelectedDate, 'selectedApptList', document.getElementById('searchApptInput').value);
+  }
+
+  async function viewPatientDetails(hn, name) {
+    if (!hn || hn === '-') return Swal.fire('แจ้งเตือน', 'ไม่มีข้อมูล HN ในระบบ', 'warning');
+    Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      const res = await fetch(`/api/patients/${hn}/courses`);
+      const data = await res.json();
+      
+      let activeCourses = ''; let completedCourses = '';
+      
+      if (data.status === 'success' && data.data.length > 0) {
+        data.data.forEach(c => {
+          let remain = c.total_qty - c.used_qty;
+          let displayName = c.product_name || c.product_id;
+          let unitName = c.unit || 'ครั้ง';
+          
+          if (remain > 0) {
+            activeCourses += `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><span class="text-success fw-bold"><i class="fa-solid fa-syringe me-1"></i> ${displayName}</span><span class="badge bg-success rounded-pill" style="font-size:0.8rem;">เหลือ ${remain} / ${c.total_qty} ${unitName}</span></div>`;
+          } else {
+            completedCourses += `<div class="d-flex justify-content-between align-items-center border-bottom py-2 text-muted"><span><i class="fa-solid fa-check-double me-1"></i> ${displayName}</span><span style="font-size:0.8rem;">ใช้ครบแล้ว (${c.total_qty} ${unitName})</span></div>`;
+          }
+        });
+      }
+      
+      if (!activeCourses) activeCourses = '<div class="text-muted small py-2 text-center">- ไม่มีคอร์สคงเหลือ -</div>';
+      if (!completedCourses) completedCourses = '<div class="text-muted small py-2 text-center">- ไม่มีประวัติคอร์สที่ใช้หมดแล้ว -</div>';
+
+      Swal.fire({
+        title: `<h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-user me-2"></i>${name}</h5><div class="fs-6 text-muted mt-1">HN: ${hn}</div>`,
+        html: `<div class="text-start mt-3"><h6 class="fw-bold text-success border-bottom pb-2 mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> คอร์ส / โปรโมชั่นที่คงเหลือ</h6><div class="mb-4">${activeCourses}</div><h6 class="fw-bold text-secondary border-bottom pb-2 mb-2"><i class="fa-solid fa-clock-rotate-left me-1"></i> คอร์สที่ใช้ครบแล้ว</h6><div>${completedCourses}</div></div>`,
+        width: '500px', showCloseButton: true, showConfirmButton: false
+      });
+      
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error'); }
+  }
+
+  function renderApptList(filterDate, containerId, searchTerm = '') {
+    const listContainer = document.getElementById(containerId);
+    if(!listContainer) return;
+    listContainer.innerHTML = '';
+
+    let filtered = [];
+    searchTerm = searchTerm.toLowerCase().trim();
+
+    if (searchTerm) {
+      filtered = clinicAppointments.filter(a => (a.name && a.name.toLowerCase().includes(searchTerm)) || (a.phone && a.phone.includes(searchTerm)) || (a.hn && a.hn.toLowerCase().includes(searchTerm)));
+      document.getElementById('selectedDateBadge').innerText = `ผลลัพธ์การค้นหา: ${filtered.length} คิว`;
+      document.getElementById('selectedDateBadge').className = "badge bg-warning text-dark rounded-pill px-3 mt-2 fs-6";
+    } else {
+      filtered = clinicAppointments.filter(a => a.date === filterDate);
+      const dateObj = new Date(filterDate);
+      document.getElementById('selectedDateBadge').innerText = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+      document.getElementById('selectedDateBadge').className = "badge bg-primary rounded-pill px-3 mt-2 fs-6";
+    }
+
+    filtered.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+
+    if (filtered.length === 0) {
+      listContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-magnifying-glass fa-2x mb-3 text-light"></i><br>${searchTerm ? 'ไม่พบคิวจากคำค้นหา' : 'ไม่มีคิวนัดหมาย'}</div>`;
+      return;
+    }
+
+    let html = '';
+    const now = new Date(); 
+    const nowDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    filtered.forEach(appt => {
+      const dObj = new Date(appt.date);
+      const dStr = dObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+      const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
+      
+      let statusBadge = appt.status === 'CONFIRMED' ? '<span class="badge bg-success ms-2"><i class="fa-solid fa-check"></i> โทรแล้ว</span>' : '';
+      let cardClass = appt.status === 'CONFIRMED' ? 'confirmed-card' : '';
+      let timeBadgeClass = "bg-warning text-dark"; 
+      let overdueBadge = "";
+
+      const apptDateTime = new Date(`${appt.date}T${appt.time}`);
+      
+      if (apptDateTime < now) {
+        timeBadgeClass = "bg-danger text-white"; 
+        cardClass += " opacity-75"; 
+        if (appt.date === nowDateStr) overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-clock-rotate-left"></i> เลยเวลานัด</span>';
+        else overdueBadge = '<span class="badge bg-danger ms-2"><i class="fa-solid fa-calendar-xmark"></i> เลยวันนัด</span>';
+      }
+
+      let actionBtnHtml = '';
+      let deleteBtn = (appt.status === 'WAITING' || appt.status === 'CONFIRMED') 
+        ? `<button class="btn btn-sm btn-light text-danger rounded-circle border ms-1 shadow-sm" title="ยกเลิกนัดหมาย" onclick="deleteAppointment(${appt.id})"><i class="fa-solid fa-trash"></i></button>`
+        : '';
+
+      if (appt.status === 'CHECKED_IN') actionBtnHtml = `<span class="badge bg-warning text-dark border"><i class="fa-solid fa-user-clock me-1"></i> รอเข้าห้องตรวจ</span>`;
+      else if (appt.status === 'COMPLETED') actionBtnHtml = `<span class="badge bg-success text-white border"><i class="fa-solid fa-check-double me-1"></i> ตรวจเสร็จสิ้น</span>`;
+      else if (appt.status === 'WAITING_PAYMENT') actionBtnHtml = `<span class="badge bg-info text-dark border"><i class="fa-solid fa-file-invoice-dollar me-1"></i> รอชำระเงิน</span>`;
+      else if (appt.status === 'PAID') actionBtnHtml = `<span class="badge bg-secondary text-white border"><i class="fa-solid fa-check-to-slot me-1"></i> ชำระเงินแล้ว</span>`;
+      else actionBtnHtml = `<button class="btn btn-sm btn-info text-white fw-bold rounded-pill py-0 px-3" style="font-size: 0.75rem;" onclick="checkInPatient(${appt.id}, '${patientName}')"><i class="fa-solid fa-person-walking-arrow-right"></i> Check-in เข้าห้องตรวจ</button>`;
+
+      let checkCourseBtn = appt.hn !== '-' ? `<button class="btn btn-sm btn-outline-secondary py-0 px-2 ms-2 rounded-pill" style="font-size: 0.7rem;" onclick="viewPatientDetails('${appt.hn}', '${patientName}')"><i class="fa-solid fa-magnifying-glass"></i> เช็คคอร์ส</button>` : '';
+
+      html += `
+        <div class="card appt-card ${cardClass} mb-3 shadow-sm border-0 bg-light">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="fw-bold text-primary m-0 mb-1">${patientName} ${statusBadge} ${overdueBadge}</h6>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <small class="text-muted d-flex align-items-center"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn} ${checkCourseBtn}</small>
+                  ${actionBtnHtml}
+                  ${deleteBtn}
+                </div>
+              </div>
+              <div class="text-end">
+                <span class="badge ${timeBadgeClass} mb-1"><i class="fa-regular fa-clock me-1"></i> ${appt.time} น.</span><br>
+                <small class="text-muted" style="font-size: 0.7rem;">${dStr}</small>
+              </div>
+            </div>
+            <div class="small fw-bold text-secondary bg-white p-2 rounded border border-light">
+              <i class="fa-solid fa-pen-to-square me-1"></i> ${appt.note || 'ไม่มีหมายเหตุ'}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    listContainer.innerHTML = html;
+  }
+
+  function renderTomorrowList() {
+    const listContainer = document.getElementById('tomorrowApptList');
+    if(!listContainer) return;
+    listContainer.innerHTML = '';
+
+    const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+    const tmrStr = `${tmr.getFullYear()}-${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`;
+    document.getElementById('tomorrowDateBadge').innerText = tmr.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+
+    let filtered = clinicAppointments.filter(a => a.date === tmrStr);
+    document.getElementById('tomorrowCountBadge').innerText = filtered.length;
+
+    if (filtered.length === 0) {
+      listContainer.innerHTML = `<div class="col-12"><div class="text-center py-5 text-muted"><i class="fa-solid fa-face-smile fa-3x mb-3 text-success opacity-50"></i><br>พรุ่งนี้ไม่มีนัดหมาย</div></div>`;
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(appt => {
+      const patientName = appt.name ? appt.name : 'ไม่ระบุชื่อคนไข้';
+      const patientPhone = appt.phone ? appt.phone : 'ไม่มีเบอร์โทร';
+      
+      let actionHtml = '';
+      if (appt.status === 'CONFIRMED') { actionHtml = `<div class="text-success text-center fw-bold small mt-3 bg-success bg-opacity-10 p-2 rounded"><i class="fa-solid fa-check-circle me-1"></i> โทรยืนยันนัดหมายแล้ว</div>`; } 
+      else { actionHtml = `<button class="btn btn-sm btn-outline-success fw-bold rounded-pill w-100 mt-3" onclick="markAsContacted(${appt.id})"><i class="fa-solid fa-phone-volume me-1"></i> กดเมื่อโทรยืนยันแล้ว</button>`; }
+
+      let checkCourseBtn = appt.hn !== '-' ? `<button class="btn btn-sm btn-outline-secondary py-0 px-2 ms-2 rounded-pill" style="font-size: 0.7rem;" onclick="viewPatientDetails('${appt.hn}', '${patientName}')"><i class="fa-solid fa-magnifying-glass"></i> เช็คคอร์ส</button>` : '';
+
+      html += `
+        <div class="col-md-4 col-sm-6">
+          <div class="card appt-card shadow-sm border-0 bg-white border-start border-success border-4 h-100">
+            <div class="card-body p-3 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h6 class="fw-bold text-success m-0 mb-1">${patientName}</h6>
+                  <div class="d-flex align-items-center gap-2 mt-1 mb-1"><small class="text-muted d-flex align-items-center"><i class="fa-solid fa-address-card me-1"></i> ${appt.hn} ${checkCourseBtn}</small></div>
+                  <small class="fw-bold text-dark"><i class="fa-solid fa-phone me-1 text-success"></i> ${patientPhone}</small>
+                </div>
+              </div>
+              <div class="text-end mb-2"><span class="badge bg-warning text-dark"><i class="fa-regular fa-clock me-1"></i> ${appt.time} น.</span></div>
+              <div class="small fw-bold text-secondary bg-light p-2 rounded border border-light mt-auto"><i class="fa-solid fa-pen-to-square me-1"></i> ${appt.note || 'ไม่มีหมายเหตุ'}</div>
+              ${actionHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    listContainer.innerHTML = html;
+  }
+
+  function openAddApptModal() {
+    document.getElementById('newApptSearch').value = '';
+    document.getElementById('newApptPatientResult').innerHTML = '';
+    document.getElementById('newApptHN').value = '';
+    document.getElementById('newApptDate').value = activeSelectedDate;
+    document.getElementById('newApptTime').value = '10:00';
+    document.getElementById('newApptNote').value = '';
+
+    const modalEl = document.getElementById('addApptModal');
+    if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+    if (!addApptModalInstance) addApptModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    addApptModalInstance.show();
+  }
+
+  function closeAddApptModal() { if (addApptModalInstance) addApptModalInstance.hide(); }
+
+  async function searchNewApptPatient() {
+    const text = document.getElementById('newApptSearch').value.trim();
+    if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ชื่อหรือ HN', 'warning');
+    
+    Swal.showLoading();
+    try {
+      const res = await fetch(`/api/patients?search=${text}`);
+      const data = await res.json();
+      
+      if (data.data.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบคนไข้ในระบบ กรุณาลงทะเบียนก่อน', 'warning');
+      } else if (data.data.length === 1) {
+        selectNewApptPatient(data.data[0].id, data.data[0].full_name);
+        Swal.close();
+      } else {
+        let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+        data.data.forEach(p => { html += `<button class="list-group-item list-group-item-action py-3" onclick="Swal.close(); selectNewApptPatient('${p.id}', '${p.full_name}')"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id}</small></button>`; });
+        Swal.fire({ title: 'พบหลายรายการ', html: html+'</div>', showConfirmButton: false, showCloseButton: true });
+      }
+    } catch(e) {}
+  }
+
+  function selectNewApptPatient(hn, name) {
+    document.getElementById('newApptHN').value = hn;
+    document.getElementById('newApptPatientResult').innerHTML = `<i class="fa-solid fa-check-circle text-success me-1"></i> เลือก: ${name} (${hn})`;
+  }
+
+  async function saveNewAppointment() {
+    const hn = document.getElementById('newApptHN').value;
+    const date = document.getElementById('newApptDate').value;
+    const time = document.getElementById('newApptTime').value;
+    const note = document.getElementById('newApptNote').value;
+
+    if (!hn || !date || !time) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาคนไข้ และระบุวัน/เวลาให้ครบถ้วน', 'warning');
+
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient_id: hn, appointment_date: date, appointment_time: time, notes: note })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกนัดหมายสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        closeAddApptModal();
+        fetchAppointments(); 
+      }
+    } catch(e) { Swal.fire('Error', 'บันทึกล้มเหลว', 'error'); }
+  }
+
+  async function deleteAppointment(id) {
+    if ((await Swal.fire({ title: 'ยกเลิกนัดหมายนี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'ยืนยันยกเลิก' })).isConfirmed) {
+      Swal.fire({ title: 'กำลังยกเลิก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
+        Swal.fire({ icon: 'success', title: 'ยกเลิกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        fetchAppointments();
+      } catch (e) {}
+    }
+  }
+
+  async function markAsContacted(id) {
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      const res = await fetch(`/api/appointments/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'CONFIRMED' }) });
+      const data = await res.json();
+      if (data.status === 'success') { Swal.fire({ icon: 'success', title: 'บันทึกสถานะเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); fetchAppointments(); }
+    } catch (err) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+  }
+
+// =========================================================
+  // 🌟 ฟังก์ชัน Check-in พร้อมเลือกโปรโมชั่น (ดึงมาจาก Reception)
+  // =========================================================
+  async function checkInPatient(id, name) {
+    const appt = clinicAppointments.find(a => a.id === id);
+    if(!appt || appt.hn === '-' || !appt.hn) {
+        return Swal.fire('แจ้งเตือน', 'กรุณาระบุคนไข้ที่มีรหัส HN ก่อนทำการ Check-in', 'warning');
+    }
+
+    currentCheckInHN = appt.hn;
+    currentCheckInApptId = id;
+
+    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      const [pdRes, courseRes, billRes] = await Promise.all([ 
+        fetch('/api/inventory'), 
+        fetch(`/api/patients/${currentCheckInHN}/courses`),
+        fetch(`/api/pos/bill/${currentCheckInHN}`)
+      ]);
+      
+      const pdData = await pdRes.json(); 
+      const courseData = await courseRes.json();
+      const billData = await billRes.json();
+      
+      allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
+      allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
+      allBillsForScreening = billData.status === 'success' ? billData.data : [];
+      
+      resetSelection();
+      renderPromoCards();
+      renderGeneralCards();
+      renderActiveCourses(); 
+      
+      const modalEl = document.getElementById('screeningModal');
+      if (!modalEl) return;
+      
+      if (modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+      }
+      
+      let existingModal = bootstrap.Modal.getInstance(modalEl);
+      if (!existingModal) {
+        existingModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      }
+      screeningModalInstance = existingModal;
+      
+      document.getElementById('scr_note').value = appt.note || '';
+
+      Swal.close();
+      setTimeout(() => {
+        screeningModalInstance.show();
+        switchServiceTab('promo');
+      }, 200);
+
+    } catch (e) {
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลป๊อปอัปได้', 'error');
+    }
+  }
+
+  function switchServiceTab(tabName) {
+    document.querySelectorAll('.nav-pills-custom .nav-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tabbtn-${tabName}`).classList.add('active');
+
+    document.getElementById('tab-promo').style.display = 'none';
+    document.getElementById('tab-general').style.display = 'none';
+    document.getElementById('tab-active').style.display = 'none';
+
+    document.getElementById(`tab-${tabName}`).style.display = 'flex';
+  }
+
+  function renderPromoCards() {
+    const container = document.getElementById('tab-promo');
+    let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
+    
+    if(promos.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลโปรโมชั่นในระบบ</div>`;
+      return;
+    }
+
+    let html = '';
+    promos.forEach(p => {
+      let bundleHtml = '';
+      try {
+        let bundles = JSON.parse(p.bundle_items || '[]');
+        if (bundles.length > 0) {
+          bundleHtml = bundles.map(b => `<div class="mb-1"><i class="fa-solid fa-check text-success me-1"></i> ${b.name} <span class="badge bg-secondary ms-1">x${b.qty}</span></div>`).join('');
+        } else {
+          bundleHtml = '<div class="text-muted small">- ไม่มีรายการของแถมย่อย</div>';
+        }
+      } catch (e) { bundleHtml = ''; }
+
+      let valStr = `NEW_${p.id}`;
+      html += `
+        <div class="col-md-6">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3">
+               <h6 class="fw-bold card-title text-dark mb-2"><i class="fa-solid fa-gift text-primary me-1"></i> ${p.name}</h6>
+               <div class="bg-light p-2 rounded border" style="font-size: 0.8rem;">
+                 <div class="fw-bold text-muted border-bottom pb-1 mb-2">สิ่งที่จะได้รับ:</div>
+                 ${bundleHtml}
+               </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  function renderGeneralCards() {
+    const container = document.getElementById('tab-general');
+    let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE');
+    
+    if(generals.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลสินค้าทั่วไปที่ให้บริการได้</div>`;
+      return;
+    }
+
+    let html = '';
+    generals.forEach(p => {
+      let valStr = `NEW_${p.id}`;
+      let badgeType = p.type === 'INJECTABLE' ? 'bg-danger' : 'bg-info text-dark';
+      html += `
+        <div class="col-md-4">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3 text-center">
+               <span class="badge ${badgeType} mb-2">${p.type}</span>
+               <h6 class="fw-bold card-title text-dark m-0">${p.name}</h6>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+function renderActiveCourses() {
+    const container = document.getElementById('tab-active');
+    if(allCoursesForScreening.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
+      return;
+    }
+
+    let html = '';
+    let sortedCourses = [...allCoursesForScreening].sort((a, b) => b.id - a.id);
+    
+    sortedCourses.forEach(c => {
+       let prodDef = allInventoryForScreening.find(p => p.id === c.product_id);
+       let displayName = c.product_name || c.product_id;
+       let isPromo = prodDef && prodDef.type === 'PROMOTION';
+       
+       let isUnpaid = allBillsForScreening.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
+       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
+
+       if (isPromo) {
+          let state = JSON.parse(c.bundle_state || '[]');
+          if (state.length === 0) return; // ซ่อนข้อมูลผีที่ไม่มีกล่อง
+          let isAllUsed = state.every(item => item.total - item.used <= 0);
+
+          let bundleHtml = state.map(ab => {
+            let remain = ab.total - ab.used;
+            return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.total}</span>
+                    </div>`;
+          }).join('');
+
+          let valStr = `OLD_BOX_${c.id}`;
+          let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+
+          html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-1"></i> ${displayName}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
+                     </div></div></div>`;
+       } else {
+          let remain = c.total_qty - c.used_qty;
+          let isUsedUp = remain <= 0;
+          let valStr = `OLD_${c.id}`;
+          let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
+
+          html += `<div class="col-md-4"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว #' + c.id}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-1"></i> ${displayName}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">
+                          <div class="d-flex justify-content-between small">
+                            <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
+                            <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
+                          </div>
+                       </div>
+                     </div></div></div>`;
+       }
+    });
+    container.innerHTML = html;
+  }
+
+  function selectService(actionVal, actionName) {
+    let currentVal = document.getElementById('selected_action_val').value;
+    
+    if (currentVal === actionVal) {
+      resetSelection();
+    } else {
+      document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+      
+      let cardEl = document.getElementById(`card_${actionVal}`);
+      if(cardEl) cardEl.classList.add('selected');
+
+      document.getElementById('selected_action_val').value = actionVal;
+      let displayEl = document.getElementById('selected_service_display');
+      displayEl.innerText = actionName;
+      displayEl.className = "text-primary fw-bold fs-5 mb-2 px-3 py-2 bg-primary bg-opacity-10 rounded-3 border border-primary text-center";
+    }
+  }
+
+  function resetSelection() {
+    document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+    document.getElementById('selected_action_val').value = '';
+    
+    let displayEl = document.getElementById('selected_service_display');
+    displayEl.innerText = "ปรึกษาแพทย์ / ตรวจทั่วไป";
+    displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
+  }
+  
+  function closeScreeningModal() {
+    if (screeningModalInstance) {
+      screeningModalInstance.hide();
+    }
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
+  }
+
+async function submitScreening() {
+    let actionVal = document.getElementById('selected_action_val').value;
+    let selectedText = document.getElementById('selected_service_display').innerText;
+    let note = document.getElementById('scr_note').value.trim();
+
+    let btn = document.querySelector('#screeningModal .btn-info');
+    let originalBtnText = btn ? btn.innerHTML : '';
+    if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...'; btn.disabled = true; }
+
+    let serviceName = selectedText;
+    let checkInHN = (typeof currentCheckInHN !== 'undefined' && currentCheckInHN) ? currentCheckInHN : currentHN;
+
+    try {
+      if(actionVal && actionVal.startsWith('NEW_')) {
+         let productId = actionVal.replace('NEW_', '');
+         let resp = await fetch(`/api/patients/${checkInHN}/assign-promo`, { 
+           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId }) 
+         });
+         let data = await resp.json();
+         if(data.course_id) serviceName = `${selectedText} (กล่อง #${data.course_id})`;
+      } else if (actionVal && actionVal.startsWith('OLD_BOX_')) {
+         let boxId = actionVal.replace('OLD_BOX_', '');
+         serviceName = `${selectedText} (กล่อง #${boxId})`;
+      } else if (actionVal && actionVal.startsWith('OLD_')) {
+         let cId = actionVal.replace('OLD_', '');
+         serviceName = `${selectedText} (คอร์ส #${cId})`;
+      }
+
+      let finalNote = [];
+      if(actionVal) finalNote.push(`[บริการ] ${serviceName}`);
+      else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
+      if(note) finalNote.push(`[อาการ] ${note}`);
+
+      let payload = {
+        patient_id: checkInHN,
+        bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
+        pulse: document.getElementById('scr_pulse').value, 
+        weight: document.getElementById('scr_weight').value, 
+        height: document.getElementById('scr_height').value,
+        notes: finalNote.join(' | ')
+      };
+
+      if (typeof currentCheckInApptId !== 'undefined' && currentCheckInApptId) {
+          await fetch(`/api/appointments/${currentCheckInApptId}/checkin`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      } else {
+          await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      }
+      
+      closeScreeningModal();
+      if(typeof clearForm === 'function') clearForm();
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+      
+      document.getElementById('scr_sys').value = ''; document.getElementById('scr_dia').value = ''; document.getElementById('scr_pulse').value = ''; document.getElementById('scr_weight').value = ''; document.getElementById('scr_height').value = ''; document.getElementById('scr_note').value = '';
+      
+      setTimeout(() => {
+        Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+        if(typeof fetchAppointments === 'function') fetchAppointments();
+        if(typeof renderEmrQueue === 'function') renderEmrQueue();
+      }, 300);
+
+    } catch (e) {
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
+    }
+  }
+</script>

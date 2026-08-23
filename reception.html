@@ -1,0 +1,578 @@
+<style>
+  .service-card { transition: 0.2s ease-in-out; border: 2px solid #e2e8f0; cursor: pointer; border-radius: 16px; background-color: #ffffff; }
+  .service-card:hover { border-color: #93c5fd; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+  .service-card.selected { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 8px 20px rgba(59,130,246,0.2); }
+  .service-card.selected .card-title { color: #1d4ed8 !important; }
+  
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  .nav-pills-custom .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; margin-right: 8px; transition: 0.2s; border: 1px solid transparent; }
+  .nav-pills-custom .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+  .nav-pills-custom .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
+</style>
+
+<div class="container-fluid py-4" style="max-width: 1200px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-info m-0"><i class="fa-solid fa-clipboard-user me-2"></i> ลงทะเบียน & คัดกรองคนไข้</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+  </div>
+
+  <div class="row g-4">
+    <!-- ค้นหาคนไข้ -->
+    <div class="col-lg-4">
+      <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+        <h6 class="fw-bold m-0 mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-primary"></i> ค้นหาฐานข้อมูล</h6>
+        <div class="input-group mb-3">
+          <input type="text" id="searchInput" class="form-control bg-light border-0" placeholder="ชื่อ, นามสกุล, HN..." onkeypress="if(event.key === 'Enter') searchPatient()">
+          <button class="btn btn-primary" onclick="searchPatient()"><i class="fa-solid fa-search"></i></button>
+        </div>
+        <div class="text-center py-4 text-muted small" id="searchResultText">พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา</div>
+      </div>
+    </div>
+
+    <!-- ฟอร์มประวัติส่วนตัว -->
+    <div class="col-lg-8">
+      <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> ข้อมูลคนไข้ (Profile)</h5>
+          <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" onclick="readSmartCard()"><i class="fa-solid fa-id-card me-2"></i> อ่านบัตร ปชช.</button>
+        </div>
+        <form id="patientForm" onsubmit="savePatient(event)">
+          <div class="row g-3">
+            <div class="col-md-3"><label class="form-label fw-bold small text-muted">รหัสคนไข้ (HN)</label><input type="text" id="p_hn" class="form-control bg-light" placeholder="ระบบสร้างให้อัตโนมัติ" readonly></div>
+            <div class="col-md-5"><label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label><input type="text" id="p_name" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label><input type="text" id="p_idcard" class="form-control" maxlength="13" placeholder="ตัวเลข 13 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label><input type="tel" id="p_phone" class="form-control" required maxlength="10" placeholder="ตัวเลข 10 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold small text-muted">วันเกิด <span id="age_display" class="text-primary ms-1"></span></label>
+              <input type="date" id="p_dob" class="form-control" onchange="calculateAge()">
+            </div>
+            <div class="col-md-4"><label class="form-label fw-bold small text-muted">โรคประจำตัว</label><input type="text" id="p_disease" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา (ระบุให้ชัดเจน)</label><textarea id="p_allergies" class="form-control" rows="2"></textarea></div>
+            <div class="col-12 text-end mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-light rounded-pill px-4 me-2 fw-bold shadow-sm" onclick="clearForm()">เคลียร์ข้อมูล</button>
+              <button type="submit" class="btn btn-primary rounded-pill px-4 me-2 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติ</button>
+              <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="openScreeningModal()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> เลือกโปรโมชั่น / ส่งตรวจ</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal เลือกโปรโมชั่น -->
+<div class="modal fade" id="screeningModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-info text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-hand-holding-medical me-2"></i> เลือกรับบริการ & จุดคัดกรองเบื้องต้น</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeScreeningModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        <div class="row g-4">
+          <!-- 📦 ฝั่งซ้าย: เลือกบริการ -->
+          <div class="col-lg-8 border-end">
+            <h6 class="fw-bold text-secondary mb-3">กรุณาเลือกรายการที่คนไข้ต้องการรับบริการ</h6>
+            <ul class="nav nav-pills nav-pills-custom mb-3" id="serviceTabs">
+              <li class="nav-item"><button class="nav-link active" id="tabbtn-promo" onclick="switchServiceTab('promo')"><i class="fa-solid fa-gift me-1"></i> โปรโมชั่นจัดเซ็ต</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-general" onclick="switchServiceTab('general')"><i class="fa-solid fa-syringe me-1"></i> หัตถการ / สินค้าทั่วไป</button></li>
+              <li class="nav-item"><button class="nav-link" id="tabbtn-active" onclick="switchServiceTab('active')"><i class="fa-solid fa-clipboard-check me-1"></i> คอร์สคงเหลือของคนไข้</button></li>
+            </ul>
+
+            <div class="custom-scrollbar px-2" style="height: 420px; overflow-y: auto;">
+              <div id="tab-promo" class="row g-3"></div>
+              <div id="tab-general" class="row g-3" style="display:none;"></div>
+              <div id="tab-active" class="row g-3" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 🩺 ฝั่งขวา: สรุปและซักประวัติ -->
+          <div class="col-lg-4 d-flex flex-column">
+            <div class="bg-white p-3 rounded-4 shadow-sm border mb-3">
+              <h6 class="fw-bold text-primary mb-2">บริการที่เลือก:</h6>
+              <div id="selected_service_display" class="text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center">
+                ปรึกษาแพทย์ (ไม่ได้เลือก)
+              </div>
+              <input type="hidden" id="selected_action_val" value="">
+              
+              <label class="form-label fw-bold small text-muted mt-2">ระบุอาการ / หมายเหตุเพิ่มเติม</label>
+              <textarea id="scr_note" class="form-control rounded-3" rows="2" placeholder="เช่น ต้องการปรึกษาเรื่องสิว, ปวดหัว..."></textarea>
+            </div>
+
+            <div class="bg-white p-3 rounded-4 shadow-sm border flex-grow-1">
+              <h6 class="fw-bold text-muted small mb-3 border-bottom pb-2">ข้อมูล Vitals (คัดกรอง)</h6>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="small text-muted mb-1">SYS (ความดัน)</label>
+                  <input id="scr_sys" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">DIA (ความดัน)</label>
+                  <input id="scr_dia" type="number" class="form-control rounded-3 text-center" placeholder="mmHg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">Pulse (ชีพจร)</label>
+                  <input id="scr_pulse" type="number" class="form-control rounded-3 text-center" placeholder="/min">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">น้ำหนัก (kg)</label>
+                  <input id="scr_weight" type="number" class="form-control rounded-3 text-center" placeholder="kg">
+                </div>
+                <div class="col-6">
+                  <label class="small text-muted mb-1">ส่วนสูง (cm)</label>
+                  <input id="scr_height" type="number" class="form-control rounded-3 text-center" placeholder="cm">
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-info w-100 mt-3 rounded-pill fw-bold text-white shadow-sm py-3 fs-5" onclick="submitScreening()">
+              <i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งเข้าห้องตรวจ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var currentHN = '';
+  var screeningModalInstance = null;
+  var allInventoryForScreening = [];
+  var allCoursesForScreening = [];
+  var allBillsForScreening = []; // 🌟 ตัวแปรใหม่สำหรับเก็บประวัติบิล
+  
+  document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+  
+  async function searchPatient() {
+    const text = document.getElementById('searchInput').value.trim();
+    if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ข้อความ', 'warning');
+    Swal.showLoading();
+    try {
+      const res = await fetch(`/api/patients?search=${text}`);
+      const data = await res.json();
+      if (data.data.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'สามารถเพิ่มเป็นคนไข้ใหม่ได้เลย', 'info');
+      } else if (data.data.length === 1) {
+        loadPatientProfile(data.data[0]);
+        Swal.close();
+      } else {
+        let html = '<div class="list-group text-start mt-3" style="max-height:300px; overflow-y:auto;">';
+        data.data.forEach(p => { html += `<button class="list-group-item list-group-item-action py-3" onclick="selectFromList('${p.id}')"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id} | โทร: ${p.phone}</small></button>`; });
+        Swal.fire({ title: 'พบหลายรายการ', html: html+'</div>', showConfirmButton: false, showCloseButton: true });
+      }
+    } catch(e) {}
+  }
+  
+  async function selectFromList(hn) {
+    Swal.showLoading();
+    const res = await fetch(`/api/patients/${hn}`);
+    const data = await res.json();
+    loadPatientProfile(data.data);
+    Swal.close();
+  }
+
+  function loadPatientProfile(p) {
+    currentHN = p.id;
+    document.getElementById('p_hn').value = p.id;
+    document.getElementById('p_name').value = p.full_name || '';
+    document.getElementById('p_idcard').value = p.id_card || '';
+    document.getElementById('p_phone').value = p.phone || '';
+    document.getElementById('p_dob').value = p.dob || '';
+    calculateAge();
+    document.getElementById('p_disease').value = p.congenital_disease || '';
+    document.getElementById('p_allergies').value = p.allergies || '';
+    document.getElementById('searchResultText').innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-check"></i> ดึงประวัติ ${p.full_name} เรียบร้อย</span>`;
+  }
+
+  async function savePatient(e) {
+    e.preventDefault();
+    
+    const id_card_val = document.getElementById('p_idcard').value.trim();
+    const phone_val = document.getElementById('p_phone').value.trim();
+
+    // 🌟 ดักเช็คจำนวนหลัก
+    if (id_card_val !== '' && id_card_val.length !== 13) {
+      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก', 'warning');
+    }
+    if (phone_val.length !== 10) {
+      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
+    }
+
+    const payload = {
+      id: document.getElementById('p_hn').value,
+      full_name: document.getElementById('p_name').value, 
+      id_card: id_card_val,
+      phone: phone_val, 
+      dob: document.getElementById('p_dob').value,
+      congenital_disease: document.getElementById('p_disease').value, 
+      allergies: document.getElementById('p_allergies').value
+    };
+    
+    try {
+      const res = await fetch('/api/patients', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        if(!payload.id) payload.id = data.patient_id; 
+        loadPatientProfile(payload);
+      } else {
+        // ถ้าระบบหลังบ้านแจ้งว่าบัตรซ้ำ ให้เด้งเตือนพนักงาน
+        Swal.fire({
+          icon: 'warning',
+          title: 'ข้อมูลซ้ำซ้อน!',
+          html: data.message,
+          confirmButtonColor: '#3b82f6'
+        });
+      }
+    } catch(e) {
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
+  }
+
+  // ==========================================
+  // 🌟 เปิด Modal พร้อมเคลียร์บั๊กกดครั้งที่ 2 แล้ว Error
+  // ==========================================
+  async function openScreeningModal() {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาหรือบันทึกประวัติคนไข้ก่อนส่งคิวครับ', 'warning');
+
+    Swal.fire({ title: 'กำลังโหลดข้อมูลบริการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+      const [pdRes, courseRes, billRes] = await Promise.all([ 
+        fetch('/api/inventory'), 
+        fetch(`/api/patients/${currentHN}/courses`),
+        fetch(`/api/pos/bill/${currentHN}`)
+      ]);
+      
+      const pdData = await pdRes.json(); 
+      const courseData = await courseRes.json();
+      const billData = await billRes.json();
+      
+      allInventoryForScreening = pdData.status === 'success' ? pdData.data : [];
+      allCoursesForScreening = courseData.status === 'success' ? courseData.data : [];
+      allBillsForScreening = billData.status === 'success' ? billData.data : [];
+      
+      resetSelection();
+      renderPromoCards();
+      renderGeneralCards();
+      renderActiveCourses(); 
+      
+      const modalEl = document.getElementById('screeningModal');
+      if (!modalEl) return; // ป้องกันหาป๊อปอัปไม่เจอ
+      
+      if (modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+      }
+      
+      let existingModal = bootstrap.Modal.getInstance(modalEl);
+      if (!existingModal) {
+        existingModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      }
+      screeningModalInstance = existingModal;
+      
+      Swal.close();
+      setTimeout(() => {
+        screeningModalInstance.show();
+        switchServiceTab('promo');
+      }, 200);
+
+    } catch (e) {
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลป๊อปอัปได้', 'error');
+    }
+  }
+
+  function switchServiceTab(tabName) {
+    document.querySelectorAll('.nav-pills-custom .nav-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tabbtn-${tabName}`).classList.add('active');
+
+    document.getElementById('tab-promo').style.display = 'none';
+    document.getElementById('tab-general').style.display = 'none';
+    document.getElementById('tab-active').style.display = 'none';
+
+    document.getElementById(`tab-${tabName}`).style.display = 'flex';
+  }
+
+  function renderPromoCards() {
+    const container = document.getElementById('tab-promo');
+    let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
+    
+    if(promos.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลโปรโมชั่นในระบบ</div>`;
+      return;
+    }
+
+    let html = '';
+    promos.forEach(p => {
+      let bundleHtml = '';
+      try {
+        let bundles = JSON.parse(p.bundle_items || '[]');
+        if (bundles.length > 0) {
+          bundleHtml = bundles.map(b => `<div class="mb-1"><i class="fa-solid fa-check text-success me-1"></i> ${b.name} <span class="badge bg-secondary ms-1">x${b.qty}</span></div>`).join('');
+        } else {
+          bundleHtml = '<div class="text-muted small">- ไม่มีรายการของแถมย่อย</div>';
+        }
+      } catch (e) { bundleHtml = ''; }
+
+      let valStr = `NEW_${p.id}`;
+      html += `
+        <div class="col-md-6">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3">
+               <h6 class="fw-bold card-title text-dark mb-2"><i class="fa-solid fa-gift text-primary me-1"></i> ${p.name}</h6>
+               <div class="bg-light p-2 rounded border" style="font-size: 0.8rem;">
+                 <div class="fw-bold text-muted border-bottom pb-1 mb-2">สิ่งที่จะได้รับ:</div>
+                 ${bundleHtml}
+               </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  function renderGeneralCards() {
+    const container = document.getElementById('tab-general');
+    let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE');
+    
+    if(generals.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลสินค้าทั่วไปที่ให้บริการได้</div>`;
+      return;
+    }
+
+    let html = '';
+    generals.forEach(p => {
+      let valStr = `NEW_${p.id}`;
+      let badgeType = p.type === 'INJECTABLE' ? 'bg-danger' : 'bg-info text-dark';
+      html += `
+        <div class="col-md-4">
+          <div class="card h-100 service-card" id="card_${valStr}" onclick="selectService('${valStr}', '${p.name}')">
+            <div class="card-body p-3 text-center">
+               <span class="badge ${badgeType} mb-2">${p.type}</span>
+               <h6 class="fw-bold card-title text-dark m-0">${p.name}</h6>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+function renderActiveCourses() {
+    const container = document.getElementById('tab-active');
+    if(allCoursesForScreening.length === 0) {
+      container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
+      return;
+    }
+
+    let html = '';
+    let sortedCourses = [...allCoursesForScreening].sort((a, b) => b.id - a.id);
+    
+    sortedCourses.forEach(c => {
+       let prodDef = allInventoryForScreening.find(p => p.id === c.product_id);
+       let displayName = c.product_name || c.product_id;
+       let isPromo = prodDef && prodDef.type === 'PROMOTION';
+       
+       let isUnpaid = allBillsForScreening.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
+       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2">ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
+
+       if (isPromo) {
+          let state = JSON.parse(c.bundle_state || '[]');
+          if (state.length === 0) return; // ซ่อนข้อมูลผีที่ไม่มีกล่อง
+          let isAllUsed = state.every(item => item.total - item.used <= 0);
+
+          let bundleHtml = state.map(ab => {
+            let remain = ab.total - ab.used;
+            return `<div class="d-flex justify-content-between mb-1 small border-bottom pb-1">
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-primary'} me-1"></i> ${ab.name}</span>
+                      <span class="${remain <= 0 ? 'text-muted' : 'text-primary fw-bold'}">เหลือ ${remain} / ${ab.total}</span>
+                    </div>`;
+          }).join('');
+
+          let valStr = `OLD_BOX_${c.id}`;
+          let onclick = isAllUsed ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+
+          html += `<div class="col-md-6"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isAllUsed ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-1">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-1"></i> ${displayName}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">${bundleHtml}</div>
+                     </div></div></div>`;
+       } else {
+          let remain = c.total_qty - c.used_qty;
+          let isUsedUp = remain <= 0;
+          let valStr = `OLD_${c.id}`;
+          let onclick = isUsedUp ? '' : `onclick="selectService('${valStr}', '${displayName}')"`;
+          let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
+
+          html += `<div class="col-md-4"><div class="card h-100 service-card ${cardStyle}" id="card_${valStr}" ${onclick} style="${isUsedUp ? 'cursor:not-allowed;' : ''}">
+                     <div class="card-body p-3">
+                       <div class="d-flex justify-content-between align-items-start">
+                         <div><span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'} mb-1">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว #' + c.id}</span></div>
+                         ${payBadge}
+                       </div>
+                       <h6 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} m-0 mt-1 mb-2"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-1"></i> ${displayName}</h6>
+                       <div class="bg-white p-2 rounded border" style="font-size: 0.85rem;">
+                          <div class="d-flex justify-content-between small">
+                            <span class="${isUsedUp ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isUsedUp ? 'text-muted' : 'text-success'} me-1"></i> ${displayName}</span>
+                            <span class="${isUsedUp ? 'text-muted' : 'text-success fw-bold'}">เหลือ ${remain} / ${c.total_qty}</span>
+                          </div>
+                       </div>
+                     </div></div></div>`;
+       }
+    });
+    container.innerHTML = html;
+  }
+
+  function selectService(actionVal, actionName) {
+    let currentVal = document.getElementById('selected_action_val').value;
+    
+    if (currentVal === actionVal) {
+      resetSelection();
+    } else {
+      document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+      
+      let cardEl = document.getElementById(`card_${actionVal}`);
+      if(cardEl) cardEl.classList.add('selected');
+
+      document.getElementById('selected_action_val').value = actionVal;
+      let displayEl = document.getElementById('selected_service_display');
+      displayEl.innerText = actionName;
+      displayEl.className = "text-primary fw-bold fs-5 mb-2 px-3 py-2 bg-primary bg-opacity-10 rounded-3 border border-primary text-center";
+    }
+  }
+
+  function resetSelection() {
+    document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+    document.getElementById('selected_action_val').value = '';
+    
+    let displayEl = document.getElementById('selected_service_display');
+    displayEl.innerText = "ปรึกษาแพทย์ / ตรวจทั่วไป";
+    displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
+  }
+  
+  function closeScreeningModal() {
+    if (screeningModalInstance) {
+      screeningModalInstance.hide();
+    }
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
+  }
+
+async function submitScreening() {
+    let actionVal = document.getElementById('selected_action_val').value;
+    let selectedText = document.getElementById('selected_service_display').innerText;
+    let note = document.getElementById('scr_note').value.trim();
+
+    let btn = document.querySelector('#screeningModal .btn-info');
+    let originalBtnText = btn ? btn.innerHTML : '';
+    if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...'; btn.disabled = true; }
+
+    let serviceName = selectedText;
+    let checkInHN = (typeof currentCheckInHN !== 'undefined' && currentCheckInHN) ? currentCheckInHN : currentHN;
+
+    try {
+      if(actionVal && actionVal.startsWith('NEW_')) {
+         let productId = actionVal.replace('NEW_', '');
+         let resp = await fetch(`/api/patients/${checkInHN}/assign-promo`, { 
+           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId }) 
+         });
+         let data = await resp.json();
+         if(data.course_id) serviceName = `${selectedText} (กล่อง #${data.course_id})`;
+      } else if (actionVal && actionVal.startsWith('OLD_BOX_')) {
+         let boxId = actionVal.replace('OLD_BOX_', '');
+         serviceName = `${selectedText} (กล่อง #${boxId})`;
+      } else if (actionVal && actionVal.startsWith('OLD_')) {
+         let cId = actionVal.replace('OLD_', '');
+         serviceName = `${selectedText} (คอร์ส #${cId})`;
+      }
+
+      let finalNote = [];
+      if(actionVal) finalNote.push(`[บริการ] ${serviceName}`);
+      else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
+      if(note) finalNote.push(`[อาการ] ${note}`);
+
+      let payload = {
+        patient_id: checkInHN,
+        bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
+        pulse: document.getElementById('scr_pulse').value, 
+        weight: document.getElementById('scr_weight').value, 
+        height: document.getElementById('scr_height').value,
+        notes: finalNote.join(' | ')
+      };
+
+      if (typeof currentCheckInApptId !== 'undefined' && currentCheckInApptId) {
+          await fetch(`/api/appointments/${currentCheckInApptId}/checkin`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      } else {
+          await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      }
+      
+      closeScreeningModal();
+      if(typeof clearForm === 'function') clearForm();
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+      
+      document.getElementById('scr_sys').value = ''; document.getElementById('scr_dia').value = ''; document.getElementById('scr_pulse').value = ''; document.getElementById('scr_weight').value = ''; document.getElementById('scr_height').value = ''; document.getElementById('scr_note').value = '';
+      
+      setTimeout(() => {
+        Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+        if(typeof fetchAppointments === 'function') fetchAppointments();
+        if(typeof renderEmrQueue === 'function') renderEmrQueue();
+      }, 300);
+
+    } catch (e) {
+      if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
+    }
+  }
+  }
+
+  function clearForm() {
+    currentHN = ''; 
+    document.getElementById('patientForm').reset(); 
+    document.getElementById('p_hn').value = '';
+    document.getElementById('age_display').innerText = '';
+    document.getElementById('searchInput').value = ''; 
+    document.getElementById('searchResultText').innerHTML = 'พิมพ์ข้อมูลเพื่อค้นหา หรือลงทะเบียนใหม่ด้านขวา';
+  }
+
+  function readSmartCard() {
+    Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    setTimeout(() => { 
+      clearForm(); 
+      document.getElementById('p_name').value = 'สมชาย รักชาติ'; 
+      document.getElementById('p_idcard').value = '1100200300401'; 
+      document.getElementById('p_phone').value = '0891234567'; 
+      document.getElementById('p_dob').value = '1985-10-25'; 
+      Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false }); 
+    }, 1000);
+  }
+  
+  function calculateAge() {
+    const dobStr = document.getElementById('p_dob').value;
+    const ageDisplay = document.getElementById('age_display');
+    if (!dobStr) { ageDisplay.innerText = ''; return; }
+    
+    const dob = new Date(dobStr);
+    const diffMS = Date.now() - dob.getTime();
+    const ageDate = new Date(diffMS);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    ageDisplay.innerText = `(อายุ ${age} ปี)`;
+  }
+</script>
