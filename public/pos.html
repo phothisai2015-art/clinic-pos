@@ -514,134 +514,65 @@
   }
   
  // ==========================================
-  // 🌟 ฟังก์ชันดูคอร์สคงเหลือ แยกเฉพาะรายการที่กดดูตามบิล (POS)
+  // 🌟 ฟังก์ชันดูข้อมูลกล่องโปรโมชั่น 1 บิล ต่อ 1 กล่อง (POS)
   // ==========================================
   async function viewPatientSpecificCourse(productId, itemName, billId) {
     if (!activeBill || !activeBill.hn) return;
     let hn = activeBill.hn;
 
-    Swal.fire({ title: 'กำลังเช็คสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังเปิดกล่องสิทธิ์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-      // 🌟 ดึงข้อมูลคอร์สทั้งหมด, คลังสินค้า, และประวัติบิลทั้งหมดของคนไข้
-      const [courseRes, invRes, billRes] = await Promise.all([
-        fetch(`/api/patients/${hn}/courses`),
-        fetch('/api/inventory'),
-        fetch(`/api/pos/bill/${hn}`)
-      ]);
-      const courseData = await courseRes.json();
-      const invData = await invRes.json();
-      const billData = await billRes.json();
-
-      let allCourses = courseData.status === 'success' ? courseData.data : [];
-      let inventory = invData.status === 'success' ? invData.data : [];
-      let allBills = billData.status === 'success' ? billData.data : [];
+      const [courseRes, invRes, billRes] = await Promise.all([ fetch(`/api/patients/${hn}/courses`), fetch('/api/inventory'), fetch(`/api/pos/bill/${hn}`) ]);
+      let allCourses = (await courseRes.json()).data || [];
+      let inventory = (await invRes.json()).data || [];
+      let allBills = (await billRes.json()).data || [];
 
       let productDef = inventory.find(p => p.id === productId);
-      if (!productDef) return Swal.fire('ข้อมูลไม่พบ', 'ไม่พบข้อมูลสินค้านี้ในระบบ', 'error');
-
-      // 🌟 เรียงคอร์สและบิลจากเก่าไปใหม่ (ASC) เพื่อนำมาจับคู่กันตามลำดับการซื้อแบบ 1-ต่อ-1
-      let tempCourses = [...allCourses].sort((a,b) => a.id - b.id);
+      
+      // 🌟 เรียงบิลและกล่องคอร์สจากเก่าไปใหม่ เพื่อจับคู่แบบ 1-to-1 (บิลใบที่ 1 คู่กับ กล่องใบที่ 1 เสมอ)
       let productBills = allBills.filter(b => b.product_id === productId).sort((a,b) => a.id - b.id);
+      let targetCourses = allCourses.filter(c => c.product_id === productId).sort((a,b) => a.id - b.id);
+      
+      // หาว่าบิลที่เราจิ้มดู เป็นบิลใบที่เท่าไหร่ แล้วไปดึง "กล่อง" ในลำดับเดียวกันมาโชว์
+      let billIndex = productBills.findIndex(b => b.id === billId);
+      let targetBox = targetCourses[billIndex]; 
 
-      let targetSet = null;
+      if (!targetBox) return Swal.fire('ไม่พบข้อมูลกล่อง', 'อาจเป็นประวัติเก่าก่อนการอัปเดตระบบ หรือถูกลบไปแล้ว', 'warning');
 
-      // 🌟 วนลูปจับคู่บิลทีละใบกับคอร์ส เพื่อป้องกันคอร์สเก่า-ใหม่ปนกัน
-      for (let i = 0; i < productBills.length; i++) {
-        let currentBill = productBills[i];
-        let currentBillQty = currentBill.qty || 1; // เผื่อกรณีซื้อทีละ 2 เซ็ต
-        let currentSet = [];
+      let isAllUsed = false;
+      let bundleHtml = '';
 
-        if (productDef.type === 'PROMOTION') {
-            let bundles = [];
-            try { bundles = JSON.parse(productDef.bundle_items || '[]'); } catch(e) {}
-            if (bundles.length === 0) bundles = [{id: productDef.id, name: productDef.name, qty: 1}];
-
-            let usedIndices = new Set();
-            for (let b of bundles) {
-                let expectedQty = parseFloat(b.qty) * parseFloat(currentBillQty);
-
-                // 1. หารายการที่ชื่อตรงกัน และ จำนวนครั้งรวม (total_qty) ตรงกันเป๊ะ! (กันไปดึงคอร์สเดี่ยวมาปน)
-                let foundIdx = tempCourses.findIndex((c, idx) =>
-                    !usedIndices.has(idx) &&
-                    (c.product_id === b.id || c.product_name === b.name) &&
-                    parseFloat(c.total_qty) === expectedQty
-                );
-
-                // 2. ถ้าหาแบบเป๊ะๆ ไม่เจอ ให้ยอมดึงอันที่มีชื่อตรงกันที่เก่าที่สุด (Fallback)
-                if (foundIdx === -1) {
-                    foundIdx = tempCourses.findIndex((c, idx) =>
-                        !usedIndices.has(idx) &&
-                        (c.product_id === b.id || c.product_name === b.name)
-                    );
-                }
-
-                if (foundIdx !== -1) {
-                    currentSet.push({ ...b, course_data: tempCourses[foundIdx] });
-                    usedIndices.add(foundIdx);
-                }
-            }
-
-            // ตัดรายการคอร์สที่ถูกจับคู่กับบิลใบนี้ออกไป เพื่อไม่ให้บิลใบถัดไปดึงไปซ้ำ
-            tempCourses = tempCourses.filter((_, idx) => !usedIndices.has(idx));
-
-            // ถ้าบิลรอบนี้คือบิลที่เรากดคลิกดู ก็เก็บข้อมูลก้อนนี้ไว้แสดงผล
-            if (currentBill.id === billId) {
-                targetSet = currentSet;
-                break;
-            }
-
-        } else {
-            // สำหรับคอร์สเดี่ยว / หัตถการ
-            let expectedQty = parseFloat(currentBillQty);
-            let foundIdx = tempCourses.findIndex(c =>
-                (c.product_id === productId || c.product_name === itemName) &&
-                parseFloat(c.total_qty) === expectedQty
-            );
-
-            if (foundIdx === -1) {
-                foundIdx = tempCourses.findIndex(c =>
-                    c.product_id === productId || c.product_name === itemName
-                );
-            }
-
-            if (foundIdx !== -1) {
-                let c = tempCourses[foundIdx];
-                currentSet.push({ name: itemName, course_data: c });
-                tempCourses.splice(foundIdx, 1);
-
-                if (currentBill.id === billId) {
-                    targetSet = currentSet;
-                    break;
-                }
-            }
-        }
+      if (productDef && productDef.type === 'PROMOTION') {
+         let state = JSON.parse(targetBox.bundle_state || '[]');
+         isAllUsed = targetBox.used_qty >= targetBox.total_qty; // เช็คว่ากล่องนี้ถูกใช้หมดหรือยัง
+         
+         bundleHtml = state.map(ab => {
+            let remain = ab.total - ab.used;
+            return `<div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
+                        <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-success'} me-1"></i> ${ab.name}</span>
+                        <span class="${remain <= 0 ? 'text-muted' : 'text-success fw-bold'} badge bg-light border px-2 py-1">เหลือ ${remain} / ${ab.total}</span>
+                    </div>`;
+         }).join('');
+      } else {
+         let remain = targetBox.total_qty - targetBox.used_qty;
+         isAllUsed = remain <= 0;
+         bundleHtml = `<div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
+                        <span class="${isAllUsed ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${isAllUsed ? 'text-muted' : 'text-success'} me-1"></i> ${itemName}</span>
+                        <span class="${isAllUsed ? 'text-muted' : 'text-success fw-bold'} badge bg-light border px-2 py-1">เหลือ ${remain} / ${targetBox.total_qty}</span>
+                    </div>`;
       }
 
-      // ถ้าดึงแล้วไม่เจออะไรเลย
-      if (!targetSet || targetSet.length === 0) {
-          return Swal.fire('ไม่พบสิทธิ์', 'ระบบไม่พบข้อมูลสิทธิ์ที่ผูกกับบิลนี้ (อาจเป็นข้อมูลเก่า หรือไม่สมบูรณ์)', 'warning');
-      }
-
-      let isAllUsed = targetSet.every(ab => (ab.course_data.total_qty - ab.course_data.used_qty) <= 0);
-
-      // สร้างหน้าตา UI
-      let bundleHtml = targetSet.map(ab => {
-          let remain = ab.course_data.total_qty - ab.course_data.used_qty;
-          return `<div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
-                      <span class="${remain <= 0 ? 'text-muted' : 'text-dark'}"><i class="fa-solid fa-check ${remain <= 0 ? 'text-muted' : 'text-success'} me-1"></i> ${ab.name}</span>
-                      <span class="${remain <= 0 ? 'text-muted' : 'text-success fw-bold'} badge bg-light border px-2 py-1">เหลือ ${remain} / ${ab.course_data.total_qty}</span>
-                  </div>`;
-      }).join('');
-
-      let statusBadge = isAllUsed
-          ? `<span class="badge bg-secondary px-3 py-2"><i class="fa-solid fa-check-double me-1"></i> ใช้สิทธิ์ครบแล้ว</span>`
-          : `<span class="badge bg-success px-3 py-2"><i class="fa-solid fa-check me-1"></i> ยังมีสิทธิ์คงเหลือ</span>`;
+      let statusBadge = isAllUsed 
+          ? `<span class="badge bg-secondary px-3 py-2"><i class="fa-solid fa-check-double me-1"></i> ใช้สิทธิ์ครบแล้ว</span>` 
+          : `<span class="badge bg-success px-3 py-2"><i class="fa-solid fa-box-open me-1"></i> ยังมีสิทธิ์ในกล่องนี้</span>`;
 
       let cardHtml = `
           <div class="card border-0 shadow-sm ${isAllUsed ? 'opacity-75' : ''}">
               <div class="card-header bg-white border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
-                  <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-success'} fs-6"><i class="fa-solid ${productDef.type === 'PROMOTION' ? 'fa-gift' : 'fa-wand-magic-sparkles'} me-2"></i> ${itemName}</div>
+                  <div class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-success'} fs-6">
+                    <i class="fa-solid ${productDef && productDef.type === 'PROMOTION' ? 'fa-gift' : 'fa-wand-magic-sparkles'} me-2"></i> รหัสกล่อง: #${targetBox.id}
+                  </div>
               </div>
               <div class="card-body">
                   <div class="mb-3">${statusBadge}</div>
@@ -650,15 +581,11 @@
           </div>`;
 
       Swal.fire({
-          title: `<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>รายละเอียดสิทธิ์</h4>`,
+          title: `<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-box-open me-2"></i>รายละเอียดในกล่อง</h4>`,
           html: `<div class="text-start mt-3">${cardHtml}</div>`,
-          width: '500px',
-          showCloseButton: true,
-          showConfirmButton: false
+          width: '500px', showCloseButton: true, showConfirmButton: false
       });
 
-    } catch (err) {
-       Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error');
-    }
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลคอร์สได้', 'error'); }
   }
 </script>

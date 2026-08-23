@@ -320,7 +320,6 @@ async function selectPatient(hn) {
     activePromoInfo = null;
     currentSubItems = [];
     
-    // 🌟 ปลดล็อกฟอร์มและรีเซ็ตปุ่มบันทึกเมื่อเลือกคนไข้ใหม่
     let btnSave = document.getElementById('btn_save_emr');
     if (btnSave) {
       btnSave.disabled = false;
@@ -344,6 +343,8 @@ async function selectPatient(hn) {
     const invData = (await invRes.json()).data || [];
     const cData = (await cRes.json()).data || [];
     
+    window.invDataForDoctor = invData; // 🌟 เก็บข้อมูลคลังไว้เช็คหักสต็อกตอนหมอกดเซฟ
+
     document.getElementById('hdr_name').innerText = p.full_name; 
     document.getElementById('hdr_hn').innerText = p.id;
     document.getElementById('hdr_idcard').innerText = p.id_card || '-';
@@ -386,68 +387,36 @@ async function selectPatient(hn) {
 
     let serviceNote = queueInfo ? queueInfo.notes || '' : '';
     
-    // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (ป้องกันการจับคู่ผิดตัว)
-    // 🌟 ระบบจับคู่โปรโมชั่นแบบใหม่ (รองรับทั้งโปรซื้อใหม่ และ โปรทำต่อ)
-  // 🌟 แก้ไข: ระบบดึงของแถมโปรโมชั่นแบบ 100% (กันบั๊กชื่อเว้นวรรค และดึงของแถมครบแม้จะใช้สิทธิ์หมดแล้ว)
+    // 🌟 ระบบจับคู่โปรโมชั่นใหม่จากรหัส "กล่อง"
     if (serviceNote.includes('[บริการ]') && !serviceNote.includes('ปรึกษาแพทย์')) {
-      let rawPromoName = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
-      let isOldCourse = rawPromoName.endsWith('(คอร์สเดิม)');
-      let cleanPromoName = rawPromoName.replace(/\s*\(คอร์สเดิม\)$/, '').trim(); 
-      
-      // 🛑 เพิ่ม .trim() ตอนหาชื่อสินค้า เพื่อป้องกันบั๊กพิมพ์เว้นวรรคในฐานข้อมูล
-      let matchedProd = invData.find(x => x.name.trim() === cleanPromoName);
-      activePromoInfo = { name: cleanPromoName, prod: matchedProd };
+      let rawService = serviceNote.replace(/\[บริการ\]\s*/, '').split(' | ')[0].trim();
+      let boxMatch = rawService.match(/\(กล่อง #(\d+)\)/);
+      let singleMatch = rawService.match(/\(คอร์ส #(\d+)\)/);
 
-      let rawBundleItems = [];
-      if (matchedProd && matchedProd.bundle_items && matchedProd.bundle_items !== '[]') {
-        try { rawBundleItems = JSON.parse(matchedProd.bundle_items); } catch(e) {}
-      } else {
-        rawBundleItems = [{ id: matchedProd ? matchedProd.id : 'ITEM', name: cleanPromoName, qty: 1 }];
-      }
-
-      currentSubItems = [];
-      rawBundleItems.forEach(b => {
-        // 🌟 ปรับให้หาแบบระบุเจาะจงเหมือนหน้าจุดคัดกรองเป๊ะๆ
-        let availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && c.total_qty === b.qty && (c.total_qty - c.used_qty) > 0);
-        // ถ้าหาแบบตรงเป๊ะไม่เจอ ก็ยอมให้หาแบบชื่อตรงอย่างเดียวที่ยังมีสิทธิ์เหลือ
-        if (!availableCourse) availableCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && (c.total_qty - c.used_qty) > 0);
-        
-        // ถ้าคอร์สหมดแล้ว ก็ดึงมาโชว์เฉยๆ หมอจะได้รู้
-        let exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id) && c.total_qty === b.qty);
-        if (!exhaustedCourse) exhaustedCourse = cData.find(c => (c.product_name === b.name || c.product_id === b.id));
-        
-        let matchedCourse = availableCourse || exhaustedCourse;
-
-        if (matchedCourse) {
-           let remain = matchedCourse.total_qty - matchedCourse.used_qty;
-           currentSubItems.push({
-             id: b.id,
-             name: matchedCourse.product_name || b.name,
-             remain_qty: remain,
-             used_today: remain > 0 ? 1 : 0,
-             course_id: matchedCourse.id
-           });
-        } else if (!isOldCourse) {
-           // กรณีเปิดบิลใหม่
-           currentSubItems.push({
-             id: b.id,
-             name: b.name,
-             remain_qty: b.qty,
-             used_today: b.qty > 0 ? 1 : 0,
-             course_id: null
-           });
-        }
-      });
-
-      if(currentSubItems.length > 0) {
-        switchToPromoMode();
-      } else {
-        switchToGeneralMode();
-        document.getElementById('btn_switch_to_promo').style.display = 'none';
-      }
+      if (boxMatch) {
+         let courseId = parseInt(boxMatch[1]);
+         let targetCourse = cData.find(c => c.id === courseId);
+         if (targetCourse) {
+            activePromoInfo = { name: targetCourse.product_name, isBox: true, course_id: courseId };
+            let state = JSON.parse(targetCourse.bundle_state || '[]');
+            currentSubItems = state.map(s => ({
+               id: s.id, name: s.name, remain_qty: s.total - s.used, used_today: (s.total - s.used) > 0 ? 1 : 0, total: s.total, used: s.used
+            }));
+            switchToPromoMode();
+         } else { switchToGeneralMode(); }
+      } else if (singleMatch) {
+         let courseId = parseInt(singleMatch[1]);
+         let targetCourse = cData.find(c => c.id === courseId);
+         if (targetCourse) {
+            activePromoInfo = { name: targetCourse.product_name, isBox: false, course_id: courseId };
+            currentSubItems = [{
+               id: targetCourse.product_id, name: targetCourse.product_name, remain_qty: targetCourse.total_qty - targetCourse.used_qty, used_today: (targetCourse.total_qty - targetCourse.used_qty) > 0 ? 1 : 0
+            }];
+            switchToPromoMode();
+         } else { switchToGeneralMode(); }
+      } else { switchToGeneralMode(); }
     } else {
       switchToGeneralMode();
-      document.getElementById('btn_switch_to_promo').style.display = 'none';
     }
 
     loadEMRHistory(hn); 
@@ -558,8 +527,7 @@ async function selectPatient(hn) {
     sel.value = ''; qtyInput.value = ''; sigInput.value = '';
   }
 
-// 🌟 บล็อกการกดซ้ำ และล็อกฟอร์มทันทีที่บันทึกสำเร็จ
-  async function submitEMR() {
+async function submitEMR() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวคนไข้ก่อน', 'warning');
     
     let btnSave = document.getElementById('btn_save_emr');
@@ -623,10 +591,9 @@ async function selectPatient(hn) {
       return (el && el.innerText !== '-') ? el.innerText : '';
     };
 
-   // 🌟 เพิ่มข้อมูลนัดหมายเข้า Payload
     const payload = {
       patient_id: currentHN,
-      doctor_id: sessionStorage.getItem('currentUserId') || 1, // <--- เติม || 1 ป้องกันเผื่อหลุด และเติมลูกน้ำ (,) ตรงนี้
+      doctor_id: sessionStorage.getItem('currentUserId') || 1, 
       symptoms: sys_symptoms, 
       diagnosis: sys_diagnosis,
       treatment_details: finalTxArray.filter(Boolean).join('\n\n'),
@@ -643,15 +610,36 @@ async function selectPatient(hn) {
     try {
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
+      // 🌟 ระบบหักสต็อกและหักสิทธิ์แบบใหม่ ส่งเข้า API
       if (isPromoModeActive) {
-        let doneItems = currentSubItems.filter(x => x.used_today > 0 && x.course_id);
-        for (let item of doneItems) {
-           await fetch(`/api/courses/${item.course_id}/deduct`, { 
-             method: 'PUT', 
-             headers: {'Content-Type':'application/json'}, 
-             body: JSON.stringify({ deduct_amount: item.used_today }) 
-           });
-        }
+         if (activePromoInfo.isBox) {
+             let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
+             let stockDeductions = [];
+             currentSubItems.forEach(s => {
+                if(s.used_today > 0 && window.invDataForDoctor) {
+                   let pDef = window.invDataForDoctor.find(inv => inv.id === s.id);
+                   if(pDef && ['INJECTABLE','MEDICINE','SKINCARE'].includes(pDef.type)) {
+                       stockDeductions.push({ product_id: s.id, amount: s.used_today });
+                   }
+                }
+             });
+             
+             let isAllUsed = newState.every(s => s.total - s.used <= 0);
+             let deductOverall = isAllUsed ? 1 : 0; 
+
+             await fetch(`/api/courses/${activePromoInfo.course_id}/deduct`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ deduct_amount: deductOverall, bundle_state: JSON.stringify(newState), stock_deductions: stockDeductions })
+             });
+         } else {
+            let used_today = currentSubItems[0].used_today;
+            if (used_today > 0) {
+                await fetch(`/api/courses/${activePromoInfo.course_id}/deduct`, {
+                    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ deduct_amount: used_today })
+                });
+            }
+         }
       }
 
       Swal.fire({ icon: 'success', title: 'บันทึกการตรวจเรียบร้อย', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
@@ -673,7 +661,6 @@ async function selectPatient(hn) {
       if(document.getElementById('mc_additional_note')) document.getElementById('mc_additional_note').value = '';
       if(document.getElementById('emr_treatment')) document.getElementById('emr_treatment').value = ''; 
       
-      // 🌟 เคลียร์กล่องนัดหมาย
       if(document.getElementById('emr_next_appointment_date')) document.getElementById('emr_next_appointment_date').value = '';
       if(document.getElementById('emr_next_appointment_time')) document.getElementById('emr_next_appointment_time').value = '10:00';
       if(document.getElementById('emr_next_appointment_note')) document.getElementById('emr_next_appointment_note').value = '';
