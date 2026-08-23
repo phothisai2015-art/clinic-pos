@@ -42,6 +42,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, alterLog);
   db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, alterLog);
   db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, alterLog);
+  db.run(`ALTER TABLE emr_logs ADD COLUMN payment_status TEXT DEFAULT 'WAITING'`, alterLog);
   
   db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, alterLog);
   db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, alterLog);
@@ -351,8 +352,13 @@ app.get('/api/pos/bill/:hn', (req, res) => {
 // ==========================================
 app.put('/api/pos/send/:hn', (req, res) => {
   db.get(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn], (err, row) => {
-    if (row) { db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id], () => res.json({ status: 'success' })); } 
-    else { res.json({ status: 'error', message: 'ไม่พบคิวที่กำลังตรวจ' }); }
+    if (row) { 
+      db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id]); 
+    } 
+    // 🌟 บันทึกสถานะการส่งไปการเงินลงใน EMR Log ใบล่าสุดของคนไข้โดยตรง!
+    db.run(`UPDATE emr_logs SET payment_status = 'SENT' WHERE patient_id = ? AND id = (SELECT MAX(id) FROM emr_logs WHERE patient_id = ?)`, [req.params.hn, req.params.hn], () => {
+      res.json({ status: 'success' });
+    });
   });
 });
 
@@ -443,7 +449,7 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
     }
 
     await dbRun(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn]);
-    
+    await dbRun(`UPDATE emr_logs SET payment_status = 'PAID' WHERE patient_id = ? AND payment_status = 'SENT'`, [hn]);
     await dbRun("COMMIT");
     res.json({ status: 'success' });
   } catch (err) {
