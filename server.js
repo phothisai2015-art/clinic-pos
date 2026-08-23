@@ -43,6 +43,8 @@ db.serialize(() => {
   db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, alterLog);
   db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, alterLog);
   db.run(`ALTER TABLE emr_logs ADD COLUMN payment_status TEXT DEFAULT 'WAITING'`, alterLog);
+  // 🌟 เพิ่มคอลัมน์ bundle_state ลงใน patient_courses เพื่อเก็บรายการย่อยในกล่อง
+  db.run(`ALTER TABLE patient_courses ADD COLUMN bundle_state TEXT DEFAULT '[]'`, alterLog);
   
   db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, alterLog);
   db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, alterLog);
@@ -167,26 +169,43 @@ app.post('/api/patients/:id/courses', (req, res) => {
 });
 
 app.put('/api/courses/:id/deduct', (req, res) => {
-  const deductVal = parseFloat(req.body.deduct_amount);
-  db.get(`SELECT product_id FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
+  const { deduct_amount, bundle_state, stock_deductions } = req.body;
+  db.get(`SELECT * FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
     if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
     
-    db.run(`UPDATE patient_courses SET used_qty = used_qty + ? WHERE id = ?`, [deductVal, req.params.id], function(err2) {
-      // ✅ เช็คประเภทสินค้าก่อนหักสต็อก ป้องกันสต็อกคอร์ส/โปรโมชั่นติดลบ
-      db.get(`SELECT type FROM products WHERE id = ?`, [course.product_id], (err3, prod) => {
-        if (prod && (prod.type === 'INJECTABLE' || prod.type === 'MEDICINE' || prod.type === 'SKINCARE')) {
-          db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [deductVal, course.product_id], function(err4) { 
-            res.json({ status: 'success' }); 
-          });
-        } else {
-          res.json({ status: 'success' }); // หักแค่สิทธิ์คอร์ส ไม่หักสต็อกโกดัง
-        }
-      });
+    let sql = `UPDATE patient_courses SET used_qty = used_qty + ?`;
+    let params = [parseFloat(deduct_amount || 0)];
+    
+    if (bundle_state) {
+      sql += `, bundle_state = ?`;
+      params.push(bundle_state);
+    }
+    sql += ` WHERE id = ?`;
+    params.push(req.params.id);
+
+    db.run(sql, params, function(err2) {
+      // 🌟 หักสต็อกของแถมย่อยในกล่อง
+      if (stock_deductions && stock_deductions.length > 0) {
+         stock_deductions.forEach(sd => {
+            db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(sd.amount), sd.product_id]);
+         });
+         res.json({ status: 'success' });
+      } else {
+         // 🌟 หักสต็อกคอร์สเดี่ยวแบบปกติ
+         db.get(`SELECT type FROM products WHERE id = ?`, [course.product_id], (err3, prod) => {
+           if (prod && (prod.type === 'INJECTABLE' || prod.type === 'MEDICINE' || prod.type === 'SKINCARE')) {
+             db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(deduct_amount || 0), course.product_id], () => { 
+               res.json({ status: 'success' }); 
+             });
+           } else {
+             res.json({ status: 'success' });
+           }
+         });
+      }
     });
   });
 });
 
-// 🌟 API แตกโปรโมชั่น (Async/Await)
 app.post('/api/patients/:id/assign-promo', async (req, res) => {
   const { product_id } = req.body;
   const patient_id = req.params.id;
@@ -198,18 +217,18 @@ app.post('/api/patients/:id/assign-promo', async (req, res) => {
     await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status) VALUES (1, ?, ?, ?, ?, ?, 1, ?, 0, 'UNPAID')`,
       [patient_id, today, prod.name, prod.type, prod.id, prod.price]);
 
+    let course_id = null;
     if (prod.type === 'PROMOTION') {
       let items = JSON.parse(prod.bundle_items || '[]');
-      if (items.length > 0) {
-        for (let item of items) { await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [patient_id, item.id, item.qty]); }
-      } else {
-        // 🌟 เพิ่มจุดที่ตกหล่น: ถ้าโปรโมชั่นไม่ได้ใส่ของแถมมา ให้เพิ่มตัวมันเองเป็นคอร์ส 1 ครั้ง
-        await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id]);
-      }
+      let bundleState = items.map(i => ({ id: i.id, name: i.name, total: i.qty, used: 0 }));
+      let result = await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty, bundle_state) VALUES (1, ?, ?, 1, 0, ?)`, 
+        [patient_id, prod.id, JSON.stringify(bundleState)]);
+      course_id = result.lastID;
     } else {
-      await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id]);
+      let result = await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id]);
+      course_id = result.lastID;
     }
-    res.json({status: 'success'});
+    res.json({status: 'success', course_id: course_id});
   } catch (err) { res.status(500).json({status: 'error'}); }
 });
 
@@ -434,18 +453,16 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
           [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0, item.payment_method || currentPayMethod, JSON.stringify(history)]);
           
         if (item.is_new_course) {
-           let prod = await dbGet(`SELECT bundle_items FROM products WHERE id = ?`, [item.product_id]);
-           if (prod && prod.bundle_items && prod.bundle_items !== '[]') {
-              let bItems = JSON.parse(prod.bundle_items);
-              for (let b of bItems) { await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, b.id, b.qty * item.qty]); }
+           let prod = await dbGet(`SELECT type, bundle_items FROM products WHERE id = ?`, [item.product_id]);
+           if (prod && prod.type === 'PROMOTION') {
+              let bItems = JSON.parse(prod.bundle_items || '[]');
+              let bundleState = bItems.map(i => ({ id: i.id, name: i.name, total: i.qty * item.qty, used: 0 }));
+              await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty, bundle_state) VALUES (1, ?, ?, 1, 0, ?)`, 
+                [hn, item.product_id, JSON.stringify(bundleState)]);
            } else {
               await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, item.product_id, item.qty]);
            }
-        } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && safePayAmount > 0) {
-           await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [item.qty, item.product_id]);
-           await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [insertRes.lastID]);
         }
-      }
     }
 
     await dbRun(`UPDATE appointments SET status = 'PAID', sales_rep = ? WHERE patient_id = ? AND status = 'WAITING_PAYMENT'`, [sales_rep || '-', hn]);
