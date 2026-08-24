@@ -13,6 +13,17 @@
   .history-card { transition: 0.2s ease-in-out; cursor: pointer; border-left: 4px solid #3b82f6 !important; }
   .history-card:hover { transform: translateX(-4px); box-shadow: 0 8px 15px rgba(59,130,246,0.15) !important; background-color: #eff6ff !important; border-color: #2563eb !important; }
   
+  /* สไตล์ปฏิทินย่อยใน Pop-up นัดหมาย */
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .calendar-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #94a3b8; font-size: 0.85rem; }
+  .emr-cal-cell { background-color: #f8fafc; min-height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.2s; font-size: 0.95rem; color: #334155; }
+  .emr-cal-cell:hover:not(.other-month) { background-color: #eff6ff; border-color: #3b82f6; color: #3b82f6; transform: translateY(-1px); }
+  .emr-cal-cell.other-month { opacity: 0.25; pointer-events: none; }
+  .emr-cal-cell.today { background-color: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
+
+  .emr-slot-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; transition: 0.2s; }
+  .emr-slot-row:hover { background: #eff6ff; border-color: #93c5fd; }
+
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -191,14 +202,21 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-				 <!-- 🌟 ปุ่มลงนัดหมายคนไข้ (เตรียมซิงค์กับหน้านัดหมาย) -->
-				<div class="col-12 mt-3">
-				<button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" onclick="openBookingModule()">
-				<i class="fa-solid fa-calendar-check me-2"></i> นัดหมายคนไข้ติดตามผล / ครั้งถัดไป (Appointment)
-				</button>
-				</div>
+				  <!-- 🌟 ปุ่มเปิด Pop-up เลือกวันเวลานัดติดตามผล + กล่องแสดงมาร์กผล -->
+				  <div class="col-12 mt-3">
+				    <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" onclick="openEmrAppointmentModal()">
+				      <i class="fa-solid fa-calendar-check me-2"></i> นัดหมายคนไข้ติดตามผล / ครั้งถัดไป (Appointment)
+				    </button>
+            <div id="emr_selected_appt_box" class="alert alert-primary mt-2 mb-0 d-none justify-content-between align-items-center rounded-3 border-primary shadow-sm py-2 px-3">
+              <div>
+                <i class="fa-solid fa-clock-check me-2 text-primary fs-5"></i>
+                <strong>มาร์กวันนัดครั้งถัดไป:</strong> <span id="emr_selected_appt_text" class="fw-bold text-dark ms-1"></span>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-bold" onclick="clearEmrSelectedAppt()"><i class="fa-solid fa-times me-1"></i> ยกเลิกมาร์ก</button>
+            </div>
+				  </div>
 				  
-                  <!-- 🌟 Container รองรับผู้ช่วยหลายคน -->
+                  <!-- Container รองรับผู้ช่วยหลายคน -->
                   <div class="col-12 mt-3">
                     <label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
                     <div id="assistant_container" class="d-flex flex-column gap-2">
@@ -337,9 +355,47 @@
   </div>
 </div>
 
+<!-- 🌟 Modal: เลือกวัน-เวลานัดหมายติดตามผลล่วงหน้า (Pop-up ในหน้า EMR) -->
+<div class="modal" id="emrAppointmentModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-light border-bottom p-3">
+        <h5 class="modal-title fw-bold text-primary m-0"><i class="fa-solid fa-calendar-days me-2"></i> เลือกวัน-เวลานัดหมายติดตามผล</h5>
+        <button type="button" class="btn-close" onclick="closeEmrAppointmentModal()"></button>
+      </div>
+      <div class="modal-body p-4 custom-scrollbar" style="max-height: 75vh; overflow-y: auto;">
+        
+        <!-- Panel 1: ปฏิทินรายเดือน -->
+        <div id="emrApptMonthPanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark m-0" id="emrCalMonthDisplay">สิงหาคม 2026</h5>
+            <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+              <button class="btn btn-white text-secondary btn-sm px-3 py-1 border-end" onclick="changeEmrCalMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <button class="btn btn-white text-secondary btn-sm px-3 py-1" onclick="changeEmrCalMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="calendar-header-row mb-2">
+            <div class="text-danger">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-primary">ส</div>
+          </div>
+          <div id="emrCalGrid" class="calendar-grid"></div>
+        </div>
+
+        <!-- Panel 2: เลือกตารางเวลา ( Time Slots ) -->
+        <div id="emrApptDayPanel" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" onclick="showEmrCalMonth()"><i class="fa-solid fa-arrow-left me-1"></i> เลือกลองวันอื่น</button>
+            <h6 class="fw-bold text-primary m-0" id="emrApptDayTitle">วันที่...</h6>
+          </div>
+          <div id="emrTimeSlotsContainer" class="d-flex flex-column gap-2"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   var currentHN = '';
-  // 🌟 เพิ่มตัวแปรสำหรับเก็บเบอร์โทร เพื่อนำไปส่งให้หน้าตารางนัด
   var currentPhone = ''; 
   var allInventoryList = [];
   var allBillsList = [];
@@ -353,6 +409,11 @@
   var pendingMeds = [];
   var currentFilteredEmr = []; 
   var isCurrentEmrViewOnly = false; 
+
+  // 🌟 ตัวแปรเก็บวัน-เวลานัดหมายครั้งถัดไปชั่วคราว
+  var selectedNextApptDate = '';
+  var selectedNextApptTime = '';
+  var selectedNextApptText = '';
 
   var globalStaffOptionsHtml = '<option value="">-- เลือกผู้ช่วย / ผู้ให้บริการ --</option>';
 
@@ -466,7 +527,6 @@
 
   async function loadPatientData(p) {
     currentHN = p.id;
-    // 🌟 ดึงข้อมูลเบอร์โทรศัพท์เก็บไว้
     currentPhone = p.phone || '-'; 
     
     document.getElementById('emptyPatientState').style.display = 'none';
@@ -601,20 +661,17 @@
     });
   }
 
-  // --- ป๊อปอัปเลือกแพคเกจ / บริการใหม่ (แก้บั๊กกดไม่ได้) ---
   function openPackageModal() {
     if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
     currentCart = [];
     renderCart();
     renderPackageCards();
 
-    // 🌟 สั่งเปิดป๊อปอัปแบบแมนนวล ไม่ผ่าน Bootstrap JS
     document.getElementById('packageModal').style.display = 'block';
     switchPackageTab('promo');
   }
 
   function closePackageModal() { 
-    // 🌟 สั่งปิดแบบแมนนวล คืนค่าการคลิกให้หน้าเว็บทันที
     document.getElementById('packageModal').style.display = 'none';
   }
 
@@ -712,7 +769,6 @@
     } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error'); }
   }
 
-  // 🌟 (อัปเดต) บังคับล้างกระดานวาดรูป และรีเซ็ตผู้ช่วยเมื่อเปิดคอร์สใหม่
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
@@ -725,7 +781,9 @@
     document.getElementById('emr_detail_view_section').style.display = 'none'; 
     switchEmrSubTab('detail');
 
-    // ล้างรูปภาพมาร์กหน้าและไฟล์ที่อัปโหลดไว้
+    // 🌟 ล้างค่าวันนัดหมายชั่วคราวทุกครั้งที่เปลี่ยนมาทำคอร์สใหม่
+    clearEmrSelectedAppt();
+
     currentCanvasBg = null;
     clearCanvas();
     let canvasFile = document.getElementById('canvasFileInput');
@@ -741,7 +799,6 @@
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
       
-      // 🌟 รีเซ็ตช่องเลือกผู้ช่วยกลับเหลือช่องเดียว
       resetAssistantDropdowns();
       
       document.getElementById('e_med_list_display').value = '';
@@ -936,6 +993,7 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
+  // 🌟 บันทึกประวัติ EMR + หักคอร์ส + เซฟวันนัดลงปฏิทินจริงในขั้นตอนนี้ทันที!
   async function submitEMRAndDeduct() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
@@ -950,7 +1008,6 @@
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     }
 
-    // 🌟 ดึงชื่อผู้ช่วยทุกคนที่เลือกไว้แนบในประวัติ
     let selectedAssistants = [];
     document.querySelectorAll('.assistant-select').forEach(sel => {
       if (sel.value) selectedAssistants.push(sel.value);
@@ -960,18 +1017,28 @@
       finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
     }
 
+    // 🌟 ชื่อแพคเกจสำหรับลงนัดหมาย
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = document.getElementById('emr_package_title').innerText;
+    let cleanCourseName = (tempDiv.textContent || tempDiv.innerText || '').trim();
+
     let emrPayload = {
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
       symptoms: document.getElementById('e_cc').value, 
       diagnosis: 'บริการความงาม',
       treatment_details: finalTxArray.join('\n\n'),
+      next_appointment_date: selectedNextApptDate, // 🌟 ส่งวันนัดลง EMR
+      next_appointment_time: selectedNextApptTime, // 🌟 ส่งเวลานัดลง EMR
+      next_appointment_note: cleanCourseName,
       prescribed_meds: pendingMeds
     };
 
     try {
+      // 1. บันทึก EMR Log (หลังบ้าน server.js จะสร้างนัดหมายลงตาราง appointments ให้โดยอัตโนมัติ)
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
       
+      // 2. บันทึกหักคอร์ส
       let deductPayload = {};
       if (activeEmrCourse.bundle_state) {
         let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
@@ -985,11 +1052,33 @@
 
       await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
 
-      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์สและบันทึกประวัติเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
+      // 3. 🌟 บันทึกสำรองลง LocalStorage สำหรับโหมดพัฒนา (กันพลาด)
+      if (selectedNextApptDate && selectedNextApptTime) {
+         let newAppt = {
+            id: 'APP_' + Date.now(),
+            hn: currentHN,
+            patientName: document.getElementById('disp_name').innerText,
+            phone: currentPhone,
+            date: selectedNextApptDate,
+            time: selectedNextApptTime,
+            courseName: cleanCourseName
+         };
+         
+         let devApps = JSON.parse(localStorage.getItem('clinicAppointments_DEV') || '[]');
+         devApps.push(newAppt);
+         localStorage.setItem('clinicAppointments_DEV', JSON.stringify(devApps));
+
+         let prodApps = JSON.parse(localStorage.getItem('clinicAppointments') || '[]');
+         prodApps.push(newAppt);
+         localStorage.setItem('clinicAppointments', JSON.stringify(prodApps));
+      }
+
+      clearEmrSelectedAppt();
+      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์ส บันทึกประวัติ และลงตารางนัดหมายเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
       closeEmrMode();
       selectFromList(currentHN);
 
-    } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+    } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   }
   
   // ==========================================
@@ -1186,7 +1275,7 @@
   }
   
   // ==========================================
-  // 👩‍⚕️ ดึงรายชื่อพนักงาน/ผู้ช่วย จากฐานข้อมูล Users
+  // 👩‍⚕️ ดึงรายชื่อพนักงาน/ผู้ช่วย
   // ==========================================
   async function loadAssistants() {
     try {
@@ -1207,9 +1296,7 @@
           sel.innerHTML = globalStaffOptionsHtml;
         });
       }
-    } catch(e) {
-       console.error('Error loading assistants:', e);
-    }
+    } catch(e) { console.error('Error loading assistants:', e); }
   }
 
   function handleAssistantChange(selectEl) {
@@ -1263,29 +1350,151 @@
     `;
   }
 
-  // 🌟 ฟังก์ชันส่งข้อมูลไปยังหน้าปฏิทินนัดหมาย (Fast-track Booking)
-  function openBookingModule() {
+  // ==========================================
+  // 🗓️ ระบบ Pop-up ปฏิทินเลือกวันนัดหมายครั้งถัดไปในหน้า EMR
+  // ==========================================
+  var emrCalMonthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+  var emrCalDayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  
+  var emrCalToday = new Date();
+  var emrCalMonth = emrCalToday.getMonth();
+  var emrCalYear = emrCalToday.getFullYear();
+  var tempSelectedEmrDateStr = '';
+  var tempSelectedEmrDayTitle = '';
+
+  function openEmrAppointmentModal() {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
     
-    let pName = document.getElementById('disp_name').innerText;
-    let rawCourseName = document.getElementById('emr_package_title').innerText;
+    showEmrCalMonth();
+    document.getElementById('emrAppointmentModal').style.display = 'block';
+  }
+
+  function closeEmrAppointmentModal() {
+    document.getElementById('emrAppointmentModal').style.display = 'none';
+  }
+
+  function showEmrCalMonth() {
+    document.getElementById('emrApptDayPanel').classList.add('d-none');
+    document.getElementById('emrApptMonthPanel').classList.remove('d-none');
+    renderEmrCalGrid(emrCalMonth, emrCalYear);
+  }
+
+  function renderEmrCalGrid(month, year) {
+    const grid = document.getElementById('emrCalGrid');
+    grid.innerHTML = '';
+    document.getElementById('emrCalMonthDisplay').innerText = `${emrCalMonthNames[month]} ${year}`;
+
+    let firstDay = new Date(year, month, 1).getDay();
+    let daysInMonth = new Date(year, month + 1, 0).getDate();
+    let daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    let html = '';
+    for (let i = firstDay - 1; i >= 0; i--) {
+      html += `<div class="emr-cal-cell other-month">${daysInPrevMonth - i}</div>`;
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      let isToday = (i === emrCalToday.getDate() && month === emrCalToday.getMonth() && year === emrCalToday.getFullYear());
+      let todayClass = isToday ? 'today' : '';
+
+      html += `<div class="emr-cal-cell ${todayClass}" onclick="openEmrTimeSlots(${year}, ${month}, ${i})">${i}</div>`;
+    }
+
+    let totalCells = firstDay + daysInMonth;
+    let nextMonthDaysToFill = 42 - totalCells;
+    for (let i = 1; i <= nextMonthDaysToFill; i++) {
+      html += `<div class="emr-cal-cell other-month">${i}</div>`;
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function changeEmrCalMonth(step) {
+    emrCalMonth += step;
+    if (emrCalMonth < 0) { emrCalMonth = 11; emrCalYear--; } 
+    else if (emrCalMonth > 11) { emrCalMonth = 0; emrCalYear++; }
+    renderEmrCalGrid(emrCalMonth, emrCalYear);
+  }
+
+  function openEmrTimeSlots(year, month, day) {
+    document.getElementById('emrApptMonthPanel').classList.add('d-none');
+    document.getElementById('emrApptDayPanel').classList.remove('d-none');
+
+    let dateObj = new Date(year, month, day);
+    let dayOfWeek = emrCalDayNames[dateObj.getDay()];
     
-    // ลบข้อความที่ติดมาจากไอคอน
-    let tempDiv = document.createElement('div');
-    tempDiv.innerHTML = rawCourseName;
-    let cleanCourseName = tempDiv.textContent || tempDiv.innerText || '';
+    tempSelectedEmrDayTitle = `วัน${dayOfWeek}ที่ ${day} ${emrCalMonthNames[month]} ${year}`;
+    tempSelectedEmrDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    
+    document.getElementById('emrApptDayTitle').innerText = tempSelectedEmrDayTitle;
+    renderEmrTimeSlots();
+  }
 
-    // เก็บข้อมูลคนไข้ใส่กระเป๋า (Session) ไว้ให้หน้าปฏิทินดึงไปใช้
-    sessionStorage.setItem('autoBook_Active', 'true');
-    sessionStorage.setItem('autoBook_HN', currentHN);
-    sessionStorage.setItem('autoBook_Name', pName);
-    sessionStorage.setItem('autoBook_Phone', currentPhone);
-    sessionStorage.setItem('autoBook_CourseId', activeEmrCourse ? activeEmrCourse.id : '');
-    sessionStorage.setItem('autoBook_CourseName', cleanCourseName.trim());
+  function renderEmrTimeSlots() {
+    const container = document.getElementById('emrTimeSlotsContainer');
+    container.innerHTML = '';
 
-    // สั่งเปิดหน้าปฏิทินทันที
-    if(typeof closeModule === 'function') closeModule();
-    if(typeof openModule === 'function') openModule('booking.html');
+    // เวลาเปิดทำการ 10:00 - 20:00
+    let openTime = localStorage.getItem('clinicOpenTime_DEV') || localStorage.getItem('clinicOpenTime') || '10:00';
+    let closeTime = localStorage.getItem('clinicCloseTime_DEV') || localStorage.getItem('clinicCloseTime') || '20:00';
+
+    let [startH, startM] = openTime.split(':').map(Number);
+    let [endH, endM] = closeTime.split(':').map(Number);
+
+    let startMins = (startH * 60) + startM;
+    let endMins = (endH * 60) + endM;
+
+    let html = '';
+    for (let m = startMins; m < endMins; m += 30) {
+      let h = Math.floor(m / 60).toString().padStart(2, '0');
+      let min = (m % 60).toString().padStart(2, '0');
+      let timeStr = `${h}:${min}`;
+
+      html += `
+        <div class="emr-slot-row" onclick="selectEmrApptSlot('${timeStr}')">
+          <span class="fw-bold text-primary"><i class="fa-regular fa-clock me-2"></i> ${timeStr} น.</span>
+          <span class="badge bg-light text-primary border">กดเลือกเวลานี้</span>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+  }
+
+  // 🌟 ฟังก์ชันเลือกวัน-เวลาแล้ว มาร์กค่าไว้ชั่วคราวบนหน้าจอ EMR
+  function selectEmrApptSlot(timeStr) {
+    selectedNextApptDate = tempSelectedEmrDateStr;
+    selectedNextApptTime = timeStr;
+    selectedNextApptText = `${tempSelectedEmrDayTitle} เวลา ${timeStr} น.`;
+
+    document.getElementById('emr_selected_appt_text').innerText = selectedNextApptText;
+    
+    let box = document.getElementById('emr_selected_appt_box');
+    box.classList.remove('d-none');
+    box.classList.add('d-flex');
+
+    closeEmrAppointmentModal();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'มาร์กวันนัดหมายเรียบร้อย!',
+      text: `เลือกระบุวันนัด: ${selectedNextApptText} (ข้อมูลจะถูกบันทึกลงตารางเมื่อกด "บันทึกและหักคอร์ส")`,
+      toast: true,
+      position: 'top-end',
+      timer: 3000,
+      showConfirmButton: false
+    });
+  }
+
+  function clearEmrSelectedAppt() {
+    selectedNextApptDate = '';
+    selectedNextApptTime = '';
+    selectedNextApptText = '';
+
+    let box = document.getElementById('emr_selected_appt_box');
+    if (box) {
+      box.classList.remove('d-flex');
+      box.classList.add('d-none');
+    }
   }
 
   loadAssistants();
