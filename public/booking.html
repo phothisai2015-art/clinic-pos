@@ -11,17 +11,21 @@
   
   .calendar-cell { background-color: #ffffff; min-height: 100px; border-radius: 16px; padding: 10px; cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; }
   .calendar-cell:hover:not(.other-month) { background-color: #f8fafc; border-color: #e2e8f0; transform: translateY(-2px); }
-  
   .calendar-cell.other-month { opacity: 0.3; pointer-events: none; } 
   
   .date-number { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #334155; border-radius: 50%; margin-bottom: 5px; transition: 0.2s; }
-  
-  /* วันปัจจุบัน */
   .calendar-cell.today .date-number { background-color: #3b82f6; color: #ffffff; box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); }
   
-  /* 🌟 จุดสีแดงเวลามีนัดหมาย */
+  /* จุดสีแดงเวลามีนัดหมาย */
   .event-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 4px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); }
   
+  /* 🌟 ดีไซน์ตารางเวลารายวัน (Time Slots) */
+  .time-slot-row { display: flex; border-bottom: 1px solid #f1f5f9; transition: 0.2s; cursor: pointer; background: #fff; }
+  .time-slot-row:hover { background-color: #eff6ff; }
+  .time-label { width: 90px; padding: 15px 15px 15px 0; font-weight: bold; color: #475569; border-right: 3px solid #e2e8f0; text-align: right; font-size: 1.1rem; }
+  .slot-content { padding: 15px 20px; flex-grow: 1; color: #cbd5e1; font-weight: 500; display: flex; align-items: center; }
+  .time-slot-row:hover .slot-content { color: #3b82f6; }
+
   /* การ์ดรายชื่อนัดหมายพรุ่งนี้ */
   .appointment-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: 0.2s; background: #fff; border-left: 5px solid #3b82f6; }
   .appointment-card:hover { transform: translateX(5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: #93c5fd; }
@@ -38,7 +42,7 @@
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
-  <!-- 🌟 Tabs Menu -->
+  <!-- Tabs Menu -->
   <ul class="nav nav-pills booking-nav mb-4">
     <li class="nav-item">
       <button class="nav-link active" id="tabbtn-calendar" onclick="switchBookingTab('calendar')">
@@ -52,40 +56,64 @@
     </li>
   </ul>
 
-  <!-- 🌟 Content Area -->
+  <!-- Content Area -->
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
     <!-- ========================================== -->
-    <!-- 📍 TAB 1: ปฏิทินแบบ Minimal -->
+    <!-- 📍 TAB 1: ปฏิทินแบบ Minimal & ตารางรายวัน -->
     <!-- ========================================== -->
-    <div id="tab-calendar" style="display: block; height: 100%; display: flex; flex-direction: column;">
+    <div id="tab-calendar" style="display: block; height: 100%; position: relative;">
       
-      <!-- Toolbar ปฏิทิน -->
-      <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-        <div class="d-flex align-items-center">
-          <h3 class="fw-bold text-dark m-0 me-4" id="calendarMonthYearDisplay">สิงหาคม 2026</h3>
-          <button class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
+      <!-- 🗓️ มุมมองรายเดือน (Month View) -->
+      <div id="monthViewPanel" class="h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+          <div class="d-flex align-items-center">
+            <h3 class="fw-bold text-dark m-0 me-4" id="calendarMonthYearDisplay">สิงหาคม 2026</h3>
+            <button class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-outline-secondary rounded-circle shadow-sm" style="width: 40px; height: 40px;" onclick="openTimeSettings()" title="ตั้งค่าเวลาทำการ">
+              <i class="fa-solid fa-gear"></i>
+            </button>
+            <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+              <button class="btn btn-white text-secondary px-3 py-2 border-end" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <button class="btn btn-white text-secondary px-3 py-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
         </div>
-        <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
-          <button class="btn btn-white text-secondary px-3 py-2 border-end" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-          <button class="btn btn-white text-secondary px-3 py-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <div class="calendar-wrapper shadow-sm border flex-grow-1 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
+          <div class="calendar-header-row">
+            <div class="text-danger">อาทิตย์</div>
+            <div>จันทร์</div>
+            <div>อังคาร</div>
+            <div>พุธ</div>
+            <div>พฤหัสบดี</div>
+            <div>ศุกร์</div>
+            <div class="text-primary">เสาร์</div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid flex-grow-1"></div>
         </div>
       </div>
 
-      <!-- โครงสร้างปฏิทิน -->
-      <div class="calendar-wrapper shadow-sm border flex-grow-1 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
-        <div class="calendar-header-row">
-          <div class="text-danger">อาทิตย์</div>
-          <div>จันทร์</div>
-          <div>อังคาร</div>
-          <div>พุธ</div>
-          <div>พฤหัสบดี</div>
-          <div>ศุกร์</div>
-          <div class="text-primary">เสาร์</div>
+      <!-- 🕒 มุมมองรายวัน (Day View - Time Slots) -->
+      <div id="dayViewPanel" class="h-100 d-none flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2 border-bottom pb-3">
+          <button class="btn btn-light rounded-pill px-4 fw-bold shadow-sm border" onclick="showMonthView()">
+            <i class="fa-solid fa-arrow-left me-2"></i> กลับไปปฏิทิน
+          </button>
+          <h4 class="fw-bold text-primary m-0" id="dayViewTitle">วันจันทร์ที่ 24 สิงหาคม 2026</h4>
+          <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm" onclick="openTimeSettings()">
+            <i class="fa-solid fa-clock me-2"></i> ตั้งค่าเวลา
+          </button>
         </div>
-        <!-- ช่องตารางปฏิทินจะถูกสร้างด้วย JavaScript ตรงนี้ -->
-        <div id="calendarGrid" class="calendar-grid flex-grow-1"></div>
+        
+        <div class="bg-white rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding: 20px;">
+          <!-- ช่องตารางเวลาจะถูกแทรกตรงนี้ -->
+          <div id="timeSlotsContainer"></div>
+        </div>
       </div>
+
     </div>
 
     <!-- ========================================== -->
@@ -97,51 +125,8 @@
         <div class="text-muted small mb-4">ระบบดึงข้อมูลเฉพาะคนไข้ที่ต้องเข้ามาติดตามผล หรือทำคอร์สต่อเนื่องในวันพรุ่งนี้</div>
         
         <div class="row g-3">
-          <div class="col-md-6">
-            <div class="appointment-card">
-              <div class="d-flex justify-content-between mb-2">
-                <span class="badge bg-primary fs-6"><i class="fa-regular fa-clock me-1"></i> 10:00 น.</span>
-                <span class="badge bg-light text-dark border">HN-100254</span>
-              </div>
-              <h5 class="fw-bold text-dark mt-2 mb-1">คุณ สมหญิง รักสวย</h5>
-              <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> 081-234-5678</div>
-              <div class="bg-light p-2 rounded small text-secondary mt-3 border">
-                <strong>รายการนัด:</strong> ติดตามผลร้อยไหม (ครบ 2 สัปดาห์) <br>
-                <strong>แพทย์ผู้นัด:</strong> นพ. สมหมาย
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="appointment-card border-warning">
-              <div class="d-flex justify-content-between mb-2">
-                <span class="badge bg-warning text-dark fs-6"><i class="fa-regular fa-clock me-1"></i> 13:30 น.</span>
-                <span class="badge bg-light text-dark border">HN-100889</span>
-              </div>
-              <h5 class="fw-bold text-dark mt-2 mb-1">คุณ มานี ใจดี</h5>
-              <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> 089-987-6543</div>
-              <div class="bg-light p-2 rounded small text-secondary mt-3 border">
-                <strong>รายการนัด:</strong> ฉีดโบท็อกซ์ลดกราม (ครั้งที่ 2) <br>
-                <strong>แพทย์ผู้นัด:</strong> พญ. สมศรี
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="appointment-card border-info">
-              <div class="d-flex justify-content-between mb-2">
-                <span class="badge bg-info text-dark fs-6"><i class="fa-regular fa-clock me-1"></i> 16:00 น.</span>
-                <span class="badge bg-light text-dark border">HN-100902</span>
-              </div>
-              <h5 class="fw-bold text-dark mt-2 mb-1">คุณ วันดี ศรีเมือง</h5>
-              <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> 082-333-4444</div>
-              <div class="bg-light p-2 rounded small text-secondary mt-3 border">
-                <strong>รายการนัด:</strong> เลเซอร์ Pico หน้าใส (คอร์สครั้งที่ 3/5) <br>
-                <strong>แพทย์ผู้นัด:</strong> พนักงาน (Therapist)
-              </div>
-            </div>
-          </div>
-
+          <div class="col-md-6"><div class="appointment-card"><div class="d-flex justify-content-between mb-2"><span class="badge bg-primary fs-6"><i class="fa-regular fa-clock me-1"></i> 10:00 น.</span><span class="badge bg-light text-dark border">HN-100254</span></div><h5 class="fw-bold text-dark mt-2 mb-1">คุณ สมหญิง รักสวย</h5><div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> 081-234-5678</div><div class="bg-light p-2 rounded small text-secondary mt-3 border"><strong>รายการนัด:</strong> ติดตามผลร้อยไหม <br><strong>แพทย์ผู้นัด:</strong> นพ. สมหมาย</div></div></div>
+          <div class="col-md-6"><div class="appointment-card border-warning"><div class="d-flex justify-content-between mb-2"><span class="badge bg-warning text-dark fs-6"><i class="fa-regular fa-clock me-1"></i> 13:30 น.</span><span class="badge bg-light text-dark border">HN-100889</span></div><h5 class="fw-bold text-dark mt-2 mb-1">คุณ มานี ใจดี</h5><div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> 089-987-6543</div><div class="bg-light p-2 rounded small text-secondary mt-3 border"><strong>รายการนัด:</strong> ฉีดโบท็อกซ์ลดกราม <br><strong>แพทย์ผู้นัด:</strong> พญ. สมศรี</div></div></div>
         </div>
       </div>
     </div>
@@ -149,37 +134,57 @@
   </div>
 </div>
 
+<!-- 🌟 Modal: ตั้งค่าเวลาเปิด-ปิดคลินิก -->
+<div class="modal fade" id="timeSettingsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-light border-bottom-0 rounded-top-4 p-4">
+        <h5 class="modal-title fw-bold text-dark m-0"><i class="fa-solid fa-clock text-primary me-2"></i> ตั้งค่าเวลาตารางนัด</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">เวลาเปิดรับคิวแรก</label>
+          <input type="time" id="setting_open_time" class="form-control form-control-lg fw-bold text-center border-primary text-primary">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">เวลาปิดรับคิวสุดท้าย</label>
+          <input type="time" id="setting_close_time" class="form-control form-control-lg fw-bold text-center border-danger text-danger">
+        </div>
+        <button class="btn btn-primary w-100 rounded-pill fw-bold py-2 mt-3 shadow-sm" onclick="saveBusinessHours()">บันทึกเวลาทำการ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ==========================================
-  // 🌟 ระบบสลับ Tab
-  // ==========================================
   function switchBookingTab(tab) {
     document.querySelectorAll('.booking-nav .nav-link').forEach(btn => btn.classList.remove('active'));
     document.getElementById('tabbtn-' + tab).classList.add('active');
-
     document.getElementById('tab-calendar').style.display = 'none';
     document.getElementById('tab-tomorrow').style.display = 'none';
-
     document.getElementById('tab-' + tab).style.display = 'flex';
+    
+    // ถ้าย้ายแท็บให้กลับมาหน้าเดือนเสมอ
+    if (tab === 'calendar') showMonthView(); 
   }
 
   // ==========================================
-  // 📅 ระบบสร้างปฏิทิน (Minimal Calendar Logic)
+  // 📅 ระบบสร้างปฏิทินรายเดือน
   // ==========================================
   const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+  const dayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   
   let today = new Date();
   let currentMonth = today.getMonth(); 
   let currentYear = today.getFullYear();
+  let selectedDateString = ""; // เก็บค่าวันที่กดเพื่อส่งไปหน้า Time Slot
 
-  function initCalendar() {
-    renderCalendar(currentMonth, currentYear);
-  }
+  function initCalendar() { renderCalendar(currentMonth, currentYear); }
 
   function renderCalendar(month, year) {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = ''; 
-
     document.getElementById('calendarMonthYearDisplay').innerText = `${monthNames[month]} ${year}`;
 
     let firstDay = new Date(year, month, 1).getDay();
@@ -187,38 +192,28 @@
     let daysInPrevMonth = new Date(year, month, 0).getDate();
 
     // 🔴 ข้อมูลจำลอง: วันที่มีคิวนัดหมาย (เพื่อให้จุดสีแดงขึ้น)
-    // สมมติว่ามีคนไข้นัดในวันที่ 3, 14, 15, 24, 28 ของเดือนนี้
     const mockedAppointmentDates = [3, 14, 15, 24, 28]; 
 
     let html = '';
-
-    // 1. เติมช่องว่างของเดือนก่อนหน้า (ให้สีจางๆ กดไม่ได้)
     for (let i = firstDay - 1; i >= 0; i--) {
-      let prevDate = daysInPrevMonth - i;
-      html += `<div class="calendar-cell other-month"><div class="date-number">${prevDate}</div></div>`;
+      html += `<div class="calendar-cell other-month"><div class="date-number">${daysInPrevMonth - i}</div></div>`;
     }
 
-    // 2. เติมวันของเดือนปัจจุบัน
     for (let i = 1; i <= daysInMonth; i++) {
       let isToday = (i === today.getDate() && month === today.getMonth() && year === today.getFullYear());
       let todayClass = isToday ? 'today' : '';
-      
-      // เช็คว่าวันนั้นมีนัดหมายไหม ถ้ามีให้แสดงจุดแดง
-      let hasAppointment = mockedAppointmentDates.includes(i);
-      let dotHtml = hasAppointment ? `<div class="event-dot"></div>` : '';
+      let dotHtml = mockedAppointmentDates.includes(i) ? `<div class="event-dot"></div>` : '';
 
       html += `
-        <div class="calendar-cell ${todayClass}" onclick="clickDate(${i}, ${month}, ${year})">
+        <div class="calendar-cell ${todayClass}" onclick="openDailyView(${year}, ${month}, ${i})">
           <div class="date-number">${i}</div>
           ${dotHtml}
         </div>
       `;
     }
 
-    // 3. เติมช่องว่างของเดือนถัดไป
     let totalCells = firstDay + daysInMonth;
     let nextMonthDaysToFill = 42 - totalCells;
-    
     for (let i = 1; i <= nextMonthDaysToFill; i++) {
       html += `<div class="calendar-cell other-month"><div class="date-number">${i}</div></div>`;
     }
@@ -228,13 +223,8 @@
 
   function changeMonth(step) {
     currentMonth += step;
-    if (currentMonth < 0) {
-      currentMonth = 11;
-      currentYear--;
-    } else if (currentMonth > 11) {
-      currentMonth = 0;
-      currentYear++;
-    }
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; } 
+    else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     renderCalendar(currentMonth, currentYear);
   }
 
@@ -245,15 +235,112 @@
     renderCalendar(currentMonth, currentYear);
   }
 
-  function clickDate(day, month, year) {
+  // ==========================================
+  // 🕒 ระบบตารางรายวัน (Time Slots) 30 นาที
+  // ==========================================
+  function openDailyView(year, month, day) {
+    // 1. ซ่อนหน้าเดือน เปิดหน้ารายวัน
+    document.getElementById('monthViewPanel').classList.add('d-none');
+    document.getElementById('dayViewPanel').classList.remove('d-none');
+    document.getElementById('dayViewPanel').classList.add('d-flex');
+
+    // 2. จัดฟอร์แมตหัวข้อให้สวยงาม
+    let dateObj = new Date(year, month, day);
+    let dayOfWeek = dayNames[dateObj.getDay()];
+    selectedDateString = `วัน${dayOfWeek}ที่ ${day} ${monthNames[month]} ${year}`;
+    document.getElementById('dayViewTitle').innerText = selectedDateString;
+
+    // 3. สร้างช่องตารางเวลา (ดึงค่ามาจากที่ตั้งไว้ หรือใช้ค่าเริ่มต้น 10:00 - 20:00)
+    renderTimeSlots();
+  }
+
+  function showMonthView() {
+    document.getElementById('dayViewPanel').classList.remove('d-flex');
+    document.getElementById('dayViewPanel').classList.add('d-none');
+    document.getElementById('monthViewPanel').classList.remove('d-none');
+  }
+
+  function renderTimeSlots() {
+    const container = document.getElementById('timeSlotsContainer');
+    container.innerHTML = ''; // ล้างของเก่า
+
+    // ดึงค่าการตั้งค่าจาก localStorage ถ้าไม่มีให้เริ่มที่ 10 โมง เลิก 2 ทุ่ม
+    let openTime = localStorage.getItem('clinicOpenTime') || '10:00';
+    let closeTime = localStorage.getItem('clinicCloseTime') || '20:00';
+
+    // แปลงเวลาให้เป็นนาทีเพื่อจะนับเพิ่มทีละ 30 นาทีได้ง่ายๆ
+    let [startH, startM] = openTime.split(':').map(Number);
+    let [endH, endM] = closeTime.split(':').map(Number);
+
+    let startMins = (startH * 60) + startM;
+    let endMins = (endH * 60) + endM;
+
+    let html = '';
+    
+    // วนลูปสร้างช่องทีละ 30 นาที
+    for (let m = startMins; m < endMins; m += 30) {
+      let h = Math.floor(m / 60).toString().padStart(2, '0');
+      let min = (m % 60).toString().padStart(2, '0');
+      let timeStr = `${h}:${min}`;
+
+      html += `
+        <div class="time-slot-row" onclick="bookSlot('${timeStr}')">
+          <div class="time-label">${timeStr}</div>
+          <div class="slot-content"><i class="fa-solid fa-plus me-2"></i> ว่าง - กดเพื่อลงนัดหมาย</div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function bookSlot(timeStr) {
     Swal.fire({
-      icon: 'info',
-      title: 'ดูคิวนัดหมาย',
-      text: `คุณคลิกวันที่ ${day} ${monthNames[month]} ${year} (เดี๋ยวเราจะเชื่อม API เพื่อดึงรายชื่อคนไข้ที่นัดในวันนี้มาแสดงครับ)`,
-      confirmButtonColor: '#3b82f6',
-      confirmButtonText: 'ตกลง'
+      icon: 'question',
+      title: 'จองคิวนัดหมาย',
+      html: `คุณกำลังเลือกลงคิวเวลา <b>${timeStr} น.</b><br><small class="text-muted">${selectedDateString}</small>`,
+      confirmButtonText: 'จองคิว',
+      showCancelButton: true,
+      cancelButtonText: 'ยกเลิก'
     });
   }
 
+  // ==========================================
+  // ⚙️ ระบบตั้งค่าเวลาเปิด-ปิด
+  // ==========================================
+  var timeModalInstance = null;
+
+  function openTimeSettings() {
+    let openTime = localStorage.getItem('clinicOpenTime') || '10:00';
+    let closeTime = localStorage.getItem('clinicCloseTime') || '20:00';
+
+    document.getElementById('setting_open_time').value = openTime;
+    document.getElementById('setting_close_time').value = closeTime;
+
+    const modalEl = document.getElementById('timeSettingsModal');
+    if (!timeModalInstance) { timeModalInstance = new bootstrap.Modal(modalEl); }
+    timeModalInstance.show();
+  }
+
+  function saveBusinessHours() {
+    let openTime = document.getElementById('setting_open_time').value;
+    let closeTime = document.getElementById('setting_close_time').value;
+
+    if (!openTime || !closeTime) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเวลาให้ครบถ้วน', 'warning');
+
+    // บันทึกฝังไว้ในเบราว์เซอร์
+    localStorage.setItem('clinicOpenTime', openTime);
+    localStorage.setItem('clinicCloseTime', closeTime);
+
+    timeModalInstance.hide();
+    Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+
+    // รีเฟรชตารางถ้ายืนอยู่ในหน้ารายวัน
+    if (!document.getElementById('dayViewPanel').classList.contains('d-none')) {
+      renderTimeSlots();
+    }
+  }
+
+  // รันระบบ
   initCalendar();
 </script>
