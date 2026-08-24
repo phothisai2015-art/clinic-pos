@@ -449,10 +449,10 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
           history.push({ date: new Date().toISOString(), amount: safePayAmount, method: item.payment_method || currentPayMethod });
         }
 
-        // 🌟 แก้ไขบั๊กตรงนี้: ลบเลข 1 ที่เกินมาใน Array ออก เพื่อให้รหัส HN ตรงกับคอลัมน์ patient_id
+        // 🌟 แก้ไข: เอาเลข 1 ที่พิมพ์เกินมาออก เพื่อให้ฐานข้อมูลบันทึกสำเร็จ
         let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted, payment_method, payment_history) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0, item.payment_method || currentPayMethod, JSON.stringify(history)]);
-          
+		  
         if (item.is_new_course) {
            let prod = await dbGet(`SELECT type, bundle_items FROM products WHERE id = ?`, [item.product_id]);
            if (prod && prod.type === 'PROMOTION') {
