@@ -693,7 +693,7 @@
     } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error'); }
   }
 
-  // --- โมดูลบันทึก EMR และแสดงรูปภาพ ---
+  // 🌟 (อัปเดต) เพิ่มการบังคับสลับแท็บกลับไปหน้าแรกเสมอ เพื่อแก้บั๊กรูปภาพค้าง
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
@@ -704,6 +704,9 @@
     document.getElementById('emr_package_title').innerHTML = `<i class="fa-solid fa-notes-medical me-2"></i> ${courseName}`;
     
     document.getElementById('emr_detail_view_section').style.display = 'none'; 
+    
+    // 🌟 บังคับสลับกลับไปแท็บ "รายละเอียดการรักษา" ทุกครั้งที่เปิดโปรใหม่
+    switchEmrSubTab('detail');
     
     if (isViewOnly) {
       document.getElementById('emr_input_section').style.display = 'none';
@@ -741,9 +744,11 @@
     loadSideEmrHistory(courseName);
   }
 
+  // 🌟 (อัปเดต) ตอนกดปุ่มกลับไปหน้ารายการ ก็ให้ล้างคลังภาพเดิมออกด้วย เพื่อความชัวร์
   function closeEmrMode() {
     document.getElementById('emrRecordingArea').style.display = 'none';
     document.getElementById('courseMainArea').style.display = 'block';
+    document.getElementById('patientPhotoGrid').innerHTML = '<div class="text-center py-4 text-muted">รอเลือกคนไข้...</div>';
   }
 
   function resetLeftPanel() {
