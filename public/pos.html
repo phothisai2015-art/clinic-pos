@@ -497,21 +497,27 @@
     });
 
     try {
-      await fetch('/api/pos/pay/' + activeBill.hn, { 
+      const res = await fetch('/api/pos/pay/' + activeBill.hn, { 
         method: 'PUT', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ sales_rep: salesRep, payments: payments, new_items: newItemsToSave, payment_method: currentPayMethod }) 
       });
+      const data = await res.json();
 
-      Swal.fire({ icon: 'success', title: 'บันทึกการชำระเงินเรียบร้อย', text: `ประทับตราการจ่ายด้วย ${currentPayMethod} ลงประวัติคนไข้แล้ว`, confirmButtonColor: '#3b82f6' }).then(() => {
-        activeBill = null; 
-        document.getElementById('posBillState').style.display = 'none'; 
-        document.getElementById('posEmptyState').style.setProperty('display', 'flex', 'important'); 
-        document.getElementById('posSearchInput').value = '';
-        fetchPosQueue(); 
-      });
-    } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
-  }
+      if (data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'บันทึกการชำระเงินเรียบร้อย', text: `ประทับตราการจ่ายด้วย ${currentPayMethod} ลงประวัติคนไข้แล้ว`, confirmButtonColor: '#3b82f6' }).then(() => {
+          activeBill = null; 
+          document.getElementById('posBillState').style.display = 'none'; 
+          document.getElementById('posEmptyState').style.setProperty('display', 'flex', 'important'); 
+          document.getElementById('posSearchInput').value = '';
+          fetchPosQueue(); 
+        });
+      } else {
+        Swal.fire('Error', data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+      }
+    } catch (err) { 
+      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); 
+    }
   
  // ==========================================
   // 🌟 ฟังก์ชันดูข้อมูลกล่องโปรโมชั่น 1 บิล ต่อ 1 กล่อง (POS)
