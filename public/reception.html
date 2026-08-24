@@ -106,32 +106,32 @@
           
           <div class="col-md-7 ps-4">
             <div id="patientInfoDisplay" style="display: none;">
-  <div class="d-flex justify-content-between align-items-start mb-2">
-    <div>
-      <h4 class="fw-bold text-dark m-0 mb-1" id="disp_name">-</h4>
-      <div class="text-muted">
-        <i class="fa-solid fa-address-card me-1 text-primary"></i> <span id="disp_hn" class="fw-bold">-</span> 
-        <span class="mx-2">|</span> 
-        <i class="fa-solid fa-phone me-1"></i> <span id="disp_phone">-</span>
-      </div>
-    </div>
-    <!-- 🌟 ปุ่มใหม่: เปิดป๊อปอัปเลือกแพคเกจ -->
-    <button class="btn btn-info text-white rounded-pill fw-bold shadow-sm" onclick="openPackageModal()">
-      <i class="fa-solid fa-hand-holding-medical me-1"></i> เลือกแพคเกจ / บริการใหม่
-    </button>
-  </div>
-  
-  <!-- กล่องเตือนแพ้ยา -->
-  <div id="allergyAlert" class="allergy-alert align-items-center justify-content-between mt-3 shadow-sm">
-    <div class="d-flex align-items-center">
-      <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
-      <div>
-        <div class="fw-bold fs-6">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
-        <div class="small fw-semibold" id="allergyDetails"></div>
-      </div>
-    </div>
-  </div>
-</div>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h4 class="fw-bold text-dark m-0 mb-1" id="disp_name">-</h4>
+                  <div class="text-muted">
+                    <i class="fa-solid fa-address-card me-1 text-primary"></i> <span id="disp_hn" class="fw-bold">-</span> 
+                    <span class="mx-2">|</span> 
+                    <i class="fa-solid fa-phone me-1"></i> <span id="disp_phone">-</span>
+                  </div>
+                </div>
+                <!-- 🌟 ปุ่มเปิดป๊อปอัปเลือกแพคเกจ -->
+                <button class="btn btn-info text-white rounded-pill fw-bold shadow-sm" onclick="openPackageModal()">
+                  <i class="fa-solid fa-hand-holding-medical me-1"></i> เลือกแพคเกจ / บริการใหม่
+                </button>
+              </div>
+              
+              <!-- กล่องเตือนแพ้ยา -->
+              <div id="allergyAlert" class="allergy-alert align-items-center justify-content-between mt-3 shadow-sm">
+                <div class="d-flex align-items-center">
+                  <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
+                  <div>
+                    <div class="fw-bold fs-6">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
+                    <div class="small fw-semibold" id="allergyDetails"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
             
             <div id="emptyPatientState" class="text-center text-muted py-3">
               <i class="fa-solid fa-user-check fa-2x mb-2 opacity-50"></i><br>ค้นหาคนไข้เพื่อดูสิทธิ์การรักษา
@@ -140,117 +140,63 @@
         </div>
       </div>
 
-      <!-- 2. พื้นที่การ์ดสิทธิ์การรักษา -->
+      <!-- 2. พื้นที่การ์ดสิทธิ์การรักษา / บันทึกประวัติ EMR -->
       <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
-        <h5 class="fw-bold text-secondary mb-4"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
         
         <!-- พื้นที่หลัก (สลับระหว่าง "หน้ารวมคอร์ส" กับ "หน้าบันทึก EMR") -->
-<div id="courseMainArea" style="display: block;">
-  <div id="patientCoursesGrid" class="row g-4">
-     <div class="col-12 text-center text-muted py-5">กรุณาเลือกคนไข้ก่อน...</div>
-  </div>
-</div>
+        <div id="courseMainArea" style="display: block;">
+          <h5 class="fw-bold text-secondary mb-4"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
+          <div id="patientCoursesGrid" class="row g-4">
+             <div class="col-12 text-center text-muted py-5">กรุณาเลือกคนไข้ก่อน...</div>
+          </div>
+        </div>
 
-<!-- พื้นที่บันทึก EMR (ซ่อนไว้ตอนแรก จะโชว์เมื่อกดปุ่มการ์ด) -->
-<div id="emrRecordingArea" style="display: none;">
-  <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-    <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
-    <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
-      <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
-    </button>
-  </div>
+        <!-- พื้นที่บันทึก EMR (ซ่อนไว้ตอนแรก จะโชว์เมื่อกดปุ่มบนการ์ด) -->
+        <div id="emrRecordingArea" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
+              <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
+            </button>
+          </div>
 
-  <div class="row g-3">
-    <!-- รายการย่อยในแพคเกจ -->
-    <div class="col-12" id="emr_sub_items_section" style="display: none;">
-      <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
-      <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
-    </div>
+          <div class="row g-3">
+            <!-- รายการย่อยในแพคเกจ -->
+            <div class="col-12" id="emr_sub_items_section" style="display: none;">
+              <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
+              <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
+            </div>
 
-    <!-- ฟอร์ม Vitals & EMR -->
-    <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-    <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="2" placeholder="รายละเอียดการรักษา..."></textarea></div>
-    
-    <!-- สั่งยา -->
-    <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
-      <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
-      <div class="input-group input-group-sm mb-2">
-        <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
-        <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
-        <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
-        <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
-      </div>
-      <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold" rows="2" readonly></textarea>
-    </div>
-    
-    <div class="col-12 text-end mt-3">
-      <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5" onclick="submitEMRAndDeduct()">
-        <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
-      </button>
-    </div>
-  </div>
-</div>
+            <!-- ฟอร์ม Vitals & EMR -->
+            <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
+            <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="2" placeholder="รายละเอียดการรักษา..."></textarea></div>
+            
+            <!-- สั่งยา -->
+            <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
+              <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
+              <div class="input-group input-group-sm mb-2">
+                <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
+                <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
+                <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
+                <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
+              </div>
+              <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold" rows="2" readonly></textarea>
+            </div>
+            
+            <div class="col-12 text-end mt-3">
+              <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5" onclick="submitEMRAndDeduct()">
+                <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
       
     </div>
   </div>
 </div>
 
-<!-- ========================================== -->
-<!-- 🩺 Modal: Vitals & ซักประวัติก่อนส่งแพทย์ -->
-<!-- ========================================== -->
-<div class="modal fade" id="vitalsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0 shadow-lg">
-      <div class="modal-header bg-info text-white rounded-top-4 py-3">
-        <h5 class="modal-title fw-bold"><i class="fa-solid fa-heart-pulse me-2"></i> ซักประวัติก่อนเข้าห้องตรวจ</h5>
-        <button type="button" class="btn-close btn-close-white" onclick="closeVitalsModal()"></button>
-      </div>
-      <div class="modal-body p-4 bg-light">
-        
-        <div class="bg-white p-3 rounded-3 shadow-sm border mb-4 text-center">
-          <span class="text-muted small fw-bold">บริการที่เลือกล่าสุด:</span>
-          <h5 class="fw-bold text-primary m-0 mt-1" id="vitals_service_name">ปรึกษาแพทย์ทั่วไป</h5>
-          <input type="hidden" id="vitals_action_val">
-        </div>
-
-        <h6 class="fw-bold text-secondary mb-3">คัดกรองสัญญาณชีพ (Vitals)</h6>
-        <div class="row g-3 mb-4">
-          <div class="col-6">
-            <label class="small text-muted mb-1 fw-bold">SYS (ความดัน)</label>
-            <input id="v_sys" type="number" class="form-control rounded-3 text-center border-primary" placeholder="mmHg">
-          </div>
-          <div class="col-6">
-            <label class="small text-muted mb-1 fw-bold">DIA (ความดัน)</label>
-            <input id="v_dia" type="number" class="form-control rounded-3 text-center border-primary" placeholder="mmHg">
-          </div>
-          <div class="col-4">
-            <label class="small text-muted mb-1 fw-bold">ชีพจร (Pulse)</label>
-            <input id="v_pulse" type="number" class="form-control rounded-3 text-center" placeholder="/min">
-          </div>
-          <div class="col-4">
-            <label class="small text-muted mb-1 fw-bold">น้ำหนัก (kg)</label>
-            <input id="v_weight" type="number" class="form-control rounded-3 text-center" placeholder="kg">
-          </div>
-          <div class="col-4">
-            <label class="small text-muted mb-1 fw-bold">ส่วนสูง (cm)</label>
-            <input id="v_height" type="number" class="form-control rounded-3 text-center" placeholder="cm">
-          </div>
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label fw-bold small text-muted">อาการเบื้องต้น / ข้อความฝากถึงแพทย์ (Note)</label>
-          <textarea id="v_note" class="form-control rounded-3" rows="2" placeholder="เช่น ต้องการปรึกษาเรื่องสิว, ต้องการมาร์กยาชา..."></textarea>
-        </div>
-
-      </div>
-      <div class="modal-footer bg-white border-top-0 rounded-bottom-4 p-3">
-        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeVitalsModal()">ยกเลิก</button>
-        <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="sendToDoctor()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งคิวไปห้องแพทย์</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ========================================== -->
 <!-- 🎁 Modal: เลือกแพคเกจ / บริการใหม่ -->
@@ -314,12 +260,18 @@
 </div>
 
 <script>
+  // Variables[cite: 5]
   var currentHN = '';
   var allInventoryList = [];
   var allBillsList = [];
-  var vitalsModalInstance = null;
+  var rawPatientCourses = []; 
+  
+  var packageModalInstance = null;
+  var currentCart = []; 
 
-  document.querySelectorAll('body > #vitalsModal').forEach(m => m.remove()); // ป้องกันป๊อปอัปซ้ำ[cite: 4]
+  var activeEmrCourse = null;
+  var currentSubItems = [];
+  var pendingMeds = [];
 
   function switchMainTab(tab) {
     document.getElementById('tabbtn-new').classList.remove('active');
@@ -332,7 +284,7 @@
   }
 
   // ==========================================
-  // ส่วนที่ 1: ระบบจัดการคนไข้ใหม่ (Tab 1)
+  // TAB 1: ลงทะเบียนคนไข้ใหม่[cite: 5]
   // ==========================================
   async function savePatient(e) {
     e.preventDefault();
@@ -347,7 +299,7 @@
     };
     
     try {
-      const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); //[cite: 1]
+      const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       
       if (data.status === 'success') {
@@ -360,7 +312,7 @@
           searchPatient();
         }, 1500);
       } else {
-        Swal.fire({ icon: 'warning', title: 'ข้อมูลซ้ำซ้อน!', html: data.message }); //[cite: 3]
+        Swal.fire({ icon: 'warning', title: 'ข้อมูลซ้ำซ้อน!', html: data.message }); 
       }
     } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
   }
@@ -391,14 +343,14 @@
   }
 
   // ==========================================
-  // ส่วนที่ 2: ค้นหา & จัดการสิทธิ์การรักษา (Tab 2)
+  // TAB 2: ค้นหา & จัดการสิทธิ์การรักษา[cite: 5]
   // ==========================================
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาระบุข้อมูลค้นหา', 'warning');
     Swal.showLoading();
     try {
-      const res = await fetch(`/api/patients?search=${encodeURIComponent(text)}`); //[cite: 3]
+      const res = await fetch(`/api/patients?search=${encodeURIComponent(text)}`);
       const data = await res.json();
       
       if (data.data.length === 0) {
@@ -431,25 +383,25 @@
     document.getElementById('disp_hn').innerText = p.id;
     document.getElementById('disp_phone').innerText = p.phone;
 
-    // ระบบเตือนแพ้ยา[cite: 4]
     const alertBox = document.getElementById('allergyAlert');
     if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
       alertBox.style.display = 'flex';
       document.getElementById('allergyDetails').innerHTML = `แพ้: ${p.allergies}<br>โรค: ${p.congenital_disease || 'ไม่มี'}`;
     } else { alertBox.style.display = 'none'; }
 
-    // โหลดคลังสินค้า, บิล และสิทธิ์
+    // ปิดหน้าต่างบันทึก EMR ถ้าเปิดค้างอยู่ กลับหน้าแรกของการ์ด
+    closeEmrMode();
     document.getElementById('patientCoursesGrid').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
     
     const [invRes, courseRes, billRes] = await Promise.all([ 
       fetch('/api/inventory'), fetch(`/api/patients/${p.id}/courses`), fetch(`/api/pos/bill/${p.id}`) 
-    ]); //[cite: 3]
+    ]);
     
     allInventoryList = (await invRes.json()).data || [];
-    let patientCourses = (await courseRes.json()).data || [];
+    rawPatientCourses = (await courseRes.json()).data || [];
     allBillsList = (await billRes.json()).data || [];
 
-    renderPatientCourses(patientCourses);
+    renderPatientCourses(rawPatientCourses);
   }
 
   function renderPatientCourses(courses) {
@@ -460,14 +412,13 @@
     }
 
     let html = '';
-    // เรียงคอร์สใหม่ขึ้นก่อน
     courses.sort((a, b) => b.id - a.id).forEach(c => {
        let prodDef = allInventoryList.find(p => p.id === c.product_id);
        let displayName = c.product_name || c.product_id;
        let isPromo = prodDef && prodDef.type === 'PROMOTION';
        
        let isUnpaid = allBillsList.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
-       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`; //[cite: 4]
+       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`; 
 
        if (isPromo) {
           let state = JSON.parse(c.bundle_state || '[]');
@@ -484,6 +435,7 @@
 
           let valStr = `OLD_BOX_${c.id}`;
           let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
+          // 🌟 ปรับปรุงปุ่ม ส่ง true สำหรับ โปรโมชั่น
           let btnHtml = isAllUsed ? '' : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
           html += `<div class="col-md-6"><div class="course-card ${cardStyle} shadow-sm">
@@ -501,6 +453,7 @@
           let isUsedUp = remain <= 0;
           let valStr = `OLD_${c.id}`;
           let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
+          // 🌟 ปรับปรุงปุ่ม ส่ง false สำหรับ คอร์สเดี่ยว
           let btnHtml = isUsedUp ? '' : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
           html += `<div class="col-md-4"><div class="course-card ${cardStyle} shadow-sm">
@@ -524,393 +477,291 @@
   }
 
   // ==========================================
-  // ส่วนที่ 3: ระบบ Vitals Modal และการส่งคิวแพทย์
+  // โมดูลป๊อปอัปเลือกแพคเกจ / บริการใหม่[cite: 5]
   // ==========================================
-  function openGeneralServiceModal() {
+  function openPackageModal() {
     if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
-    openVitalsModal('', 'ปรึกษาแพทย์ / ตรวจทั่วไป');
-  }
-
-  function openVitalsModal(actionVal, serviceName) {
-    document.getElementById('vitals_action_val').value = actionVal;
-    document.getElementById('vitals_service_name').innerText = serviceName;
     
-    // เคลียร์ค่าเก่า
-    document.getElementById('v_sys').value = '';
-    document.getElementById('v_dia').value = '';
-    document.getElementById('v_pulse').value = '';
-    document.getElementById('v_weight').value = '';
-    document.getElementById('v_height').value = '';
-    document.getElementById('v_note').value = '';
+    currentCart = [];
+    renderCart();
+    renderPackageCards();
 
-    const modalEl = document.getElementById('vitalsModal');
+    const modalEl = document.getElementById('packageModal');
     if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
     
-    let existingModal = bootstrap.Modal.getInstance(modalEl);
-    if (!existingModal) existingModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
-    
-    vitalsModalInstance = existingModal;
-    vitalsModalInstance.show();
-  }
-
-  function closeVitalsModal() {
-    if (vitalsModalInstance) vitalsModalInstance.hide();
-    setTimeout(() => {
-      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }, 150);
-  }
-
-  async function sendToDoctor() {
-    let actionVal = document.getElementById('vitals_action_val').value;
-    let serviceName = document.getElementById('vitals_service_name').innerText;
-    let note = document.getElementById('v_note').value.trim();
-
-    let btn = document.querySelector('#vitalsModal .btn-info');
-    let originalBtnText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังส่งคิว...'; 
-    btn.disabled = true;
-
-    try {
-      let finalNote = [];
-      if(actionVal) finalNote.push(`[บริการ] ${serviceName}`);
-      else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
-      if(note) finalNote.push(`[อาการ] ${note}`);
-
-      let payload = {
-        patient_id: currentHN,
-        bp: (document.getElementById('v_sys').value || document.getElementById('v_dia').value) ? `${document.getElementById('v_sys').value}/${document.getElementById('v_dia').value}` : '', 
-        pulse: document.getElementById('v_pulse').value, 
-        weight: document.getElementById('v_weight').value, 
-        height: document.getElementById('v_height').value,
-        notes: finalNote.join(' | ')
-      };
-
-      // ส่งคิวไปยัง API ส่งเข้าห้องแพทย์ (ใช้โค้ดดั้งเดิมในระบบ[cite: 3])
-      await fetch('/api/queue/send-doctor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      
-      closeVitalsModal();
-      btn.innerHTML = originalBtnText; 
-      btn.disabled = false;
-      
-      Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', text: 'สามารถติดตามคิวได้ที่หน้าจอห้องแพทย์', timer: 2000, showConfirmButton: false });
-      
-    } catch (e) {
-      btn.innerHTML = originalBtnText; btn.disabled = false;
-      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
+    if (!packageModalInstance) {
+      packageModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
     }
+    packageModalInstance.show();
+    switchPackageTab('promo');
   }
-  
-  let packageModalInstance = null;
-let currentCart = []; // ตะกร้าเก็บรายการที่ถูกเลือก
 
-function openPackageModal() {
-  if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
-  
-  // เคลียร์ตะกร้า
-  currentCart = [];
-  renderCart();
-
-  // ดึงข้อมูลสินค้ามาแสดงในการ์ด
-  renderPackageCards();
-
-  const modalEl = document.getElementById('packageModal');
-  if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
-  
-  if (!packageModalInstance) {
-    packageModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+  function closePackageModal() {
+    if (packageModalInstance) packageModalInstance.hide();
   }
-  packageModalInstance.show();
-  switchPackageTab('promo');
-}
 
-function closePackageModal() {
-  if (packageModalInstance) packageModalInstance.hide();
-}
+  function switchPackageTab(tab) {
+    document.getElementById('pkg-tab-promo').classList.remove('active');
+    document.getElementById('pkg-tab-general').classList.remove('active');
+    document.getElementById(`pkg-tab-${tab}`).classList.add('active');
 
-function switchPackageTab(tab) {
-  document.getElementById('pkg-tab-promo').classList.remove('active');
-  document.getElementById('pkg-tab-general').classList.remove('active');
-  document.getElementById(`pkg-tab-${tab}`).classList.add('active');
+    document.getElementById('pkg-content-promo').style.display = 'none';
+    document.getElementById('pkg-content-general').style.display = 'none';
+    document.getElementById(`pkg-content-${tab}`).style.display = 'flex';
+  }
 
-  document.getElementById('pkg-content-promo').style.display = 'none';
-  document.getElementById('pkg-content-general').style.display = 'none';
-  document.getElementById(`pkg-content-${tab}`).style.display = 'flex';
-}
-
-function renderPackageCards() {
-  const promoContainer = document.getElementById('pkg-content-promo');
-  const generalContainer = document.getElementById('pkg-content-general');
-  
-  promoContainer.innerHTML = '';
-  generalContainer.innerHTML = '';
-
-  // allInventoryList เป็นตัวแปรที่คุณดึงไว้แล้วในฟังก์ชัน loadPatientData
-  allInventoryList.forEach(p => {
-    let priceStr = `฿${p.price.toLocaleString()}`;
-    let isPromo = p.type === 'PROMOTION';
+  function renderPackageCards() {
+    const promoContainer = document.getElementById('pkg-content-promo');
+    const generalContainer = document.getElementById('pkg-content-general');
     
-    let html = `
-      <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
-        <div class="course-card p-3 shadow-sm" onclick="addToCart('${p.id}', '${p.name}', ${p.price}, '${p.type}')">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-             <span class="badge ${isPromo ? 'bg-primary' : 'bg-info text-dark'}">${p.type}</span>
-             <span class="fw-bold text-success">${priceStr}</span>
+    promoContainer.innerHTML = '';
+    generalContainer.innerHTML = '';
+
+    allInventoryList.forEach(p => {
+      let priceStr = `฿${p.price.toLocaleString()}`;
+      let isPromo = p.type === 'PROMOTION';
+      
+      let html = `
+        <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
+          <div class="course-card p-3 shadow-sm" onclick="addToCart('${p.id}', '${p.name}', ${p.price}, '${p.type}')">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+               <span class="badge ${isPromo ? 'bg-primary' : 'bg-info text-dark'}">${p.type}</span>
+               <span class="fw-bold text-success">${priceStr}</span>
+            </div>
+            <h6 class="fw-bold text-dark m-0"><i class="fa-solid ${isPromo ? 'fa-gift text-primary' : 'fa-syringe text-info'} me-2"></i>${p.name}</h6>
           </div>
-          <h6 class="fw-bold text-dark m-0"><i class="fa-solid ${isPromo ? 'fa-gift text-primary' : 'fa-syringe text-info'} me-2"></i>${p.name}</h6>
-        </div>
-      </div>`;
-      
-    if (isPromo) promoContainer.innerHTML += html;
-    else generalContainer.innerHTML += html;
-  });
-
-  if(promoContainer.innerHTML === '') promoContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลแพคเกจ</div>';
-  if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อย</div>';
-}
-
-function addToCart(id, name, price, type) {
-  // เช็คว่ามีในตะกร้าหรือยัง
-  let existing = currentCart.find(item => item.id === id);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    currentCart.push({ id, name, price, type, qty: 1 });
-  }
-  renderCart();
-}
-
-function removeFromCart(index) {
-  currentCart.splice(index, 1);
-  renderCart();
-}
-
-function renderCart() {
-  const cartContainer = document.getElementById('selectedItemsCart');
-  const totalDisplay = document.getElementById('cartTotalDisplay');
-  
-  if (currentCart.length === 0) {
-    cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>';
-    totalDisplay.innerText = '฿ 0.00';
-    return;
-  }
-
-  let html = '';
-  let total = 0;
-  
-  currentCart.forEach((item, index) => {
-    let lineTotal = item.price * item.qty;
-    total += lineTotal;
-    
-    html += `
-      <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
-        <div>
-          <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.name}</div>
-          <div class="text-success fw-bold small">฿${item.price.toLocaleString()} x ${item.qty}</div>
-        </div>
-        <button class="btn btn-sm btn-outline-danger rounded-circle" style="padding: 2px 6px;" onclick="removeFromCart(${index})">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>`;
-  });
-  
-  cartContainer.innerHTML = html;
-  totalDisplay.innerText = `฿ ${total.toLocaleString()}`;
-}
-
-async function confirmPackageSelection() {
-  if (currentCart.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการอย่างน้อย 1 รายการ', 'warning');
-  
-  Swal.fire({
-    title: 'กำลังสร้างรายการ...',
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
-  });
-
-  try {
-    // 🌟 วนลูปตามรายการในตะกร้า (Cart)
-    for (let item of currentCart) {
-      // หากเลือกจำนวน (Qty) มากกว่า 1 ให้วนลูปเรียก API ตามจำนวน 
-      // เพื่อให้ระบบแยกสร้างคอร์สและบิลอย่างถูกต้อง
-      for (let i = 0; i < item.qty; i++) {
-        await fetch(`/api/patients/${currentHN}/assign-promo`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id: item.id })
-        });
-      }
-    }
-    
-    // 🌟 เมื่อสร้างสำเร็จ ปิดป๊อปอัปและล้างตะกร้า
-    closePackageModal();
-    currentCart = []; 
-    
-    Swal.fire({
-      icon: 'success',
-      title: 'เพิ่มรายการสำเร็จ!',
-      text: 'รายการถูกเพิ่มลงในการ์ดด้านล่างแล้ว (สถานะ: ค้างชำระ)',
-      timer: 2000,
-      showConfirmButton: false
+        </div>`;
+        
+      if (isPromo) promoContainer.innerHTML += html;
+      else generalContainer.innerHTML += html;
     });
 
-    // 🌟 รีเฟรชข้อมูลคนไข้ใหม่ เพื่อให้การ์ดโปรโมชั่นอัปเดตโชว์ด้านล่างทันที
-    selectFromList(currentHN);
-    
-  } catch (error) {
-    Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
+    if(promoContainer.innerHTML === '') promoContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลแพคเกจ</div>';
+    if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อย</div>';
   }
-}
 
-let activeEmrCourse = null;
-let currentSubItems = [];
-let pendingMeds = [];
-let rawPatientCourses = []; // ตัวแปรเก็บคอร์สทั้งหมดเพื่อดึงมาใช้งาน
-
-// 🌟 ต้องแก้ฟังก์ชัน loadPatientData นิดหน่อย เพื่อเก็บ rawPatientCourses
-// ค้นหาบรรทัด: let patientCourses = (await courseRes.json()).data || [];
-// เปลี่ยนเป็น: rawPatientCourses = (await courseRes.json()).data || []; 
-// แล้วใช้ rawPatientCourses ส่งเข้า renderPatientCourses(rawPatientCourses); แทน
-
-function openEmrMode(courseId, courseName, isPromo) {
-  activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
-  if(!activeEmrCourse) return;
-
-  document.getElementById('courseMainArea').style.display = 'none';
-  document.getElementById('emrRecordingArea').style.display = 'block';
-  document.getElementById('emr_package_title').innerHTML = `<i class="fa-solid fa-notes-medical me-2"></i> ${courseName}`;
-  
-  // เคลียร์ฟอร์ม
-  document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
-  document.getElementById('e_tx').value = '';
-  document.getElementById('e_med_list_display').value = '';
-  pendingMeds = [];
-  currentSubItems = [];
-
-  // โหลดรายชื่อยาเข้า Dropdown
-  let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
-  allInventoryList.forEach(item => { 
-    if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
-      medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`; 
+  function addToCart(id, name, price, type) {
+    let existing = currentCart.find(item => item.id === id);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      currentCart.push({ id, name, price, type, qty: 1 });
     }
-  });
-  document.getElementById('e_med_select').innerHTML = medOptions;
-
-  // จัดการรายการย่อย (Sub-items)
-  if (isPromo) {
-    document.getElementById('emr_sub_items_section').style.display = 'block';
-    let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
-    currentSubItems = state.map(s => ({
-      id: s.id, name: s.name, total: s.total, used: s.used, 
-      remain_qty: s.total - s.used, 
-      used_today: (s.total - s.used) > 0 ? 1 : 0
-    }));
-    renderSubItemsList();
-  } else {
-    document.getElementById('emr_sub_items_section').style.display = 'none';
-    currentSubItems = [{
-      id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty,
-      remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1
-    }];
+    renderCart();
   }
-}
 
-function closeEmrMode() {
-  document.getElementById('emrRecordingArea').style.display = 'none';
-  document.getElementById('courseMainArea').style.display = 'block';
-}
+  function removeFromCart(index) {
+    currentCart.splice(index, 1);
+    renderCart();
+  }
 
-function renderSubItemsList() {
-  const container = document.getElementById('emr_sub_items_list');
-  container.innerHTML = '';
-  currentSubItems.forEach((sub, idx) => {
-    let isNotDone = sub.used_today === 0;
-    let cardClass = isNotDone ? 'bg-light border-secondary opacity-50' : 'bg-white border-primary';
+  function renderCart() {
+    const cartContainer = document.getElementById('selectedItemsCart');
+    const totalDisplay = document.getElementById('cartTotalDisplay');
     
-    container.innerHTML += `
-      <div class="col-md-6">
-        <div class="p-2 rounded-3 shadow-sm border ${cardClass}">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <div class="fw-bold fs-6">${sub.name} (เหลือ ${sub.remain_qty})</div>
-            <button class="btn btn-sm ${isNotDone ? 'btn-outline-primary' : 'btn-outline-danger'} rounded-pill py-0" onclick="toggleSubItemStatus(${idx})">
-              ${isNotDone ? 'ทำ' : 'ไม่ทำ'}
-            </button>
+    if (currentCart.length === 0) {
+      cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>';
+      totalDisplay.innerText = '฿ 0.00';
+      return;
+    }
+
+    let html = '';
+    let total = 0;
+    
+    currentCart.forEach((item, index) => {
+      let lineTotal = item.price * item.qty;
+      total += lineTotal;
+      
+      html += `
+        <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
+          <div>
+            <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.name}</div>
+            <div class="text-success fw-bold small">฿${item.price.toLocaleString()} x ${item.qty}</div>
           </div>
-          <div class="d-flex align-items-center justify-content-between">
-            <small class="text-muted">จำนวนทำวันนี้:</small>
-            <div class="input-group input-group-sm w-50">
-              <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, -1)" ${isNotDone ? 'disabled' : ''}>-</button>
-              <input type="text" class="form-control text-center fw-bold" value="${sub.used_today}" readonly>
-              <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, 1)" ${isNotDone || sub.used_today >= sub.remain_qty ? 'disabled' : ''}>+</button>
+          <button class="btn btn-sm btn-outline-danger rounded-circle" style="padding: 2px 6px;" onclick="removeFromCart(${index})">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>`;
+    });
+    
+    cartContainer.innerHTML = html;
+    totalDisplay.innerText = `฿ ${total.toLocaleString()}`;
+  }
+
+  async function confirmPackageSelection() {
+    if (currentCart.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการอย่างน้อย 1 รายการ', 'warning');
+    
+    Swal.fire({
+      title: 'กำลังสร้างรายการ...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      for (let item of currentCart) {
+        for (let i = 0; i < item.qty; i++) {
+          await fetch(`/api/patients/${currentHN}/assign-promo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: item.id })
+          });
+        }
+      }
+      
+      closePackageModal();
+      currentCart = []; 
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'เพิ่มรายการสำเร็จ!',
+        text: 'รายการถูกเพิ่มลงในการ์ดด้านล่างแล้ว (สถานะ: ค้างชำระ)',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      selectFromList(currentHN);
+      
+    } catch (error) {
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
+    }
+  }
+
+  // ==========================================
+  // โมดูลบันทึก EMR ในตัว และ การหักคอร์ส[cite: 5]
+  // ==========================================
+  function openEmrMode(courseId, courseName, isPromo) {
+    activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
+    if(!activeEmrCourse) return;
+
+    document.getElementById('courseMainArea').style.display = 'none';
+    document.getElementById('emrRecordingArea').style.display = 'block';
+    document.getElementById('emr_package_title').innerHTML = `<i class="fa-solid fa-notes-medical me-2"></i> ${courseName}`;
+    
+    document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
+    document.getElementById('e_tx').value = '';
+    document.getElementById('e_med_list_display').value = '';
+    pendingMeds = [];
+    currentSubItems = [];
+
+    let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
+    allInventoryList.forEach(item => { 
+      if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
+        medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`; 
+      }
+    });
+    document.getElementById('e_med_select').innerHTML = medOptions;
+
+    if (isPromo) {
+      document.getElementById('emr_sub_items_section').style.display = 'block';
+      let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
+      currentSubItems = state.map(s => ({
+        id: s.id, name: s.name, total: s.total, used: s.used, 
+        remain_qty: s.total - s.used, 
+        used_today: (s.total - s.used) > 0 ? 1 : 0
+      }));
+      renderSubItemsList();
+    } else {
+      document.getElementById('emr_sub_items_section').style.display = 'none';
+      currentSubItems = [{
+        id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty,
+        remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1
+      }];
+    }
+  }
+
+  function closeEmrMode() {
+    document.getElementById('emrRecordingArea').style.display = 'none';
+    document.getElementById('courseMainArea').style.display = 'block';
+  }
+
+  function renderSubItemsList() {
+    const container = document.getElementById('emr_sub_items_list');
+    container.innerHTML = '';
+    currentSubItems.forEach((sub, idx) => {
+      let isNotDone = sub.used_today === 0;
+      let cardClass = isNotDone ? 'bg-light border-secondary opacity-50' : 'bg-white border-primary';
+      
+      container.innerHTML += `
+        <div class="col-md-6">
+          <div class="p-2 rounded-3 shadow-sm border ${cardClass}">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="fw-bold fs-6">${sub.name} (เหลือ ${sub.remain_qty})</div>
+              <button class="btn btn-sm ${isNotDone ? 'btn-outline-primary' : 'btn-outline-danger'} rounded-pill py-0" onclick="toggleSubItemStatus(${idx})">
+                ${isNotDone ? 'ทำ' : 'ไม่ทำ'}
+              </button>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <small class="text-muted">จำนวนทำวันนี้:</small>
+              <div class="input-group input-group-sm w-50">
+                <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, -1)" ${isNotDone ? 'disabled' : ''}>-</button>
+                <input type="text" class="form-control text-center fw-bold" value="${sub.used_today}" readonly>
+                <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, 1)" ${isNotDone || sub.used_today >= sub.remain_qty ? 'disabled' : ''}>+</button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>`;
-  });
-}
+        </div>`;
+    });
+  }
 
-function toggleSubItemStatus(index) {
-  currentSubItems[index].used_today = currentSubItems[index].used_today > 0 ? 0 : (currentSubItems[index].remain_qty > 0 ? 1 : 0);
-  renderSubItemsList();
-}
+  function toggleSubItemStatus(index) {
+    currentSubItems[index].used_today = currentSubItems[index].used_today > 0 ? 0 : (currentSubItems[index].remain_qty > 0 ? 1 : 0);
+    renderSubItemsList();
+  }
 
-function adjustSubItemQty(index, step) {
-  let item = currentSubItems[index];
-  let newQty = item.used_today + step;
-  if (newQty >= 0 && newQty <= item.remain_qty) { item.used_today = newQty; renderSubItemsList(); }
-}
+  function adjustSubItemQty(index, step) {
+    let item = currentSubItems[index];
+    let newQty = item.used_today + step;
+    if (newQty >= 0 && newQty <= item.remain_qty) { item.used_today = newQty; renderSubItemsList(); }
+  }
 
-function addMedInline() {
-  let sel = document.getElementById('e_med_select'); let qty = document.getElementById('e_med_qty'); let sig = document.getElementById('e_med_sig');
-  if(!sel.value || !qty.value) return;
-  let opt = sel.options[sel.selectedIndex];
-  pendingMeds.push({ product_id: sel.value, name: opt.getAttribute('data-name'), unit: opt.getAttribute('data-unit'), price: parseFloat(opt.getAttribute('data-price')), qty: parseFloat(qty.value), sig: sig.value || 'ตามสั่ง' });
-  document.getElementById('e_med_list_display').value = pendingMeds.map((m, i) => `${i+1}. ${m.name} x ${m.qty} ${m.unit} (${m.sig})`).join('\n');
-  sel.value = ''; qty.value = ''; sig.value = '';
-}
+  function addMedInline() {
+    let sel = document.getElementById('e_med_select'); let qty = document.getElementById('e_med_qty'); let sig = document.getElementById('e_med_sig');
+    if(!sel.value || !qty.value) return;
+    let opt = sel.options[sel.selectedIndex];
+    pendingMeds.push({ product_id: sel.value, name: opt.getAttribute('data-name'), unit: opt.getAttribute('data-unit'), price: parseFloat(opt.getAttribute('data-price')), qty: parseFloat(qty.value), sig: sig.value || 'ตามสั่ง' });
+    document.getElementById('e_med_list_display').value = pendingMeds.map((m, i) => `${i+1}. ${m.name} x ${m.qty} ${m.unit} (${m.sig})`).join('\n');
+    sel.value = ''; qty.value = ''; sig.value = '';
+  }
 
-async function submitEMRAndDeduct() {
-  Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
-  
-  let finalTxArray = [];
-  let doneItems = currentSubItems.filter(x => x.used_today > 0);
-  if (doneItems.length > 0) finalTxArray.push(`[หัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
-  
-  let manualTx = document.getElementById('e_tx').value;
-  if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
-
-  // 1. บันทึก EMR เข้าฐานข้อมูล[cite: 1, 3]
-  let emrPayload = {
-    patient_id: currentHN,
-    doctor_id: sessionStorage.getItem('currentUserId') || 1, 
-    symptoms: document.getElementById('e_cc').value, 
-    diagnosis: 'บริการความงาม',
-    treatment_details: finalTxArray.join('\n\n'),
-    prescribed_meds: pendingMeds
-  };
-
-  try {
-    await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
+  async function submitEMRAndDeduct() {
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
-    // 2. หักคอร์สและตัดสต็อก[cite: 1, 3]
-    let deductPayload = {};
-    if (activeEmrCourse.bundle_state) {
-      let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
-      let stockDeds = [];
-      currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
-      let isAllUsed = newState.every(s => s.total - s.used <= 0);
-      deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
-    } else {
-      deductPayload = { deduct_amount: currentSubItems[0].used_today };
-    }
+    let finalTxArray = [];
+    let doneItems = currentSubItems.filter(x => x.used_today > 0);
+    if (doneItems.length > 0) finalTxArray.push(`[หัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
+    
+    let manualTx = document.getElementById('e_tx').value;
+    if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
-    await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
+    let emrPayload = {
+      patient_id: currentHN,
+      doctor_id: sessionStorage.getItem('currentUserId') || 1, 
+      symptoms: document.getElementById('e_cc').value, 
+      diagnosis: 'บริการความงาม',
+      treatment_details: finalTxArray.join('\n\n'),
+      prescribed_meds: pendingMeds
+    };
 
-    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์สและบันทึกประวัติเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
-    closeEmrMode();
-    selectFromList(currentHN); // รีเฟรชข้อมูลคนไข้ใหม่
+    try {
+      await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
+      
+      let deductPayload = {};
+      if (activeEmrCourse.bundle_state) {
+        let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
+        let stockDeds = [];
+        currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
+        let isAllUsed = newState.every(s => s.total - s.used <= 0);
+        deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
+      } else {
+        deductPayload = { deduct_amount: currentSubItems[0].used_today };
+      }
 
-  } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
-}
+      await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
+
+      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์สและบันทึกประวัติเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
+      closeEmrMode();
+      selectFromList(currentHN);
+
+    } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+  }
 </script>
