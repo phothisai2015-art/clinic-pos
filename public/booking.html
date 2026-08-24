@@ -140,7 +140,7 @@
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header bg-light border-bottom-0 rounded-top-4 p-4">
         <h5 class="modal-title fw-bold text-dark m-0"><i class="fa-solid fa-clock text-primary me-2"></i> ตั้งค่าเวลาตารางนัด</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" onclick="closeTimeSettingsModal()"></button>
       </div>
       <div class="modal-body p-4">
         <div class="mb-3">
@@ -322,6 +322,34 @@
     timeModalInstance.show();
   }
 
+  // ==========================================
+  // ⚙️ ระบบตั้งค่าเวลาเปิด-ปิด (แก้ไขป๊อปอัปค้าง)
+  // ==========================================
+  var timeModalInstance = null;
+
+  function openTimeSettings() {
+    let openTime = localStorage.getItem('clinicOpenTime') || '10:00';
+    let closeTime = localStorage.getItem('clinicCloseTime') || '20:00';
+
+    document.getElementById('setting_open_time').value = openTime;
+    document.getElementById('setting_close_time').value = closeTime;
+
+    const modalEl = document.getElementById('timeSettingsModal');
+    if (!timeModalInstance) { timeModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' }); }
+    timeModalInstance.show();
+  }
+
+  // 🌟 ฟังก์ชันปิดป๊อปอัปและเคลียร์เงาดำที่ค้าง
+  function closeTimeSettingsModal() {
+    if (timeModalInstance) timeModalInstance.hide();
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
+  }
+
   function saveBusinessHours() {
     let openTime = document.getElementById('setting_open_time').value;
     let closeTime = document.getElementById('setting_close_time').value;
@@ -332,7 +360,9 @@
     localStorage.setItem('clinicOpenTime', openTime);
     localStorage.setItem('clinicCloseTime', closeTime);
 
-    timeModalInstance.hide();
+    // 🌟 เรียกใช้ฟังก์ชันปิดป๊อปอัปที่แก้บั๊กแล้ว
+    closeTimeSettingsModal();
+
     Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
 
     // รีเฟรชตารางถ้ายืนอยู่ในหน้ารายวัน
