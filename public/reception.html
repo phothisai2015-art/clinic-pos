@@ -203,7 +203,7 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-				  <!-- 🌟 ปุ่มเปิด Pop-up เลือกวันเวลานัดติดตามผล + แถบสีฟ้าแสดงมาร์ก -->
+				  <!-- ปุ่มเปิด Pop-up เลือกวันเวลานัดติดตามผล -->
 				  <div class="col-12 mt-3">
 				    <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" onclick="openEmrAppointmentModal()">
 				      <i class="fa-solid fa-calendar-check me-2"></i> นัดหมายคนไข้ติดตามผล / ครั้งถัดไป (Appointment)
@@ -358,7 +358,7 @@
   </div>
 </div>
 
-<!-- 🌟 Modal: เลือกวัน-เวลานัดหมายติดตามผลล่วงหน้า (Pop-up ในหน้า EMR) -->
+<!-- 🌟 Modal: เลือกวัน-เวลานัดหมายติดตามผลล่วงหน้า -->
 <div class="modal" id="emrAppointmentModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -368,7 +368,6 @@
       </div>
       <div class="modal-body p-4 custom-scrollbar" style="max-height: 75vh; overflow-y: auto;">
         
-        <!-- Panel 1: ปฏิทินรายเดือน -->
         <div id="emrApptMonthPanel">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-dark m-0" id="emrCalMonthDisplay">สิงหาคม 2026</h5>
@@ -383,7 +382,6 @@
           <div id="emrCalGrid" class="calendar-grid"></div>
         </div>
 
-        <!-- Panel 2: เลือกตารางเวลา ( Time Slots ) -->
         <div id="emrApptDayPanel" class="d-none">
           <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
             <button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" onclick="showEmrCalMonth()"><i class="fa-solid fa-arrow-left me-1"></i> เลือกลองวันอื่น</button>
@@ -398,7 +396,7 @@
 </div>
 
 <script>
-  // 🌟 สวิตช์โหมดฐานข้อมูล (ตรงกับ booking.html)
+  // 🌟 สวิตช์โหมดฐานข้อมูล (ปรับให้ตรงกัน)
   var USE_REAL_DATABASE = false; 
 
   var currentHN = '';
@@ -1365,24 +1363,26 @@
   var tempSelectedEmrDateStr = '';
   var tempSelectedEmrDayTitle = '';
 
-  // 🌟 ดึงข้อมูลคิวจากทุกคลังมาผสานกัน เพื่อให้เช็คคิวว่างได้อย่างแม่นยำ 100%
+  // 🌟 ดึงข้อมูลคิวที่ตรงกับสวิตช์ USE_REAL_DATABASE
   async function loadEmrAppointmentsList() {
     emrAppointmentsList = [];
-    
-    // 1. ดึงจาก LocalStorage ทั้งโหมด DEV และ โหมดปกติ
-    let devData = localStorage.getItem('clinicAppointments_DEV');
-    let prodData = localStorage.getItem('clinicAppointments');
-    
-    if (devData) { try { emrAppointmentsList = emrAppointmentsList.concat(JSON.parse(devData)); } catch(e){} }
-    if (prodData) { try { emrAppointmentsList = emrAppointmentsList.concat(JSON.parse(prodData)); } catch(e){} }
 
-    // 2. ดึงจาก Database เซิร์ฟเวอร์จริง
+    if (!USE_REAL_DATABASE) {
+      // ดึงเฉพาะโหมดทดสอบ
+      let localData = localStorage.getItem('clinicAppointments_DEV');
+      if (localData) {
+        try { emrAppointmentsList = JSON.parse(localData); } catch(e){}
+      }
+      return;
+    }
+
+    // โหมดต่อ Database จริง
     try {
       const res = await fetch('/api/appointments');
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success' && Array.isArray(data.data)) {
-          let dbApps = data.data.map(item => ({
+          emrAppointmentsList = data.data.map(item => ({
             id: item.id,
             hn: item.hn || item.patient_id,
             patientName: item.name || item.patient_name || 'ไม่ระบุชื่อ',
@@ -1390,7 +1390,6 @@
             time: item.time || item.appointment_time,
             courseName: item.note || item.notes || item.course_name || 'นัดหมาย'
           }));
-          emrAppointmentsList = emrAppointmentsList.concat(dbApps);
         }
       }
     } catch(e) {}
@@ -1500,7 +1499,6 @@
       let min = (m % 60).toString().padStart(2, '0');
       let timeStr = `${h}:${min}`;
 
-      // 🌟 ค้นหาคิวที่ไม่ว่างจากคลังนัดหมายทั้งหมด
       let matchedApp = emrAppointmentsList.find(a => a.date === tempSelectedEmrDateStr && a.time === timeStr);
 
       if (matchedApp) {
