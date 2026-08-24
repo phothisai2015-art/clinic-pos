@@ -72,7 +72,6 @@
             <button class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
           </div>
           <div class="d-flex align-items-center gap-3">
-            <!-- เปลี่ยนมาใช้ onclick แมนนวล เพื่อเลี่ยงบั๊ก Bootstrap -->
             <button class="btn btn-outline-secondary rounded-circle shadow-sm" style="width: 40px; height: 40px;" onclick="openTimeSettings()" title="ตั้งค่าเวลาทำการ">
               <i class="fa-solid fa-gear"></i>
             </button>
@@ -97,14 +96,13 @@
         </div>
       </div>
 
-      <!-- 🕒 มุมมองรายวัน (Day View - Time Slots) บังคับกางเต็มด้วย w-100 -->
+      <!-- 🕒 มุมมองรายวัน (Day View - Time Slots) -->
       <div id="dayViewPanel" class="h-100 w-100 d-none flex-column">
         <div class="d-flex justify-content-between align-items-center mb-3 px-2 border-bottom pb-3">
           <button class="btn btn-light rounded-pill px-4 fw-bold shadow-sm border" onclick="showMonthView()">
             <i class="fa-solid fa-arrow-left me-2"></i> กลับไปปฏิทิน
           </button>
           <h4 class="fw-bold text-primary m-0" id="dayViewTitle">วันจันทร์ที่ 24 สิงหาคม 2026</h4>
-          <!-- เปลี่ยนมาใช้ onclick แมนนวล -->
           <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm" onclick="openTimeSettings()">
             <i class="fa-solid fa-clock me-2"></i> ตั้งค่าเวลา
           </button>
@@ -117,9 +115,6 @@
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- 📍 TAB 2: นัดหมายพรุ่งนี้ -->
-    <!-- ========================================== -->
     <!-- ========================================== -->
     <!-- 📍 TAB 2: นัดหมายพรุ่งนี้ -->
     <!-- ========================================== -->
@@ -139,14 +134,13 @@
 </div>
 
 <!-- ========================================== -->
-<!-- 🌟 Modal: ตั้งค่าเวลาเปิด-ปิดคลินิก (Custom แบบไม่พึ่ง Bootstrap JS) -->
+<!-- 🌟 Modal: ตั้งค่าเวลาเปิด-ปิดคลินิก (Custom ป้องกันเงาดำค้าง) -->
 <!-- ========================================== -->
 <div class="modal" id="timeSettingsModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1050;">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header bg-light border-bottom-0 rounded-top-4 p-4">
         <h5 class="modal-title fw-bold text-dark m-0"><i class="fa-solid fa-clock text-primary me-2"></i> ตั้งค่าเวลาตารางนัด</h5>
-        <!-- ปุ่มปิดธรรมดา เรียกฟังก์ชันปิดตรงๆ -->
         <button type="button" class="btn-close" onclick="closeTimeSettingsModal()"></button>
       </div>
       <div class="modal-body p-4">
@@ -176,6 +170,27 @@
   }
 
   // ==========================================
+  // 🌟 ตัวแปรเก็บเวลาเปิด-ปิดร้าน (รองรับการดึงจาก Database)
+  // ==========================================
+  let clinicOpenTime = '10:00'; 
+  let clinicCloseTime = '20:00'; 
+
+  // ฟังก์ชันดึงค่าเวลาจาก API ตอนเปิดหน้าเว็บ
+  async function loadClinicSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      
+      if (data.status === 'success' && data.data) {
+        if (data.data.open_time) clinicOpenTime = data.data.open_time;
+        if (data.data.close_time) clinicCloseTime = data.data.close_time;
+      }
+    } catch (e) {
+      console.warn("ยังไม่ได้เชื่อมต่อ API Settings หรือไม่มีข้อมูล ใช้ค่าเริ่มต้น 10:00-20:00");
+    }
+  }
+
+  // ==========================================
   // 📅 ระบบสร้างปฏิทินรายเดือน
   // ==========================================
   const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -186,7 +201,11 @@
   let currentYear = today.getFullYear();
   let selectedDateString = ""; 
 
-  function initCalendar() { renderCalendar(currentMonth, currentYear); }
+  function initCalendar() { 
+    loadClinicSettings().then(() => {
+      renderCalendar(currentMonth, currentYear); 
+    });
+  }
 
   function renderCalendar(month, year) {
     const grid = document.getElementById('calendarGrid');
@@ -266,11 +285,9 @@
     const container = document.getElementById('timeSlotsContainer');
     container.innerHTML = ''; 
 
-    let openTime = localStorage.getItem('clinicOpenTime') || '10:00';
-    let closeTime = localStorage.getItem('clinicCloseTime') || '20:00';
-
-    let [startH, startM] = openTime.split(':').map(Number);
-    let [endH, endM] = closeTime.split(':').map(Number);
+    // ใช้ค่าจากตัวแปรที่โหลดมาจาก Database
+    let [startH, startM] = clinicOpenTime.split(':').map(Number);
+    let [endH, endM] = clinicCloseTime.split(':').map(Number);
 
     let startMins = (startH * 60) + startM;
     let endMins = (endH * 60) + endM;
@@ -305,44 +322,63 @@
   }
 
   // ==========================================
-  // ⚙️ ระบบตั้งค่าเวลาเปิด-ปิด (กวาดล้างบั๊ก 100%)
+  // ⚙️ ระบบตั้งค่าเวลาเปิด-ปิด (บันทึกลง Database)
   // ==========================================
-
-  // ฟังก์ชันเปิด (ไม่ผ่าน Bootstrap JS)
   function openTimeSettings() {
-    document.getElementById('setting_open_time').value = localStorage.getItem('clinicOpenTime') || '10:00';
-    document.getElementById('setting_close_time').value = localStorage.getItem('clinicCloseTime') || '20:00';
+    document.getElementById('setting_open_time').value = clinicOpenTime;
+    document.getElementById('setting_close_time').value = clinicCloseTime;
     
     const modalEl = document.getElementById('timeSettingsModal');
-    modalEl.style.display = 'block'; // โชว์แบบแมนนวล
+    modalEl.style.display = 'block'; 
   }
 
-  // ฟังก์ชันปิด (ไม่ผ่าน Bootstrap JS)
   function closeTimeSettingsModal() {
     const modalEl = document.getElementById('timeSettingsModal');
-    modalEl.style.display = 'none'; // ซ่อนแบบแมนนวล
+    modalEl.style.display = 'none'; 
   }
 
-  function saveBusinessHours() {
+  async function saveBusinessHours() {
     let openTime = document.getElementById('setting_open_time').value;
     let closeTime = document.getElementById('setting_close_time').value;
 
     if (!openTime || !closeTime) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเวลาให้ครบถ้วน', 'warning');
 
-    localStorage.setItem('clinicOpenTime', openTime);
-    localStorage.setItem('clinicCloseTime', closeTime);
+    Swal.fire({ title: 'กำลังบันทึกเวลา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    // ปิดหน้าต่างทันทีด้วยฟังก์ชันใหม่
-    closeTimeSettingsModal();
+    try {
+      // 🌟 ส่งข้อมูลไปบันทึกลงฐานข้อมูล
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          open_time: openTime,
+          close_time: closeTime
+        })
+      });
 
-    Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      // อัปเดตตัวแปรในหน้าเว็บ
+      clinicOpenTime = openTime;
+      clinicCloseTime = closeTime;
 
-    // รีเฟรชตารางถ้ายืนอยู่ในหน้ารายวัน
-    if (!document.getElementById('dayViewPanel').classList.contains('d-none')) {
-      renderTimeSlots();
+      closeTimeSettingsModal();
+      Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+
+      // รีเฟรชตารางถ้าเปิดค้างไว้
+      if (!document.getElementById('dayViewPanel').classList.contains('d-none')) {
+        renderTimeSlots();
+      }
+    } catch (e) {
+      // กรณี API พัง (ให้จำค่าในตัวแปรไว้ก่อนเพื่อโชว์ UI ไปก่อน)
+      clinicOpenTime = openTime;
+      clinicCloseTime = closeTime;
+      closeTimeSettingsModal();
+      Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ (โหมดจำลอง)', text: 'เนื่องจากยังไม่มีระบบ Backend ระบบจึงเปลี่ยนค่าชั่วคราวให้ก่อนครับ', timer: 2000, showConfirmButton: false });
+      
+      if (!document.getElementById('dayViewPanel').classList.contains('d-none')) {
+        renderTimeSlots();
+      }
     }
   }
 
-  // รันระบบครั้งแรก
   initCalendar();
 </script>
