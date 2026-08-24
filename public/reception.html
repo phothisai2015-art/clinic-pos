@@ -151,66 +151,76 @@
           </div>
         </div>
 
-        <!-- 🌟 พื้นที่บันทึก EMR แบบ 2 ฝั่ง ซ้าย/ขวา -->
-        <div id="emrRecordingArea" style="display: none;">
-          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-            <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
-              <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
-            </button>
-          </div>
+        <!-- พื้นที่บันทึก EMR (ซ่อนไว้ตอนแรก จะโชว์เมื่อกดปุ่มบนการ์ด) -->
+<div id="emrRecordingArea" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+    <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
+    <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
+      <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
+    </button>
+  </div>
 
-          <div class="row g-4">
-            <!-- 📝 ฝั่งซ้าย: ฟอร์มบันทึกหัตถการ -->
-            <div class="col-lg-7">
-              <div class="row g-3">
-                <!-- รายการย่อยในแพคเกจ -->
-                <div class="col-12" id="emr_sub_items_section" style="display: none;">
-                  <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
-                  <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
-                </div>
-
-                <!-- ฟอร์ม Vitals & EMR -->
-                <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-                <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
-                
-                <!-- 📸 อัปโหลดรูปภาพ -->
-                <div class="col-12 mt-2">
-                   <label class="form-label fw-bold small text-primary"><i class="fa-solid fa-camera"></i> อัปโหลดรูปภาพการรักษา (ถ้ามี)</label>
-                   <input type="file" id="e_photo" class="form-control form-control-sm border-primary" accept="image/*">
-                </div>
-
-                <!-- สั่งยา -->
-                <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
-                  <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
-                  <div class="input-group input-group-sm mb-2">
-                    <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
-                    <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
-                    <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
-                    <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
-                </div>
-                
-                <div class="col-12 text-end mt-3">
-                  <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
-                    <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 🕒 ฝั่งขวา: ประวัติที่ผ่านมา -->
-            <div class="col-lg-5">
-               <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
-                 <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
-                 <div id="emr_history_side" class="custom-scrollbar flex-grow-1" style="height: 480px; overflow-y: auto; padding-right: 5px;">
-                    <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
-                 </div>
-               </div>
-            </div>
-          </div>
+  <div class="row g-4">
+    <!-- 📝 ฝั่งซ้าย: ฟอร์มบันทึกหัตถการ -->
+    <div class="col-lg-7">
+      
+      <!-- 🌟 ฟอร์มกรอกข้อมูล (จะถูกซ่อนถ้าคอร์สใช้ครบแล้ว) -->
+      <div class="row g-3" id="emr_input_section">
+        <!-- รายการย่อยในแพคเกจ -->
+        <div class="col-12" id="emr_sub_items_section" style="display: none;">
+          <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
+          <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
         </div>
+
+        <!-- ฟอร์ม Vitals & EMR -->
+        <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
+        <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
+        
+        <!-- 📸 อัปโหลดรูปภาพ -->
+        <div class="col-12 mt-2">
+           <label class="form-label fw-bold small text-primary"><i class="fa-solid fa-camera"></i> อัปโหลดรูปภาพการรักษา (ถ้ามี)</label>
+           <input type="file" id="e_photo" class="form-control form-control-sm border-primary" accept="image/*">
+        </div>
+
+        <!-- สั่งยา -->
+        <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
+          <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
+          <div class="input-group input-group-sm mb-2">
+            <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
+            <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
+            <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
+            <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
+        </div>
+        
+        <div class="col-12 text-end mt-3">
+          <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
+            <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
+          </button>
+        </div>
+      </div>
+
+      <!-- 🌟 ข้อความแสดงเมื่อคอร์สถูกใช้หมดแล้ว (โชว์แทนฟอร์ม) -->
+      <div id="emr_view_only_msg" class="text-center py-5 mt-4 bg-light rounded-4 border" style="display: none;">
+          <i class="fa-solid fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
+          <h5 class="text-secondary fw-bold">คอร์ส / โปรโมชั่นนี้ถูกใช้ครบแล้ว</h5>
+          <p class="text-muted mb-0">คุณสามารถดูประวัติการรักษาได้จากหน้าต่างด้านขวามือ</p>
+      </div>
+
+    </div>
+
+    <!-- 🕒 ฝั่งขวา: ประวัติที่ผ่านมา -->
+    <div class="col-lg-5">
+       <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
+         <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
+         <div id="emr_history_side" class="custom-scrollbar flex-grow-1" style="height: 480px; overflow-y: auto; padding-right: 5px;">
+            <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
+         </div>
+       </div>
+    </div>
+  </div>
+</div>
 
       </div>
     </div>
@@ -438,7 +448,11 @@
        let isPromo = prodDef && prodDef.type === 'PROMOTION';
        
        let isUnpaid = allBillsList.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
-       let payBadge = isUnpaid ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</span>` : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`; 
+       
+       // 🌟 อัปเดต: เปลี่ยนป้ายแดงให้เป็นปุ่มกดข้ามไปหน้า POS
+       let payBadge = isUnpaid 
+         ? `<button class="btn btn-sm btn-danger ms-2 shadow-sm rounded-pill fw-bold" onclick="goToPOS('${currentHN}')"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</button>` 
+         : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`; 
 
        if (isPromo) {
           let state = JSON.parse(c.bundle_state || '[]');
@@ -455,8 +469,11 @@
 
           let valStr = `OLD_BOX_${c.id}`;
           let cardStyle = isAllUsed ? 'opacity-50 bg-light border-secondary' : 'border-primary';
-          // ส่งค่า true ให้กับ isPromo
-          let btnHtml = isAllUsed ? '' : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
+          
+          // 🌟 อัปเดต: ให้คอร์สที่ใช้ครบแล้ว มีปุ่มสีเทาๆ เอาไว้กดดูประวัติย้อนหลัง (ส่งพารามิเตอร์ true ตัวสุดท้าย)
+          let btnHtml = isAllUsed 
+            ? `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true, true)"><i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติการรักษา</button>` 
+            : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true, false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
           html += `<div class="col-md-6"><div class="course-card ${cardStyle} shadow-sm">
                      <div class="card-body p-4">
@@ -473,8 +490,11 @@
           let isUsedUp = remain <= 0;
           let valStr = `OLD_${c.id}`;
           let cardStyle = isUsedUp ? 'opacity-50 bg-light border-secondary' : 'border-success';
-          // ส่งค่า false ให้กับ isPromo
-          let btnHtml = isUsedUp ? '' : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
+          
+          // 🌟 อัปเดต: ให้คอร์สเดี่ยวที่ใช้ครบแล้ว มีปุ่มดูประวัติด้วย
+          let btnHtml = isUsedUp 
+            ? `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false, true)"><i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติการรักษา</button>` 
+            : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false, false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
           html += `<div class="col-md-4"><div class="course-card ${cardStyle} shadow-sm">
                      <div class="card-body p-4 text-center">
@@ -646,7 +666,8 @@
     }
   }
 
-function openEmrMode(courseId, courseName, isPromo) {
+// 🌟 เพิ่ม Parameter ตัวใหม่ (isViewOnly) เพื่อเช็คสถานะการเปิด
+  function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
     if(!activeEmrCourse) return;
 
@@ -654,40 +675,72 @@ function openEmrMode(courseId, courseName, isPromo) {
     document.getElementById('emrRecordingArea').style.display = 'block';
     document.getElementById('emr_package_title').innerHTML = `<i class="fa-solid fa-notes-medical me-2"></i> ${courseName}`;
     
-    document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
-    document.getElementById('e_tx').value = '';
-    document.getElementById('e_photo').value = ''; 
-    document.getElementById('e_med_list_display').value = '';
-    pendingMeds = [];
-    currentSubItems = [];
-
-    let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
-    allInventoryList.forEach(item => { 
-      if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
-        medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`; 
-      }
-    });
-    document.getElementById('e_med_select').innerHTML = medOptions;
-
-    if (isPromo) {
-      document.getElementById('emr_sub_items_section').style.display = 'block';
-      let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
-      currentSubItems = state.map(s => ({
-        id: s.id, name: s.name, total: s.total, used: s.used, 
-        remain_qty: s.total - s.used, 
-        used_today: (s.total - s.used) > 0 ? 1 : 0
-      }));
-      renderSubItemsList();
+    // 🌟 เช็คว่าเป็นการเปิดดูเฉยๆ หรือเปิดเพื่อบันทึก
+    if (isViewOnly) {
+      document.getElementById('emr_input_section').style.display = 'none';
+      document.getElementById('emr_view_only_msg').style.display = 'block';
     } else {
-      document.getElementById('emr_sub_items_section').style.display = 'none';
-      currentSubItems = [{
-        id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty,
-        remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1
-      }];
+      document.getElementById('emr_input_section').style.display = 'flex';
+      document.getElementById('emr_view_only_msg').style.display = 'none';
+      
+      document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
+      document.getElementById('e_tx').value = '';
+      document.getElementById('e_photo').value = ''; 
+      document.getElementById('e_med_list_display').value = '';
+      pendingMeds = [];
+      currentSubItems = [];
+
+      let medOptions = '<option value="">-- เลือกยา / สกินแคร์ --</option>';
+      allInventoryList.forEach(item => { 
+        if (item.type === 'MEDICINE' || item.type === 'SKINCARE') {
+          medOptions += `<option value="${item.id}" data-name="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name} (คลัง: ${item.stock})</option>`; 
+        }
+      });
+      document.getElementById('e_med_select').innerHTML = medOptions;
+
+      if (isPromo) {
+        document.getElementById('emr_sub_items_section').style.display = 'block';
+        let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
+        currentSubItems = state.map(s => ({
+          id: s.id, name: s.name, total: s.total, used: s.used, 
+          remain_qty: s.total - s.used, 
+          used_today: (s.total - s.used) > 0 ? 1 : 0
+        }));
+        renderSubItemsList();
+      } else {
+        document.getElementById('emr_sub_items_section').style.display = 'none';
+        currentSubItems = [{
+          id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty,
+          remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1
+        }];
+      }
     }
 
-    // 🌟 ส่งชื่อคอร์ส (ที่มีเลขกล่อง/คอร์ส) ไปเป็นตัวกรองประวัติด้านขวามือ
+    // โหลดประวัติการรักษามาโชว์ขวามือ
     loadSideEmrHistory(courseName);
+  }
+  
+  // 🌟 ฟังก์ชันใหม่สำหรับเด้งไปหน้าชำระเงิน
+  function goToPOS(hn) {
+    Swal.fire({
+      title: 'ไปยังหน้าชำระเงิน?',
+      text: "ระบบจะพาคุณไปที่หน้า 'ขาย & ชำระเงิน (POS)' เพื่อเคลียร์ยอดบิลนี้",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'ไปหน้า POS',
+      cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // เซฟ HN ลงใน Cache เพื่อให้หน้า POS ดึงประวัติขึ้นมาโชว์ได้เลย
+        sessionStorage.setItem('targetHN', hn);
+        
+        // สลับไปเรียกหน้า POS ขึ้นมา
+        closeModule();
+        openModule('pos.html');
+      }
+    });
   }
 
   function closeEmrMode() {
