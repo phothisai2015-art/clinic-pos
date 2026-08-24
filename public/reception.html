@@ -940,9 +940,15 @@
     
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
+	
+	// 🌟 เอารายการยาที่สั่ง มาพิมพ์ต่อท้ายลงในประวัติ (Tx)
+    if (pendingMeds.length > 0) {
+      finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
+    }
 	// 🌟 ดึงชื่อผู้ช่วยมาแนบในประวัติ
     let assistantName = document.getElementById('e_assistant').value;
     if (assistantName) finalTxArray.push(`[ผู้ให้บริการ]\n${assistantName}`);
+	
 
     let emrPayload = {
       patient_id: currentHN,
