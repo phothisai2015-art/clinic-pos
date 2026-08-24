@@ -117,7 +117,7 @@
 
     </div>
 
-    <!-- 📍 TAB 2: นัดหมายพรุ่งนี้ (โครงสร้างรองรับข้อมูลจริง) -->
+    <!-- 📍 TAB 2: นัดหมายพรุ่งนี้ -->
     <div id="tab-tomorrow" class="w-100 flex-column custom-scrollbar pr-2" style="display: none; height: 100%; overflow-y: auto;">
       <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 w-100">
         <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-list-check me-2"></i> รายชื่อคนไข้ที่มีนัดหมายในวันพรุ่งนี้</h5>
@@ -157,7 +157,7 @@
 </div>
 
 <!-- ========================================== -->
-<!-- 🌟 Modal: เลือกคอร์สที่จะลงนัด (หน้าตาเหมือนฝั่ง Reception) -->
+<!-- 🌟 Modal: เลือกคอร์สที่จะลงนัด -->
 <!-- ========================================== -->
 <div class="modal" id="bookingCourseModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1050;">
   <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -175,7 +175,6 @@
           <h6 class="fw-bold text-dark m-0" id="bookingPatientName">คนไข้: -</h6>
         </div>
 
-        <!-- กล่องสำหรับเพิ่มปุ่มตรวจทั่วไป -->
         <div class="mb-4">
           <button class="btn btn-outline-primary w-100 fw-bold rounded-pill py-3 border-2 shadow-sm bg-white" onclick="confirmAppointment(null, 'ปรึกษาแพทย์ / ตรวจทั่วไป')">
             <i class="fa-solid fa-user-doctor me-2"></i> นัดหมายปรึกษาแพทย์ / ตรวจทั่วไป (ไม่หักคอร์ส)
@@ -204,18 +203,17 @@
     if (tab === 'calendar') showMonthView(); 
   }
 
-  let clinicOpenTime = '10:00'; 
-  let clinicCloseTime = '20:00'; 
+  // 🌟 อัปเดตตัวแปรทั้งหมดให้เป็น var เพื่อไม่ให้เกิด Error Redeclaration ตอนสลับเมนูเข้าออก
+  var clinicOpenTime = '10:00'; 
+  var clinicCloseTime = '20:00'; 
 
-  // ตัวแปรสำหรับจองคิว
-  let currentBookingTime = '';
-  let currentBookingDateStr = '';
-  let currentBookingPatientHN = '';
+  var currentBookingTime = '';
+  var currentBookingDateStr = '';
+  var currentBookingPatientHN = '';
   
-  // ตัวแปรเก็บข้อมูล API คอร์สคนไข้
-  let allInventoryList = [];
-  let rawPatientCourses = []; 
-  let allBillsList = [];
+  var allInventoryList = [];
+  var rawPatientCourses = []; 
+  var allBillsList = [];
 
   async function loadClinicSettings() {
     try {
@@ -230,16 +228,14 @@
     }
   }
 
-  // ==========================================
-  // 📅 ระบบสร้างปฏิทินรายเดือน (ลบข้อมูลจำลองออก)
-  // ==========================================
-  const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-  const dayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  // 🌟 เปลี่ยนตัวแปรหลักของปฏิทินเป็น var ให้หมด
+  var monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+  var dayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   
-  let today = new Date();
-  let currentMonth = today.getMonth(); 
-  let currentYear = today.getFullYear();
-  let selectedDateString = ""; 
+  var today = new Date();
+  var currentMonth = today.getMonth(); 
+  var currentYear = today.getFullYear();
+  var selectedDateString = ""; 
 
   function initCalendar() { 
     loadClinicSettings().then(() => {
@@ -256,7 +252,6 @@
     let daysInMonth = new Date(year, month + 1, 0).getDate();
     let daysInPrevMonth = new Date(year, month, 0).getDate();
 
-    // 🌟 ลบข้อมูลจุดสีแดงจำลองออก รอใส่ข้อมูลจริงจาก API อนาคต
     let realAppointmentDates = []; 
 
     let html = '';
@@ -300,9 +295,6 @@
     renderCalendar(currentMonth, currentYear);
   }
 
-  // ==========================================
-  // 🕒 ระบบตารางรายวัน (Time Slots) 
-  // ==========================================
   function openDailyView(year, month, day) {
     document.getElementById('monthViewPanel').classList.add('d-none');
     document.getElementById('dayViewPanel').classList.remove('d-none');
@@ -312,7 +304,6 @@
     let dayOfWeek = dayNames[dateObj.getDay()];
     selectedDateString = `วัน${dayOfWeek}ที่ ${day} ${monthNames[month]} ${year}`;
     
-    // บันทึกวันที่ไว้ใช้ลงคิว
     currentBookingDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     
     document.getElementById('dayViewTitle').innerText = selectedDateString;
@@ -353,9 +344,6 @@
     container.innerHTML = html;
   }
 
-  // ==========================================
-  // 🔍 ระบบค้นหาคนไข้เพื่อลงนัด
-  // ==========================================
   async function bookSlot(timeStr) {
     const { value: searchText } = await Swal.fire({
       title: 'ค้นหาคนไข้เพื่อลงนัด',
@@ -401,9 +389,6 @@
     openBookingCourseModal({id: hn, full_name: name}, timeStr);
   }
 
-  // ==========================================
-  // 🎁 ระบบแสดงคอร์สคนไข้ใน Pop-up
-  // ==========================================
   async function openBookingCourseModal(patient, timeStr) {
     currentBookingTime = timeStr;
     currentBookingPatientHN = patient.id;
@@ -509,9 +494,6 @@
     grid.innerHTML = html;
   }
 
-  // ==========================================
-  // 📝 ยืนยันการลงนัด
-  // ==========================================
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
@@ -530,7 +512,6 @@
       confirmButtonColor: '#10b981'
     }).then((result) => {
       if (result.isConfirmed) {
-        // อนาคตสามารถนำข้อมูลเหล่านี้ไปส่ง POST /api/appointments ได้
         console.log("บันทึกนัด:", { hn: currentBookingPatientHN, date: currentBookingDateStr, time: currentBookingTime, course: courseId });
         
         closeBookingCourseModal();
@@ -545,9 +526,6 @@
     });
   }
 
-  // ==========================================
-  // ⚙️ ระบบตั้งค่าเวลาเปิด-ปิด (ไม่มีบั๊ก)
-  // ==========================================
   function openTimeSettings() {
     document.getElementById('setting_open_time').value = clinicOpenTime;
     document.getElementById('setting_close_time').value = clinicCloseTime;
