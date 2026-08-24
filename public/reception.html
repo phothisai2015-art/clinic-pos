@@ -892,6 +892,24 @@
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
+    // 🌟 อัปโหลดรูปภาพถ้ามีการเลือกไว้ (แนบ ID คอร์สไปด้วย)
+    const photoInput = document.getElementById('e_photo');
+    if (photoInput.files && photoInput.files[0]) {
+      let photoTypeUpload = activeEmrCourse && activeEmrCourse.id ? `MARKING_${activeEmrCourse.id}` : 'MARKING';
+      await new Promise((resolve) => {
+        let reader = new FileReader();
+        reader.onload = async function(e) {
+          await fetch('/api/patients/photos', { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ patient_id: currentHN, photo_type: photoTypeUpload, image_data: e.target.result }) 
+          });
+          resolve();
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+      });
+    }
+
     let emrPayload = {
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
@@ -1004,9 +1022,20 @@
   async function savePhotoToServer(type) {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
     let base64Data = canvas.toDataURL('image/png');
+    
+    // 🌟 แนบ ID ของคอร์สไปกับประเภทรูปภาพ เพื่อให้แยกว่าเป็นรูปของคอร์สไหน
+    let finalPhotoType = type;
+    if (activeEmrCourse && activeEmrCourse.id) {
+      finalPhotoType = `${type}_${activeEmrCourse.id}`;
+    }
+
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
-      await fetch('/api/patients/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, photo_type: type, image_data: base64Data }) }); //[cite: 6]
+      await fetch('/api/patients/photos', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ patient_id: currentHN, photo_type: finalPhotoType, image_data: base64Data }) 
+      });
       Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       loadPatientPhotos(currentHN);
     } catch(e) {}
@@ -1016,16 +1045,26 @@
     const grid = document.getElementById('patientPhotoGrid');
     grid.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
     try {
-      const res = await fetch(`/api/patients/${hn}/photos`); //[cite: 6]
+      const res = await fetch(`/api/patients/${hn}/photos`);
       const data = await res.json();
-      if(data.data.length === 0) return grid.innerHTML = '<div class="text-center py-4 text-muted">ไม่มีรูปภาพ</div>';
+      
+      // 🌟 กรองเอารูปเฉพาะของคอร์สที่กำลังเปิดอยู่
+      let filteredPhotos = data.data;
+      if (activeEmrCourse && activeEmrCourse.id) {
+        filteredPhotos = filteredPhotos.filter(p => p.photo_type && p.photo_type.endsWith(`_${activeEmrCourse.id}`));
+      }
+
+      if(filteredPhotos.length === 0) return grid.innerHTML = '<div class="text-center py-4 text-muted">ยังไม่มีรูปภาพสำหรับรายการนี้</div>';
       
       let html = '';
-      data.data.forEach(p => {
-        let typeBadge = p.photo_type === 'BEFORE' ? '<span class="badge bg-secondary">BEFORE</span>' : '<span class="badge bg-primary">MARKING</span>';
+      filteredPhotos.forEach(p => {
+        // ตัด ID คอร์สออกเวลาแสดงผลป้าย (เช่น MARKING_15 -> MARKING)
+        let baseType = p.photo_type.split('_')[0]; 
+        let typeBadge = baseType === 'BEFORE' ? '<span class="badge bg-secondary">BEFORE</span>' : '<span class="badge bg-primary">MARKING</span>';
         let dateStr = new Date(p.created_at).toLocaleDateString('th-TH');
+        
         html += `
-          <div class="col-6">
+          <div class="col-md-6 col-12">
             <div class="bg-light p-2 text-center rounded-3 position-relative">
               <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle" onclick="deletePhoto(${p.id})"><i class="fa-solid fa-trash fa-xs"></i></button>
               <img src="${p.image_path}" class="img-fluid rounded-3 mb-2 border" style="height:120px; object-fit:contain; width:100%; cursor:pointer; background:#fff;" onclick="window.open('${p.image_path}')">
@@ -1047,12 +1086,22 @@
 
   async function openCompareMode() {
     if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
-    const res = await fetch(`/api/patients/${currentHN}/photos`); //[cite: 6]
+    const res = await fetch(`/api/patients/${currentHN}/photos`);
     const data = await res.json();
-    const photos = data.data.filter(p => p.photo_type !== 'CONSENT');
-    if(photos.length < 2) return Swal.fire('ข้อมูลไม่พอ', 'ต้องมีรูปภาพหรือรูปมาร์กหน้าอย่างน้อย 2 รูป', 'warning');
     
-    let options = photos.map(p => `<option value="${p.image_path}">${p.photo_type} - ${new Date(p.created_at).toLocaleDateString('th-TH')}</option>`).join('');
+    // 🌟 กรองเอารูปเฉพาะของคอร์สที่กำลังเปิดอยู่ เหมือนในแกลลอรี่
+    let photos = data.data.filter(p => p.photo_type !== 'CONSENT');
+    if (activeEmrCourse && activeEmrCourse.id) {
+      photos = photos.filter(p => p.photo_type && p.photo_type.endsWith(`_${activeEmrCourse.id}`));
+    }
+
+    if(photos.length < 2) return Swal.fire('ข้อมูลไม่พอ', 'ต้องมีรูปภาพอย่างน้อย 2 รูปในรายการนี้', 'warning');
+    
+    let options = photos.map(p => {
+      let baseType = p.photo_type.split('_')[0];
+      return `<option value="${p.image_path}">${baseType} - ${new Date(p.created_at).toLocaleDateString('th-TH')}</option>`;
+    }).join('');
+    
     Swal.fire({
       title: '<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-code-compare me-2"></i>เปรียบเทียบภาพการรักษา</h4>',
       width: '80%',
