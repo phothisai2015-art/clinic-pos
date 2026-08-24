@@ -449,6 +449,7 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
           history.push({ date: new Date().toISOString(), amount: safePayAmount, method: item.payment_method || currentPayMethod });
         }
 
+        // 🌟 แก้ไขบั๊กตรงนี้: ลบเลข 1 ที่เกินมาใน Array ออก เพื่อให้รหัส HN ตรงกับคอลัมน์ patient_id
         let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted, payment_method, payment_history) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0, item.payment_method || currentPayMethod, JSON.stringify(history)]);
           
@@ -464,7 +465,6 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
               await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, [hn, item.product_id, item.qty]);
            }
         } else if ((item.type === 'MEDICINE' || item.type === 'SKINCARE') && safePayAmount > 0) {
-           // 🌟 โค้ดตัดสต็อกยาส่วนนี้ที่เผลอลบหายไป เอากลับมาให้แล้วครับ
            await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [item.qty, item.product_id]);
            await dbRun(`UPDATE patient_bills SET stock_deducted = 1 WHERE id = ?`, [insertRes.lastID]);
         }
