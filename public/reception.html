@@ -282,7 +282,7 @@
 </div>
 
 <!-- 🎁 Modal: เลือกแพคเกจ / บริการใหม่ -->
-<div class="modal fade" id="packageModal" tabindex="-1" aria-hidden="true">
+<div class="modal" id="packageModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1050;">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header bg-primary text-white rounded-top-4 py-3">
@@ -596,29 +596,21 @@
     });
   }
 
-  // --- ป๊อปอัปเลือกแพคเกจ / บริการใหม่ ---
+  // --- ป๊อปอัปเลือกแพคเกจ / บริการใหม่ (แก้บั๊กกดไม่ได้) ---
   function openPackageModal() {
     if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
     currentCart = [];
     renderCart();
     renderPackageCards();
 
-    const modalEl = document.getElementById('packageModal');
-    if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
-    
-    if (!packageModalInstance) { packageModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' }); }
-    packageModalInstance.show();
+    // 🌟 สั่งเปิดป๊อปอัปแบบแมนนวล ไม่ผ่าน Bootstrap JS
+    document.getElementById('packageModal').style.display = 'block';
     switchPackageTab('promo');
   }
 
   function closePackageModal() { 
-    if (packageModalInstance) packageModalInstance.hide(); 
-    setTimeout(() => {
-      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }, 150);
+    // 🌟 สั่งปิดแบบแมนนวล คืนค่าการคลิกให้หน้าเว็บทันที
+    document.getElementById('packageModal').style.display = 'none';
   }
 
   function switchPackageTab(tab) {
