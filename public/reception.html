@@ -39,9 +39,7 @@
 
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
-    <!-- ========================================== -->
     <!-- 📍 TAB 1: ลงทะเบียนคนไข้ใหม่ -->
-    <!-- ========================================== -->
     <div id="tab-new" style="display: block; height: 100%; overflow-y: auto;" class="custom-scrollbar pr-2">
       <div class="bg-white p-5 rounded-4 shadow-sm border mx-auto" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
@@ -90,9 +88,7 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- 🔍 TAB 2: ค้นหา & จัดการสิทธิ์ -->
-    <!-- ========================================== -->
     <div id="tab-search" style="display: none; height: 100%; flex-direction: column;">
       
       <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
@@ -195,12 +191,17 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-			<div class="col-12 mt-3">
-			<label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
-			<select id="e_assistant" class="form-select border-secondary">
-			<option value="">-- กำลังโหลดรายชื่อ... --</option>
-			</select>
-			</div>
+                  <!-- 🌟 Container รองรับผู้ช่วยหลายคน -->
+                  <div class="col-12 mt-3">
+                    <label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
+                    <div id="assistant_container" class="d-flex flex-column gap-2">
+                      <div class="input-group input-group-sm assistant-row">
+                        <select class="form-select border-secondary assistant-select" onchange="handleAssistantChange(this)">
+                          <option value="">-- เลือกผู้ช่วย / ผู้ให้บริการ --</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div class="col-12 text-end mt-3">
                     <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
@@ -247,7 +248,7 @@
                   <input type="file" id="canvasFileInput" class="d-none" accept="image/*" onchange="loadCanvasBg(this)">
                   
                   <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('canvasFileInput').click()"><i class="fa-solid fa-image"></i> โหลดรูป</button>
-                  <button class="btn btn-sm btn-outline-danger rounded-pill mx-1" onclick="clearCanvas()"><i class="fa-solid fa-eraser"></i> ล้าง</button>
+                  <button class="btn btn-sm btn-outline-danger rounded-pill mx-1" onclick="clearCanvas()"><i class="fa-solid fa-eraser"></i> ล้างจุดมาร์ก</button>
                   <input type="color" id="drawColor" value="#e11d48" class="form-control form-control-color rounded-circle d-inline-block align-middle" style="width: 32px; height: 32px; padding: 2px;">
                   <button class="btn btn-sm btn-success rounded-pill" onclick="savePhotoToServer('MARKING')"><i class="fa-solid fa-floppy-disk"></i> บันทึกรูป</button>
                 </div>
@@ -273,9 +274,7 @@
   </div>
 </div>
 
-<!-- ========================================== -->
 <!-- 🎁 Modal: เลือกแพคเกจ / บริการใหม่ -->
-<!-- ========================================== -->
 <div class="modal fade" id="packageModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -331,9 +330,6 @@
   </div>
 </div>
 
-<!-- ========================================== -->
-<!-- เริ่มต้น JavaScript -->
-<!-- ========================================== -->
 <script>
   var currentHN = '';
   var allInventoryList = [];
@@ -348,6 +344,8 @@
   var pendingMeds = [];
   var currentFilteredEmr = []; 
   var isCurrentEmrViewOnly = false; 
+
+  var globalStaffOptionsHtml = '<option value="">-- เลือกผู้ช่วย / ผู้ให้บริการ --</option>';
 
   function switchMainTab(tab) {
     document.getElementById('tabbtn-new').classList.remove('active');
@@ -710,7 +708,7 @@
     } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error'); }
   }
 
-  // 🌟 (อัปเดต) บังคับล้างกระดานวาดรูป และรูปพื้นหลังทุกครั้งที่เปิดคอร์สใหม่
+  // 🌟 (อัปเดต) บังคับล้างกระดานวาดรูป และรีเซ็ตผู้ช่วยเมื่อเปิดคอร์สใหม่
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
@@ -723,7 +721,7 @@
     document.getElementById('emr_detail_view_section').style.display = 'none'; 
     switchEmrSubTab('detail');
 
-    // 🌟 ล้างกระดานวาดรูป (Canvas) และล้างรูปพื้นหลัง
+    // ล้างรูปภาพมาร์กหน้าและไฟล์ที่อัปโหลดไว้
     currentCanvasBg = null;
     clearCanvas();
     let canvasFile = document.getElementById('canvasFileInput');
@@ -739,8 +737,8 @@
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
       
-      const assistantDropdown = document.getElementById('e_assistant');
-      if (assistantDropdown) assistantDropdown.value = '';
+      // 🌟 รีเซ็ตช่องเลือกผู้ช่วยกลับเหลือช่องเดียว
+      resetAssistantDropdowns();
       
       document.getElementById('e_med_list_display').value = '';
       pendingMeds = [];
@@ -943,12 +941,20 @@
     
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
-	
+
     if (pendingMeds.length > 0) {
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     }
-    let assistantName = document.getElementById('e_assistant').value;
-    if (assistantName) finalTxArray.push(`[ผู้ให้บริการ]\n${assistantName}`);
+
+    // 🌟 ดึงชื่อผู้ช่วยทุกคนที่เลือกไว้แนบในประวัติ
+    let selectedAssistants = [];
+    document.querySelectorAll('.assistant-select').forEach(sel => {
+      if (sel.value) selectedAssistants.push(sel.value);
+    });
+    
+    if (selectedAssistants.length > 0) {
+      finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
+    }
 
     let emrPayload = {
       patient_id: currentHN,
@@ -986,7 +992,7 @@
   // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
   // ==========================================
   var canvas, ctx, isDrawing = false;
-  var currentCanvasBg = null; // 🌟 เพิ่มตัวแปรเก็บรูปพื้นหลัง
+  var currentCanvasBg = null; 
 
   function switchEmrSubTab(tabName) {
     document.getElementById('emr-subtabbtn-detail').classList.remove('active');
@@ -1034,7 +1040,6 @@
     }
   }
 
-  // 🌟 (อัปเดต) ล้างเฉพาะรอยมาร์กโดยวาดรูปพื้นหลังทับใหม่
   function clearCanvas() { 
     if(!ctx) return;
     ctx.fillStyle = "#ffffff"; 
@@ -1045,7 +1050,6 @@
     }
   }
 
-  // 🌟 (อัปเดต) โหลดรูปแม่แบบและจำรูปไว้
   function loadTemplate(type) {
     let url = '';
     if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
@@ -1061,7 +1065,6 @@
     img.src = url;
   }
 
-  // 🌟 (อัปเดต) โหลดรูปภาพจากเครื่องและจำรูปไว้
   function loadCanvasBg(input) {
     if(input.files && input.files[0]) {
       const reader = new FileReader();
@@ -1190,20 +1193,56 @@
         const currentUserId = parseInt(sessionStorage.getItem('currentUserId')) || 0;
         const staffList = data.data.filter(u => u.id !== currentUserId);
         
-        let optionsHtml = '<option value="">-- ไม่ระบุ --</option>';
+        globalStaffOptionsHtml = '<option value="">-- เลือกผู้ช่วย / ผู้ให้บริการ --</option>';
         staffList.forEach(staff => {
           let roleName = staff.role === 'DOCTOR' ? 'แพทย์' : (staff.role === 'ADMIN' ? 'ผู้บริหาร' : 'พนักงาน');
-          optionsHtml += `<option value="${staff.name} (${roleName})">${staff.name} (${roleName})</option>`;
+          globalStaffOptionsHtml += `<option value="${staff.name} (${roleName})">${staff.name} (${roleName})</option>`;
         });
         
-        const dropdown = document.getElementById('e_assistant');
-        if (dropdown) dropdown.innerHTML = optionsHtml;
+        document.querySelectorAll('.assistant-select').forEach(sel => {
+          sel.innerHTML = globalStaffOptionsHtml;
+        });
       }
     } catch(e) {
        console.error('Error loading assistants:', e);
-       const dropdown = document.getElementById('e_assistant');
-       if (dropdown) dropdown.innerHTML = '<option value="">-- โหลดรายชื่อล้มเหลว --</option>';
     }
+  }
+
+  // 🌟 ฟังก์ชันจัดการเพิ่ม/ลบ Dropdown ผู้ช่วยแบบ Dynamic
+  function handleAssistantChange(selectEl) {
+    const container = document.getElementById('assistant_container');
+    const rows = container.querySelectorAll('.assistant-row');
+    
+    const lastRow = rows[rows.length - 1];
+    const lastSelect = lastRow.querySelector('.assistant-select');
+    
+    if (lastSelect.value !== '') {
+      const newRow = document.createElement('div');
+      newRow.className = 'input-group input-group-sm assistant-row';
+      newRow.innerHTML = `
+        <select class="form-select border-secondary assistant-select" onchange="handleAssistantChange(this)">
+          ${globalStaffOptionsHtml}
+        </select>
+        <button class="btn btn-outline-danger" type="button" onclick="removeAssistantRow(this)"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      container.appendChild(newRow);
+    }
+  }
+
+  function removeAssistantRow(btnEl) {
+    btnEl.closest('.assistant-row').remove();
+  }
+
+  function resetAssistantDropdowns() {
+    const container = document.getElementById('assistant_container');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="input-group input-group-sm assistant-row">
+        <select class="form-select border-secondary assistant-select" onchange="handleAssistantChange(this)">
+          ${globalStaffOptionsHtml}
+        </select>
+      </div>
+    `;
   }
 
   loadAssistants();
