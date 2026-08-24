@@ -713,8 +713,8 @@
       selectFromList(currentHN);
     } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error'); }
   }
-
-  // --- โมดูลบันทึก EMR และแสดงรูปภาพ ---
+  
+// 🌟 (อัปเดต) บังคับล้างกระดานวาดรูปทุกครั้งที่เปิดคอร์สใหม่
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
@@ -726,6 +726,11 @@
     
     document.getElementById('emr_detail_view_section').style.display = 'none'; 
     switchEmrSubTab('detail');
+
+    // 🌟 ล้างกระดานวาดรูป (Canvas) และล้างไฟล์ที่เลือกค้างไว้
+    clearCanvas();
+    let canvasFile = document.getElementById('canvasFileInput');
+    if (canvasFile) canvasFile.value = '';
     
     if (isViewOnly) {
       document.getElementById('emr_input_section').style.display = 'none';
@@ -736,7 +741,10 @@
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
-	  document.getElementById('e_assistant').value = ''; // 🌟 ล้างค่าผู้ช่วย
+      
+      // ล้างค่าผู้ช่วย
+      const assistantDropdown = document.getElementById('e_assistant');
+      if (assistantDropdown) assistantDropdown.value = '';
       
       document.getElementById('e_med_list_display').value = '';
       pendingMeds = [];
