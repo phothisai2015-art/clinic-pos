@@ -195,7 +195,6 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-				 <!-- 🌟 เพิ่ม Dropdown ผู้ช่วยแพทย์ (รอรับข้อมูลจาก API) -->
 			<div class="col-12 mt-3">
 			<label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
 			<select id="e_assistant" class="form-select border-secondary">
@@ -609,7 +608,6 @@
 
   function closePackageModal() { 
     if (packageModalInstance) packageModalInstance.hide(); 
-    // 🌟 ล้าง Backdrop ออกจากหน้าจอเพื่อแก้บั๊กคลิกไม่ได้ 
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       document.body.classList.remove('modal-open');
@@ -633,14 +631,12 @@
     const generalContainer = document.getElementById('pkg-content-general');
     promoContainer.innerHTML = ''; generalContainer.innerHTML = '';
 
-    // 🌟 กรองเอารายการยาและสกินแคร์ออก
     const filteredList = allInventoryList.filter(p => p.type !== 'MEDICINE' && p.type !== 'SKINCARE');
 
     filteredList.forEach(p => {
       let priceStr = `฿${p.price.toLocaleString()}`;
       let isPromo = p.type === 'PROMOTION';
       
-      // 🌟 ใช้แบ็กทิกคร่อม p.name ป้องกันบั๊กชื่อมีช่องว่างหรือสัญลักษณ์แปลกๆ
       let html = `
         <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
           <div class="course-card p-3 shadow-sm" style="cursor:pointer;" onclick="addToCart('${p.id}', \`${p.name}\`, ${p.price}, '${p.type}')">
@@ -713,8 +709,8 @@
       selectFromList(currentHN);
     } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error'); }
   }
-  
-// 🌟 (อัปเดต) บังคับล้างกระดานวาดรูปทุกครั้งที่เปิดคอร์สใหม่
+
+  // 🌟 (อัปเดต) บังคับล้างกระดานวาดรูป และรูปพื้นหลังทุกครั้งที่เปิดคอร์สใหม่
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
@@ -727,7 +723,8 @@
     document.getElementById('emr_detail_view_section').style.display = 'none'; 
     switchEmrSubTab('detail');
 
-    // 🌟 ล้างกระดานวาดรูป (Canvas) และล้างไฟล์ที่เลือกค้างไว้
+    // 🌟 ล้างกระดานวาดรูป (Canvas) และล้างรูปพื้นหลัง
+    currentCanvasBg = null;
     clearCanvas();
     let canvasFile = document.getElementById('canvasFileInput');
     if (canvasFile) canvasFile.value = '';
@@ -742,7 +739,6 @@
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
       
-      // ล้างค่าผู้ช่วย
       const assistantDropdown = document.getElementById('e_assistant');
       if (assistantDropdown) assistantDropdown.value = '';
       
@@ -839,7 +835,6 @@
 
     let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
     
-    // ดึงรูปภาพที่มีในวันนั้น
     let photoHtml = '<div class="text-muted small mt-2">- ไม่พบรูปภาพการรักษาในวันนี้ -</div>';
     try {
       const res = await fetch(`/api/patients/${currentHN}/photos`);
@@ -949,14 +944,11 @@
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 	
-	// 🌟 เอารายการยาที่สั่ง มาพิมพ์ต่อท้ายลงในประวัติ (Tx)
     if (pendingMeds.length > 0) {
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     }
-	// 🌟 ดึงชื่อผู้ช่วยมาแนบในประวัติ
     let assistantName = document.getElementById('e_assistant').value;
     if (assistantName) finalTxArray.push(`[ผู้ให้บริการ]\n${assistantName}`);
-	
 
     let emrPayload = {
       patient_id: currentHN,
@@ -994,6 +986,7 @@
   // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
   // ==========================================
   var canvas, ctx, isDrawing = false;
+  var currentCanvasBg = null; // 🌟 เพิ่มตัวแปรเก็บรูปพื้นหลัง
 
   function switchEmrSubTab(tabName) {
     document.getElementById('emr-subtabbtn-detail').classList.remove('active');
@@ -1041,19 +1034,18 @@
     }
   }
 
-// 🌟 ฟังก์ชันล้างรอยมาร์ก (วาดรูปพื้นหลังทับใหม่ รอยมาร์กจะหายไปแต่รูปพื้นหลังยังอยู่)
+  // 🌟 (อัปเดต) ล้างเฉพาะรอยมาร์กโดยวาดรูปพื้นหลังทับใหม่
   function clearCanvas() { 
     if(!ctx) return;
     ctx.fillStyle = "#ffffff"; 
     ctx.fillRect(0, 0, canvas.width, canvas.height); 
     
-    // ถ้ามีรูปพื้นหลังเดิมอยู่ ให้เอามาวาดซ้ำเพื่อลบรอยมาร์ก
     if (currentCanvasBg) {
       ctx.drawImage(currentCanvasBg, 0, 0, canvas.width, canvas.height);
     }
   }
 
-  // 🌟 โหลดแม่แบบหน้าตรง/ด้านข้าง/ลำตัว
+  // 🌟 (อัปเดต) โหลดรูปแม่แบบและจำรูปไว้
   function loadTemplate(type) {
     let url = '';
     if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
@@ -1063,20 +1055,20 @@
     const img = new Image(); 
     img.crossOrigin = "Anonymous";
     img.onload = () => { 
-      currentCanvasBg = img; // จำรูปพื้นหลังไว้
+      currentCanvasBg = img; 
       clearCanvas(); 
     };
     img.src = url;
   }
 
-  // 🌟 โหลดรูปจากไฟล์ที่อัปโหลด
+  // 🌟 (อัปเดต) โหลดรูปภาพจากเครื่องและจำรูปไว้
   function loadCanvasBg(input) {
     if(input.files && input.files[0]) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image(); 
         img.onload = () => {
-          currentCanvasBg = img; // จำรูปพื้นหลังไว้
+          currentCanvasBg = img; 
           clearCanvas();
         };
         img.src = e.target.result;
@@ -1195,18 +1187,12 @@
       const data = await res.json();
       
       if (data.status === 'success') {
-        // 🌟 ดึง ID ของคนที่กำลังล็อกอินเข้าใช้งานระบบในตอนนี้
         const currentUserId = parseInt(sessionStorage.getItem('currentUserId')) || 0;
-        
-        // 🌟 ดึงรายชื่อ "ทุกคน" แต่ "ยกเว้น" คนที่กำลังล็อกอินอยู่
         const staffList = data.data.filter(u => u.id !== currentUserId);
         
         let optionsHtml = '<option value="">-- ไม่ระบุ --</option>';
         staffList.forEach(staff => {
-          // แปลงชื่อตำแหน่งให้เป็นภาษาไทยเพื่อความสวยงาม
           let roleName = staff.role === 'DOCTOR' ? 'แพทย์' : (staff.role === 'ADMIN' ? 'ผู้บริหาร' : 'พนักงาน');
-          
-          // ดึงชื่อมาใส่เป็นตัวเลือก พร้อมวงเล็บบอกตำแหน่งด้านหลัง
           optionsHtml += `<option value="${staff.name} (${roleName})">${staff.name} (${roleName})</option>`;
         });
         
@@ -1220,8 +1206,5 @@
     }
   }
 
-  // สั่งให้ระบบดึงรายชื่อทันทีที่เปิดหน้านี้ขึ้นมา
   loadAssistants();
-  
-  
 </script>
