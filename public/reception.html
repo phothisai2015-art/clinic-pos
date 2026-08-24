@@ -194,6 +194,18 @@
                     </div>
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
+				  
+				  <!-- 🌟 เพิ่ม Dropdown ผู้ช่วยแพทย์ -->
+				<div class="col-12 mt-3">
+				<label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
+				<select id="e_assistant" class="form-select border-secondary">
+				<option value="">-- ไม่ระบุ --</option>
+				<!-- Mock-up รายชื่อไว้ก่อน เดี๋ยวค่อยดึงจาก API ทีหลัง -->
+				<option value="น้องส้ม (ผู้ช่วย)">น้องส้ม (ผู้ช่วย)</option>
+				<option value="น้องฟ้า (ผู้ช่วย)">น้องฟ้า (ผู้ช่วย)</option>
+				<option value="น้องแนน (Therapist)">น้องแนน (Therapist)</option>
+				</select>
+				</div>
                   
                   <div class="col-12 text-end mt-3">
                     <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
@@ -728,6 +740,7 @@
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
+	  document.getElementById('e_assistant').value = ''; // 🌟 ล้างค่าผู้ช่วย
       
       document.getElementById('e_med_list_display').value = '';
       pendingMeds = [];
@@ -931,6 +944,9 @@
     
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
+	// 🌟 ดึงชื่อผู้ช่วยมาแนบในประวัติ
+    let assistantName = document.getElementById('e_assistant').value;
+    if (assistantName) finalTxArray.push(`[ผู้ให้บริการ]\n${assistantName}`);
 
     let emrPayload = {
       patient_id: currentHN,
