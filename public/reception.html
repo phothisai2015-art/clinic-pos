@@ -680,22 +680,43 @@ function renderCart() {
 async function confirmPackageSelection() {
   if (currentCart.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการอย่างน้อย 1 รายการ', 'warning');
   
-  // ตรงนี้คือจุดที่เราจะเปลี่ยน Flow! 
-  // แทนที่จะส่งคิวไปห้องหมอ เราอาจจะ "สร้างบิล(POS)" และ "เพิ่มประวัติการทำ (EMR)" พร้อมกันในหน้านี้เลย
   Swal.fire({
-    title: 'ยืนยันรายการ?',
-    text: "ระบบจะบันทึกรายการเหล่านี้ให้คนไข้",
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'ยืนยัน',
-    confirmButtonColor: '#3b82f6'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      closePackageModal();
-      
-      // TODO: ขั้นตอนต่อไปคือ ดึงหน้า "ชำระเงิน POS" หรือหน้า "ตัดคอร์ส/หักสต็อก" ขึ้นมาในหน้านี้เลย
-      Swal.fire('สำเร็จ', 'เลือกแพคเกจเรียบร้อย! (รอเชื่อมต่อระบบชำระเงินในสเต็ปถัดไป)', 'success');
-    }
+    title: 'กำลังสร้างรายการ...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
   });
+
+  try {
+    // 🌟 วนลูปตามรายการในตะกร้า (Cart)
+    for (let item of currentCart) {
+      // หากเลือกจำนวน (Qty) มากกว่า 1 ให้วนลูปเรียก API ตามจำนวน 
+      // เพื่อให้ระบบแยกสร้างคอร์สและบิลอย่างถูกต้อง
+      for (let i = 0; i < item.qty; i++) {
+        await fetch(`/api/patients/${currentHN}/assign-promo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: item.id })
+        });
+      }
+    }
+    
+    // 🌟 เมื่อสร้างสำเร็จ ปิดป๊อปอัปและล้างตะกร้า
+    closePackageModal();
+    currentCart = []; 
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'เพิ่มรายการสำเร็จ!',
+      text: 'รายการถูกเพิ่มลงในการ์ดด้านล่างแล้ว (สถานะ: ค้างชำระ)',
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    // 🌟 รีเฟรชข้อมูลคนไข้ใหม่ เพื่อให้การ์ดโปรโมชั่นอัปเดตโชว์ด้านล่างทันที
+    selectFromList(currentHN);
+    
+  } catch (error) {
+    Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
+  }
 }
 </script>
