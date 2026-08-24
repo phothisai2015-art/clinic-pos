@@ -1209,10 +1209,28 @@
   }
 
   // 🌟 ฟังก์ชันจัดการเพิ่ม/ลบ Dropdown ผู้ช่วยแบบ Dynamic
+  // 🌟 (อัปเดต) ฟังก์ชันจัดการเพิ่ม/ลบ Dropdown ผู้ช่วยแบบ Dynamic + ดักจับรายชื่อซ้ำ
   function handleAssistantChange(selectEl) {
     const container = document.getElementById('assistant_container');
+    const allSelects = container.querySelectorAll('.assistant-select');
+    const val = selectEl.value;
+
+    if (val !== '') {
+      // 🌟 1. เช็คว่ารายชื่อที่เลือก ซ้ำกับช่องอื่นหรือไม่
+      let duplicateCount = 0;
+      allSelects.forEach(sel => {
+        if (sel.value === val) duplicateCount++;
+      });
+
+      if (duplicateCount > 1) {
+        Swal.fire('รายชื่อซ้ำ!', 'คุณได้เลือกผู้ช่วยท่านนี้ไปแล้ว กรุณาเลือกท่านอื่น', 'warning');
+        selectEl.value = ''; // รีเซ็ตช่องนี้กลับเป็นค่าว่าง
+        return;
+      }
+    }
+
+    // 🌟 2. ถ้าเลือกช่องสุดท้ายสำเร็จค่อยสร้างช่องใหม่เด้งต่อท้าย
     const rows = container.querySelectorAll('.assistant-row');
-    
     const lastRow = rows[rows.length - 1];
     const lastSelect = lastRow.querySelector('.assistant-select');
     
