@@ -56,17 +56,17 @@
         <form id="patientForm" onsubmit="savePatient(event)">
           <div class="row g-4">
             <div class="col-md-4">
-  <label class="form-label fw-bold small text-muted">เลขบัตรประชาชน *</label>
-  <input type="text" id="p_idcard" class="form-control" maxlength="13" required placeholder="ตัวเลข 13 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-</div>
+              <label class="form-label fw-bold small text-muted">รหัสคนไข้ (HN)</label>
+              <input type="text" id="p_hn" class="form-control bg-light" placeholder="ระบบสร้างอัตโนมัติ" readonly>
+            </div>
             <div class="col-md-8">
               <label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label>
               <input type="text" id="p_name" class="form-control form-control-lg border-primary text-primary fw-bold" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small text-muted">เลขบัตรประชาชน</label>
-              <input type="text" id="p_idcard" class="form-control" maxlength="13" placeholder="ตัวเลข 13 หลัก">
-            </div>
+  <label class="form-label fw-bold small text-muted">เลขบัตรประชาชน *</label>
+  <input type="text" id="p_idcard" class="form-control" maxlength="13" required placeholder="ตัวเลข 13 หลัก" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+</div>
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ *</label>
               <input type="tel" id="p_phone" class="form-control" required maxlength="10" placeholder="ตัวเลข 10 หลัก">
