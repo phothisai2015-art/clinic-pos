@@ -51,7 +51,6 @@
 
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
-    <!-- 📍 TAB 1: ลงทะเบียนคนไข้ใหม่ -->
     <div id="tab-new" style="display: block; height: 100%; overflow-y: auto;" class="custom-scrollbar pr-2">
       <div class="bg-white p-5 rounded-4 shadow-sm border mx-auto" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
@@ -100,9 +99,7 @@
       </div>
     </div>
 
-    <!-- 🔍 TAB 2: ค้นหา & จัดการสิทธิ์ -->
     <div id="tab-search" style="display: none; height: 100%; flex-direction: column;">
-      
       <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
         <div class="row align-items-center">
           <div class="col-md-5 border-end pe-4">
@@ -150,7 +147,6 @@
       </div>
 
       <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
-        
         <div id="courseMainArea" style="display: block;">
           <h5 class="fw-bold text-secondary mb-4"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
           <div id="patientCoursesGrid" class="row g-4">
@@ -182,7 +178,6 @@
           <div id="emr-subtab-detail" style="display: block;">
             <div class="row g-4">
               <div class="col-lg-7">
-                
                 <div class="row g-3" id="emr_input_section">
                   <div class="col-12" id="emr_sub_items_section" style="display: none;">
                     <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
@@ -203,7 +198,6 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-				  <!-- ปุ่มเปิด Pop-up เลือกวันเวลานัดติดตามผล -->
 				  <div class="col-12 mt-3">
 				    <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" onclick="openEmrAppointmentModal()">
 				      <i class="fa-solid fa-calendar-check me-2"></i> นัดหมายคนไข้ติดตามผล / ครั้งถัดไป (Appointment)
@@ -219,7 +213,6 @@
             </div>
 				  </div>
 				  
-                  <!-- Container รองรับผู้ช่วยหลายคน -->
                   <div class="col-12 mt-3">
                     <label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
                     <div id="assistant_container" class="d-flex flex-column gap-2">
@@ -302,7 +295,6 @@
   </div>
 </div>
 
-<!-- 🎁 Modal: เลือกแพคเกจ / บริการใหม่ -->
 <div class="modal" id="packageModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1050;">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -358,7 +350,6 @@
   </div>
 </div>
 
-<!-- 🌟 Modal: เลือกวัน-เวลานัดหมายติดตามผลล่วงหน้า -->
 <div class="modal" id="emrAppointmentModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.6); z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -367,7 +358,6 @@
         <button type="button" class="btn-close" onclick="closeEmrAppointmentModal()"></button>
       </div>
       <div class="modal-body p-4 custom-scrollbar" style="max-height: 75vh; overflow-y: auto;">
-        
         <div id="emrApptMonthPanel">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-dark m-0" id="emrCalMonthDisplay">สิงหาคม 2026</h5>
@@ -389,15 +379,14 @@
           </div>
           <div id="emrTimeSlotsContainer" class="d-flex flex-column gap-2"></div>
         </div>
-
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // 🌟 สวิตช์โหมดฐานข้อมูล (ปรับให้ตรงกัน)
-  var USE_REAL_DATABASE = false; 
+  // 🌟 เปิดต่อ Database จริงแบบเดียวกับ booking.html
+  var USE_REAL_DATABASE = true; 
 
   var currentHN = '';
   var currentPhone = ''; 
@@ -432,19 +421,13 @@
     document.getElementById('tab-' + tab).style.display = 'block';
   }
 
-  // --- TAB 1: ลงทะเบียนคนไข้ใหม่ ---
   async function savePatient(e) {
     e.preventDefault();
-    
     const id_card_val = document.getElementById('p_idcard').value.trim();
     const phone_val = document.getElementById('p_phone').value.trim();
 
-    if (id_card_val.length !== 13) {
-      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประจำตัวประชาชนให้ครบ 13 หลัก', 'warning');
-    }
-    if (phone_val.length !== 10) {
-      return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
-    }
+    if (id_card_val.length !== 13) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประจำตัวประชาชนให้ครบ 13 หลัก', 'warning');
+    if (phone_val.length !== 10) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
 
     const payload = {
       id: document.getElementById('p_hn').value,
@@ -500,7 +483,6 @@
     document.getElementById('age_display').innerText = `(อายุ ${age} ปี)`;
   }
 
-  // --- TAB 2: ค้นหา & จัดการสิทธิ์การรักษา ---
   async function searchPatient() {
     const text = document.getElementById('searchInput').value.trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาระบุข้อมูลค้นหา', 'warning');
@@ -997,7 +979,6 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
-  // 🌟 บันทึกประวัติ EMR + หักคอร์ส + เซฟวันนัดลงปฏิทินจริง
   async function submitEMRAndDeduct() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
@@ -1053,7 +1034,6 @@
 
       await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
 
-      // สำรองข้อมูลลง LocalStorage กันเหนียว
       if (selectedNextApptDate && selectedNextApptTime) {
          let newAppt = {
             id: 'APP_' + Date.now(),
@@ -1065,13 +1045,15 @@
             courseName: cleanCourseName
          };
          
-         let devApps = JSON.parse(localStorage.getItem('clinicAppointments_DEV') || '[]');
-         devApps.push(newAppt);
-         localStorage.setItem('clinicAppointments_DEV', JSON.stringify(devApps));
-
-         let prodApps = JSON.parse(localStorage.getItem('clinicAppointments') || '[]');
-         prodApps.push(newAppt);
-         localStorage.setItem('clinicAppointments', JSON.stringify(prodApps));
+         if (!USE_REAL_DATABASE) {
+            let devApps = JSON.parse(localStorage.getItem('clinicAppointments_DEV') || '[]');
+            devApps.push(newAppt);
+            localStorage.setItem('clinicAppointments_DEV', JSON.stringify(devApps));
+         } else {
+            let prodApps = JSON.parse(localStorage.getItem('clinicAppointments') || '[]');
+            prodApps.push(newAppt);
+            localStorage.setItem('clinicAppointments', JSON.stringify(prodApps));
+         }
       }
 
       clearEmrSelectedAppt();
@@ -1363,12 +1345,11 @@
   var tempSelectedEmrDateStr = '';
   var tempSelectedEmrDayTitle = '';
 
-  // 🌟 ดึงข้อมูลคิวที่ตรงกับสวิตช์ USE_REAL_DATABASE
+  // 🌟 ดึงข้อมูลเฉพาะจากแหล่งที่ตั้งค่าตามสวิตช์ USE_REAL_DATABASE
   async function loadEmrAppointmentsList() {
     emrAppointmentsList = [];
 
     if (!USE_REAL_DATABASE) {
-      // ดึงเฉพาะโหมดทดสอบ
       let localData = localStorage.getItem('clinicAppointments_DEV');
       if (localData) {
         try { emrAppointmentsList = JSON.parse(localData); } catch(e){}
@@ -1376,7 +1357,6 @@
       return;
     }
 
-    // โหมดต่อ Database จริง
     try {
       const res = await fetch('/api/appointments');
       if (res.ok) {
@@ -1384,11 +1364,11 @@
         if (data.status === 'success' && Array.isArray(data.data)) {
           emrAppointmentsList = data.data.map(item => ({
             id: item.id,
-            hn: item.hn || item.patient_id,
-            patientName: item.name || item.patient_name || 'ไม่ระบุชื่อ',
-            date: item.date || item.appointment_date,
-            time: item.time || item.appointment_time,
-            courseName: item.note || item.notes || item.course_name || 'นัดหมาย'
+            hn: item.hn,
+            patientName: item.name || 'ไม่ระบุชื่อ',
+            date: item.date,
+            time: item.time,
+            courseName: item.note || 'นัดหมาย'
           }));
         }
       }
@@ -1558,3 +1538,4 @@
 
   loadAssistants();
 </script>
+
