@@ -128,7 +128,7 @@
         <div class="text-muted small mb-4">แสดงคิวนัดหมายของคนไข้ที่จะเข้ามาติดตามผลหรือใช้บริการในวันพรุ่งนี้</div>
         <div id="tomorrowAppointmentsList" class="row g-3">
           <div class="col-12 text-center py-5 text-muted">
-            <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i><br>ยังไม่มีข้อมูลนัดหมายวันพรุ่งนี้
+            <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i><br>กำลังโหลดข้อมูลนัดหมาย...
           </div>
         </div>
       </div>
@@ -227,6 +227,9 @@
   var rawPatientCourses = []; 
   var allBillsList = [];
 
+  // ==========================================
+  // 💾 ฟังก์ชันเชื่อมต่อ Database (API)
+  // ==========================================
   async function loadClinicSettings() {
     try {
       const res = await fetch('/api/settings');
@@ -236,7 +239,22 @@
         if (data.data.close_time) clinicCloseTime = data.data.close_time;
       }
     } catch (e) {
-      console.warn("Using default settings");
+      console.warn("API Settings ออฟไลน์, ใช้ค่าเริ่มต้น");
+    }
+  }
+
+  // 🌟 ดึงข้อมูลนัดหมายทั้งหมดจากฐานข้อมูลเมื่อเปิดหน้าเว็บ
+  async function loadAppointmentsFromDB() {
+    try {
+      const res = await fetch('/api/appointments'); // สมมติว่ามี API ดึงคิวนัด
+      const data = await res.json();
+      if (data.status === 'success' && data.data) {
+        appointmentsList = data.data;
+      }
+    } catch (e) {
+      console.warn("API Appointments ออฟไลน์, โหลดข้อมูลสำรองจาก LocalStorage...");
+      // ดึงข้อมูลสำรองเพื่อไม่ให้หายเวลากดเข้าออก (ระหว่างที่ยังไม่มี Backend API)
+      appointmentsList = JSON.parse(localStorage.getItem('clinicAppointments')) || [];
     }
   }
 
@@ -248,14 +266,14 @@
   var currentYear = today.getFullYear();
   var selectedDateString = ""; 
 
+  // รอให้ดึงตั้งค่า และดึงคิวจากฐานข้อมูลเสร็จ ค่อยวาดปฏิทิน
   function initCalendar() { 
-    loadClinicSettings().then(() => {
+    Promise.all([loadClinicSettings(), loadAppointmentsFromDB()]).then(() => {
       renderCalendar(currentMonth, currentYear); 
       renderTomorrowAppointments();
     });
   }
 
-  // 🌟 ปฏิทินรายเดือน: ค้นหาวันที่มีนัดหมายเพื่อสร้างจุดแดง
   function renderCalendar(month, year) {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = ''; 
@@ -265,7 +283,6 @@
     let daysInMonth = new Date(year, month + 1, 0).getDate();
     let daysInPrevMonth = new Date(year, month, 0).getDate();
 
-    // ดึงเฉพาะ "วันที่" ของเดือนนี้ที่มีรายการนัดหมาย
     let activeDates = [];
     appointmentsList.forEach(app => {
       let appDate = new Date(app.date);
@@ -337,7 +354,6 @@
     renderCalendar(currentMonth, currentYear);
   }
 
-  // 🌟 ตารางเวลา 30 นาที: วาดช่องเวลาว่าง หรือการ์ดคนไข้ถ้านัดไว้แล้ว
   function renderTimeSlots() {
     const container = document.getElementById('timeSlotsContainer');
     container.innerHTML = ''; 
@@ -355,11 +371,9 @@
       let min = (m % 60).toString().padStart(2, '0');
       let timeStr = `${h}:${min}`;
 
-      // ค้นหาคิวนัดในวันและเวลานี้
       let matchedApp = appointmentsList.find(a => a.date === currentBookingDateStr && a.time === timeStr);
 
       if (matchedApp) {
-        // 🌟 แสดงกล่องคิวนัดหมายที่มีคนไข้จองไว้
         html += `
           <div class="time-slot-row booked-slot">
             <div class="time-label">${timeStr}</div>
@@ -379,7 +393,6 @@
           </div>
         `;
       } else {
-        // 🌟 ช่องว่างปกติ
         html += `
           <div class="time-slot-row" onclick="bookSlot('${timeStr}')">
             <div class="time-label">${timeStr}</div>
@@ -544,7 +557,7 @@
     grid.innerHTML = html;
   }
 
-  // 🌟 บันทึกคิวนัดเข้าสู่ระบบและสั่งรีเฟรชตาราง
+  // 🌟 บันทึกการจองคิวลง Database และอัปเดตตาราง
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
@@ -561,9 +574,10 @@
       confirmButtonText: 'ยืนยันนัดหมาย',
       cancelButtonText: 'ยกเลิก',
       confirmButtonColor: '#10b981'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // เพิ่มข้อมูลลงในคลังนัดหมาย
+        Swal.fire({ title: 'กำลังบันทึกนัดหมาย...', didOpen: () => Swal.showLoading() });
+        
         var newAppointment = {
           id: 'APP_' + Date.now(),
           hn: currentBookingPatientHN,
@@ -575,27 +589,42 @@
           courseName: courseName
         };
 
-        appointmentsList.push(newAppointment);
-        
-        closeBookingCourseModal();
+        try {
+          // 🚀 ส่งข้อมูลไป Database จริง
+          await fetch('/api/appointments', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify(newAppointment)
+          });
 
-        // 🌟 สั่งวาดช่องตารางใหม่ทันที
-        renderTimeSlots();
-        renderCalendar(currentMonth, currentYear);
-        renderTomorrowAppointments();
+          // อัปเดตในระบบตาราง
+          appointmentsList.push(newAppointment);
+          // ระบบสำรอง LocalStorage กันเหนียว
+          localStorage.setItem('clinicAppointments', JSON.stringify(appointmentsList));
+          
+          closeBookingCourseModal();
+          renderTimeSlots();
+          renderCalendar(currentMonth, currentYear);
+          renderTomorrowAppointments();
 
-        Swal.fire({
-          icon: 'success',
-          title: 'ลงนัดหมายสำเร็จ!',
-          text: `บันทึกคิว ${currentBookingPatientName} เวลา ${currentBookingTime} น. เรียบร้อยแล้ว`,
-          timer: 2000,
-          showConfirmButton: false
-        });
+          Swal.fire({ icon: 'success', title: 'ลงนัดหมายสำเร็จ!', text: `บันทึกคิวเรียบร้อยแล้ว`, timer: 2000, showConfirmButton: false });
+        } catch(e) {
+          // โหมดจำลองกรณี API ล่ม
+          appointmentsList.push(newAppointment);
+          localStorage.setItem('clinicAppointments', JSON.stringify(appointmentsList));
+          
+          closeBookingCourseModal();
+          renderTimeSlots();
+          renderCalendar(currentMonth, currentYear);
+          renderTomorrowAppointments();
+          
+          Swal.fire({ icon: 'success', title: 'ลงนัดหมายสำเร็จ! (โหมดสำรอง)', text: `เนื่องจาก API ฐานข้อมูลยังไม่ได้เชื่อมต่อ ข้อมูลจะถูกเก็บไว้ที่เครื่องของคุณชั่วคราว`, timer: 3000, showConfirmButton: false });
+        }
       }
     });
   }
 
-  // 🌟 ฟังก์ชันยกเลิกนัด
+  // 🌟 ฟังก์ชันยกเลิกนัด และลบออกจาก Database
   function cancelAppointment(appId) {
     Swal.fire({
       title: 'ยกเลิกนัดหมายนี้?',
@@ -605,18 +634,33 @@
       confirmButtonText: 'ยืนยันลบนัด',
       cancelButtonText: 'ยกเลิก',
       confirmButtonColor: '#ef4444'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        appointmentsList = appointmentsList.filter(a => a.id !== appId);
-        renderTimeSlots();
-        renderCalendar(currentMonth, currentYear);
-        renderTomorrowAppointments();
-        Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        Swal.fire({ title: 'กำลังยกเลิก...', didOpen: () => Swal.showLoading() });
+        try {
+          // 🚀 สั่งลบจาก Database จริง
+          await fetch(`/api/appointments/${appId}`, { method: 'DELETE' });
+
+          appointmentsList = appointmentsList.filter(a => a.id !== appId);
+          localStorage.setItem('clinicAppointments', JSON.stringify(appointmentsList));
+          
+          renderTimeSlots();
+          renderCalendar(currentMonth, currentYear);
+          renderTomorrowAppointments();
+          Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        } catch(e) {
+          appointmentsList = appointmentsList.filter(a => a.id !== appId);
+          localStorage.setItem('clinicAppointments', JSON.stringify(appointmentsList));
+          
+          renderTimeSlots();
+          renderCalendar(currentMonth, currentYear);
+          renderTomorrowAppointments();
+          Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อย (โหมดสำรอง)', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        }
       }
     });
   }
 
-  // 🌟 แสดงรายการนัดหมายวันพรุ่งนี้อัตโนมัติ
   function renderTomorrowAppointments() {
     const container = document.getElementById('tomorrowAppointmentsList');
     const badgeCount = document.getElementById('tomorrowBadgeCount');
