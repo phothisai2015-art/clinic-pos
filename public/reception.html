@@ -1159,13 +1159,19 @@
       const data = await res.json();
       
       if (data.status === 'success') {
-        // 🌟 กรองเอาเฉพาะคนที่มีตำแหน่งเป็น STAFF (ไม่เอา DOCTOR หรือ ADMIN)
-        const staffList = data.data.filter(u => u.role === 'STAFF');
+        // 🌟 ดึง ID ของคนที่กำลังล็อกอินเข้าใช้งานระบบในตอนนี้
+        const currentUserId = parseInt(sessionStorage.getItem('currentUserId')) || 0;
+        
+        // 🌟 ดึงรายชื่อ "ทุกคน" แต่ "ยกเว้น" คนที่กำลังล็อกอินอยู่
+        const staffList = data.data.filter(u => u.id !== currentUserId);
         
         let optionsHtml = '<option value="">-- ไม่ระบุ --</option>';
         staffList.forEach(staff => {
-          // ดึงชื่อมาใส่เป็นตัวเลือกใน Dropdown
-          optionsHtml += `<option value="${staff.name}">${staff.name}</option>`;
+          // แปลงชื่อตำแหน่งให้เป็นภาษาไทยเพื่อความสวยงาม
+          let roleName = staff.role === 'DOCTOR' ? 'แพทย์' : (staff.role === 'ADMIN' ? 'ผู้บริหาร' : 'พนักงาน');
+          
+          // ดึงชื่อมาใส่เป็นตัวเลือก พร้อมวงเล็บบอกตำแหน่งด้านหลัง
+          optionsHtml += `<option value="${staff.name} (${roleName})">${staff.name} (${roleName})</option>`;
         });
         
         const dropdown = document.getElementById('e_assistant');
