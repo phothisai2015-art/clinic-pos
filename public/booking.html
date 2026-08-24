@@ -4,16 +4,23 @@
   .booking-nav .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .booking-nav .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
 
-  /* การตกแต่งปฏิทิน */
-  .calendar-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; }
-  .calendar-header-row { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #f8fafc; text-align: center; font-weight: bold; border-bottom: 2px solid #e2e8f0; }
-  .calendar-header-cell { padding: 12px 5px; color: #475569; }
-  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; }
-  .calendar-cell { background-color: #fff; min-height: 120px; padding: 10px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
-  .calendar-cell:hover { background-color: #f8fafc; }
-  .calendar-cell.other-month { background-color: #fcfcfc; color: #cbd5e1; }
-  .calendar-cell.today { background-color: #eff6ff; border: 2px solid #3b82f6; box-shadow: inset 0 0 0 2px #fff; }
-  .date-number { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; text-align: right; color: #334155; }
+  /* 🌟 ดีไซน์ปฏิทินแบบ Minimalist */
+  .calendar-wrapper { background: #ffffff; padding: 20px 30px; border-radius: 24px; }
+  .calendar-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #94a3b8; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+  
+  .calendar-cell { background-color: #ffffff; min-height: 100px; border-radius: 16px; padding: 10px; cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; }
+  .calendar-cell:hover:not(.other-month) { background-color: #f8fafc; border-color: #e2e8f0; transform: translateY(-2px); }
+  
+  .calendar-cell.other-month { opacity: 0.3; pointer-events: none; } 
+  
+  .date-number { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #334155; border-radius: 50%; margin-bottom: 5px; transition: 0.2s; }
+  
+  /* วันปัจจุบัน */
+  .calendar-cell.today .date-number { background-color: #3b82f6; color: #ffffff; box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); }
+  
+  /* 🌟 จุดสีแดงเวลามีนัดหมาย */
+  .event-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 4px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); }
   
   /* การ์ดรายชื่อนัดหมายพรุ่งนี้ */
   .appointment-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: 0.2s; background: #fff; border-left: 5px solid #3b82f6; }
@@ -49,32 +56,32 @@
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
     <!-- ========================================== -->
-    <!-- 📍 TAB 1: ปฏิทินขนาดใหญ่ -->
+    <!-- 📍 TAB 1: ปฏิทินแบบ Minimal -->
     <!-- ========================================== -->
     <div id="tab-calendar" style="display: block; height: 100%; display: flex; flex-direction: column;">
       
       <!-- Toolbar ปฏิทิน -->
-      <div class="bg-white p-3 rounded-top-4 shadow-sm border border-bottom-0 d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center mb-3 px-2">
         <div class="d-flex align-items-center">
-          <h4 class="fw-bold text-dark m-0 me-4" id="calendarMonthYearDisplay">สิงหาคม 2026</h4>
-          <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="goToToday()">วันนี้</button>
+          <h3 class="fw-bold text-dark m-0 me-4" id="calendarMonthYearDisplay">สิงหาคม 2026</h3>
+          <button class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
         </div>
-        <div class="btn-group shadow-sm">
-          <button class="btn btn-primary px-3" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-          <button class="btn btn-primary px-3" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+          <button class="btn btn-white text-secondary px-3 py-2 border-end" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="btn btn-white text-secondary px-3 py-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
 
       <!-- โครงสร้างปฏิทิน -->
-      <div class="calendar-wrapper shadow-sm flex-grow-1 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
+      <div class="calendar-wrapper shadow-sm border flex-grow-1 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
         <div class="calendar-header-row">
-          <div class="calendar-header-cell text-danger">อาทิตย์</div>
-          <div class="calendar-header-cell">จันทร์</div>
-          <div class="calendar-header-cell">อังคาร</div>
-          <div class="calendar-header-cell">พุธ</div>
-          <div class="calendar-header-cell">พฤหัสบดี</div>
-          <div class="calendar-header-cell">ศุกร์</div>
-          <div class="calendar-header-cell text-primary">เสาร์</div>
+          <div class="text-danger">อาทิตย์</div>
+          <div>จันทร์</div>
+          <div>อังคาร</div>
+          <div>พุธ</div>
+          <div>พฤหัสบดี</div>
+          <div>ศุกร์</div>
+          <div class="text-primary">เสาร์</div>
         </div>
         <!-- ช่องตารางปฏิทินจะถูกสร้างด้วย JavaScript ตรงนี้ -->
         <div id="calendarGrid" class="calendar-grid flex-grow-1"></div>
@@ -90,7 +97,6 @@
         <div class="text-muted small mb-4">ระบบดึงข้อมูลเฉพาะคนไข้ที่ต้องเข้ามาติดตามผล หรือทำคอร์สต่อเนื่องในวันพรุ่งนี้</div>
         
         <div class="row g-3">
-          <!-- Mockup การ์ดคนที่ 1 -->
           <div class="col-md-6">
             <div class="appointment-card">
               <div class="d-flex justify-content-between mb-2">
@@ -106,7 +112,6 @@
             </div>
           </div>
 
-          <!-- Mockup การ์ดคนที่ 2 -->
           <div class="col-md-6">
             <div class="appointment-card border-warning">
               <div class="d-flex justify-content-between mb-2">
@@ -122,7 +127,6 @@
             </div>
           </div>
 
-          <!-- Mockup การ์ดคนที่ 3 -->
           <div class="col-md-6">
             <div class="appointment-card border-info">
               <div class="d-flex justify-content-between mb-2">
@@ -160,7 +164,7 @@
   }
 
   // ==========================================
-  // 📅 ระบบสร้างปฏิทิน (Calendar Logic)
+  // 📅 ระบบสร้างปฏิทิน (Minimal Calendar Logic)
   // ==========================================
   const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   
@@ -174,21 +178,21 @@
 
   function renderCalendar(month, year) {
     const grid = document.getElementById('calendarGrid');
-    grid.innerHTML = ''; // ล้างตารางเก่าทิ้ง
+    grid.innerHTML = ''; 
 
-    // อัปเดตหัวข้อเดือน-ปี
     document.getElementById('calendarMonthYearDisplay').innerText = `${monthNames[month]} ${year}`;
 
-    // หาวันแรกของเดือน และจำนวนวันในเดือนนี้
     let firstDay = new Date(year, month, 1).getDay();
     let daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    // หาวันในเดือนก่อนหน้า (เพื่อมาเติมช่องว่างช่วงต้น)
     let daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    // 🔴 ข้อมูลจำลอง: วันที่มีคิวนัดหมาย (เพื่อให้จุดสีแดงขึ้น)
+    // สมมติว่ามีคนไข้นัดในวันที่ 3, 14, 15, 24, 28 ของเดือนนี้
+    const mockedAppointmentDates = [3, 14, 15, 24, 28]; 
 
     let html = '';
 
-    // 1. เติมช่องว่างของเดือนก่อนหน้า
+    // 1. เติมช่องว่างของเดือนก่อนหน้า (ให้สีจางๆ กดไม่ได้)
     for (let i = firstDay - 1; i >= 0; i--) {
       let prevDate = daysInPrevMonth - i;
       html += `<div class="calendar-cell other-month"><div class="date-number">${prevDate}</div></div>`;
@@ -198,19 +202,20 @@
     for (let i = 1; i <= daysInMonth; i++) {
       let isToday = (i === today.getDate() && month === today.getMonth() && year === today.getFullYear());
       let todayClass = isToday ? 'today' : '';
-      let todayBadge = isToday ? '<span class="badge bg-primary float-start" style="font-size: 0.6rem;">วันนี้</span>' : '';
       
+      // เช็คว่าวันนั้นมีนัดหมายไหม ถ้ามีให้แสดงจุดแดง
+      let hasAppointment = mockedAppointmentDates.includes(i);
+      let dotHtml = hasAppointment ? `<div class="event-dot"></div>` : '';
+
       html += `
         <div class="calendar-cell ${todayClass}" onclick="clickDate(${i}, ${month}, ${year})">
-          <div class="date-number">${todayBadge}${i}</div>
-          <div class="calendar-events-area custom-scrollbar" style="flex-grow: 1; overflow-y: auto;">
-             <!-- เดี๋ยวเราจะดึง API เอากล่องนัดหมายมาใส่ตรงนี้ -->
-          </div>
+          <div class="date-number">${i}</div>
+          ${dotHtml}
         </div>
       `;
     }
 
-    // 3. เติมช่องว่างของเดือนถัดไปให้ครบ Grid (42 ช่อง เพื่อให้ความสูงตารางเท่ากันทุกเดือน)
+    // 3. เติมช่องว่างของเดือนถัดไป
     let totalCells = firstDay + daysInMonth;
     let nextMonthDaysToFill = 42 - totalCells;
     
@@ -221,7 +226,6 @@
     grid.innerHTML = html;
   }
 
-  // กดปุ่มลูกศรเลื่อนเดือน
   function changeMonth(step) {
     currentMonth += step;
     if (currentMonth < 0) {
@@ -234,7 +238,6 @@
     renderCalendar(currentMonth, currentYear);
   }
 
-  // กดปุ่มกลับมาเดือนปัจจุบัน
   function goToToday() {
     today = new Date();
     currentMonth = today.getMonth();
@@ -242,16 +245,15 @@
     renderCalendar(currentMonth, currentYear);
   }
 
-  // คลิกที่ช่องวันที่ (รอเชื่อมต่อระบบเพิ่มนัดหมาย)
   function clickDate(day, month, year) {
     Swal.fire({
       icon: 'info',
-      title: 'สร้างนัดหมายใหม่',
-      text: `คุณคลิกวันที่ ${day} ${monthNames[month]} ${year} (เดี๋ยวเราจะทำ Pop-up สร้างนัดหมายตรงนี้ครับ)`,
-      confirmButtonText: 'รับทราบ'
+      title: 'ดูคิวนัดหมาย',
+      text: `คุณคลิกวันที่ ${day} ${monthNames[month]} ${year} (เดี๋ยวเราจะเชื่อม API เพื่อดึงรายชื่อคนไข้ที่นัดในวันนี้มาแสดงครับ)`,
+      confirmButtonColor: '#3b82f6',
+      confirmButtonText: 'ตกลง'
     });
   }
 
-  // สั่งทำงานตอนเปิดหน้าต่าง
   initCalendar();
 </script>
