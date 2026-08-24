@@ -646,11 +646,7 @@
     }
   }
 
-  // ==========================================
-  // โมดูลบันทึก EMR ในตัว และ การหักคอร์ส 
-  // (พร้อมฟอร์มซ้าย-ขวา แบบในรูป)
-  // ==========================================
-  function openEmrMode(courseId, courseName, isPromo) {
+function openEmrMode(courseId, courseName, isPromo) {
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
     if(!activeEmrCourse) return;
 
@@ -690,8 +686,8 @@
       }];
     }
 
-    // 🌟 ดึงข้อมูลประวัติการรักษามาโชว์ขวามือ
-    loadSideEmrHistory();
+    // 🌟 ส่งชื่อคอร์ส (ที่มีเลขกล่อง/คอร์ส) ไปเป็นตัวกรองประวัติด้านขวามือ
+    loadSideEmrHistory(courseName);
   }
 
   function closeEmrMode() {
@@ -699,21 +695,30 @@
     document.getElementById('courseMainArea').style.display = 'block';
   }
 
-  // 🌟 ฟังก์ชันดึงประวัติมาแสดงทางด้านขวามือ
-  async function loadSideEmrHistory() {
+  // 🌟 ฟังก์ชันดึงประวัติมาแสดงทางด้านขวามือ (เพิ่มระบบกรองข้อมูล)
+  async function loadSideEmrHistory(filterCourseName) {
     const container = document.getElementById('emr_history_side');
     container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
     try {
       const res = await fetch(`/api/emr/${currentHN}`); // เรียก API ดึงประวัติเดิม
       const data = await res.json();
       
-      if (data.data.length === 0) {
-        container.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษา</div>';
+      // 🌟 กรองข้อมูล: เอาเฉพาะประวัติที่ CC มีชื่อและหมายเลขกล่องตรงกันเท่านั้น
+      let filteredData = data.data;
+      if (filterCourseName) {
+        filteredData = data.data.filter(log => {
+          let cc = log.symptoms || '';
+          return cc.includes(filterCourseName);
+        });
+      }
+
+      if (filteredData.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-4"><i class="fa-solid fa-folder-open fa-2x mb-2 opacity-50"></i><br>ยังไม่มีประวัติการทำรายการนี้</div>';
         return;
       }
       
       let html = '';
-      data.data.forEach(log => {
+      filteredData.forEach(log => {
         const dateStr = new Date(log.visit_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
         
