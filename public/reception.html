@@ -339,6 +339,8 @@
 
 <script>
   var currentHN = '';
+  // 🌟 เพิ่มตัวแปรสำหรับเก็บเบอร์โทร เพื่อนำไปส่งให้หน้าตารางนัด
+  var currentPhone = ''; 
   var allInventoryList = [];
   var allBillsList = [];
   var rawPatientCourses = []; 
@@ -464,6 +466,9 @@
 
   async function loadPatientData(p) {
     currentHN = p.id;
+    // 🌟 ดึงข้อมูลเบอร์โทรศัพท์เก็บไว้
+    currentPhone = p.phone || '-'; 
+    
     document.getElementById('emptyPatientState').style.display = 'none';
     document.getElementById('patientInfoDisplay').style.display = 'block';
     
@@ -1207,15 +1212,12 @@
     }
   }
 
-  // 🌟 ฟังก์ชันจัดการเพิ่ม/ลบ Dropdown ผู้ช่วยแบบ Dynamic
-  // 🌟 (อัปเดต) ฟังก์ชันจัดการเพิ่ม/ลบ Dropdown ผู้ช่วยแบบ Dynamic + ดักจับรายชื่อซ้ำ
   function handleAssistantChange(selectEl) {
     const container = document.getElementById('assistant_container');
     const allSelects = container.querySelectorAll('.assistant-select');
     const val = selectEl.value;
 
     if (val !== '') {
-      // 🌟 1. เช็คว่ารายชื่อที่เลือก ซ้ำกับช่องอื่นหรือไม่
       let duplicateCount = 0;
       allSelects.forEach(sel => {
         if (sel.value === val) duplicateCount++;
@@ -1223,12 +1225,11 @@
 
       if (duplicateCount > 1) {
         Swal.fire('รายชื่อซ้ำ!', 'คุณได้เลือกผู้ช่วยท่านนี้ไปแล้ว กรุณาเลือกท่านอื่น', 'warning');
-        selectEl.value = ''; // รีเซ็ตช่องนี้กลับเป็นค่าว่าง
+        selectEl.value = ''; 
         return;
       }
     }
 
-    // 🌟 2. ถ้าเลือกช่องสุดท้ายสำเร็จค่อยสร้างช่องใหม่เด้งต่อท้าย
     const rows = container.querySelectorAll('.assistant-row');
     const lastRow = rows[rows.length - 1];
     const lastSelect = lastRow.querySelector('.assistant-select');
@@ -1260,6 +1261,31 @@
         </select>
       </div>
     `;
+  }
+
+  // 🌟 ฟังก์ชันส่งข้อมูลไปยังหน้าปฏิทินนัดหมาย (Fast-track Booking)
+  function openBookingModule() {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
+    
+    let pName = document.getElementById('disp_name').innerText;
+    let rawCourseName = document.getElementById('emr_package_title').innerText;
+    
+    // ลบข้อความที่ติดมาจากไอคอน
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = rawCourseName;
+    let cleanCourseName = tempDiv.textContent || tempDiv.innerText || '';
+
+    // เก็บข้อมูลคนไข้ใส่กระเป๋า (Session) ไว้ให้หน้าปฏิทินดึงไปใช้
+    sessionStorage.setItem('autoBook_Active', 'true');
+    sessionStorage.setItem('autoBook_HN', currentHN);
+    sessionStorage.setItem('autoBook_Name', pName);
+    sessionStorage.setItem('autoBook_Phone', currentPhone);
+    sessionStorage.setItem('autoBook_CourseId', activeEmrCourse ? activeEmrCourse.id : '');
+    sessionStorage.setItem('autoBook_CourseName', cleanCourseName.trim());
+
+    // สั่งเปิดหน้าปฏิทินทันที
+    if(typeof closeModule === 'function') closeModule();
+    if(typeof openModule === 'function') openModule('booking.html');
   }
 
   loadAssistants();

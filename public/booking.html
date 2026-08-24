@@ -50,6 +50,18 @@
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
+  <!-- 🌟 แบนเนอร์แจ้งเตือนสถานะลงนัดหมายด่วน -->
+  <div id="autoBookBanner" class="alert alert-warning d-flex justify-content-between align-items-center mb-4 d-none" style="border-radius: 16px; border-left: 5px solid #eab308;">
+    <div>
+      <i class="fa-solid fa-bolt text-warning me-2 fs-5"></i> 
+      <strong>โหมดนัดหมายต่อเนื่อง:</strong> โปรดคลิกเลือกเวลาว่างในตารางเพื่อลงนัดให้คุณ 
+      <span id="autoBookPatientName" class="text-primary fw-bold text-decoration-underline mx-1"></span> ทันที
+    </div>
+    <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold bg-white" onclick="cancelAutoBook()">
+      <i class="fa-solid fa-times me-1"></i> ยกเลิกโหมดด่วน
+    </button>
+  </div>
+
   <!-- Tabs Menu -->
   <ul class="nav nav-pills booking-nav mb-4">
     <li class="nav-item">
@@ -197,7 +209,10 @@
   </div>
 </div>
 
+
 <script>
+  var USE_REAL_DATABASE = false; 
+
   function switchBookingTab(tab) {
     document.querySelectorAll('.booking-nav .nav-link').forEach(btn => btn.classList.remove('active'));
     document.getElementById('tabbtn-' + tab).classList.add('active');
@@ -223,39 +238,51 @@
   var rawPatientCourses = []; 
   var allBillsList = [];
 
-  // ==========================================
-  // 💾 โหลดข้อมูลโดยคุยกับ server.js ของจริง
-  // ==========================================
   async function loadClinicSettings() {
+    if (!USE_REAL_DATABASE) {
+        clinicOpenTime = localStorage.getItem('clinicOpenTime_DEV') || '10:00';
+        clinicCloseTime = localStorage.getItem('clinicCloseTime_DEV') || '20:00';
+        return;
+    }
+    
     try {
       const res = await fetch('/api/settings');
-      const data = await res.json();
-      if (data.status === 'success' && data.data) {
-        if (data.data.open_time) clinicOpenTime = data.data.open_time;
-        if (data.data.close_time) clinicCloseTime = data.data.close_time;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success' && data.data) {
+          if (data.data.open_time) clinicOpenTime = data.data.open_time;
+          if (data.data.close_time) clinicCloseTime = data.data.close_time;
+        }
       }
     } catch (e) { console.warn("API Settings ออฟไลน์"); }
   }
 
   async function loadAppointmentsFromDB() {
+    if (!USE_REAL_DATABASE) {
+        let localData = localStorage.getItem('clinicAppointments_DEV');
+        appointmentsList = localData ? JSON.parse(localData) : [];
+        return;
+    }
+
     try {
       const res = await fetch('/api/appointments');
-      const data = await res.json();
+      if (!res.ok) throw new Error("API ไม่พร้อมใช้งาน"); 
       
-      // 🌟 จูนตัวแปรใหม่ให้รับข้อมูลจาก server.js ได้ 100%
+      const data = await res.json();
       if (data.status === 'success' && Array.isArray(data.data)) {
         appointmentsList = data.data.map(item => ({
             id: item.id,
-            hn: item.hn, // server.js ส่งมาเป็น hn (จาก a.patient_id as hn)
-            patientName: item.name || 'ไม่ระบุชื่อ', // server.js ส่งมาเป็น name (จาก p.full_name as name)
-            phone: item.phone || '-',
-            date: item.date, // server.js ส่งมาเป็น date (จาก a.appointment_date as date)
-            time: item.time, // server.js ส่งมาเป็น time
-            courseName: item.note || 'ปรึกษาแพทย์ / ตรวจทั่วไป' // server.js ของคุณไม่มีตารางเก็บคอร์ส เลยฝากไว้ที่ a.notes as note แทน
+            hn: item.patient_id || item.hn,
+            patientName: item.patient_name || item.patientName,
+            phone: item.phone,
+            date: item.appointment_date || item.date,
+            time: item.appointment_time || item.time,
+            courseId: item.course_id || item.courseId,
+            courseName: item.course_name || item.courseName
         }));
       }
     } catch (e) {
-      console.warn("ไม่สามารถดึงข้อมูลคิวนัดจาก Database ได้");
+      console.warn("ไม่สามารถดึงข้อมูลจาก Database ได้");
     }
   }
 
@@ -267,10 +294,23 @@
   var selectedDateString = ""; 
 
   function initCalendar() { 
+    // 🌟 ดึงสถานะโหมดลงนัดหมายด่วนขึ้นมาโชว์แบนเนอร์
+    if (sessionStorage.getItem('autoBook_Active') === 'true') {
+      document.getElementById('autoBookBanner').classList.remove('d-none');
+      document.getElementById('autoBookPatientName').innerText = sessionStorage.getItem('autoBook_Name') || 'คนไข้';
+    }
+
     Promise.all([loadClinicSettings(), loadAppointmentsFromDB()]).then(() => {
       renderCalendar(currentMonth, currentYear); 
       renderTomorrowAppointments();
     });
+  }
+
+  // 🌟 ฟังก์ชันยกเลิกโหมดลงนัดด่วน (ซ่อนแบนเนอร์)
+  function cancelAutoBook() {
+    sessionStorage.removeItem('autoBook_Active');
+    document.getElementById('autoBookBanner').classList.add('d-none');
+    Swal.fire({ icon: 'info', title: 'ออกจากโหมดด่วนแล้ว', text: 'กลับสู่การจองคิวแบบปกติ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
   }
 
   function renderCalendar(month, year) {
@@ -405,6 +445,21 @@
   }
 
   async function bookSlot(timeStr) {
+    // 🌟 ตรวจสอบว่ากำลังอยู่ในโหมดลงนัดด่วนหรือไม่
+    if (sessionStorage.getItem('autoBook_Active') === 'true') {
+        currentBookingTime = timeStr;
+        currentBookingPatientHN = sessionStorage.getItem('autoBook_HN');
+        currentBookingPatientName = sessionStorage.getItem('autoBook_Name');
+        currentBookingPatientPhone = sessionStorage.getItem('autoBook_Phone') || '-';
+        let cId = sessionStorage.getItem('autoBook_CourseId');
+        let cName = sessionStorage.getItem('autoBook_CourseName') || 'นัดติดตามผล';
+
+        // วิ่งข้ามการค้นหา ตรงไปหน้ายืนยันเลย!
+        confirmAppointment(cId, cName);
+        return;
+    }
+
+    // โหมดการจองคิวปกติ (ต้องค้นหาชื่อ)
     const { value: searchText } = await Swal.fire({
       title: 'ค้นหาคนไข้เพื่อลงนัด',
       input: 'text',
@@ -556,9 +611,6 @@
     grid.innerHTML = html;
   }
 
-  // ==========================================
-  // 💾 บันทึกลงฐานข้อมูลจริงแบบ 100%
-  // ==========================================
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
@@ -577,9 +629,7 @@
       confirmButtonColor: '#10b981'
     }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'กำลังบันทึกลง Database...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        // 🌟 จูนตัวแปรให้ตรงกับฝั่ง server.js (รับเป็น notes แทน course_name)
         var payload = {
           patient_id: currentBookingPatientHN,
           appointment_date: currentBookingDateStr,
@@ -587,17 +637,40 @@
           notes: courseName 
         };
 
+        if (!USE_REAL_DATABASE) {
+            appointmentsList.push({
+                id: 'APP_' + Date.now(),
+                hn: payload.patient_id,
+                patientName: currentBookingPatientName,
+                phone: currentBookingPatientPhone,
+                date: payload.appointment_date,
+                time: payload.appointment_time,
+                courseId: courseId,
+                courseName: courseName
+            });
+            localStorage.setItem('clinicAppointments_DEV', JSON.stringify(appointmentsList));
+
+            closeBookingCourseModal();
+            cancelAutoBook(); // 🌟 บันทึกเสร็จให้ล้างโหมดด่วนออกอัตโนมัติ
+            renderTimeSlots();
+            renderCalendar(currentMonth, currentYear);
+            renderTomorrowAppointments();
+            Swal.fire({ icon: 'success', title: 'ลงนัดหมายสำเร็จ!', text: 'บันทึกในเครื่องจำลองแล้ว', timer: 2000, showConfirmButton: false });
+            return;
+        }
+
         try {
+            Swal.fire({ title: 'กำลังบันทึกลง Database...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const res = await fetch('/api/appointments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            // 🌟 ดึงคิวทั้งหมดกลับมาจาก Database ใหม่ เพื่อให้ตารางเป็นข้อมูลชุดล่าสุดตลอดเวลา
             await loadAppointmentsFromDB();
 
             closeBookingCourseModal();
+            cancelAutoBook(); // 🌟 บันทึกเสร็จให้ล้างโหมดด่วนออกอัตโนมัติ
             renderTimeSlots();
             renderCalendar(currentMonth, currentYear);
             renderTomorrowAppointments();
@@ -621,11 +694,20 @@
       confirmButtonColor: '#ef4444'
     }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'กำลังลบจาก Database...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        if (!USE_REAL_DATABASE) {
+            appointmentsList = appointmentsList.filter(a => a.id !== appId);
+            localStorage.setItem('clinicAppointments_DEV', JSON.stringify(appointmentsList));
+            renderTimeSlots();
+            renderCalendar(currentMonth, currentYear);
+            renderTomorrowAppointments();
+            Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+            return;
+        }
+
         try {
             await fetch(`/api/appointments/${appId}`, { method: 'DELETE' });
-            
-            // 🌟 รีโหลดใหม่ทั้งหมดหลังลบเสร็จ
             await loadAppointmentsFromDB();
             
             renderTimeSlots();
@@ -701,12 +783,22 @@
     let closeTime = document.getElementById('setting_close_time').value;
     if (!openTime || !closeTime) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเวลาให้ครบถ้วน', 'warning');
 
-    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+    clinicOpenTime = openTime; 
+    clinicCloseTime = closeTime;
+
+    if (!USE_REAL_DATABASE) {
+        localStorage.setItem('clinicOpenTime_DEV', clinicOpenTime);
+        localStorage.setItem('clinicCloseTime_DEV', clinicCloseTime);
+        closeTimeSettingsModal();
+        Swal.fire({ icon: 'success', title: 'อัปเดตเวลาสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        if (!document.getElementById('dayViewPanel').classList.contains('d-none')) renderTimeSlots();
+        return;
+    }
 
     try {
+        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
         const res = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ open_time: openTime, close_time: closeTime }) });
-        clinicOpenTime = openTime; 
-        clinicCloseTime = closeTime;
+        if(!res.ok) throw new Error("Error");
         closeTimeSettingsModal();
         Swal.fire({ icon: 'success', title: 'อัปเดตเวลาสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         if (!document.getElementById('dayViewPanel').classList.contains('d-none')) renderTimeSlots();
