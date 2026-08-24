@@ -106,25 +106,32 @@
           
           <div class="col-md-7 ps-4">
             <div id="patientInfoDisplay" style="display: none;">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h4 class="fw-bold text-dark m-0 mb-1" id="disp_name">-</h4>
-                  <div class="text-muted"><i class="fa-solid fa-address-card me-1 text-primary"></i> <span id="disp_hn" class="fw-bold">-</span> <span class="mx-2">|</span> <i class="fa-solid fa-phone me-1"></i> <span id="disp_phone">-</span></div>
-                </div>
-                <button class="btn btn-outline-info rounded-pill fw-bold btn-sm shadow-sm" onclick="openGeneralServiceModal()"><i class="fa-solid fa-stethoscope me-1"></i> ตรวจทั่วไป (ไม่ใช้คอร์ส)</button>
-              </div>
-              
-              <!-- กล่องเตือนแพ้ยา -->
-              <div id="allergyAlert" class="allergy-alert align-items-center justify-content-between mt-3 shadow-sm">
-                <div class="d-flex align-items-center">
-                  <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
-                  <div>
-                    <div class="fw-bold fs-6">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
-                    <div class="small fw-semibold" id="allergyDetails"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div class="d-flex justify-content-between align-items-start mb-2">
+    <div>
+      <h4 class="fw-bold text-dark m-0 mb-1" id="disp_name">-</h4>
+      <div class="text-muted">
+        <i class="fa-solid fa-address-card me-1 text-primary"></i> <span id="disp_hn" class="fw-bold">-</span> 
+        <span class="mx-2">|</span> 
+        <i class="fa-solid fa-phone me-1"></i> <span id="disp_phone">-</span>
+      </div>
+    </div>
+    <!-- 🌟 ปุ่มใหม่: เปิดป๊อปอัปเลือกแพคเกจ -->
+    <button class="btn btn-info text-white rounded-pill fw-bold shadow-sm" onclick="openPackageModal()">
+      <i class="fa-solid fa-hand-holding-medical me-1"></i> เลือกแพคเกจ / บริการใหม่
+    </button>
+  </div>
+  
+  <!-- กล่องเตือนแพ้ยา -->
+  <div id="allergyAlert" class="allergy-alert align-items-center justify-content-between mt-3 shadow-sm">
+    <div class="d-flex align-items-center">
+      <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
+      <div>
+        <div class="fw-bold fs-6">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
+        <div class="small fw-semibold" id="allergyDetails"></div>
+      </div>
+    </div>
+  </div>
+</div>
             
             <div id="emptyPatientState" class="text-center text-muted py-3">
               <i class="fa-solid fa-user-check fa-2x mb-2 opacity-50"></i><br>ค้นหาคนไข้เพื่อดูสิทธิ์การรักษา
@@ -197,6 +204,67 @@
       <div class="modal-footer bg-white border-top-0 rounded-bottom-4 p-3">
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeVitalsModal()">ยกเลิก</button>
         <button type="button" class="btn btn-info rounded-pill px-4 fw-bold text-white shadow-sm" onclick="sendToDoctor()"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> ส่งคิวไปห้องแพทย์</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 🎁 Modal: เลือกแพคเกจ / บริการใหม่ -->
+<!-- ========================================== -->
+<div class="modal fade" id="packageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-plus me-2"></i> เลือกแพคเกจ / รายการใหม่ให้คนไข้</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closePackageModal()"></button>
+      </div>
+      <div class="modal-body p-0 bg-light">
+        <div class="row g-0">
+          
+          <!-- 📦 ฝั่งซ้าย: แถบเลือกรายการ -->
+          <div class="col-lg-8 border-end bg-white p-4">
+            <ul class="nav nav-pills nav-pills-custom mb-4" id="packageTabs">
+              <li class="nav-item">
+                <button class="nav-link active" id="pkg-tab-promo" onclick="switchPackageTab('promo')">
+                  <i class="fa-solid fa-gift me-1"></i> โปรโมชั่น / แพคเกจเซ็ต
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" id="pkg-tab-general" onclick="switchPackageTab('general')">
+                  <i class="fa-solid fa-syringe me-1"></i> รายการยิบย่อย / หัตถการเดี่ยว
+                </button>
+              </li>
+            </ul>
+
+            <!-- พื้นที่แสดงการ์ดสินค้า -->
+            <div class="custom-scrollbar pe-2" style="height: 450px; overflow-y: auto;">
+              <div id="pkg-content-promo" class="row g-3"></div>
+              <div id="pkg-content-general" class="row g-3" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 🛒 ฝั่งขวา: สรุปรายการที่เลือก (Cart) -->
+          <div class="col-lg-4 p-4 d-flex flex-column bg-light">
+            <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-list-check me-2"></i> รายการที่เลือกวันนี้</h6>
+            
+            <div id="selectedItemsCart" class="flex-grow-1 custom-scrollbar bg-white rounded-3 border p-2 mb-3" style="overflow-y: auto;">
+              <div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>
+            </div>
+            
+            <div class="bg-white p-3 rounded-3 border mb-3">
+              <div class="d-flex justify-content-between fw-bold text-muted mb-1">
+                <span>ยอดรวมเบื้องต้น:</span>
+                <span id="cartTotalDisplay" class="text-dark fs-5">฿ 0.00</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5" onclick="confirmPackageSelection()">
+              <i class="fa-solid fa-check-circle me-1"></i> ยืนยันรายการ & สร้างบิล
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
@@ -491,4 +559,143 @@
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคิว', 'error');
     }
   }
+  
+  let packageModalInstance = null;
+let currentCart = []; // ตะกร้าเก็บรายการที่ถูกเลือก
+
+function openPackageModal() {
+  if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
+  
+  // เคลียร์ตะกร้า
+  currentCart = [];
+  renderCart();
+
+  // ดึงข้อมูลสินค้ามาแสดงในการ์ด
+  renderPackageCards();
+
+  const modalEl = document.getElementById('packageModal');
+  if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+  
+  if (!packageModalInstance) {
+    packageModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+  }
+  packageModalInstance.show();
+  switchPackageTab('promo');
+}
+
+function closePackageModal() {
+  if (packageModalInstance) packageModalInstance.hide();
+}
+
+function switchPackageTab(tab) {
+  document.getElementById('pkg-tab-promo').classList.remove('active');
+  document.getElementById('pkg-tab-general').classList.remove('active');
+  document.getElementById(`pkg-tab-${tab}`).classList.add('active');
+
+  document.getElementById('pkg-content-promo').style.display = 'none';
+  document.getElementById('pkg-content-general').style.display = 'none';
+  document.getElementById(`pkg-content-${tab}`).style.display = 'flex';
+}
+
+function renderPackageCards() {
+  const promoContainer = document.getElementById('pkg-content-promo');
+  const generalContainer = document.getElementById('pkg-content-general');
+  
+  promoContainer.innerHTML = '';
+  generalContainer.innerHTML = '';
+
+  // allInventoryList เป็นตัวแปรที่คุณดึงไว้แล้วในฟังก์ชัน loadPatientData
+  allInventoryList.forEach(p => {
+    let priceStr = `฿${p.price.toLocaleString()}`;
+    let isPromo = p.type === 'PROMOTION';
+    
+    let html = `
+      <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
+        <div class="course-card p-3 shadow-sm" onclick="addToCart('${p.id}', '${p.name}', ${p.price}, '${p.type}')">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+             <span class="badge ${isPromo ? 'bg-primary' : 'bg-info text-dark'}">${p.type}</span>
+             <span class="fw-bold text-success">${priceStr}</span>
+          </div>
+          <h6 class="fw-bold text-dark m-0"><i class="fa-solid ${isPromo ? 'fa-gift text-primary' : 'fa-syringe text-info'} me-2"></i>${p.name}</h6>
+        </div>
+      </div>`;
+      
+    if (isPromo) promoContainer.innerHTML += html;
+    else generalContainer.innerHTML += html;
+  });
+
+  if(promoContainer.innerHTML === '') promoContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลแพคเกจ</div>';
+  if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อย</div>';
+}
+
+function addToCart(id, name, price, type) {
+  // เช็คว่ามีในตะกร้าหรือยัง
+  let existing = currentCart.find(item => item.id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    currentCart.push({ id, name, price, type, qty: 1 });
+  }
+  renderCart();
+}
+
+function removeFromCart(index) {
+  currentCart.splice(index, 1);
+  renderCart();
+}
+
+function renderCart() {
+  const cartContainer = document.getElementById('selectedItemsCart');
+  const totalDisplay = document.getElementById('cartTotalDisplay');
+  
+  if (currentCart.length === 0) {
+    cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>';
+    totalDisplay.innerText = '฿ 0.00';
+    return;
+  }
+
+  let html = '';
+  let total = 0;
+  
+  currentCart.forEach((item, index) => {
+    let lineTotal = item.price * item.qty;
+    total += lineTotal;
+    
+    html += `
+      <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
+        <div>
+          <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.name}</div>
+          <div class="text-success fw-bold small">฿${item.price.toLocaleString()} x ${item.qty}</div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger rounded-circle" style="padding: 2px 6px;" onclick="removeFromCart(${index})">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>`;
+  });
+  
+  cartContainer.innerHTML = html;
+  totalDisplay.innerText = `฿ ${total.toLocaleString()}`;
+}
+
+async function confirmPackageSelection() {
+  if (currentCart.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายการอย่างน้อย 1 รายการ', 'warning');
+  
+  // ตรงนี้คือจุดที่เราจะเปลี่ยน Flow! 
+  // แทนที่จะส่งคิวไปห้องหมอ เราอาจจะ "สร้างบิล(POS)" และ "เพิ่มประวัติการทำ (EMR)" พร้อมกันในหน้านี้เลย
+  Swal.fire({
+    title: 'ยืนยันรายการ?',
+    text: "ระบบจะบันทึกรายการเหล่านี้ให้คนไข้",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    confirmButtonColor: '#3b82f6'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      closePackageModal();
+      
+      // TODO: ขั้นตอนต่อไปคือ ดึงหน้า "ชำระเงิน POS" หรือหน้า "ตัดคอร์ส/หักสต็อก" ขึ้นมาในหน้านี้เลย
+      Swal.fire('สำเร็จ', 'เลือกแพคเกจเรียบร้อย! (รอเชื่อมต่อระบบชำระเงินในสเต็ปถัดไป)', 'success');
+    }
+  });
+}
 </script>
