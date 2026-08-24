@@ -191,6 +191,13 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
+				  <!-- 🌟 ปุ่มเปิดปฏิทินนัดหมายคนไข้ -->
+<div class="col-12 mt-3">
+  <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" onclick="openAppointmentModal()">
+    <i class="fa-solid fa-calendar-check me-2"></i> นัดหมายคนไข้ติดตามผล / ครั้งถัดไป (Appointment)
+  </button>
+</div>
+				  
                   <!-- 🌟 Container รองรับผู้ช่วยหลายคน -->
                   <div class="col-12 mt-3">
                     <label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
@@ -326,6 +333,120 @@
 
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal: ปฏิทินนัดหมายคนไข้ (Minimal Calendar UI) -->
+<div class="modal fade" id="appointmentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+      
+      <div class="modal-header bg-white border-bottom p-4">
+        <h5 class="modal-title fw-bold text-dark m-0">
+          <i class="fa-solid fa-calendar-plus text-primary me-2"></i> ตารางลงนัดหมายคนไข้ติดตามผล
+        </h5>
+        <button type="button" class="btn-close" onclick="closeAppointmentModal()"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-light">
+        <div class="row g-4">
+          
+          <!-- ฝั่งซ้าย: ปฏิทินมินิมอล -->
+          <div class="col-lg-8">
+            <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-calendar-days me-2"></i> สิงหาคม 2026</h5>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-secondary rounded-start-pill"><i class="fa-solid fa-chevron-left"></i></button>
+                  <button class="btn btn-outline-secondary fw-bold">วันนี้</button>
+                  <button class="btn btn-outline-secondary rounded-end-pill"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+              </div>
+
+              <!-- ตารางปฏิทินมินิมอล -->
+              <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle mb-0" style="border-color: #f1f5f9;">
+                  <thead class="bg-light text-muted small">
+                    <tr>
+                      <th class="py-2 text-danger">อา.</th>
+                      <th class="py-2">จ.</th>
+                      <th class="py-2">อ.</th>
+                      <th class="py-2">พ.</th>
+                      <th class="py-2">พฤ.</th>
+                      <th class="py-2 text-success">ศ.</th>
+                      <th class="py-2 text-primary">ส.</th>
+                    </tr>
+                  </thead>
+                  <tbody style="font-size: 0.95rem;">
+                    <tr>
+                      <td class="text-muted opacity-50 py-3">26</td><td class="text-muted opacity-50">27</td><td class="text-muted opacity-50">28</td><td class="text-muted opacity-50">29</td><td class="text-muted opacity-50">30</td><td class="text-muted opacity-50">31</td><td>1</td>
+                    </tr>
+                    <tr>
+                      <td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td>
+                    </tr>
+                    <tr>
+                      <td>9</td><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td>
+                    </tr>
+                    <tr>
+                      <td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td>
+                    </tr>
+                    <tr>
+                      <td>23</td>
+                      <td class="bg-primary text-white fw-bold rounded-3 shadow-sm position-relative">
+                        24
+                        <div style="font-size: 0.6rem;" class="badge bg-white text-primary d-block mt-1">วันนี้</div>
+                      </td>
+                      <td class="bg-info bg-opacity-10 text-info fw-bold rounded-3">25</td>
+                      <td>26</td><td>27</td><td>28</td><td>29</td>
+                    </tr>
+                    <tr>
+                      <td>30</td><td>31</td><td class="text-muted opacity-50">1</td><td class="text-muted opacity-50">2</td><td class="text-muted opacity-50">3</td><td class="text-muted opacity-50">4</td><td class="text-muted opacity-50">5</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ฝั่งขวา: รายละเอียดการนัดหมาย -->
+          <div class="col-lg-4 d-flex flex-column">
+            <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 d-flex flex-column">
+              <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">
+                <i class="fa-solid fa-clock me-2"></i> ข้อมูลการนัดหมาย
+              </h6>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">วันที่ต้องการนัด *</label>
+                <input type="date" id="app_date" class="form-control rounded-3 border-primary" value="2026-08-25">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">เวลานัดหมาย *</label>
+                <select id="app_time" class="form-select rounded-3 border-primary">
+                  <option value="10:00">10:00 น.</option>
+                  <option value="11:00">11:00 น.</option>
+                  <option value="13:00" selected>13:00 น.</option>
+                  <option value="14:00">14:00 น.</option>
+                  <option value="15:00">15:00 น.</option>
+                  <option value="16:00">16:00 น.</option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-muted">วัตถุประสงค์ / หมายเหตุการนัด</label>
+                <textarea id="app_note" class="form-control rounded-3" rows="3" placeholder="เช่น ติดตามผลหลังทำเลเซอร์ 2 สัปดาห์"></textarea>
+              </div>
+
+              <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm mt-auto fs-6" onclick="saveAppointmentMock()">
+                <i class="fa-solid fa-calendar-check me-2"></i> ยืนยันการบันทึกนัดหมาย
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
