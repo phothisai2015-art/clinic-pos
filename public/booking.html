@@ -1,12 +1,24 @@
 <script>
   var currentHN = '';
   var canvas, ctx, isDrawing = false;
+  var currentCanvasBg = null; // 🌟 เพิ่มตัวแปรจำรูปพื้นหลังเวลาล้าง Canvas
   var screeningModalInstance = null;
   var allInventoryForScreening = [];
   var allCoursesForScreening = [];
   var allBillsForScreening = [];
 
+  // 🌟 ฟังก์ชันตัวช่วย: ป้องกันระบบพังเวลาหาช่อง HTML ไม่เจอ
+  function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+  function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function setHtml(id, val) { const el = document.getElementById(id); if (el) el.innerHTML = val; }
+  function setText(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
+
   document.querySelectorAll('body > #screeningModal').forEach(m => m.remove());
+
+  // 🌟 บังคับให้โหลด HTML เสร็จก่อน ค่อยเริ่มดึงข้อมูล (แก้บั๊กจอขาว/ปุ่มพัง)
+  document.addEventListener('DOMContentLoaded', () => {
+     initPatientModule();
+  });
 
   function initPatientModule() {
     renderEmrQueue();
@@ -16,13 +28,12 @@
     let target = sessionStorage.getItem('targetHN');
     if (target) {
       setTimeout(() => {
-        document.getElementById('searchInput').value = target;
+        setVal('searchInput', target);
         searchPatient();
         sessionStorage.removeItem('targetHN');
       }, 300);
     }
   }
-  initPatientModule();
 
   async function renderEmrQueue() {
     try {
@@ -31,8 +42,8 @@
       const list = document.getElementById('emrQueueList');
       if(!list) return;
 
-      const queueData = data.data;
-      document.getElementById('emrQueueCount').innerText = `${queueData.length} คิว`;
+      const queueData = data.data || [];
+      setText('emrQueueCount', `${queueData.length} คิว`);
       
       if (queueData.length === 0) {
         list.innerHTML = `<div class="text-center py-4 text-muted"><i class="fa-solid fa-bed-pulse fa-2x mb-2 opacity-50"></i><br>ไม่มีคนไข้รอตรวจ</div>`;
@@ -61,7 +72,7 @@
   }
 
   function selectQueueFromList(hn) {
-    document.getElementById('searchInput').value = hn;
+    setVal('searchInput', hn);
     searchPatient();
   }
 
@@ -71,11 +82,17 @@
       return;
     }
     ['reg', 'emr', 'gallery'].forEach(t => {
-      document.getElementById(`btn-tab-${t}`).classList.remove('active');
-      document.getElementById(`${t}-content`).style.display = 'none';
+      const btn = document.getElementById(`btn-tab-${t}`);
+      const content = document.getElementById(`${t}-content`);
+      if (btn) btn.classList.remove('active');
+      if (content) content.style.display = 'none';
     });
-    document.getElementById(`btn-tab-${tabName}`).classList.add('active');
-    document.getElementById(`${tabName}-content`).style.display = 'block';
+    
+    const activeBtn = document.getElementById(`btn-tab-${tabName}`);
+    const activeContent = document.getElementById(`${tabName}-content`);
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activeContent) activeContent.style.display = 'block';
+    
     if (tabName === 'gallery') setTimeout(initCanvas, 100);
   }
 
@@ -83,16 +100,16 @@
     const emrBtn = document.getElementById('btn-tab-emr');
     const galleryBtn = document.getElementById('btn-tab-gallery');
     if (currentHN) {
-      emrBtn.classList.remove('disabled-tab');
-      galleryBtn.classList.remove('disabled-tab');
+      if(emrBtn) emrBtn.classList.remove('disabled-tab');
+      if(galleryBtn) galleryBtn.classList.remove('disabled-tab');
     } else {
-      emrBtn.classList.add('disabled-tab');
-      galleryBtn.classList.add('disabled-tab');
+      if(emrBtn) emrBtn.classList.add('disabled-tab');
+      if(galleryBtn) galleryBtn.classList.add('disabled-tab');
     }
   }
 
   async function searchPatient() {
-    const text = document.getElementById('searchInput').value.trim();
+    const text = getVal('searchInput').trim();
     if (!text) return Swal.fire('แจ้งเตือน', 'กรุณาพิมพ์ข้อความ', 'warning');
 
     Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -100,7 +117,7 @@
       const res = await fetch(`/api/patients?search=${text}`);
       const data = await res.json();
       
-      if (data.data.length === 0) {
+      if (!data.data || data.data.length === 0) {
         Swal.fire('ไม่พบข้อมูล', 'สามารถเพิ่มเป็นคนไข้ใหม่ได้', 'info');
       } else if (data.data.length === 1) {
         Swal.close();
@@ -116,7 +133,7 @@
         html += '</div>';
         Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
       }
-    } catch (err) {}
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถค้นหาข้อมูลได้', 'error'); }
   }
 
   async function selectFromList(hn) {
@@ -129,26 +146,28 @@
 
   function loadPatientProfile(p) {
     currentHN = p.id;
-    document.getElementById('p_hn').value = p.id;
-    document.getElementById('p_name').value = p.full_name || '';
-    document.getElementById('p_idcard').value = p.id_card || '';
-    document.getElementById('p_phone').value = p.phone || '';
-    document.getElementById('p_dob').value = p.dob || '';
+    setVal('p_hn', p.id);
+    setVal('p_name', p.full_name || '');
+    setVal('p_idcard', p.id_card || '');
+    setVal('p_phone', p.phone || '');
+    setVal('p_dob', p.dob || '');
     calculateAge();
-    document.getElementById('p_disease').value = p.congenital_disease || '';
-    document.getElementById('p_allergies').value = p.allergies || '';
+    setVal('p_disease', p.congenital_disease || '');
+    setVal('p_allergies', p.allergies || '');
 
     const alertBox = document.getElementById('allergyAlert');
-    if (p.allergies && p.allergies.trim() !== '' && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
-      alertBox.style.display = 'flex';
-      document.getElementById('allergyTitle').innerText = `⚠️ ข้อมูลแพ้ยา (${p.id}: ${p.full_name})`;
-      document.getElementById('allergyDetails').innerText = `แพ้ยา: ${p.allergies} | โรคประจำตัว: ${p.congenital_disease || 'ไม่มี'}`;
-    } else {
-      alertBox.style.display = 'none';
+    if (alertBox) {
+      if (p.allergies && p.allergies.trim() !== '' && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
+        alertBox.style.display = 'flex';
+        setText('allergyTitle', `⚠️ ข้อมูลแพ้ยา (${p.id}: ${p.full_name})`);
+        setText('allergyDetails', `แพ้ยา: ${p.allergies} | โรคประจำตัว: ${p.congenital_disease || 'ไม่มี'}`);
+      } else {
+        alertBox.style.display = 'none';
+      }
     }
 
-    document.getElementById('emrCurrentPatient').innerHTML = `ลงประวัติให้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
-    document.getElementById('photoCurrentPatient').innerHTML = `คนไข้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`;
+    setHtml('emrCurrentPatient', `ลงประวัติให้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`);
+    setHtml('photoCurrentPatient', `คนไข้: <span class="text-primary fw-bold">${p.full_name} (${p.id})</span>`);
     
     updateTabState();
     loadEMRHistory(p.id);
@@ -156,21 +175,29 @@
 
     renderEmrQueue();
 
-    if(document.getElementById('searchInput').value) {
+    if(getVal('searchInput')) {
       switchPatientTab('emr');
     }
   }
 
   async function savePatient(e) {
     e.preventDefault();
+    
+    // 🌟 เพิ่ม Validation กันพลาด (เหมือนใน reception.html)
+    const id_card_val = getVal('p_idcard').trim();
+    const phone_val = getVal('p_phone').trim();
+
+    if (id_card_val.length !== 13) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประจำตัวประชาชนให้ครบ 13 หลัก', 'warning');
+    if (phone_val.length !== 10) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
+
     const payload = {
-      id: document.getElementById('p_hn').value,
-      full_name: document.getElementById('p_name').value,
-      id_card: document.getElementById('p_idcard').value,
-      phone: document.getElementById('p_phone').value,
-      dob: document.getElementById('p_dob').value,
-      congenital_disease: document.getElementById('p_disease').value,
-      allergies: document.getElementById('p_allergies').value
+      id: getVal('p_hn'),
+      full_name: getVal('p_name'),
+      id_card: id_card_val,
+      phone: phone_val,
+      dob: getVal('p_dob'),
+      congenital_disease: getVal('p_disease'),
+      allergies: getVal('p_allergies')
     };
 
     try {
@@ -193,20 +220,21 @@
     const payload = {
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
-      symptoms: document.getElementById('emr_symptoms').value,
-      diagnosis: document.getElementById('emr_diagnosis').value,
-      treatment_details: document.getElementById('emr_treatment').value,
-      next_appointment_date: document.getElementById('emr_next_appointment_date').value,
-      next_appointment_time: document.getElementById('emr_next_appointment_time').value,
-      next_appointment_note: document.getElementById('emr_next_appointment_note').value
+      symptoms: getVal('emr_symptoms'),
+      diagnosis: getVal('emr_diagnosis'),
+      treatment_details: getVal('emr_treatment'),
+      next_appointment_date: getVal('emr_next_appointment_date'),
+      next_appointment_time: getVal('emr_next_appointment_time'),
+      next_appointment_note: getVal('emr_next_appointment_note')
     };
 
     try {
       const res = await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (data.status === 'success') {
-        document.getElementById('emrForm').reset();
-        document.getElementById('emr_next_appointment_time').value = '10:00'; 
+        const emrForm = document.getElementById('emrForm');
+        if (emrForm) emrForm.reset();
+        setVal('emr_next_appointment_time', '10:00'); 
         
         await fetch(`/api/queue/complete/${currentHN}`, { method: 'PUT' });
         
@@ -222,13 +250,14 @@
 
   async function loadEMRHistory(hn) {
     const timeline = document.getElementById('emrTimeline');
+    if(!timeline) return;
     timeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
     
     try {
       const res = await fetch(`/api/emr/${hn}`);
       const data = await res.json();
       
-      if (data.data.length === 0) {
+      if (!data.data || data.data.length === 0) {
         timeline.innerHTML = '<div class="text-muted text-center py-4">ยังไม่มีประวัติการรักษา</div>';
         return;
       }
@@ -316,15 +345,19 @@
 
   function clearForm() {
     currentHN = '';
-    document.getElementById('patientForm').reset();
-    document.getElementById('emrForm').reset();
-    document.getElementById('p_hn').value = '';
-    document.getElementById('age_display').innerText = '';
-    document.getElementById('allergyAlert').style.display = 'none';
-    document.getElementById('emrCurrentPatient').innerHTML = 'กรุณาเลือกคนไข้...';
-    document.getElementById('photoCurrentPatient').innerHTML = 'เลือกคนไข้...';
-    document.getElementById('emrTimeline').innerHTML = '<div class="text-muted text-center py-4">กรุณาเลือกคนไข้...</div>';
-    document.getElementById('patientPhotoGrid').innerHTML = '<div class="text-center py-4 text-muted">กรุณาเลือกคนไข้...</div>';
+    const pForm = document.getElementById('patientForm');
+    const eForm = document.getElementById('emrForm');
+    if (pForm) pForm.reset();
+    if (eForm) eForm.reset();
+    
+    setVal('p_hn', '');
+    setText('age_display', '');
+    const alertBox = document.getElementById('allergyAlert');
+    if (alertBox) alertBox.style.display = 'none';
+    setHtml('emrCurrentPatient', 'กรุณาเลือกคนไข้...');
+    setHtml('photoCurrentPatient', 'เลือกคนไข้...');
+    setHtml('emrTimeline', '<div class="text-muted text-center py-4">กรุณาเลือกคนไข้...</div>');
+    setHtml('patientPhotoGrid', '<div class="text-center py-4 text-muted">กรุณาเลือกคนไข้...</div>');
     
     renderEmrQueue();
     switchPatientTab('reg');
@@ -335,10 +368,11 @@
     Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     setTimeout(() => {
       clearForm();
-      document.getElementById('p_name').value = 'สมชาย รักชาติ';
-      document.getElementById('p_idcard').value = '1100200300401';
-      document.getElementById('p_phone').value = '0891234567';
-      document.getElementById('p_dob').value = '1985-10-25';
+      setVal('p_name', 'สมชาย รักชาติ');
+      setVal('p_idcard', '1100200300401');
+      setVal('p_phone', '0891234567');
+      setVal('p_dob', '1985-10-25');
+      calculateAge();
       Swal.fire({ icon: 'success', title: 'ดึงข้อมูลจากบัตรสำเร็จ!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
     }, 1000);
   }
@@ -355,22 +389,62 @@
     canvas.ontouchmove = (e) => { draw(e.touches[0]); e.preventDefault(); };
     canvas.ontouchend = stopDrawing;
   }
+  
   function startDrawing(e) { isDrawing = true; const rect = canvas.getBoundingClientRect(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top); }
-  function draw(e) { if (!isDrawing) return; const rect = canvas.getBoundingClientRect(); ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); ctx.strokeStyle = document.getElementById('drawColor').value; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
+  function draw(e) { if (!isDrawing) return; const rect = canvas.getBoundingClientRect(); ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); ctx.strokeStyle = document.getElementById('drawColor')?.value || '#e11d48'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
   function stopDrawing() { isDrawing = false; }
-  function clearCanvas() { if (!ctx) return; ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-  function previewImage(input, previewId) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { document.getElementById(previewId).src = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
-  function loadCanvasBg(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
+  
+  // 🌟 ฟังก์ชันล้างรอยมาร์ก (วาดรูปพื้นหลังทับใหม่)
+  function clearCanvas() { 
+    if (!ctx) return; 
+    ctx.fillStyle = "#ffffff"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height); 
+    if (currentCanvasBg) {
+      ctx.drawImage(currentCanvasBg, 0, 0, canvas.width, canvas.height);
+    }
+  }
+  
+  function previewImage(input, previewId) { 
+    if (input.files && input.files[0]) { 
+       const reader = new FileReader(); 
+       reader.onload = function(e) { 
+         const el = document.getElementById(previewId);
+         if (el) el.src = e.target.result; 
+       }; 
+       reader.readAsDataURL(input.files[0]); 
+    } 
+  }
+  
+  // 🌟 โหลดรูปจากไฟล์ที่อัปโหลด และจำรูปไว้
+  function loadCanvasBg(input) { 
+    if (input.files && input.files[0]) { 
+      const reader = new FileReader(); 
+      reader.onload = function(e) { 
+        const img = new Image(); 
+        img.onload = function() { 
+          currentCanvasBg = img;
+          clearCanvas(); 
+        }; 
+        img.src = e.target.result; 
+      }; 
+      reader.readAsDataURL(input.files[0]); 
+    } 
+  }
 
   async function savePhotoToServer(type) {
     if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
     let base64Data = '';
+    
     if (type === 'BEFORE') {
-      base64Data = document.getElementById('beforeImgPreview').src;
+      const previewEl = document.getElementById('beforeImgPreview');
+      if (!previewEl) return Swal.fire('แจ้งเตือน', 'ไม่พบช่องอัปโหลดรูปภาพ', 'error');
+      base64Data = previewEl.src;
       if (base64Data.includes('placeholder')) return Swal.fire('แจ้งเตือน', 'อัปโหลดรูปก่อนบันทึก', 'warning');
     } else {
+      if (!canvas) return;
       base64Data = canvas.toDataURL('image/png');
     }
+    
     Swal.fire({ title: 'กำลังบันทึกรูปภาพ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
       const res = await fetch('/api/patients/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, photo_type: type, image_data: base64Data }) });
@@ -384,11 +458,12 @@
 
   async function loadPatientPhotos(hn) {
     const grid = document.getElementById('patientPhotoGrid');
+    if(!grid) return;
     grid.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
     try {
       const res = await fetch(`/api/patients/${hn}/photos`);
       const data = await res.json();
-      if (data.data.length === 0) { grid.innerHTML = '<div class="text-center py-4 text-muted">ยังไม่มีรูปภาพ</div>'; return; }
+      if (!data.data || data.data.length === 0) { grid.innerHTML = '<div class="text-center py-4 text-muted">ยังไม่มีรูปภาพ</div>'; return; }
       let html = '';
       data.data.forEach(p => {
         const dateObj = new Date(p.created_at);
@@ -420,15 +495,14 @@
   }
   
   function calculateAge() {
-    const dobStr = document.getElementById('p_dob').value;
-    const ageDisplay = document.getElementById('age_display');
-    if (!dobStr) { ageDisplay.innerText = ''; return; }
+    const dobStr = getVal('p_dob');
+    if (!dobStr) { setText('age_display', ''); return; }
     
     const dob = new Date(dobStr);
     const diffMS = Date.now() - dob.getTime();
     const ageDate = new Date(diffMS);
     const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-    ageDisplay.innerText = `(อายุ ${age} ปี)`;
+    setText('age_display', `(อายุ ${age} ปี)`);
   }
 
   // ==========================================
@@ -460,7 +534,7 @@
       renderActiveCourses(); 
       
       const modalEl = document.getElementById('screeningModal');
-      if (!modalEl) return;
+      if (!modalEl) return Swal.fire('Error', 'ไม่พบป๊อปอัป Screening', 'error');
       
       if (modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
       let existingModal = bootstrap.Modal.getInstance(modalEl);
@@ -478,15 +552,20 @@
 
   function switchServiceTab(tabName) {
     document.querySelectorAll('.nav-pills-custom .nav-link').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tabbtn-${tabName}`).classList.add('active');
-    document.getElementById('tab-promo').style.display = 'none';
-    document.getElementById('tab-general').style.display = 'none';
-    document.getElementById('tab-active').style.display = 'none';
-    document.getElementById(`tab-${tabName}`).style.display = 'flex';
+    const activeBtn = document.getElementById(`tabbtn-${tabName}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    ['promo', 'general', 'active'].forEach(t => {
+       const el = document.getElementById(`tab-${t}`);
+       if (el) el.style.display = 'none';
+    });
+    const displayEl = document.getElementById(`tab-${tabName}`);
+    if (displayEl) displayEl.style.display = 'flex';
   }
 
   function renderPromoCards() {
     const container = document.getElementById('tab-promo');
+    if(!container) return;
     let promos = allInventoryForScreening.filter(p => p.type === 'PROMOTION');
     
     if(promos.length === 0) return container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลโปรโมชั่นในระบบ</div>`;
@@ -520,6 +599,7 @@
 
   function renderGeneralCards() {
     const container = document.getElementById('tab-general');
+    if(!container) return;
     let generals = allInventoryForScreening.filter(p => p.type === 'COURSE' || p.type === 'INJECTABLE');
     
     if(generals.length === 0) return container.innerHTML = `<div class="col-12 text-center text-muted py-5">ไม่มีข้อมูลสินค้าทั่วไปที่ให้บริการได้</div>`;
@@ -543,6 +623,7 @@
 
   function renderActiveCourses() {
     const container = document.getElementById('tab-active');
+    if(!container) return;
     if(allCoursesForScreening.length === 0) return container.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-face-frown fa-2x mb-2 opacity-50"></i><br>คนไข้รายนี้ไม่มีประวัติคอร์สในระบบ</div>`;
 
     let html = '';
@@ -609,24 +690,26 @@
   }
 
   function selectService(actionVal, actionName) {
-    let currentVal = document.getElementById('selected_action_val').value;
+    let currentVal = getVal('selected_action_val');
     if (currentVal === actionVal) {
       resetSelection();
     } else {
       document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
       let cardEl = document.getElementById(`card_${actionVal}`);
       if(cardEl) cardEl.classList.add('selected');
-      document.getElementById('selected_action_val').value = actionVal;
-      document.getElementById('selected_service_display').innerText = actionName;
-      document.getElementById('selected_service_display').className = "text-primary fw-bold fs-5 mb-2 px-3 py-2 bg-primary bg-opacity-10 rounded-3 border border-primary text-center";
+      setVal('selected_action_val', actionVal);
+      setText('selected_service_display', actionName);
+      const displayEl = document.getElementById('selected_service_display');
+      if (displayEl) displayEl.className = "text-primary fw-bold fs-5 mb-2 px-3 py-2 bg-primary bg-opacity-10 rounded-3 border border-primary text-center";
     }
   }
 
   function resetSelection() {
     document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
-    document.getElementById('selected_action_val').value = '';
-    document.getElementById('selected_service_display').innerText = "ปรึกษาแพทย์ / ตรวจทั่วไป";
-    document.getElementById('selected_service_display').className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
+    setVal('selected_action_val', '');
+    setText('selected_service_display', "ปรึกษาแพทย์ / ตรวจทั่วไป");
+    const displayEl = document.getElementById('selected_service_display');
+    if (displayEl) displayEl.className = "text-danger fw-bold fs-5 mb-2 px-3 py-2 bg-danger bg-opacity-10 rounded-3 border border-danger text-center";
   }
   
   function closeScreeningModal() {
@@ -640,9 +723,9 @@
   }
 
   async function submitScreening() {
-    let actionVal = document.getElementById('selected_action_val').value;
-    let selectedText = document.getElementById('selected_service_display').innerText;
-    let note = document.getElementById('scr_note').value.trim();
+    let actionVal = getVal('selected_action_val');
+    let selectedText = document.getElementById('selected_service_display')?.innerText || '';
+    let note = getVal('scr_note').trim();
 
     let btn = document.querySelector('#screeningModal .btn-info');
     let originalBtnText = btn ? btn.innerHTML : '';
@@ -671,12 +754,16 @@
       else finalNote.push(`[บริการ] ปรึกษาแพทย์/ทั่วไป`);
       if(note) finalNote.push(`[อาการ] ${note}`);
 
+      const sys = getVal('scr_sys');
+      const dia = getVal('scr_dia');
+      let bpVal = (sys || dia) ? `${sys}/${dia}` : '';
+
       let payload = {
         patient_id: currentHN,
-        bp: (document.getElementById('scr_sys').value || document.getElementById('scr_dia').value) ? `${document.getElementById('scr_sys').value}/${document.getElementById('scr_dia').value}` : '', 
-        pulse: document.getElementById('scr_pulse').value, 
-        weight: document.getElementById('scr_weight').value, 
-        height: document.getElementById('scr_height').value,
+        bp: bpVal, 
+        pulse: getVal('scr_pulse'), 
+        weight: getVal('scr_weight'), 
+        height: getVal('scr_height'),
         notes: finalNote.join(' | ')
       };
 
@@ -686,7 +773,7 @@
       clearForm();
       if(btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
       
-      document.getElementById('scr_sys').value = ''; document.getElementById('scr_dia').value = ''; document.getElementById('scr_pulse').value = ''; document.getElementById('scr_weight').value = ''; document.getElementById('scr_height').value = ''; document.getElementById('scr_note').value = '';
+      setVal('scr_sys', ''); setVal('scr_dia', ''); setVal('scr_pulse', ''); setVal('scr_weight', ''); setVal('scr_height', ''); setVal('scr_note', '');
       
       setTimeout(() => {
         Swal.fire({ icon: 'success', title: 'ส่งคนไข้ไปห้องตรวจเรียบร้อย!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
