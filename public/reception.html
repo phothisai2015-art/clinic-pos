@@ -474,9 +474,20 @@
     document.getElementById('emptyPatientState').style.display = 'none';
     document.getElementById('patientInfoDisplay').style.display = 'block';
     
+    // คำนวณอายุ
+    let ageText = '-';
+    if (p.dob) {
+      const dob = new Date(p.dob);
+      const diffMS = Date.now() - dob.getTime();
+      const ageDate = new Date(diffMS);
+      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      ageText = age + ' ปี';
+    }
+
     document.getElementById('disp_name').innerText = p.full_name;
     document.getElementById('disp_hn').innerText = p.id;
     document.getElementById('disp_idcard').innerText = p.id_card || 'ไม่ได้ระบุเลข ปชช.';
+    document.getElementById('disp_age').innerText = ageText; // ส่งอายุไปแสดงผล
 
     const alertBox = document.getElementById('allergyAlert');
     if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
