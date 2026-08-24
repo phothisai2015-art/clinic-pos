@@ -1041,23 +1041,45 @@
     }
   }
 
-  function clearCanvas() { if(ctx) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height); } }
+// 🌟 ฟังก์ชันล้างรอยมาร์ก (วาดรูปพื้นหลังทับใหม่ รอยมาร์กจะหายไปแต่รูปพื้นหลังยังอยู่)
+  function clearCanvas() { 
+    if(!ctx) return;
+    ctx.fillStyle = "#ffffff"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height); 
+    
+    // ถ้ามีรูปพื้นหลังเดิมอยู่ ให้เอามาวาดซ้ำเพื่อลบรอยมาร์ก
+    if (currentCanvasBg) {
+      ctx.drawImage(currentCanvasBg, 0, 0, canvas.width, canvas.height);
+    }
+  }
 
+  // 🌟 โหลดแม่แบบหน้าตรง/ด้านข้าง/ลำตัว
   function loadTemplate(type) {
     let url = '';
     if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
     if(type === 'side') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Side';
     if(type === 'body') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Body+Structure';
-    const img = new Image(); img.crossOrigin = "Anonymous";
-    img.onload = () => { clearCanvas(); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+    
+    const img = new Image(); 
+    img.crossOrigin = "Anonymous";
+    img.onload = () => { 
+      currentCanvasBg = img; // จำรูปพื้นหลังไว้
+      clearCanvas(); 
+    };
     img.src = url;
   }
 
+  // 🌟 โหลดรูปจากไฟล์ที่อัปโหลด
   function loadCanvasBg(input) {
     if(input.files && input.files[0]) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new Image(); img.onload = () => ctx.drawImage(img,0,0,canvas.width,canvas.height); img.src = e.target.result;
+        const img = new Image(); 
+        img.onload = () => {
+          currentCanvasBg = img; // จำรูปพื้นหลังไว้
+          clearCanvas();
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(input.files[0]);
     }
