@@ -195,17 +195,13 @@
                     <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
                   </div>
 				  
-				  <!-- 🌟 เพิ่ม Dropdown ผู้ช่วยแพทย์ -->
-				<div class="col-12 mt-3">
-				<label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
-				<select id="e_assistant" class="form-select border-secondary">
-				<option value="">-- ไม่ระบุ --</option>
-				<!-- Mock-up รายชื่อไว้ก่อน เดี๋ยวค่อยดึงจาก API ทีหลัง -->
-				<option value="น้องส้ม (ผู้ช่วย)">น้องส้ม (ผู้ช่วย)</option>
-				<option value="น้องฟ้า (ผู้ช่วย)">น้องฟ้า (ผู้ช่วย)</option>
-				<option value="น้องแนน (Therapist)">น้องแนน (Therapist)</option>
-				</select>
-				</div>
+				 <!-- 🌟 เพิ่ม Dropdown ผู้ช่วยแพทย์ (รอรับข้อมูลจาก API) -->
+			<div class="col-12 mt-3">
+			<label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
+			<select id="e_assistant" class="form-select border-secondary">
+			<option value="">-- กำลังโหลดรายชื่อ... --</option>
+			</select>
+			</div>
                   
                   <div class="col-12 text-end mt-3">
                     <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
@@ -1153,4 +1149,37 @@
     document.getElementById('imgBefore').selectedIndex = photos.length - 1;
     document.getElementById('imgAfter').selectedIndex = 0;
   }
+  
+  // ==========================================
+  // 👩‍⚕️ ดึงรายชื่อพนักงาน/ผู้ช่วย จากฐานข้อมูล Users
+  // ==========================================
+  async function loadAssistants() {
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        // 🌟 กรองเอาเฉพาะคนที่มีตำแหน่งเป็น STAFF (ไม่เอา DOCTOR หรือ ADMIN)
+        const staffList = data.data.filter(u => u.role === 'STAFF');
+        
+        let optionsHtml = '<option value="">-- ไม่ระบุ --</option>';
+        staffList.forEach(staff => {
+          // ดึงชื่อมาใส่เป็นตัวเลือกใน Dropdown
+          optionsHtml += `<option value="${staff.name}">${staff.name}</option>`;
+        });
+        
+        const dropdown = document.getElementById('e_assistant');
+        if (dropdown) dropdown.innerHTML = optionsHtml;
+      }
+    } catch(e) {
+       console.error('Error loading assistants:', e);
+       const dropdown = document.getElementById('e_assistant');
+       if (dropdown) dropdown.innerHTML = '<option value="">-- โหลดรายชื่อล้มเหลว --</option>';
+    }
+  }
+
+  // สั่งให้ระบบดึงรายชื่อทันทีที่เปิดหน้านี้ขึ้นมา
+  loadAssistants();
+  
+  
 </script>
