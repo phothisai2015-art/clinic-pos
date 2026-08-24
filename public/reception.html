@@ -730,7 +730,7 @@
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
-      document.getElementById('e_photo').value = ''; 
+      
       document.getElementById('e_med_list_display').value = '';
       pendingMeds = [];
       currentSubItems = [];
@@ -910,23 +910,7 @@
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
-    // 🌟 อัปโหลดรูปภาพถ้ามีการเลือกไว้ (แนบ ID คอร์สไปด้วย)
-    const photoInput = document.getElementById('e_photo');
-    if (photoInput.files && photoInput.files[0]) {
-      let photoTypeUpload = activeEmrCourse && activeEmrCourse.id ? `MARKING_${activeEmrCourse.id}` : 'MARKING';
-      await new Promise((resolve) => {
-        let reader = new FileReader();
-        reader.onload = async function(e) {
-          await fetch('/api/patients/photos', { 
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ patient_id: currentHN, photo_type: photoTypeUpload, image_data: e.target.result }) 
-          });
-          resolve();
-        };
-        reader.readAsDataURL(photoInput.files[0]);
-      });
-    }
+    
 
     let emrPayload = {
       patient_id: currentHN,
