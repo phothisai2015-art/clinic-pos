@@ -155,80 +155,132 @@
         </div>
 
         <!-- 🌟 พื้นที่บันทึก EMR และแสดงรายละเอียด (2 ฝั่ง ซ้าย/ขวา) -->
-        <div id="emrRecordingArea" style="display: none;">
-          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-            <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
-              <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
+        <!-- พื้นที่บันทึก EMR และแสดงรายละเอียด (2 ฝั่ง ซ้าย/ขวา) -->
+<div id="emrRecordingArea" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+    <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
+    <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
+      <i class="fa-solid fa-arrow-left me-1"></i> กลับไปหน้ารายการ
+    </button>
+  </div>
+
+  <!-- 🌟 แท็บสลับระหว่าง "ฟอร์มบันทึก" กับ "รูปภาพมาร์กหน้า" -->
+  <ul class="nav nav-pills nav-pills-custom mb-3">
+    <li class="nav-item">
+      <button class="nav-link active py-2" id="emr-subtabbtn-detail" onclick="switchEmrSubTab('detail')">
+        <i class="fa-solid fa-file-signature me-1"></i> รายละเอียดการรักษา
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link py-2" id="emr-subtabbtn-gallery" onclick="switchEmrSubTab('gallery')">
+        <i class="fa-solid fa-images me-1"></i> รูปภาพ / มาร์กหน้า
+      </button>
+    </li>
+  </ul>
+
+  <!-- =============================== -->
+  <!-- ส่วนที่ 1: แท็บรายละเอียดการรักษา -->
+  <!-- =============================== -->
+  <div id="emr-subtab-detail" style="display: block;">
+    <div class="row g-4">
+      <!-- 📝 ฝั่งซ้าย: ฟอร์มบันทึก / กล่องดูประวัติ -->
+      <div class="col-lg-7">
+        
+        <div class="row g-3" id="emr_input_section">
+          <div class="col-12" id="emr_sub_items_section" style="display: none;">
+            <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
+            <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
+          </div>
+
+          <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
+          <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
+          
+          <div class="col-12 mt-2">
+             <label class="form-label fw-bold small text-primary"><i class="fa-solid fa-camera"></i> อัปโหลดรูปภาพการรักษา (หรือไปมาร์กหน้าในแท็บรูปภาพ)</label>
+             <input type="file" id="e_photo" class="form-control form-control-sm border-primary" accept="image/*">
+          </div>
+
+          <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
+            <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
+            <div class="input-group input-group-sm mb-2">
+              <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
+              <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
+              <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
+              <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
+          </div>
+          
+          <div class="col-12 text-end mt-3">
+            <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
+              <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
             </button>
           </div>
+        </div>
 
-          <div class="row g-4">
-            <!-- 📝 ฝั่งซ้าย: ฟอร์มบันทึก / กล่องดูประวัติ -->
-            <div class="col-lg-7">
-              
-              <!-- ฟอร์มกรอกข้อมูล -->
-              <div class="row g-3" id="emr_input_section">
-                <!-- รายการย่อยในแพคเกจ -->
-                <div class="col-12" id="emr_sub_items_section" style="display: none;">
-                  <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
-                  <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
-                </div>
+        <div id="emr_view_only_msg" class="text-center py-5 mt-4 bg-light rounded-4 border" style="display: none;">
+            <i class="fa-solid fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
+            <h5 class="text-secondary fw-bold">คอร์ส / โปรโมชั่นนี้ถูกใช้ครบแล้ว</h5>
+            <p class="text-muted mb-0">คุณสามารถดูประวัติการรักษาได้จากหน้าต่างด้านขวามือ</p>
+        </div>
 
-                <!-- ฟอร์ม Vitals & EMR -->
-                <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-                <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
-                
-                <!-- 📸 อัปโหลดรูปภาพ -->
-                <div class="col-12 mt-2">
-                   <label class="form-label fw-bold small text-primary"><i class="fa-solid fa-camera"></i> อัปโหลดรูปภาพการรักษา (ถ้ามี)</label>
-                   <input type="file" id="e_photo" class="form-control form-control-sm border-primary" accept="image/*">
-                </div>
+        <div id="emr_detail_view_section" style="display: none;" class="bg-white p-4 rounded-4 border shadow-sm mt-3">
+        </div>
+      </div>
 
-                <!-- สั่งยา -->
-                <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
-                  <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
-                  <div class="input-group input-group-sm mb-2">
-                    <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
-                    <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
-                    <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
-                    <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
-                  </div>
-                  <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
-                </div>
-                
-                <div class="col-12 text-end mt-3">
-                  <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm py-2 fs-5 w-100" onclick="submitEMRAndDeduct()">
-                    <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกและหักคอร์ส
-                  </button>
-                </div>
-              </div>
+      <!-- 🕒 ฝั่งขวา: ประวัติที่ผ่านมา -->
+      <div class="col-lg-5">
+         <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
+           <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
+           <div id="emr_history_side" class="custom-scrollbar flex-grow-1" style="height: 480px; overflow-y: auto; padding-right: 5px;">
+              <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
+           </div>
+         </div>
+      </div>
+    </div>
+  </div>
 
-              <!-- ข้อความแสดงเมื่อคอร์สถูกใช้หมดแล้ว -->
-              <div id="emr_view_only_msg" class="text-center py-5 mt-4 bg-light rounded-4 border" style="display: none;">
-                  <i class="fa-solid fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
-                  <h5 class="text-secondary fw-bold">คอร์ส / โปรโมชั่นนี้ถูกใช้ครบแล้ว</h5>
-                  <p class="text-muted mb-0">คุณสามารถดูประวัติการรักษาได้จากหน้าต่างด้านขวามือ</p>
-              </div>
+  <!-- =============================== -->
+  <!-- ส่วนที่ 2: แท็บรูปภาพและมาร์กหน้า -->
+  <!-- =============================== -->
+  <div id="emr-subtab-gallery" style="display: none;">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="bg-white p-4 rounded-4 border shadow-sm h-100 text-center">
+          <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-camera me-2"></i> มาร์กจุดตำแหน่งรักษา</h5>
+          <div class="d-flex justify-content-center gap-2 mb-3">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('front')">หน้าตรง</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('side')">ด้านข้าง</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('body')">ลำตัว</button>
+          </div>
 
-              <!-- 🌟 พื้นที่แสดงรายละเอียดประวัติ+รูปภาพ (จะโชว์เมื่อคลิกประวัติด้านขวา) -->
-              <div id="emr_detail_view_section" style="display: none;" class="bg-white p-4 rounded-4 border shadow-sm mt-3">
-                 <!-- ข้อมูลจะถูกดึงมาใส่ตรงนี้ผ่าน JavaScript -->
-              </div>
+          <div class="canvas-container mb-3 mx-auto" style="width: 400px; max-width: 100%; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; overflow: hidden;">
+            <canvas id="faceCanvas" width="400" height="350" style="cursor: crosshair; touch-action: none;"></canvas>
+          </div>
+          <input type="file" id="canvasFileInput" class="d-none" accept="image/*" onchange="loadCanvasBg(this)">
+          
+          <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="document.getElementById('canvasFileInput').click()"><i class="fa-solid fa-image"></i> โหลดรูป</button>
+          <button class="btn btn-sm btn-outline-danger rounded-pill mx-1" onclick="clearCanvas()"><i class="fa-solid fa-eraser"></i> ล้าง</button>
+          <input type="color" id="drawColor" value="#e11d48" class="form-control form-control-color rounded-circle d-inline-block align-middle" style="width: 32px; height: 32px; padding: 2px;">
+          <button class="btn btn-sm btn-success rounded-pill" onclick="savePhotoToServer('MARKING')"><i class="fa-solid fa-floppy-disk"></i> บันทึกรูป</button>
+        </div>
+      </div>
 
-            </div>
-
-            <!-- 🕒 ฝั่งขวา: ประวัติที่ผ่านมา -->
-            <div class="col-lg-5">
-               <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
-                 <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
-                 <div id="emr_history_side" class="custom-scrollbar flex-grow-1" style="height: 480px; overflow-y: auto; padding-right: 5px;">
-                    <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
-                 </div>
-               </div>
-            </div>
+      <div class="col-lg-6">
+        <div class="bg-white p-4 rounded-4 border shadow-sm h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-secondary m-0"><i class="fa-solid fa-photo-film me-2"></i> คลังภาพย้อนหลัง</h5>
+            <button class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm" onclick="openCompareMode()"><i class="fa-solid fa-code-compare me-1"></i> โหมดเปรียบเทียบ</button>
+          </div>
+          <div class="row g-3 custom-scrollbar" id="patientPhotoGrid" style="height: 380px; overflow-y: auto;">
+            <div class="text-center py-4 text-muted">รอเลือกคนไข้...</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 
       </div>
     </div>
@@ -916,5 +968,156 @@
       selectFromList(currentHN);
 
     } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+  }
+  
+  // ==========================================
+  // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
+  // ==========================================
+  var canvas, ctx, isDrawing = false;
+
+  // ฟังก์ชันสลับแท็บย่อย (รายละเอียด vs รูปภาพ)
+  function switchEmrSubTab(tabName) {
+    document.getElementById('emr-subtabbtn-detail').classList.remove('active');
+    document.getElementById('emr-subtabbtn-gallery').classList.remove('active');
+    document.getElementById(`emr-subtabbtn-${tabName}`).classList.add('active');
+
+    document.getElementById('emr-subtab-detail').style.display = 'none';
+    document.getElementById('emr-subtab-gallery').style.display = 'none';
+    
+    document.getElementById(`emr-subtab-${tabName}`).style.display = 'block';
+
+    // ถ้ากดมาที่แท็บรูปภาพ ให้เปิดระบบ Canvas วาดรูปทันที
+    if (tabName === 'gallery') {
+      if (!canvas) {
+        canvas = document.getElementById('faceCanvas');
+        ctx = canvas.getContext('2d');
+        clearCanvas();
+        
+        // เมาส์
+        canvas.onmousedown = (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+        canvas.onmousemove = (e) => { 
+          if (isDrawing) { 
+            ctx.lineTo(e.offsetX, e.offsetY); 
+            ctx.strokeStyle = document.getElementById('drawColor').value; 
+            ctx.lineWidth = 3; 
+            ctx.lineCap = 'round';
+            ctx.stroke(); 
+          }
+        };
+        canvas.onmouseup = () => isDrawing = false;
+        
+        // ทัชสกรีน (iPad)
+        canvas.ontouchstart = (e) => { 
+           const rect = canvas.getBoundingClientRect();
+           isDrawing = true; ctx.beginPath(); ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); 
+        };
+        canvas.ontouchmove = (e) => { 
+           if (!isDrawing) return;
+           const rect = canvas.getBoundingClientRect();
+           ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); 
+           ctx.strokeStyle = document.getElementById('drawColor').value; 
+           ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); 
+           e.preventDefault(); 
+        };
+        canvas.ontouchend = () => isDrawing = false;
+      }
+      loadPatientPhotos(currentHN);
+    }
+  }
+
+  function clearCanvas() { if(ctx) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height); } }
+
+  function loadTemplate(type) {
+    let url = '';
+    if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
+    if(type === 'side') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Side';
+    if(type === 'body') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Body+Structure';
+    const img = new Image(); img.crossOrigin = "Anonymous";
+    img.onload = () => { clearCanvas(); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+    img.src = url;
+  }
+
+  function loadCanvasBg(input) {
+    if(input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image(); img.onload = () => ctx.drawImage(img,0,0,canvas.width,canvas.height); img.src = e.target.result;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  async function savePhotoToServer(type) {
+    if (!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคิวก่อน', 'warning');
+    let base64Data = canvas.toDataURL('image/png');
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      await fetch('/api/patients/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient_id: currentHN, photo_type: type, image_data: base64Data }) }); //[cite: 6]
+      Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      loadPatientPhotos(currentHN);
+    } catch(e) {}
+  }
+
+  async function loadPatientPhotos(hn) {
+    const grid = document.getElementById('patientPhotoGrid');
+    grid.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+    try {
+      const res = await fetch(`/api/patients/${hn}/photos`); //[cite: 6]
+      const data = await res.json();
+      if(data.data.length === 0) return grid.innerHTML = '<div class="text-center py-4 text-muted">ไม่มีรูปภาพ</div>';
+      
+      let html = '';
+      data.data.forEach(p => {
+        let typeBadge = p.photo_type === 'BEFORE' ? '<span class="badge bg-secondary">BEFORE</span>' : '<span class="badge bg-primary">MARKING</span>';
+        let dateStr = new Date(p.created_at).toLocaleDateString('th-TH');
+        html += `
+          <div class="col-6">
+            <div class="bg-light p-2 text-center rounded-3 position-relative">
+              <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle" onclick="deletePhoto(${p.id})"><i class="fa-solid fa-trash fa-xs"></i></button>
+              <img src="${p.image_path}" class="img-fluid rounded-3 mb-2 border" style="height:120px; object-fit:contain; width:100%; cursor:pointer; background:#fff;" onclick="window.open('${p.image_path}')">
+              <div class="small">${typeBadge}</div>
+              <div class="text-muted" style="font-size: 0.7rem;">${dateStr}</div>
+            </div>
+          </div>`;
+      });
+      grid.innerHTML = html;
+    } catch(e) {}
+  }
+
+  async function deletePhoto(id) {
+    if ((await Swal.fire({ title: 'ลบรูปภาพ?', showCancelButton: true })).isConfirmed) {
+      await fetch(`/api/patients/photos/${id}`, { method: 'DELETE' }); //[cite: 6]
+      loadPatientPhotos(currentHN);
+    }
+  }
+
+  async function openCompareMode() {
+    if(!currentHN) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกคนไข้ก่อน', 'warning');
+    const res = await fetch(`/api/patients/${currentHN}/photos`); //[cite: 6]
+    const data = await res.json();
+    const photos = data.data.filter(p => p.photo_type !== 'CONSENT');
+    if(photos.length < 2) return Swal.fire('ข้อมูลไม่พอ', 'ต้องมีรูปภาพหรือรูปมาร์กหน้าอย่างน้อย 2 รูป', 'warning');
+    
+    let options = photos.map(p => `<option value="${p.image_path}">${p.photo_type} - ${new Date(p.created_at).toLocaleDateString('th-TH')}</option>`).join('');
+    Swal.fire({
+      title: '<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-code-compare me-2"></i>เปรียบเทียบภาพการรักษา</h4>',
+      width: '80%',
+      html: `
+        <div class="row mt-3">
+          <div class="col-6 border-end">
+            <span class="badge bg-secondary mb-2 fs-6">Before / รูปอดีต</span>
+            <select id="imgBefore" class="form-select mb-3 shadow-sm border-secondary" onchange="document.getElementById('previewBefore').src=this.value">${options}</select>
+            <img id="previewBefore" src="${photos[photos.length-1].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
+          </div>
+          <div class="col-6">
+            <span class="badge bg-success mb-2 fs-6">After / รูปปัจจุบัน</span>
+            <select id="imgAfter" class="form-select mb-3 shadow-sm border-success" onchange="document.getElementById('previewAfter').src=this.value">${options}</select>
+            <img id="previewAfter" src="${photos[0].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
+          </div>
+        </div>`,
+      showCloseButton: true, showConfirmButton: false
+    });
+    document.getElementById('imgBefore').selectedIndex = photos.length - 1;
+    document.getElementById('imgAfter').selectedIndex = 0;
   }
 </script>
