@@ -318,7 +318,17 @@
     document.getElementById('setting_close_time').value = closeTime;
 
     const modalEl = document.getElementById('timeSettingsModal');
-    if (!timeModalInstance) { timeModalInstance = new bootstrap.Modal(modalEl); }
+    
+    // 🌟 ขั้นเด็ดขาดที่ 1: บังคับย้าย Modal ออกไปอยู่ชั้นนอกสุด (Body) ป้องกันบั๊กซ้อนทับ
+    if (modalEl && modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
+    // 🌟 ขั้นเด็ดขาดที่ 2: ดึง Instance ตัวปัจจุบันมาใช้ (ไม่สร้างตัวแปรใหม่ซ้ำซ้อน)
+    let timeModalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!timeModalInstance) { 
+      timeModalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
+    }
     timeModalInstance.show();
   }
 
@@ -339,15 +349,22 @@
     timeModalInstance.show();
   }
 
-  // 🌟 ฟังก์ชันปิดป๊อปอัปและเคลียร์เงาดำที่ค้าง
   function closeTimeSettingsModal() {
-    if (timeModalInstance) timeModalInstance.hide();
+    const modalEl = document.getElementById('timeSettingsModal');
+    if (modalEl) {
+      let timeModalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (timeModalInstance) {
+        timeModalInstance.hide();
+      }
+    }
+    
+    // 🌟 ขั้นเด็ดขาดที่ 3: กวาดล้างเงาดำทั้งหมดที่อาจหลงเหลืออยู่ในหน้าจอ
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-    }, 150);
+    }, 200);
   }
 
   function saveBusinessHours() {
@@ -356,11 +373,10 @@
 
     if (!openTime || !closeTime) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเวลาให้ครบถ้วน', 'warning');
 
-    // บันทึกฝังไว้ในเบราว์เซอร์
     localStorage.setItem('clinicOpenTime', openTime);
     localStorage.setItem('clinicCloseTime', closeTime);
 
-    // 🌟 เรียกใช้ฟังก์ชันปิดป๊อปอัปที่แก้บั๊กแล้ว
+    // ปิดหน้าต่างด้วยฟังก์ชันใหม่ที่กวาดเงาดำทิ้ง
     closeTimeSettingsModal();
 
     Swal.fire({ icon: 'success', title: 'อัปเดตเวลาทำการสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
