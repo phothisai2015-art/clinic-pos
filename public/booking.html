@@ -21,10 +21,14 @@
   
   /* ดีไซน์ตารางเวลารายวัน (Time Slots) */
   .time-slot-row { display: flex; border-bottom: 1px solid #f1f5f9; transition: 0.2s; cursor: pointer; background: #fff; }
-  .time-slot-row:hover { background-color: #eff6ff; }
+  .time-slot-row:hover:not(.booked-slot) { background-color: #eff6ff; }
   .time-label { width: 90px; padding: 15px 15px 15px 0; font-weight: bold; color: #475569; border-right: 3px solid #e2e8f0; text-align: right; font-size: 1.1rem; }
   .slot-content { padding: 15px 20px; flex-grow: 1; color: #cbd5e1; font-weight: 500; display: flex; align-items: center; }
   .time-slot-row:hover .slot-content { color: #3b82f6; }
+
+  /* ช่องเวลาที่ถูกจองแล้ว */
+  .time-slot-row.booked-slot { background-color: #eff6ff; cursor: default; }
+  .time-slot-row.booked-slot .time-label { border-right-color: #3b82f6; color: #3b82f6; }
 
   /* การ์ดและคอร์ส */
   .appointment-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; transition: 0.2s; background: #fff; border-left: 5px solid #3b82f6; }
@@ -55,7 +59,7 @@
     </li>
     <li class="nav-item">
       <button class="nav-link" id="tabbtn-tomorrow" onclick="switchBookingTab('tomorrow')">
-        <i class="fa-solid fa-clock-rotate-left me-2"></i> นัดหมายพรุ่งนี้
+        <i class="fa-solid fa-clock-rotate-left me-2"></i> นัดหมายพรุ่งนี้ <span class="badge bg-danger rounded-pill ms-1" id="tomorrowBadgeCount">0</span>
       </button>
     </li>
   </ul>
@@ -121,9 +125,11 @@
     <div id="tab-tomorrow" class="w-100 flex-column custom-scrollbar pr-2" style="display: none; height: 100%; overflow-y: auto;">
       <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 w-100">
         <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-list-check me-2"></i> รายชื่อคนไข้ที่มีนัดหมายในวันพรุ่งนี้</h5>
-        <div class="text-muted small mb-4">ระบบจะดึงข้อมูลการนัดหมายจริงมาแสดงที่นี่ในอนาคต</div>
-        <div class="text-center py-5 text-muted">
-          <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i><br>ยังไม่มีข้อมูลนัดหมาย
+        <div class="text-muted small mb-4">แสดงคิวนัดหมายของคนไข้ที่จะเข้ามาติดตามผลหรือใช้บริการในวันพรุ่งนี้</div>
+        <div id="tomorrowAppointmentsList" class="row g-3">
+          <div class="col-12 text-center py-5 text-muted">
+            <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i><br>ยังไม่มีข้อมูลนัดหมายวันพรุ่งนี้
+          </div>
         </div>
       </div>
     </div>
@@ -201,16 +207,22 @@
     document.getElementById('tab-' + tab).style.display = 'flex';
     
     if (tab === 'calendar') showMonthView(); 
+    if (tab === 'tomorrow') renderTomorrowAppointments();
   }
 
-  // 🌟 อัปเดตตัวแปรทั้งหมดให้เป็น var เพื่อไม่ให้เกิด Error Redeclaration ตอนสลับเมนูเข้าออก
+  // 🌟 ใช้ var ทั้งหมดป้องกัน Redeclaration Error
   var clinicOpenTime = '10:00'; 
   var clinicCloseTime = '20:00'; 
 
   var currentBookingTime = '';
   var currentBookingDateStr = '';
   var currentBookingPatientHN = '';
-  
+  var currentBookingPatientName = '';
+  var currentBookingPatientPhone = '';
+
+  // 🌟 คลังเก็บข้อมูลคิวนัดหมาย (สะสมข้อมูลการนัดไว้สร้างตาราง)
+  var appointmentsList = [];
+
   var allInventoryList = [];
   var rawPatientCourses = []; 
   var allBillsList = [];
@@ -228,7 +240,6 @@
     }
   }
 
-  // 🌟 เปลี่ยนตัวแปรหลักของปฏิทินเป็น var ให้หมด
   var monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   var dayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   
@@ -240,9 +251,11 @@
   function initCalendar() { 
     loadClinicSettings().then(() => {
       renderCalendar(currentMonth, currentYear); 
+      renderTomorrowAppointments();
     });
   }
 
+  // 🌟 ปฏิทินรายเดือน: ค้นหาวันที่มีนัดหมายเพื่อสร้างจุดแดง
   function renderCalendar(month, year) {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = ''; 
@@ -252,7 +265,14 @@
     let daysInMonth = new Date(year, month + 1, 0).getDate();
     let daysInPrevMonth = new Date(year, month, 0).getDate();
 
-    let realAppointmentDates = []; 
+    // ดึงเฉพาะ "วันที่" ของเดือนนี้ที่มีรายการนัดหมาย
+    let activeDates = [];
+    appointmentsList.forEach(app => {
+      let appDate = new Date(app.date);
+      if (appDate.getMonth() === month && appDate.getFullYear() === year) {
+        activeDates.push(appDate.getDate());
+      }
+    });
 
     let html = '';
     for (let i = firstDay - 1; i >= 0; i--) {
@@ -262,7 +282,7 @@
     for (let i = 1; i <= daysInMonth; i++) {
       let isToday = (i === today.getDate() && month === today.getMonth() && year === today.getFullYear());
       let todayClass = isToday ? 'today' : '';
-      let dotHtml = realAppointmentDates.includes(i) ? `<div class="event-dot"></div>` : '';
+      let dotHtml = activeDates.includes(i) ? `<div class="event-dot"></div>` : '';
 
       html += `
         <div class="calendar-cell ${todayClass}" onclick="openDailyView(${year}, ${month}, ${i})">
@@ -314,8 +334,10 @@
     document.getElementById('dayViewPanel').classList.remove('d-flex');
     document.getElementById('dayViewPanel').classList.add('d-none');
     document.getElementById('monthViewPanel').classList.remove('d-none');
+    renderCalendar(currentMonth, currentYear);
   }
 
+  // 🌟 ตารางเวลา 30 นาที: วาดช่องเวลาว่าง หรือการ์ดคนไข้ถ้านัดไว้แล้ว
   function renderTimeSlots() {
     const container = document.getElementById('timeSlotsContainer');
     container.innerHTML = ''; 
@@ -333,12 +355,38 @@
       let min = (m % 60).toString().padStart(2, '0');
       let timeStr = `${h}:${min}`;
 
-      html += `
-        <div class="time-slot-row" onclick="bookSlot('${timeStr}')">
-          <div class="time-label">${timeStr}</div>
-          <div class="slot-content"><i class="fa-solid fa-plus me-2"></i> ว่าง - กดเพื่อลงนัดหมาย</div>
-        </div>
-      `;
+      // ค้นหาคิวนัดในวันและเวลานี้
+      let matchedApp = appointmentsList.find(a => a.date === currentBookingDateStr && a.time === timeStr);
+
+      if (matchedApp) {
+        // 🌟 แสดงกล่องคิวนัดหมายที่มีคนไข้จองไว้
+        html += `
+          <div class="time-slot-row booked-slot">
+            <div class="time-label">${timeStr}</div>
+            <div class="slot-content d-flex justify-content-between align-items-center w-100 py-1">
+              <div>
+                <span class="badge bg-primary me-2"><i class="fa-solid fa-user-check me-1"></i> นัดแล้ว</span>
+                <span class="fw-bold text-dark fs-6 me-2">${matchedApp.patientName}</span>
+                <small class="text-muted me-3">(${matchedApp.hn})</small>
+                <span class="badge bg-light text-primary border"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> ${matchedApp.courseName}</span>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" onclick="cancelAppointment('${matchedApp.id}')">
+                  <i class="fa-solid fa-trash me-1"></i> ยกเลิกนัด
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // 🌟 ช่องว่างปกติ
+        html += `
+          <div class="time-slot-row" onclick="bookSlot('${timeStr}')">
+            <div class="time-label">${timeStr}</div>
+            <div class="slot-content"><i class="fa-solid fa-plus me-2"></i> ว่าง - กดเพื่อลงนัดหมาย</div>
+          </div>
+        `;
+      }
     }
 
     container.innerHTML = html;
@@ -374,8 +422,8 @@
       } else {
         let html = '<div class="list-group text-start mt-3 custom-scrollbar" style="max-height:300px; overflow-y:auto;">';
         data.data.forEach(p => { 
-          html += `<button class="list-group-item list-group-item-action py-3" onclick="openBookingCourseModalFromList('${p.id}', '${p.full_name}', '${timeStr}')">
-                     <h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id} | โทร: ${p.phone}</small>
+          html += `<button class="list-group-item list-group-item-action py-3" onclick="openBookingCourseModalFromList('${p.id}', '${p.full_name}', '${p.phone || ''}', '${timeStr}')">
+                     <h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><small>${p.id} | โทร: ${p.phone || '-'}</small>
                    </button>`; 
         });
         html += '</div>';
@@ -384,17 +432,19 @@
     } catch(e) { Swal.fire('Error', 'ค้นหาข้อมูลล้มเหลว', 'error'); }
   }
 
-  async function openBookingCourseModalFromList(hn, name, timeStr) {
+  async function openBookingCourseModalFromList(hn, name, phone, timeStr) {
     Swal.close();
-    openBookingCourseModal({id: hn, full_name: name}, timeStr);
+    openBookingCourseModal({id: hn, full_name: name, phone: phone}, timeStr);
   }
 
   async function openBookingCourseModal(patient, timeStr) {
     currentBookingTime = timeStr;
     currentBookingPatientHN = patient.id;
+    currentBookingPatientName = patient.full_name || patient.id;
+    currentBookingPatientPhone = patient.phone || '-';
     
     document.getElementById('bookingTimeDisplay').innerText = `นัดหมาย: ${selectedDateString} เวลา ${timeStr} น.`;
-    document.getElementById('bookingPatientName').innerText = `คนไข้: ${patient.full_name} (${patient.id})`;
+    document.getElementById('bookingPatientName').innerText = `คนไข้: ${currentBookingPatientName} (${patient.id})`;
 
     Swal.fire({ title: 'กำลังโหลดข้อมูลคอร์ส...', didOpen: () => Swal.showLoading() });
     
@@ -494,12 +544,13 @@
     grid.innerHTML = html;
   }
 
+  // 🌟 บันทึกคิวนัดเข้าสู่ระบบและสั่งรีเฟรชตาราง
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
       html: `
         <div class="text-start mt-2">
-          <b>คนไข้:</b> ${currentBookingPatientHN}<br>
+          <b>คนไข้:</b> ${currentBookingPatientName} (${currentBookingPatientHN})<br>
           <b>รายการ:</b> ${courseName}<br>
           <b>วันที่:</b> ${selectedDateString}<br>
           <b>เวลา:</b> ${currentBookingTime} น.
@@ -512,18 +563,105 @@
       confirmButtonColor: '#10b981'
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log("บันทึกนัด:", { hn: currentBookingPatientHN, date: currentBookingDateStr, time: currentBookingTime, course: courseId });
+        // เพิ่มข้อมูลลงในคลังนัดหมาย
+        var newAppointment = {
+          id: 'APP_' + Date.now(),
+          hn: currentBookingPatientHN,
+          patientName: currentBookingPatientName,
+          phone: currentBookingPatientPhone,
+          date: currentBookingDateStr,
+          time: currentBookingTime,
+          courseId: courseId,
+          courseName: courseName
+        };
+
+        appointmentsList.push(newAppointment);
         
         closeBookingCourseModal();
+
+        // 🌟 สั่งวาดช่องตารางใหม่ทันที
+        renderTimeSlots();
+        renderCalendar(currentMonth, currentYear);
+        renderTomorrowAppointments();
+
         Swal.fire({
           icon: 'success',
           title: 'ลงนัดหมายสำเร็จ!',
-          text: 'ระบบได้บันทึกคิวนัดลงในตารางเรียบร้อยแล้ว',
+          text: `บันทึกคิว ${currentBookingPatientName} เวลา ${currentBookingTime} น. เรียบร้อยแล้ว`,
           timer: 2000,
           showConfirmButton: false
         });
       }
     });
+  }
+
+  // 🌟 ฟังก์ชันยกเลิกนัด
+  function cancelAppointment(appId) {
+    Swal.fire({
+      title: 'ยกเลิกนัดหมายนี้?',
+      text: 'คุณต้องการลบคิวการนัดหมายนี้ใช่หรือไม่',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยันลบนัด',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        appointmentsList = appointmentsList.filter(a => a.id !== appId);
+        renderTimeSlots();
+        renderCalendar(currentMonth, currentYear);
+        renderTomorrowAppointments();
+        Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      }
+    });
+  }
+
+  // 🌟 แสดงรายการนัดหมายวันพรุ่งนี้อัตโนมัติ
+  function renderTomorrowAppointments() {
+    const container = document.getElementById('tomorrowAppointmentsList');
+    const badgeCount = document.getElementById('tomorrowBadgeCount');
+    if (!container) return;
+
+    let tomorrowObj = new Date();
+    tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+    
+    let tmYear = tomorrowObj.getFullYear();
+    let tmMonth = String(tomorrowObj.getMonth() + 1).padStart(2, '0');
+    let tmDay = String(tomorrowObj.getDate()).padStart(2, '0');
+    let tomorrowStr = `${tmYear}-${tmMonth}-${tmDay}`;
+
+    let tomorrowList = appointmentsList.filter(a => a.date === tomorrowStr);
+    
+    if (badgeCount) badgeCount.innerText = tomorrowList.length;
+
+    if (tomorrowList.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center py-5 text-muted">
+          <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-25"></i><br>ยังไม่มีข้อมูลนัดหมายวันพรุ่งนี้ (${tmDay}/${tmMonth}/${tmYear})
+        </div>`;
+      return;
+    }
+
+    let html = '';
+    tomorrowList.sort((a,b) => a.time.localeCompare(b.time)).forEach(app => {
+      html += `
+        <div class="col-md-6">
+          <div class="appointment-card">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-primary fs-6"><i class="fa-regular fa-clock me-1"></i> ${app.time} น.</span>
+              <span class="badge bg-light text-dark border">${app.hn}</span>
+            </div>
+            <h5 class="fw-bold text-dark mt-2 mb-1">${app.patientName}</h5>
+            <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> ${app.phone}</div>
+            <div class="bg-light p-2 rounded small text-secondary mt-3 border">
+              <strong>รายการนัด:</strong> ${app.courseName}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
   }
 
   function openTimeSettings() {
