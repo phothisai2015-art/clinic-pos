@@ -486,15 +486,33 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
 // ==========================================
 // 📦 API ระบบคลังสินค้า (Inventory)
 // ==========================================
-app.get('/api/inventory', (req, res) => { db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); }); });
-app.post('/api/inventory', (req, res) => {
-  const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items } = req.body;
-  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items`;
-  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]'], () => res.json({ status: 'success' }));
-});
-app.put('/api/inventory/:id/stock', (req, res) => { db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id], () => res.json({status: 'success'})); });
-app.delete('/api/inventory/:id', (req, res) => { db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], () => res.json({status: 'success'})); });
+// 🌟 1. สร้างคอลัมน์ใหม่สำหรับเก็บสถานะ เลิกขาย (ถ้ายังไม่มี)
+db.run(`ALTER TABLE products ADD COLUMN status TEXT DEFAULT 'ACTIVE'`, alterLog);
 
+app.get('/api/inventory', (req, res) => { 
+  db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => { 
+    res.json({ status: 'success', data: rows }); 
+  }); 
+});
+
+app.post('/api/inventory', (req, res) => {
+  const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status } = req.body;
+  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'ACTIVE')) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items, status=excluded.status`;
+  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]', status || 'ACTIVE'], () => res.json({ status: 'success' }));
+});
+
+// 🌟 2. API ใหม่สำหรับเปลี่ยนสถานะ ระงับการขาย / นำกลับมาขาย
+app.put('/api/inventory/:id/status', (req, res) => { 
+  db.run(`UPDATE products SET status = ? WHERE id = ?`, [req.body.status, req.params.id], () => res.json({status: 'success'})); 
+});
+
+app.put('/api/inventory/:id/stock', (req, res) => { 
+  db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id], () => res.json({status: 'success'})); 
+});
+
+app.delete('/api/inventory/:id', (req, res) => { 
+  db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], () => res.json({status: 'success'})); 
+});
 // ==========================================
 // ⚙️ API ระบบตั้งค่า (Settings - Users & Clinic)
 // ==========================================
