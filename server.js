@@ -73,6 +73,8 @@ db.serialize(() => {
     paid_amount REAL DEFAULT 0,
     status TEXT DEFAULT 'UNPAID',
     stock_deducted BOOLEAN DEFAULT 0
+	payment_method TEXT DEFAULT 'CASH',
+    payment_history TEXT DEFAULT '[]'
   )`);
 });
 
