@@ -1,17 +1,42 @@
 <style>
-  /* 🌟 Modern Dashboard UI */
-  .dash-card { background: #ffffff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 5px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
-  .total-revenue-text { font-size: 2.8rem; font-weight: 900; color: #0f172a; line-height: 1; margin: 10px 0; letter-spacing: -1px; }
+  /* 🌟 Modern & Colorful Dashboard UI Styles */
+  body { background-color: #f4f7fe; }
   
-  .progress-custom { height: 12px; border-radius: 6px; background-color: #f1f5f9; overflow: hidden; margin-top: 8px; }
-  .progress-bar-cash { background-color: #3b82f6; }
-  .progress-bar-qr { background-color: #8b5cf6; }
-  .progress-bar-credit { background-color: #f59e0b; }
+  .modern-card { background: #ffffff; border-radius: 24px; padding: 25px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; transition: 0.3s; position: relative; overflow: hidden; }
+  .modern-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.06); transform: translateY(-3px); }
+  
+  /* Gradient Stat Cards */
+  .stat-card { border-radius: 24px; padding: 25px; color: white; position: relative; overflow: hidden; border: none; box-shadow: 0 12px 25px rgba(0,0,0,0.1); transition: 0.3s; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+  .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+  .bg-grad-total { background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%); }
+  .bg-grad-cash { background: linear-gradient(135deg, #059669 0%, #34d399 100%); }
+  .bg-grad-qr { background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); }
+  .bg-grad-credit { background: linear-gradient(135deg, #ea580c 0%, #fbbf24 100%); }
+  
+  /* Floating Background Icons */
+  .stat-icon-bg { position: absolute; right: -15px; bottom: -20px; font-size: 7rem; opacity: 0.15; transform: rotate(-15deg); transition: 0.3s; pointer-events: none; }
+  .stat-card:hover .stat-icon-bg { transform: rotate(0deg) scale(1.1); opacity: 0.25; }
 
-  .list-row { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-  .list-row:hover { background-color: #f8fafc; }
-  .list-row:last-child { border-bottom: none; }
+  .stat-title { font-size: 1rem; font-weight: 600; opacity: 0.9; margin-bottom: 5px; }
+  .stat-value { font-size: 2.2rem; font-weight: 900; line-height: 1.2; letter-spacing: -1px; }
+  .stat-badge { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-top: 10px; border: 1px solid rgba(255,255,255,0.3); }
+
+  .card-title-modern { font-size: 1.1rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; margin-bottom: 20px; }
+  .icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; margin-right: 12px; }
+
+  /* List Styles */
+  .modern-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8fafc; border-radius: 16px; margin-bottom: 10px; transition: 0.2s; border: 1px solid transparent; }
+  .modern-list-item:hover { background: #ffffff; border-color: #cbd5e1; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transform: translateX(3px); }
   
+  .rank-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.8rem; color: white; margin-right: 12px; }
+  .rank-1 { background: linear-gradient(135deg, #fbbf24, #d97706); box-shadow: 0 3px 10px rgba(245,158,11,0.3); }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 3px 10px rgba(148,163,184,0.3); }
+  .rank-3 { background: linear-gradient(135deg, #d97706, #b45309); box-shadow: 0 3px 10px rgba(217,119,6,0.3); }
+  .rank-other { background: #e2e8f0; color: #64748b; }
+
+  .date-picker-wrap { background: #ffffff; border-radius: 50px; padding: 5px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 10px; }
+  .date-input-modern { border: none !important; background: transparent !important; font-weight: 800; color: #3b82f6; cursor: pointer; outline: none; box-shadow: none !important; }
+
   .custom-scrollbar::-webkit-scrollbar { width: 5px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -19,78 +44,102 @@
 
 <div class="container-fluid py-3 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
   
-  <!-- Header & Date Picker -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex align-items-center gap-3">
-      <h4 class="fw-bold text-secondary m-0"><i class="fa-solid fa-chart-pie me-2"></i> สถิติยอดขาย (Dashboard)</h4>
-      <input type="date" id="reportDateFilter" class="form-control fw-bold text-primary border-primary shadow-sm rounded-pill" onchange="loadDashboardData()" style="width: auto;">
+  <!-- Header & Date Range Picker -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-4">
+      <h3 class="fw-bold text-dark m-0" style="letter-spacing: -0.5px;"><i class="fa-solid fa-chart-pie me-2 text-primary"></i> Dashboard</h3>
+      
+      <!-- ตัวเลือกวันที่แบบ Modern Pill -->
+      <div class="date-picker-wrap">
+        <i class="fa-solid fa-calendar-day text-muted"></i>
+        <input type="date" id="startDateFilter" class="form-control form-control-sm date-input-modern" onchange="loadDashboardData()" style="width: 115px;">
+        <i class="fa-solid fa-arrow-right text-muted small px-1"></i>
+        <input type="date" id="endDateFilter" class="form-control form-control-sm date-input-modern" onchange="loadDashboardData()" style="width: 115px;">
+      </div>
     </div>
-    <button class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+    <button class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-power-off me-2"></i> ปิดหน้านี้</button>
   </div>
 
-  <div class="row g-3 flex-grow-1" style="min-height: 0; overflow-y: auto;">
+  <div class="row g-4 flex-grow-1" style="min-height: 0; overflow-y: auto; padding-bottom: 20px;">
     
-    <!-- แถว 1: ยอดรวม & ช่องทางชำระเงิน -->
-    <div class="col-lg-4 col-md-6">
-      <div class="dash-card">
-        <h6 class="fw-bold text-muted mb-1"><i class="fa-solid fa-sack-dollar me-2 text-success"></i> รายรับรวมประจำวัน (บาท)</h6>
-        <div class="total-revenue-text text-success" id="d_total_rev">0.00</div>
-        <div class="text-muted small mt-auto pt-3 border-top">* คำนวณจากประวัติบิลที่มีการจ่ายเงินเข้าสู่ระบบในวันที่เลือก</div>
+    <!-- 🌟 แถว 1: 4 กล่องสีสันสรุปยอด -->
+    <div class="col-lg-3 col-md-6">
+      <div class="stat-card bg-grad-total">
+        <i class="fa-solid fa-sack-dollar stat-icon-bg"></i>
+        <div class="stat-title">รายได้รวม (Total Revenue)</div>
+        <div class="stat-value" id="d_total_rev">฿0.00</div>
+        <div><span class="stat-badge"><i class="fa-solid fa-calendar-check me-1"></i> ช่วงเวลาที่เลือก</span></div>
       </div>
     </div>
 
-    <div class="col-lg-8 col-md-6">
-      <div class="dash-card">
-        <h6 class="fw-bold text-muted mb-3"><i class="fa-solid fa-wallet me-2 text-primary"></i> สัดส่วนช่องทางการรับชำระเงิน (%)</h6>
-        <div class="row g-3 mt-1">
-          <div class="col-4">
-            <div class="d-flex justify-content-between small fw-bold"><span>เงินสด</span><span id="d_pct_cash">0%</span></div>
-            <div class="progress-custom"><div class="progress-bar progress-bar-cash" id="bar_cash" style="width: 0%"></div></div>
-            <div class="small text-muted mt-1" id="d_amt_cash">฿0.00</div>
-          </div>
-          <div class="col-4">
-            <div class="d-flex justify-content-between small fw-bold"><span>โอน / QR</span><span id="d_pct_qr">0%</span></div>
-            <div class="progress-custom"><div class="progress-bar progress-bar-qr" id="bar_qr" style="width: 0%"></div></div>
-            <div class="small text-muted mt-1" id="d_amt_qr">฿0.00</div>
-          </div>
-          <div class="col-4">
-            <div class="d-flex justify-content-between small fw-bold"><span>บัตรเครดิต</span><span id="d_pct_credit">0%</span></div>
-            <div class="progress-custom"><div class="progress-bar progress-bar-credit" id="bar_credit" style="width: 0%"></div></div>
-            <div class="small text-muted mt-1" id="d_amt_credit">฿0.00</div>
-          </div>
-        </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="stat-card bg-grad-cash">
+        <i class="fa-solid fa-money-bill-wave stat-icon-bg"></i>
+        <div class="stat-title">ชำระด้วยเงินสด (Cash)</div>
+        <div class="stat-value" id="d_amt_cash">฿0.00</div>
+        <div><span class="stat-badge" id="d_pct_cash">สัดส่วน 0%</span></div>
       </div>
     </div>
 
-    <!-- แถว 2: กราฟแท่ง & สินค้าขายดี -->
+    <div class="col-lg-3 col-md-6">
+      <div class="stat-card bg-grad-qr">
+        <i class="fa-solid fa-qrcode stat-icon-bg"></i>
+        <div class="stat-title">โอนผ่านธนาคาร (QR Code)</div>
+        <div class="stat-value" id="d_amt_qr">฿0.00</div>
+        <div><span class="stat-badge" id="d_pct_qr">สัดส่วน 0%</span></div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="stat-card bg-grad-credit">
+        <i class="fa-solid fa-credit-card stat-icon-bg"></i>
+        <div class="stat-title">รูดบัตรเครดิต (Credit Card)</div>
+        <div class="stat-value" id="d_amt_credit">฿0.00</div>
+        <div><span class="stat-badge" id="d_pct_credit">สัดส่วน 0%</span></div>
+      </div>
+    </div>
+
+    <!-- 🌟 แถว 2: กราฟแท่ง & สินค้าขายดี -->
     <div class="col-lg-8">
-      <div class="dash-card">
-        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-chart-column me-2"></i> แท่งรายได้ย้อนหลัง 7 วัน (นับจากวันที่เลือก)</h6>
-        <div class="flex-grow-1" style="min-height: 250px;">
+      <div class="modern-card">
+        <div class="card-title-modern">
+          <div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-chart-column"></i></div>
+          กราฟแสดงรายได้ตามช่วงวันที่ระบุ
+        </div>
+        <div class="flex-grow-1 w-100" style="min-height: 300px;">
           <canvas id="revenueBarChart"></canvas>
         </div>
       </div>
     </div>
 
     <div class="col-lg-4">
-      <div class="dash-card">
-        <h6 class="fw-bold text-info mb-2"><i class="fa-solid fa-fire me-2"></i> รายการขายดีประจำวัน (Top Sellers)</h6>
-        <div class="custom-scrollbar flex-grow-1" id="topSellersList" style="overflow-y: auto; max-height: 250px;"></div>
+      <div class="modern-card">
+        <div class="card-title-modern">
+          <div class="icon-box bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-fire"></i></div>
+          รายการขายดี (Top Sellers)
+        </div>
+        <div class="custom-scrollbar flex-grow-1 pe-1" id="topSellersList" style="overflow-y: auto; max-height: 300px;"></div>
       </div>
     </div>
 
-    <!-- แถว 3: รายชื่อค้างชำระ & ประวัติรับเงิน -->
+    <!-- 🌟 แถว 3: รายชื่อค้างชำระ & ประวัติรับเงิน -->
     <div class="col-lg-6">
-      <div class="dash-card border-danger border-opacity-50 bg-danger bg-opacity-10">
-        <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-circle-exclamation me-2"></i> บิลที่สร้างวันนี้แล้วค้างชำระ / จ่ายไม่ครบ</h6>
-        <div class="custom-scrollbar bg-white rounded border flex-grow-1" id="unpaidList" style="overflow-y: auto; max-height: 300px;"></div>
+      <div class="modern-card" style="border: 2px solid #fee2e2;">
+        <div class="card-title-modern">
+          <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          ค้างชำระ / จ่ายไม่ครบ (ในช่วงเวลานี้)
+        </div>
+        <div class="custom-scrollbar flex-grow-1 pe-1" id="unpaidList" style="overflow-y: auto; max-height: 350px;"></div>
       </div>
     </div>
 
     <div class="col-lg-6">
-      <div class="dash-card border-success border-opacity-50">
-        <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-receipt me-2"></i> ประวัติรับชำระเงินในวันนี้ (Logs)</h6>
-        <div class="custom-scrollbar bg-light rounded border flex-grow-1" id="paymentLogsList" style="overflow-y: auto; max-height: 300px;"></div>
+      <div class="modern-card" style="border: 2px solid #d1fae5;">
+        <div class="card-title-modern">
+          <div class="icon-box bg-success bg-opacity-10 text-success"><i class="fa-solid fa-receipt"></i></div>
+          ประวัติบิลย้อนหลัง (Payment Logs)
+        </div>
+        <div class="custom-scrollbar flex-grow-1 pe-1" id="paymentLogsList" style="overflow-y: auto; max-height: 350px;"></div>
       </div>
     </div>
 
@@ -102,17 +151,26 @@
 
   function initDashboard() {
     // เซ็ตวันที่เป็นวันนี้ตอนเปิดหน้า
-    document.getElementById('reportDateFilter').value = new Date().toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('startDateFilter').value = todayStr;
+    document.getElementById('endDateFilter').value = todayStr;
     loadDashboardData();
   }
   initDashboard();
 
   async function loadDashboardData() {
-    const selectedDate = document.getElementById('reportDateFilter').value;
-    Swal.fire({ title: 'กำลังโหลดรายงาน...', didOpen: () => Swal.showLoading() });
+    const startDate = document.getElementById('startDateFilter').value;
+    const endDate = document.getElementById('endDateFilter').value;
+
+    if(new Date(startDate) > new Date(endDate)) {
+        Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'วันที่เริ่มต้น ต้องน้อยกว่าหรือเท่ากับวันที่สิ้นสุด', timer: 2000, showConfirmButton: false });
+        return;
+    }
+
+    Swal.fire({ title: 'กำลังประมวลผลข้อมูล...', didOpen: () => Swal.showLoading() });
     
     try {
-      const res = await fetch(`/api/reports/dashboard?date=${selectedDate}`);
+      const res = await fetch(`/api/reports/dashboard?start_date=${startDate}&end_date=${endDate}`);
       const data = await res.json();
       
       if(data.status === 'success') {
@@ -130,7 +188,7 @@
 
   function renderOverview(data) {
     const total = data.total_revenue || 0;
-    document.getElementById('d_total_rev').innerText = total.toLocaleString('th-TH', {minimumFractionDigits: 2});
+    document.getElementById('d_total_rev').innerText = '฿' + total.toLocaleString('th-TH', {minimumFractionDigits: 2});
 
     const cash = data.methods.CASH || 0;
     const qr = data.methods.QR || 0;
@@ -140,22 +198,18 @@
     let pQr = total > 0 ? Math.round((qr / total) * 100) : 0;
     let pCredit = total > 0 ? Math.round((credit / total) * 100) : 0;
 
-    document.getElementById('d_pct_cash').innerText = pCash + '%';
+    document.getElementById('d_pct_cash').innerText = 'สัดส่วน ' + pCash + '%';
     document.getElementById('d_amt_cash').innerText = '฿' + cash.toLocaleString();
-    document.getElementById('bar_cash').style.width = pCash + '%';
 
-    document.getElementById('d_pct_qr').innerText = pQr + '%';
+    document.getElementById('d_pct_qr').innerText = 'สัดส่วน ' + pQr + '%';
     document.getElementById('d_amt_qr').innerText = '฿' + qr.toLocaleString();
-    document.getElementById('bar_qr').style.width = pQr + '%';
 
-    document.getElementById('d_pct_credit').innerText = pCredit + '%';
+    document.getElementById('d_pct_credit').innerText = 'สัดส่วน ' + pCredit + '%';
     document.getElementById('d_amt_credit').innerText = '฿' + credit.toLocaleString();
-    document.getElementById('bar_credit').style.width = pCredit + '%';
   }
 
   function renderBarChart(chartData) {
-    // เรียงจากเก่าไปใหม่ (ซ้ายไปขวา)
-    chartData.reverse(); 
+    chartData.sort((a, b) => new Date(a.date) - new Date(b.date)); 
     
     const labels = chartData.map(d => {
       const date = new Date(d.date);
@@ -166,23 +220,29 @@
     const ctx = document.getElementById('revenueBarChart').getContext('2d');
     if (revBarChart) revBarChart.destroy();
     
+    // 🌟 เปลี่ยนกราฟแท่งให้โค้งมนแบบ Modern
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, '#3b82f6');
+    gradient.addColorStop(1, '#818cf8');
+
     revBarChart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [{
-          label: 'รายได้ (บาท)',
+          label: 'รายได้รวม (บาท)',
           data: revenues,
-          backgroundColor: '#3b82f6',
-          borderRadius: 6
+          backgroundColor: gradient,
+          borderRadius: 8,
+          barPercentage: 0.6
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: false }, tooltip: { padding: 12, cornerRadius: 8, titleFont: { size: 14 }, bodyFont: { size: 14, weight: 'bold' } } },
         scales: {
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-          x: { grid: { display: false } }
+          y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { font: { family: 'Sarabun', weight: 'bold' } } },
+          x: { grid: { display: false }, ticks: { font: { family: 'Sarabun' } } }
         }
       }
     });
@@ -190,15 +250,26 @@
 
   function renderTopSellers(items) {
     const box = document.getElementById('topSellersList');
-    if (items.length === 0) { box.innerHTML = '<div class="text-center text-muted mt-4 small">ไม่มียอดขายในวันนี้</div>'; return; }
+    if (items.length === 0) { box.innerHTML = '<div class="text-center text-muted mt-5"><i class="fa-solid fa-box-open fa-2x opacity-25 mb-2"></i><br>ไม่มียอดขายในช่วงเวลานี้</div>'; return; }
     
     let html = '';
     items.forEach((it, index) => {
-      let badge = it.type === 'PROMOTION' ? '<span class="badge bg-primary ms-1" style="font-size: 0.6rem;">โปร/เซ็ต</span>' : '';
+      let badge = it.type === 'PROMOTION' ? '<span class="badge bg-primary ms-2" style="font-size: 0.6rem;">เซ็ต/โปรโมชั่น</span>' : '<span class="badge bg-info text-dark ms-2" style="font-size: 0.6rem;">รายการเดี่ยว</span>';
+      
+      let rankClass = 'rank-other';
+      if(index === 0) rankClass = 'rank-1';
+      else if(index === 1) rankClass = 'rank-2';
+      else if(index === 2) rankClass = 'rank-3';
+
       html += `
-        <div class="list-row">
-          <div class="text-dark small"><b class="text-muted me-2">#${index+1}</b> ${it.name} ${badge}</div>
-          <div class="fw-bold text-success small">x${it.qty}</div>
+        <div class="modern-list-item">
+          <div class="d-flex align-items-center">
+            <div class="rank-badge ${rankClass}">${index+1}</div>
+            <div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">${it.name} ${badge}</div>
+            </div>
+          </div>
+          <div class="fw-bold text-success" style="font-size: 1.1rem;">x${it.qty}</div>
         </div>`;
     });
     box.innerHTML = html;
@@ -206,19 +277,19 @@
 
   function renderUnpaid(patients) {
     const box = document.getElementById('unpaidList');
-    if (patients.length === 0) { box.innerHTML = '<div class="text-center text-success mt-4 fw-bold"><i class="fa-solid fa-check-circle me-1"></i> ไม่มีค้างชำระในวันนี้</div>'; return; }
+    if (patients.length === 0) { box.innerHTML = '<div class="text-center text-success mt-5 fw-bold"><i class="fa-solid fa-check-circle fa-2x mb-2 opacity-50"></i><br>ไม่มีค้างชำระในช่วงเวลานี้</div>'; return; }
     
     let html = '';
     patients.forEach(p => {
       html += `
-        <div class="list-row border-danger border-opacity-25">
+        <div class="modern-list-item border-start border-4 border-danger">
           <div>
             <div class="fw-bold text-dark fs-6">${p.name}</div>
-            <div class="text-muted" style="font-size: 0.75rem;">${p.item}</div>
+            <div class="text-muted" style="font-size: 0.8rem;"><i class="fa-solid fa-tag me-1"></i> ${p.item}</div>
           </div>
           <div class="text-end">
-            <div class="fw-bold text-danger">ค้าง: ฿${p.balance.toLocaleString()}</div>
-            <div class="text-muted" style="font-size: 0.7rem;">(เต็ม ฿${p.full_price.toLocaleString()})</div>
+            <div class="fw-bold text-danger fs-6">ค้างจ่าย: ฿${p.balance.toLocaleString()}</div>
+            <div class="text-muted" style="font-size: 0.75rem;">จากยอดเต็ม ฿${p.full_price.toLocaleString()}</div>
           </div>
         </div>`;
     });
@@ -227,23 +298,29 @@
 
   function renderLogs(logs) {
     const box = document.getElementById('paymentLogsList');
-    if (logs.length === 0) { box.innerHTML = '<div class="text-center text-muted mt-4 small">ไม่มีประวัติรับเงิน</div>'; return; }
+    if (logs.length === 0) { box.innerHTML = '<div class="text-center text-muted mt-5"><i class="fa-solid fa-receipt fa-2x opacity-25 mb-2"></i><br>ไม่มีประวัติรับเงิน</div>'; return; }
     
     let html = '';
     logs.forEach(log => {
-      let timeStr = new Date(log.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-      let mColor = log.method === 'CASH' ? 'primary' : (log.method === 'QR' ? 'indigo' : 'warning text-dark');
+      let dObj = new Date(log.time);
+      let dateStr = dObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+      let timeStr = dObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      
+      let mColor = log.method === 'CASH' ? 'success' : (log.method === 'QR' ? 'primary' : 'warning text-dark');
+      let mIcon = log.method === 'CASH' ? 'fa-money-bill-wave' : (log.method === 'QR' ? 'fa-qrcode' : 'fa-credit-card');
       
       html += `
-        <div class="list-row bg-white mb-1 rounded border-0">
+        <div class="modern-list-item border-start border-4 border-success">
           <div>
-            <span class="badge bg-secondary me-2">${timeStr} น.</span>
-            <span class="fw-bold text-dark small">${log.patient_name}</span>
-            <div class="text-muted ms-5 mt-1" style="font-size: 0.7rem;">${log.item_name}</div>
+            <div class="d-flex align-items-center mb-1">
+              <span class="badge bg-light text-muted border me-2"><i class="fa-regular fa-clock me-1"></i> ${dateStr} ${timeStr} น.</span>
+              <span class="badge bg-${mColor}"><i class="fa-solid ${mIcon} me-1"></i> ${log.method}</span>
+            </div>
+            <div class="fw-bold text-dark" style="font-size: 0.9rem;">${log.patient_name}</div>
+            <div class="text-muted" style="font-size: 0.75rem;">${log.item_name}</div>
           </div>
           <div class="text-end">
-            <div class="fw-bold text-success">+฿${log.amount.toLocaleString()}</div>
-            <span class="badge bg-${mColor}" style="font-size: 0.6rem;">${log.method}</span>
+            <div class="fw-bold text-success fs-5">+ ฿${log.amount.toLocaleString()}</div>
           </div>
         </div>`;
     });
