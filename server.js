@@ -540,15 +540,96 @@ app.post('/api/clinic/logo', (req, res) => {
 });
 
 // ==========================================
-// 📊 API สำหรับหน้ารายงาน (Reports & Dashboard)
+// 📊 API สำหรับหน้ารายงาน (Dashboard & Analytics)
 // ==========================================
 app.get('/api/reports/dashboard', (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
-  db.get(`SELECT SUM(paid_amount) as total_revenue FROM patient_bills WHERE status = 'PAID' AND bill_date = ?`, [today], (err, revRow) => {
-    const todayRevenue = revRow ? (revRow.total_revenue || 0) : 0;
-    db.get(`SELECT COUNT(id) as total_appt FROM appointments WHERE appointment_date = ?`, [today], (err, apptRow) => {
-      const todayAppt = apptRow ? (apptRow.total_appt || 0) : 0;
-      db.all(`SELECT bill_date, SUM(paid_amount) as revenue FROM patient_bills WHERE status = 'PAID' GROUP BY bill_date ORDER BY bill_date DESC LIMIT 7`, [], (err, chartRows) => { res.json({ status: 'success', today_revenue: todayRevenue, today_appt: todayAppt, chart_data: chartRows || [] }); });
+  const targetDate = req.query.date || new Date().toISOString().split('T')[0];
+
+  // ดึงบิลทั้งหมดมาประมวลผลประวัติการจ่ายเงิน
+  db.all(`SELECT b.*, p.full_name, p.phone FROM patient_bills b LEFT JOIN patients p ON b.patient_id = p.id`, [], (err, allBills) => {
+    if (err) return res.json({ status: 'error', data: [] });
+
+    let totalRevenue = 0;
+    let methodTotals = { CASH: 0, QR: 0, CREDIT: 0 };
+    let paidPatients = [];
+    let unpaidPatients = [];
+    let topSellersMap = {};
+
+    // เตรียมโครงสร้างกราฟแท่ง 7 วันย้อนหลัง
+    let chartDataMap = {};
+    for(let i=6; i>=0; i--) {
+        let d = new Date(targetDate);
+        d.setDate(d.getDate() - i);
+        chartDataMap[d.toISOString().split('T')[0]] = 0;
+    }
+
+    let billLogs = [];
+
+    allBills.forEach(bill => {
+        let history = [];
+        try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
+
+        // 1. ตรวจสอบ "ยอดที่รับชำระ" ตามวันที่ระบุ (เจาะจากประวัติการจ่าย)
+        let paidOnTarget = 0;
+        history.forEach(h => {
+            let hDate = h.date.split('T')[0];
+            
+            // ยัดลงกราฟ 7 วัน
+            if (chartDataMap[hDate] !== undefined) {
+                chartDataMap[hDate] += h.amount;
+            }
+            
+            // ยัดลงสถิติรายวัน
+            if (hDate === targetDate) {
+                totalRevenue += h.amount;
+                let method = h.method || 'CASH';
+                if(!methodTotals[method]) methodTotals[method] = 0;
+                methodTotals[method] += h.amount;
+                paidOnTarget += h.amount;
+
+                // บันทึก Log การจ่าย
+                billLogs.push({
+                    time: h.date,
+                    patient_name: bill.full_name || 'ไม่ระบุชื่อ',
+                    item_name: bill.item_name,
+                    amount: h.amount,
+                    method: method
+                });
+            }
+        });
+
+        if (paidOnTarget > 0) {
+            paidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', amount: paidOnTarget, item: bill.item_name });
+        }
+
+        // 2. ตรวจสอบ "ยอดค้างชำระ" สำหรับบิลที่สร้างในวันที่ระบุ
+        if (bill.bill_date === targetDate) {
+            let balance = bill.total_price - bill.paid_amount;
+            if (balance > 0) {
+                unpaidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', item: bill.item_name, balance: balance, full_price: bill.total_price });
+            }
+
+            // 3. จัดอันดับสินค้าขายดี (นับเฉพาะบิลที่ถูกสร้างในวันนี้)
+            let cleanItemName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
+            if (!topSellersMap[cleanItemName]) topSellersMap[cleanItemName] = { name: cleanItemName, type: bill.type, qty: 0, revenue: 0 };
+            topSellersMap[cleanItemName].qty += bill.qty;
+            topSellersMap[cleanItemName].revenue += bill.total_price;
+        }
+    });
+
+    let topSellers = Object.values(topSellersMap).sort((a,b) => b.qty - a.qty).slice(0, 10);
+    billLogs.sort((a,b) => new Date(b.time) - new Date(a.time)); // เรียงจากล่าสุดไปเก่า
+
+    res.json({
+        status: 'success',
+        target_date: targetDate,
+        total_revenue: totalRevenue,
+        methods: methodTotals,
+        chart_data: Object.keys(chartDataMap).map(k => ({ date: k, revenue: chartDataMap[k] })),
+        paid_patients: paidPatients,
+        unpaid_patients: unpaidPatients,
+        top_sellers: topSellers,
+        bill_logs: billLogs
     });
   });
 });
