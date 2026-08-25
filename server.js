@@ -35,7 +35,7 @@ app.use('/api', (req, res, next) => {
   if (!userId) {
     console.warn(`⚠️ [Security] ตรวจพบการเข้าถึง API ${req.path} โดยไม่มี Token/User ID`);
     // ในอนาคตสามารถปลดคอมเมนต์บรรทัดล่างเพื่อบล็อก 100% ได้ (เมื่อหน้าเว็บส่ง Token ทุกครั้งแล้ว)
-    // return res.status(401).json({ status: 'error', message: 'Unauthorized Access' });
+    return res.status(401).json({ status: 'error', message: 'Unauthorized Access' });
   }
   next();
 });
@@ -44,10 +44,11 @@ app.use('/api', (req, res, next) => {
 // 📄 Page Routes (หน้าเว็บ)
 // ==========================================
 app.get('/reception.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reception.html')));
-app.get('/doctor.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'doctor.html')));
+
 app.get('/booking.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'booking.html')));
-app.get('/patient.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patient.html')));
+
 app.get('/patients_list.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patients_list.html')));
+app.get('/pos.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pos.html')));
 app.get('/inventory.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'inventory.html')));
 app.get('/setting.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'setting.html')));
 app.get('/reports.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reports.html')));
