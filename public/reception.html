@@ -540,7 +540,7 @@
     const alertBox = document.getElementById('allergyAlert');
     if (p.allergies && p.allergies !== '-' && p.allergies !== 'ไม่มี') {
       alertBox.style.display = 'flex';
-      document.getElementById('allergyDetails').innerHTML = `แพ้: ${p.allergies}<br>โรค: ${p.congenital_disease || 'ไม่มี'}`;
+      document.getElementById('allergyDetails').innerHTML = `แพ้: ${p.allergies} &nbsp;&nbsp;|&nbsp;&nbsp; โรคประจำตัว: ${p.congenital_disease || 'ไม่มี'}`;
     } else { alertBox.style.display = 'none'; }
 
     closeEmrMode();
