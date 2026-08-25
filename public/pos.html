@@ -1,148 +1,147 @@
 <style>
-  /* 🌟 Modern POS UI Styles */
-  .search-hero { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-radius: 20px; padding: 30px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+  /* 🌟 Compact POS UI Styles (ย่อขนาดลง) */
+  .search-hero { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-radius: 15px; padding: 15px 20px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
   
-  .bill-card { border: 2px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; cursor: pointer; transition: all 0.25s ease; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  .bill-card:hover { border-color: #93c5fd; transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.05); }
-  .bill-card.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+  .bill-card { border: 2px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; cursor: pointer; transition: all 0.2s ease; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  .bill-card:hover { border-color: #93c5fd; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+  .bill-card.selected { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
   
-  .bill-card-header { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-  .bill-card-body { padding: 20px; flex-grow: 1; }
-  .bill-card-footer { padding: 15px 20px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; }
+  /* ลดขนาดช่องว่างต่างๆ ในกล่อง */
+  .bill-card-header { padding: 10px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+  .bill-card-body { padding: 12px 15px; flex-grow: 1; }
+  .bill-card-body h6 { font-size: 0.95rem !important; }
+  .bill-card-footer { padding: 10px 15px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; }
 
-  /* สถานะกล่อง */
-  .status-paid { border-left: 5px solid #10b981 !important; }
-  .status-partial { border-left: 5px solid #f59e0b !important; }
-  .status-unpaid { border-left: 5px solid #ef4444 !important; }
+  .status-paid { border-left: 4px solid #10b981 !important; }
+  .status-partial { border-left: 4px solid #f59e0b !important; }
+  .status-unpaid { border-left: 4px solid #ef4444 !important; }
 
-  .payment-panel { background: #ffffff; border-radius: 20px; padding: 25px; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
-  .total-display { font-size: 3rem; font-weight: 800; color: #0f172a; text-align: right; line-height: 1; margin: 15px 0; letter-spacing: -1px; }
+  .payment-panel { background: #ffffff; border-radius: 15px; padding: 15px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
+  .payment-panel h5 { font-size: 1rem !important; }
+  .total-display { font-size: 1.8rem; font-weight: 800; color: #0f172a; text-align: right; line-height: 1; margin: 5px 0; }
   
-  .pay-method-btn { border: 2px solid #e2e8f0; border-radius: 16px; background: #fff; color: #64748b; font-weight: bold; transition: all 0.2s ease; padding: 15px; }
-  .pay-method-btn:hover { border-color: #93c5fd; color: #3b82f6; background: #f8fafc; transform: translateY(-2px); }
-  .pay-method-btn.selected { border-color: #3b82f6; background: #3b82f6; color: #fff; box-shadow: 0 8px 20px rgba(59,130,246,0.3); }
+  .pay-method-btn { border: 2px solid #e2e8f0; border-radius: 10px; background: #fff; color: #64748b; font-weight: bold; transition: all 0.2s ease; padding: 8px; font-size: 0.85rem; }
+  .pay-method-btn:hover { border-color: #93c5fd; color: #3b82f6; background: #f8fafc; }
+  .pay-method-btn.selected { border-color: #3b82f6; background: #3b82f6; color: #fff; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  /* บังคับลดขนาด Bootstrap Padding พื้นฐานในหน้านี้ */
+  .p-4 { padding: 1rem !important; }
+  .py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
 </style>
 
-<div class="container-fluid py-4 px-lg-5" style="max-width: 1800px; height: 100vh; display: flex; flex-direction: column;">
-  <!-- Header & ปิดหน้าต่าง -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold text-success m-0"><i class="fa-solid fa-cash-register me-2"></i> ระบบชำระเงิน (POS)</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
-      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
+<div class="container-fluid py-2 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="fw-bold text-success m-0"><i class="fa-solid fa-cash-register me-2"></i> ระบบชำระเงิน (POS)</h4>
+    <button class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-sm" onclick="closeModule()">
+      <i class="fa-solid fa-xmark me-1"></i> ปิด
     </button>
   </div>
 
-  <!-- 🔍 1. กล่องค้นหา (Hero Search) -->
+  <!-- 🔍 1. กล่องค้นหา (บีบขนาด) -->
   <div class="search-hero">
     <div class="row align-items-center">
       <div class="col-md-5">
-        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-info"></i> ค้นหาคนไข้เพื่อชำระเงิน</h5>
-        <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden border-0">
+        <div class="fw-bold text-white mb-2 fs-6"><i class="fa-solid fa-magnifying-glass me-2 text-info"></i> ค้นหาคนไข้เพื่อชำระเงิน</div>
+        <div class="input-group shadow-sm rounded-3 overflow-hidden border-0">
           <input type="text" id="posSearchInput" class="form-control border-0 bg-white" placeholder="พิมพ์ชื่อ, HN หรือเบอร์โทร..." onkeypress="if(event.key === 'Enter') searchPosPatientNew()">
-          <button class="btn btn-primary px-4 fw-bold" onclick="searchPosPatientNew()">ค้นหา</button>
+          <button class="btn btn-primary px-3 fw-bold" onclick="searchPosPatientNew()">ค้นหา</button>
         </div>
       </div>
       
-      <div class="col-md-7 ps-md-5 mt-4 mt-md-0" id="posPatientSummary" style="display: none; border-left: 1px solid rgba(255,255,255,0.2);">
-        <div class="text-white opacity-75 small fw-bold mb-1">กำลังทำรายการให้:</div>
+      <div class="col-md-7 ps-md-4 mt-3 mt-md-0" id="posPatientSummary" style="display: none; border-left: 1px solid rgba(255,255,255,0.2);">
+        <div class="text-white opacity-75" style="font-size: 0.75rem;">กำลังทำรายการให้:</div>
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <h3 class="fw-bold text-white m-0 mb-2" id="p_summary_name">-</h3>
-            <div class="d-flex gap-3 text-white opacity-75">
+            <h5 class="fw-bold text-white m-0 mb-1" id="p_summary_name">-</h5>
+            <div class="d-flex gap-3 text-white opacity-75 small">
               <span><i class="fa-solid fa-address-card me-1 text-info"></i> <span id="p_summary_hn">-</span></span>
               <span><i class="fa-solid fa-phone me-1 text-info"></i> <span id="p_summary_phone">-</span></span>
             </div>
           </div>
-          <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="clearPosSearch()">ล้างข้อมูล</button>
+          <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" style="font-size: 0.75rem;" onclick="clearPosSearch()">ล้างข้อมูล</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- พื้นที่หลัก (ซ้าย: กล่องคอร์ส, ขวา: แผงชำระเงิน) -->
-  <div class="row g-4 flex-grow-1" style="min-height: 0;">
+  <div class="row g-3 flex-grow-1" style="min-height: 0;">
     
     <!-- 📦 2. ฝั่งซ้าย: กล่องโปรโมชั่นและคอร์ส -->
     <div class="col-lg-7 col-md-6 h-100 d-flex flex-column">
-      <div class="bg-white p-4 rounded-4 shadow-sm border h-100 flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
+      <div class="bg-white p-3 rounded-3 shadow-sm border h-100 flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-boxes-stacked me-2 text-primary"></i> รายการบิล / คอร์สของคนไข้</h5>
-          <span class="badge bg-light text-dark border px-3 py-2" id="billCountBadge">รอค้นหาคนไข้</span>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold m-0 text-dark"><i class="fa-solid fa-boxes-stacked me-2 text-primary"></i> รายการบิล / คอร์ส</h6>
+          <span class="badge bg-light text-dark border px-2 py-1" id="billCountBadge">รอค้นหาคนไข้</span>
         </div>
 
-        <!-- หน้าจอว่างเปล่า -->
-        <div id="emptyBoxesState" class="text-center py-5 mt-5">
-          <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-4" style="width: 100px; height: 100px;">
-            <i class="fa-solid fa-box-open fa-2x text-muted opacity-50"></i>
+        <div id="emptyBoxesState" class="text-center py-4 mt-4">
+          <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 70px; height: 70px;">
+            <i class="fa-solid fa-box-open fa-lg text-muted opacity-50"></i>
           </div>
-          <h5 class="fw-bold text-secondary">ยังไม่มีรายการ</h5>
-          <p class="text-muted">กรุณาค้นหาคนไข้จากช่องด้านบน</p>
+          <h6 class="fw-bold text-secondary">ยังไม่มีรายการ</h6>
         </div>
 
-        <!-- กริดแสดงกล่อง -->
-        <div class="row g-3" id="billBoxesGrid" style="display: none;"></div>
+        <div class="row g-2" id="billBoxesGrid" style="display: none;"></div>
       </div>
     </div>
 
-    <!-- 💳 3. ฝั่งขวา: แผงรับชำระเงิน (คลิกจากกล่อง) -->
+    <!-- 💳 3. ฝั่งขวา: แผงรับชำระเงิน -->
     <div class="col-lg-5 col-md-6 h-100">
       <div class="payment-panel position-relative">
         
         <div id="paymentActiveState" style="display: flex; flex-direction: column; height: 100%;">
           
-          <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-            <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-file-invoice-dollar me-2"></i> สรุปยอดชำระ</h5>
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <h6 class="fw-bold text-primary m-0"><i class="fa-solid fa-file-invoice-dollar me-2"></i> สรุปยอดชำระ</h6>
             <span class="badge bg-light text-dark border" id="pay_bill_id">-</span>
           </div>
 
-          <!-- 🌟 รายละเอียดคอร์ส/โปร (ถูกปรับให้ยืดเต็มพื้นที่ด้วย flex-grow-1) -->
-          <div class="bg-light p-3 rounded-4 border mb-4 d-flex flex-column flex-grow-1" style="min-height: 0;">
-            <div class="fw-bold text-dark fs-5 mb-2" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
-            <div class="d-flex justify-content-between text-muted small mb-1">
+          <!-- 🌟 รายละเอียดคอร์ส/โปร -->
+          <div class="bg-light p-2 rounded-3 border mb-3 d-flex flex-column flex-grow-1" style="min-height: 0;">
+            <div class="fw-bold text-dark fs-6 mb-1" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
+            <div class="d-flex justify-content-between text-muted small mb-1" style="font-size: 0.8rem;">
               <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
             </div>
-            <div class="d-flex justify-content-between text-muted small border-bottom pb-2 mb-2">
+            <div class="d-flex justify-content-between text-muted small border-bottom pb-1 mb-1" style="font-size: 0.8rem;">
               <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">฿0.00</span>
             </div>
-            
-            <!-- ส่วนแสดงรายละเอียดในคอร์ส (Bundle items) ยืดขยายได้ -->
-            <div id="pay_item_details" class="small text-secondary mt-2 custom-scrollbar flex-grow-1" style="overflow-y: auto;"></div>
+            <div id="pay_item_details" class="text-secondary mt-1 custom-scrollbar flex-grow-1" style="font-size: 0.8rem; overflow-y: auto;"></div>
           </div>
 
-          <!-- 4. ส่วนคำนวณและแบ่งจ่าย (อยู่ติดด้านล่าง) -->
+          <!-- 4. ส่วนคำนวณและแบ่งจ่าย -->
           <div>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-secondary">ยอดชำระแล้วรวม:</span>
-              <span class="fw-bold text-success fs-5" id="pay_already_paid">฿0.00</span>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-secondary small">ยอดชำระแล้วรวม:</span>
+              <span class="fw-bold text-success" id="pay_already_paid">฿0.00</span>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-danger bg-opacity-10 border border-danger rounded-3">
-              <span class="fw-bold text-danger">ยอดคงเหลือ (ยอดที่ต้องจ่าย):</span>
-              <span class="fw-bold text-danger fs-4" id="pay_balance">฿0.00</span>
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-danger bg-opacity-10 border border-danger rounded-2">
+              <span class="fw-bold text-danger small">ยอดคงเหลือ:</span>
+              <span class="fw-bold text-danger fs-5" id="pay_balance">฿0.00</span>
             </div>
 
-            <div class="mb-4">
-              <label class="fw-bold text-dark mb-2">ระบุจำนวนเงินที่ต้องการชำระรอบนี้ (฿)</label>
-              <input type="number" id="pay_input_amount" class="form-control form-control-lg text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()" disabled>
-              <small class="text-muted mt-1 d-block"><i class="fa-solid fa-circle-info me-1"></i> สามารถแก้ไขตัวเลขเพื่อแบ่งชำระได้</small>
+            <div class="mb-3">
+              <label class="fw-bold text-dark mb-1 small">ระบุยอดชำระรอบนี้ (฿)</label>
+              <input type="number" id="pay_input_amount" class="form-control text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()" disabled>
             </div>
           </div>
 
           <!-- วิธีชำระ & ปุ่มยืนยัน -->
-          <div class="border-top pt-4">
-            <label class="fw-bold text-muted small mb-2">วิธีชำระเงิน:</label>
-            <div class="d-flex gap-2 mb-4">
-              <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectMethodNew('CASH')"><i class="fa-solid fa-money-bill-wave d-block fs-5 mb-1"></i> เงินสด</button>
-              <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectMethodNew('QR')"><i class="fa-solid fa-qrcode d-block fs-5 mb-1"></i> โอน / QR</button>
-              <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectMethodNew('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-5 mb-1"></i> บัตรเครดิต</button>
+          <div class="border-top pt-3">
+            <label class="fw-bold text-muted mb-1" style="font-size: 0.8rem;">วิธีชำระเงิน:</label>
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectMethodNew('CASH')"><i class="fa-solid fa-money-bill-wave d-block fs-6 mb-1"></i> เงินสด</button>
+              <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectMethodNew('QR')"><i class="fa-solid fa-qrcode d-block fs-6 mb-1"></i> โอน/QR</button>
+              <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectMethodNew('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-6 mb-1"></i> เครดิต</button>
             </div>
             
-            <button id="pay_submit_btn" class="btn btn-secondary w-100 py-3 rounded-4 fw-bold shadow fs-5" onclick="submitSinglePayment()" disabled>
-              <i class="fa-solid fa-check-circle me-2"></i> บันทึกรับชำระเงิน <span id="pay_btn_amount">฿0.00</span>
+            <button id="pay_submit_btn" class="btn btn-secondary w-100 py-2 rounded-3 fw-bold shadow-sm" onclick="submitSinglePayment()" disabled>
+              <i class="fa-solid fa-check-circle me-1"></i> รับชำระเงิน <span id="pay_btn_amount">฿0.00</span>
             </button>
           </div>
 
@@ -160,7 +159,7 @@
   var selectedBill = null;
   var selectedMethod = 'CASH';
 
-  // 🌟 โหลดข้อมูลคลังสินค้าไว้เพื่อดูรายละเอียดในโปรโมชั่น (Bundle items)
+  // โหลดคลังสินค้า
   async function loadInventoryForPos() {
     try {
       const res = await fetch('/api/inventory');
@@ -179,12 +178,10 @@
     document.getElementById('posPatientSummary').style.display = 'none';
     document.getElementById('billBoxesGrid').style.display = 'none';
     document.getElementById('emptyBoxesState').style.display = 'block';
-    document.getElementById('billCountBadge').innerText = 'รอค้นหาคนไข้';
-    
+    document.getElementById('billCountBadge').innerText = 'รอค้นหา';
     resetPaymentPanel();
   }
 
-  // 🌟 1. ค้นหาคนไข้ (มี Pop-up ให้เลือกกรณีเจอหลายคน)
   async function searchPosPatientNew() {
     let searchVal = document.getElementById('posSearchInput').value.trim();
     if(!searchVal) return;
@@ -195,27 +192,25 @@
       const data = await res.json();
       
       if (data.data.length === 0) {
-        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้รายนี้ในระบบ', 'warning');
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติ', 'warning');
       } else if (data.data.length === 1) {
         selectPatientForPos(data.data[0].id);
       } else {
         Swal.close();
-        let html = '<div class="list-group text-start mt-3 custom-scrollbar" style="max-height:300px; overflow-y:auto;">';
+        let html = '<div class="list-group text-start mt-3 custom-scrollbar" style="max-height:250px; overflow-y:auto;">';
         data.data.forEach(p => {
-          html += `<button class="list-group-item list-group-item-action py-3 border-bottom" onclick="selectPatientForPos('${p.id}')">
-                     <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><span class="badge bg-light text-dark border">${p.id}</span></div>
-                     <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${p.phone || '-'}</small>
+          html += `<button class="list-group-item list-group-item-action py-2 border-bottom" onclick="selectPatientForPos('${p.id}')">
+                     <div class="d-flex w-100 justify-content-between"><span class="fw-bold text-primary">${p.full_name}</span><span class="badge bg-light text-dark border">${p.id}</span></div>
                    </button>`;
         });
         html += '</div>';
         Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
       }
-    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
+    } catch(e) {}
   }
 
-  // 🌟 ฟังก์ชันดึงประวัติบิลและ "จับกลุ่มยาเข้ากล่องคอร์ส (จาก Tag ที่เราแนบมา)"
   async function selectPatientForPos(hn) {
-    Swal.fire({ title: 'กำลังดึงข้อมูลบิล...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังดึงบิล...', didOpen: () => Swal.showLoading() });
     try {
       const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(hn)}`);
       const data = await res.json();
@@ -225,34 +220,23 @@
         currentPosPatient = data.patient;
         let rawBills = data.data || [];
         
-        // --- 🌟 ระบบจับกลุ่มบิลแบบเจาะจงคอร์ส ---
         let groupedBoxes = [];
         let medBills = rawBills.filter(b => b.type === 'MEDICINE' || b.type === 'SKINCARE');
         let mainBills = rawBills.filter(b => b.type !== 'MEDICINE' && b.type !== 'SKINCARE');
 
         mainBills.forEach(main => {
            main.attached_meds = [];
-           // ค้นหายาที่มีคำว่า (ในคอร์ส: ชื่อโปร) หรือสั่งในวันเดียวกัน
-           let medsForThisMain = medBills.filter(m => 
-             (!m.attached) && 
-             (m.item_name.includes(`(ในคอร์ส: ${main.item_name})`) || m.bill_date === main.bill_date)
-           );
-           
-           medsForThisMain.forEach(m => {
-              main.attached_meds.push(m);
-              m.attached = true; 
-           });
+           let medsForThisMain = medBills.filter(m => (!m.attached) && (m.item_name.includes(`(ในคอร์ส: ${main.item_name})`) || m.bill_date === main.bill_date));
+           medsForThisMain.forEach(m => { main.attached_meds.push(m); m.attached = true; });
            groupedBoxes.push(main);
         });
 
-        // ถ้ายามีหลงเหลือ (ไม่ได้สั่งในคอร์ส) ให้แยกกล่องต่างหาก
         medBills.filter(m => !m.attached).forEach(m => {
            m.attached_meds = [];
            groupedBoxes.push(m);
         });
 
         currentPatientBills = groupedBoxes;
-        
         document.getElementById('posSearchInput').value = currentPosPatient.id;
         document.getElementById('posPatientSummary').style.display = 'block';
         document.getElementById('p_summary_name').innerText = currentPosPatient.full_name;
@@ -261,74 +245,52 @@
         
         renderBillBoxes();
         
-        // 🌟 Auto-Select: เลือกลายการแรกที่ "ค้างชำระ" ให้ทันที
         if (currentPatientBills.length > 0) {
           let firstPayable = currentPatientBills.findIndex(b => {
             let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
             let boxPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
             return (boxTotal - boxPaid) > 0;
           });
-          
-          if(firstPayable !== -1) {
-            selectBillToPay(firstPayable);
-          } else {
-            selectBillToPay(0);
-          }
+          selectBillToPay(firstPayable !== -1 ? firstPayable : 0);
         } else {
           resetPaymentPanel();
         }
-
       }
-    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
+    } catch(e) {}
   }
 
-  // 🌟 2. แสดงผลกล่อง (หั่นข้อความ Tag ทิ้งเพื่อให้หน้าจอดูสะอาด)
   function renderBillBoxes() {
     const grid = document.getElementById('billBoxesGrid');
     const emptyState = document.getElementById('emptyBoxesState');
-    
     document.getElementById('billCountBadge').innerText = `${currentPatientBills.length} กล่อง`;
 
     if (currentPatientBills.length === 0) {
-      grid.style.display = 'none';
-      emptyState.style.display = 'block';
-      return;
+      grid.style.display = 'none'; emptyState.style.display = 'block'; return;
     }
-
-    grid.style.display = 'flex';
-    emptyState.style.display = 'none';
-    grid.innerHTML = '';
+    grid.style.display = 'flex'; emptyState.style.display = 'none'; grid.innerHTML = '';
 
     currentPatientBills.forEach((bill, index) => {
       let boxTotalPrice = bill.total_price + bill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
       let boxPaidAmount = bill.paid_amount + bill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
       let balance = boxTotalPrice - boxPaidAmount;
       
-      let statusClass = '';
-      let statusBadge = '';
-      let isPayable = true;
+      let statusClass = '', statusBadge = '', isPayable = true;
 
       if (balance <= 0) {
-        statusClass = 'status-paid bg-light opacity-75';
-        statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i> จ่ายครบแล้ว</span>';
-        isPayable = false;
+        statusClass = 'status-paid bg-light opacity-75'; statusBadge = '<span class="badge bg-success" style="font-size:0.7rem;">จ่ายครบ</span>'; isPayable = false;
       } else if (boxPaidAmount > 0) {
-        statusClass = 'status-partial';
-        statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock-rotate-left me-1"></i> จ่ายบางส่วน</span>';
+        statusClass = 'status-partial'; statusBadge = '<span class="badge bg-warning text-dark" style="font-size:0.7rem;">จ่ายบางส่วน</span>';
       } else {
-        statusClass = 'status-unpaid';
-        statusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-circle-exclamation me-1"></i> ค้างชำระ</span>';
+        statusClass = 'status-unpaid'; statusBadge = '<span class="badge bg-danger" style="font-size:0.7rem;">ค้างชำระ</span>';
       }
 
       let typeIcon = bill.type === 'PROMOTION' ? 'fa-gift text-primary' : (bill.type === 'MEDICINE' || bill.type === 'SKINCARE' ? 'fa-pills text-danger' : 'fa-wand-magic-sparkles text-info');
-      
       let medsHtml = '';
       if (bill.attached_meds.length > 0) {
-        medsHtml = '<div class="mt-2 pt-2 border-top border-light">';
+        medsHtml = '<div class="mt-1 pt-1 border-top border-light">';
         bill.attached_meds.forEach(m => {
-           // 🌟 ตัดคำว่า (ในคอร์ส: ...) ออกเพื่อให้ UI สะอาดตา
            let cleanMedName = m.item_name.split(' (ในคอร์ส:')[0];
-           medsHtml += `<div class="small text-muted mb-1"><i class="fa-solid fa-pills me-1 text-danger opacity-75"></i> ${cleanMedName} (+฿${m.total_price.toLocaleString()})</div>`;
+           medsHtml += `<div class="text-muted mb-0" style="font-size:0.75rem;"><i class="fa-solid fa-pills me-1 text-danger opacity-75"></i> ${cleanMedName} (+฿${m.total_price.toLocaleString()})</div>`;
         });
         medsHtml += '</div>';
       }
@@ -337,87 +299,67 @@
         <div class="col-md-6">
           <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="${isPayable ? `selectBillToPay(${index})` : 'showPaidAlert()'}">
             <div class="bill-card-header">
-              <span class="small fw-bold text-muted">บิล #${bill.id}</span>
-              ${statusBadge}
+              <span class="fw-bold text-muted">#${bill.id}</span>${statusBadge}
             </div>
-            <div class="bill-card-body pb-2">
-              <h6 class="fw-bold text-dark mb-0"><i class="fa-solid ${typeIcon} me-2"></i> ${bill.item_name}</h6>
+            <div class="bill-card-body pb-1">
+              <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><i class="fa-solid ${typeIcon} me-1"></i> ${bill.item_name}</h6>
               ${medsHtml}
             </div>
-            <div class="px-4 pb-2">
-              <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
-                <span>ราคาเต็มรวม:</span> <span>฿${boxTotalPrice.toLocaleString()}</span>
-              </div>
-              <div class="d-flex justify-content-between align-items-center mb-1 small text-success fw-bold">
-                <span>ชำระแล้วรวม:</span> <span>฿${boxPaidAmount.toLocaleString()}</span>
-              </div>
+            <div class="px-3 pb-2" style="font-size: 0.75rem;">
+              <div class="d-flex justify-content-between text-muted"><span>ราคาเต็ม:</span> <span>฿${boxTotalPrice.toLocaleString()}</span></div>
+              <div class="d-flex justify-content-between text-success fw-bold"><span>ชำระแล้ว:</span> <span>฿${boxPaidAmount.toLocaleString()}</span></div>
             </div>
             <div class="bill-card-footer d-flex justify-content-between align-items-center">
-              <span class="fw-bold text-secondary small">ยอดที่ต้องจ่าย:</span>
-              <span class="fw-bold fs-5 ${balance > 0 ? 'text-danger' : 'text-muted'}">฿${balance > 0 ? balance.toLocaleString() : '0.00'}</span>
+              <span class="fw-bold text-secondary" style="font-size: 0.8rem;">ต้องจ่าย:</span>
+              <span class="fw-bold ${balance > 0 ? 'text-danger' : 'text-muted'}">฿${balance > 0 ? balance.toLocaleString() : '0'}</span>
             </div>
           </div>
         </div>`;
     });
   }
 
-  function showPaidAlert() {
-    Swal.fire({ icon: 'info', title: 'รายการนี้ชำระครบแล้ว', text: 'ไม่มียอดค้างชำระสำหรับกล่องนี้', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
-  }
+  function showPaidAlert() { Swal.fire({ icon: 'info', title: 'รายการนี้ชำระครบแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); }
 
-  // 🌟 3. โหลดรายละเอียดกล่องที่เลือกลงแถบชำระเงินขวามือ
   function selectBillToPay(index) {
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
     document.getElementById(`bill_box_${index}`).classList.add('selected');
 
     selectedBill = currentPatientBills[index];
-    
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     let balance = boxTotalPrice - boxPaidAmount;
 
     document.getElementById('pay_bill_id').innerText = `บิล #${selectedBill.id}`;
-    
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     document.getElementById('pay_item_name').innerText = cleanMainName;
-    document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปรโมชั่น / เซ็ต' : 'คอร์สเดี่ยว / บริการ';
+    document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
     document.getElementById('pay_item_full_price').innerText = `฿${boxTotalPrice.toLocaleString()}`;
-    
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
     let inputEl = document.getElementById('pay_input_amount');
-    inputEl.disabled = false;
-    inputEl.value = balance;
-    inputEl.setAttribute('max', balance);
+    inputEl.disabled = false; inputEl.value = balance; inputEl.setAttribute('max', balance);
     
     let submitBtn = document.getElementById('pay_submit_btn');
-    submitBtn.disabled = false;
-    submitBtn.classList.remove('btn-secondary');
-    submitBtn.classList.add('btn-success');
+    submitBtn.disabled = false; submitBtn.classList.remove('btn-secondary'); submitBtn.classList.add('btn-success');
     
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
     if (prodDef && prodDef.type === 'PROMOTION' && prodDef.bundle_items) {
        try {
          let items = JSON.parse(prodDef.bundle_items);
-         detailsHtml += '<div class="fw-bold text-primary mt-3 mb-1"><i class="fa-solid fa-list-check me-1"></i> รายการในเซ็ตโปรโมชั่น:</div>';
-         items.forEach(i => {
-           detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom border-light"><span>- ${i.name}</span> <span class="fw-bold">x${i.qty}</span></div>`;
-         });
+         detailsHtml += '<div class="fw-bold text-primary mt-2 mb-1">รายการในเซ็ต:</div>';
+         items.forEach(i => { detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom"><span>- ${i.name}</span> <b>x${i.qty}</b></div>`; });
        } catch(e) {}
     }
 
     if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
-      detailsHtml += '<div class="fw-bold text-danger mt-3 mb-1"><i class="fa-solid fa-pills me-1"></i> รายการยาที่สั่งจ่ายร่วมด้วย:</div>';
+      detailsHtml += '<div class="fw-bold text-danger mt-2 mb-1">ยาที่สั่งพ่วง:</div>';
       selectedBill.attached_meds.forEach(m => {
          let mBalance = m.total_price - m.paid_amount;
          let mStatus = mBalance <= 0 ? '(จ่ายแล้ว)' : '';
          let cleanMedName = m.item_name.split(' (ในคอร์ส:')[0];
-         detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom border-light">
-                           <span>- ${cleanMedName} <small class="text-success">${mStatus}</small></span> 
-                           <span class="fw-bold">฿${m.total_price.toLocaleString()}</span>
-                         </div>`;
+         detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom"><span>- ${cleanMedName} <small class="text-success">${mStatus}</small></span> <b>฿${m.total_price.toLocaleString()}</b></div>`;
       });
     }
 
@@ -427,12 +369,9 @@
 
   function calculatePreview() {
     let inputEl = document.getElementById('pay_input_amount');
-    let val = parseFloat(inputEl.value) || 0;
-    let max = parseFloat(inputEl.getAttribute('max')) || 0;
-    
+    let val = parseFloat(inputEl.value) || 0; let max = parseFloat(inputEl.getAttribute('max')) || 0;
     if (val > max) { val = max; inputEl.value = max; }
     if (val < 0) { val = 0; inputEl.value = 0; }
-    
     document.getElementById('pay_btn_amount').innerText = `฿${val.toLocaleString()}`;
   }
 
@@ -447,7 +386,6 @@
   function resetPaymentPanel() {
     selectedBill = null;
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
-    
     document.getElementById('pay_bill_id').innerText = `-`;
     document.getElementById('pay_item_name').innerText = 'ยังไม่ได้เลือกรายการ';
     document.getElementById('pay_item_type').innerText = '-';
@@ -457,86 +395,58 @@
     document.getElementById('pay_item_details').innerHTML = '';
     
     let inputEl = document.getElementById('pay_input_amount');
-    inputEl.value = 0;
-    inputEl.setAttribute('max', 0);
-    inputEl.disabled = true; 
-    
+    inputEl.value = 0; inputEl.setAttribute('max', 0); inputEl.disabled = true; 
     document.getElementById('pay_btn_amount').innerText = `฿0.00`;
     
     let submitBtn = document.getElementById('pay_submit_btn');
-    submitBtn.disabled = true; 
-    submitBtn.classList.remove('btn-success');
-    submitBtn.classList.add('btn-secondary');
+    submitBtn.disabled = true; submitBtn.classList.remove('btn-success'); submitBtn.classList.add('btn-secondary');
   }
 
-  // 🌟 4. ยืนยันการรับชำระเงิน
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
-    
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
-    if (payAmount <= 0) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาระบุยอดชำระที่มากกว่า 0', 'warning');
+    if (payAmount <= 0) return Swal.fire('ไม่ถูกต้อง', 'กรุณาระบุยอดชำระ', 'warning');
 
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
-
     Swal.fire({
-      title: 'ยืนยันรับชำระเงิน?',
-      html: `รายการ: <b>${cleanMainName} ${selectedBill.attached_meds.length > 0 ? '(รวมยา)' : ''}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'ยืนยัน',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#3b82f6'
+      title: 'ยืนยันรับชำระ?', html: `<b>${cleanMainName}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
+      showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#3b82f6'
     }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
-        let remainingPay = payAmount;
-        let paymentsPayload = [];
-
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        let remainingPay = payAmount; let paymentsPayload = [];
         let mainBalance = selectedBill.total_price - selectedBill.paid_amount;
         let payForMain = Math.min(mainBalance, remainingPay);
-        if (payForMain > 0) {
-            paymentsPayload.push({ bill_id: selectedBill.id, pay_amount: payForMain, payment_method: selectedMethod });
-            remainingPay -= payForMain;
-        }
+        if (payForMain > 0) { paymentsPayload.push({ bill_id: selectedBill.id, pay_amount: payForMain, payment_method: selectedMethod }); remainingPay -= payForMain; }
 
         if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
             for (let m of selectedBill.attached_meds) {
                 if (remainingPay <= 0) break;
                 let mBalance = m.total_price - m.paid_amount;
                 let payForMed = Math.min(mBalance, remainingPay);
-                if (payForMed > 0) {
-                    paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod });
-                    remainingPay -= payForMed;
-                }
+                if (payForMed > 0) { paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod }); remainingPay -= payForMed; }
             }
         }
         
-        let payload = {
-          sales_rep: '-',
-          payment_method: selectedMethod,
-          payments: paymentsPayload,
-          new_items: []
-        };
-
         try {
-          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sales_rep: '-', payment_method: selectedMethod, payments: paymentsPayload, new_items: [] }) });
           const data = await res.json();
-
           if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: 'รับชำระเงินสำเร็จ!', text: `อัปเดตประวัติของ ${currentPosPatient.full_name} แล้ว`, timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'รับชำระสำเร็จ!', timer: 1500, showConfirmButton: false });
             selectPatientForPos(currentPosPatient.id);
-          } else {
-            Swal.fire('Error', data.message || 'บันทึกล้มเหลว', 'error');
-          }
-        } catch(e) {
-          Swal.fire('Error', 'ไม่สามารถเชื่อมต่อระบบได้', 'error');
-        }
+          } else { Swal.fire('Error', data.message, 'error'); }
+        } catch(e) {}
       }
     });
   }
+
+  // 🌟 ระบบ Auto-load ข้อมูลจากหน้าห้องตรวจเมื่อเปิดมาที่หน้า POS
+  setTimeout(() => {
+    let targetHN = sessionStorage.getItem('targetHN');
+    if (targetHN) {
+      document.getElementById('posSearchInput').value = targetHN;
+      searchPosPatientNew(); // สั่งให้ค้นหาและเปิดกล่องทันที
+      sessionStorage.removeItem('targetHN'); // คืนค่า
+    }
+  }, 300);
 </script>
