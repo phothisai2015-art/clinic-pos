@@ -540,10 +540,12 @@ app.post('/api/clinic/logo', (req, res) => {
 });
 
 // ==========================================
-// 📊 API สำหรับหน้ารายงาน (Dashboard & Analytics)
+// 📊 API สำหรับหน้ารายงาน (Dashboard & Analytics) แบบช่วงวันที่
 // ==========================================
 app.get('/api/reports/dashboard', (req, res) => {
-  const targetDate = req.query.date || new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const startDate = req.query.start_date || todayStr;
+  const endDate = req.query.end_date || todayStr;
 
   // ดึงบิลทั้งหมดมาประมวลผลประวัติการจ่ายเงิน
   db.all(`SELECT b.*, p.full_name, p.phone FROM patient_bills b LEFT JOIN patients p ON b.patient_id = p.id`, [], (err, allBills) => {
@@ -555,12 +557,19 @@ app.get('/api/reports/dashboard', (req, res) => {
     let unpaidPatients = [];
     let topSellersMap = {};
 
-    // เตรียมโครงสร้างกราฟแท่ง 7 วันย้อนหลัง
+    // 🌟 สร้างโครงสร้างกราฟแท่งตามช่วงวันที่เลือก
     let chartDataMap = {};
-    for(let i=6; i>=0; i--) {
-        let d = new Date(targetDate);
-        d.setDate(d.getDate() - i);
-        chartDataMap[d.toISOString().split('T')[0]] = 0;
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+    
+    // สลับวันอัตโนมัติถ้าเผลอเลือกวันเริ่มต้น มากกว่าวันสิ้นสุด
+    if (start > end) { let temp = start; start = end; end = temp; }
+    
+    // สร้าง Array วันที่รอไว้ เพื่อให้กราฟไม่แหว่งแม้บางวันจะขายไม่ได้เลย
+    let current = new Date(start);
+    while (current <= end) {
+      chartDataMap[current.toISOString().split('T')[0]] = 0;
+      current.setDate(current.getDate() + 1);
     }
 
     let billLogs = [];
@@ -569,25 +578,26 @@ app.get('/api/reports/dashboard', (req, res) => {
         let history = [];
         try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
 
-        // 1. ตรวจสอบ "ยอดที่รับชำระ" ตามวันที่ระบุ (เจาะจากประวัติการจ่าย)
+        // 1. ตรวจสอบ "ยอดที่รับชำระ" ตามช่วงวันที่ระบุ
         let paidOnTarget = 0;
         history.forEach(h => {
             let hDate = h.date.split('T')[0];
             
-            // ยัดลงกราฟ 7 วัน
-            if (chartDataMap[hDate] !== undefined) {
-                chartDataMap[hDate] += h.amount;
-            }
-            
-            // ยัดลงสถิติรายวัน
-            if (hDate === targetDate) {
+            // ถ้ารับเงินในช่วงเวลานี้
+            if (hDate >= startDate && hDate <= endDate) {
+                // บวกกราฟแท่ง
+                if (chartDataMap[hDate] !== undefined) {
+                    chartDataMap[hDate] += h.amount;
+                }
+                
+                // สรุปยอดรวมและช่องทาง
                 totalRevenue += h.amount;
                 let method = h.method || 'CASH';
                 if(!methodTotals[method]) methodTotals[method] = 0;
                 methodTotals[method] += h.amount;
                 paidOnTarget += h.amount;
 
-                // บันทึก Log การจ่าย
+                // บันทึก Log ประวัติ
                 billLogs.push({
                     time: h.date,
                     patient_name: bill.full_name || 'ไม่ระบุชื่อ',
@@ -602,14 +612,14 @@ app.get('/api/reports/dashboard', (req, res) => {
             paidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', amount: paidOnTarget, item: bill.item_name });
         }
 
-        // 2. ตรวจสอบ "ยอดค้างชำระ" สำหรับบิลที่สร้างในวันที่ระบุ
-        if (bill.bill_date === targetDate) {
+        // 2. ตรวจสอบ "ยอดค้างชำระ" สำหรับบิลที่สร้างในช่วงวันที่ระบุ
+        if (bill.bill_date >= startDate && bill.bill_date <= endDate) {
             let balance = bill.total_price - bill.paid_amount;
             if (balance > 0) {
                 unpaidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', item: bill.item_name, balance: balance, full_price: bill.total_price });
             }
 
-            // 3. จัดอันดับสินค้าขายดี (นับเฉพาะบิลที่ถูกสร้างในวันนี้)
+            // 3. จัดอันดับสินค้าขายดีในระยะเวลานี้
             let cleanItemName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
             if (!topSellersMap[cleanItemName]) topSellersMap[cleanItemName] = { name: cleanItemName, type: bill.type, qty: 0, revenue: 0 };
             topSellersMap[cleanItemName].qty += bill.qty;
@@ -622,7 +632,8 @@ app.get('/api/reports/dashboard', (req, res) => {
 
     res.json({
         status: 'success',
-        target_date: targetDate,
+        start_date: startDate,
+        end_date: endDate,
         total_revenue: totalRevenue,
         methods: methodTotals,
         chart_data: Object.keys(chartDataMap).map(k => ({ date: k, revenue: chartDataMap[k] })),
