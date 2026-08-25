@@ -205,7 +205,8 @@
 
   async function loadClinicSettings() {
     try {
-      const res = await fetch('/api/settings');
+      // เพิ่ม ?t=... เพื่อป้องกันการจำแคชของ Browser
+      const res = await fetch('/api/settings?t=' + new Date().getTime());
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success' && data.data) {

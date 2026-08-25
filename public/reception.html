@@ -1477,15 +1477,29 @@
     renderEmrTimeSlots();
   }
 
+  // สร้างตัวแปรรองรับเวลาและฟังก์ชันโหลดข้อมูล
+  var clinicOpenTime = '10:00';
+  var clinicCloseTime = '20:00';
+  
+  async function loadReceptionSettings() {
+    try {
+      const res = await fetch('/api/settings?t=' + new Date().getTime());
+      const data = await res.json();
+      if (data.status === 'success' && data.data) {
+        if (data.data.open_time) clinicOpenTime = data.data.open_time;
+        if (data.data.close_time) clinicCloseTime = data.data.close_time;
+      }
+    } catch(e) {}
+  }
+  loadReceptionSettings();
+
   function renderEmrTimeSlots() {
     const container = document.getElementById('emrTimeSlotsContainer');
     container.innerHTML = '';
 
-    let openTime = localStorage.getItem('clinicOpenTime_DEV') || localStorage.getItem('clinicOpenTime') || '10:00';
-    let closeTime = localStorage.getItem('clinicCloseTime_DEV') || localStorage.getItem('clinicCloseTime') || '20:00';
-
-    let [startH, startM] = openTime.split(':').map(Number);
-    let [endH, endM] = closeTime.split(':').map(Number);
+    // ใช้ตัวแปรที่โหลดมาจาก Database แทน localStorage
+    let [startH, startM] = clinicOpenTime.split(':').map(Number);
+    let [endH, endM] = clinicCloseTime.split(':').map(Number);
 
     let startMins = (startH * 60) + startM;
     let endMins = (endH * 60) + endM;
