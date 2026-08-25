@@ -1,167 +1,6 @@
-<style>
-  /* 🌟 Modern POS UI Styles */
-  .search-hero { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-radius: 20px; padding: 30px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-  
-  .bill-card { border: 2px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; cursor: pointer; transition: all 0.25s ease; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  .bill-card:hover { border-color: #93c5fd; transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.05); }
-  .bill-card.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-  
-  .bill-card-header { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-  .bill-card-body { padding: 20px; flex-grow: 1; }
-  .bill-card-footer { padding: 15px 20px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; }
-
-  /* สถานะกล่อง */
-  .status-paid { border-left: 5px solid #10b981 !important; }
-  .status-partial { border-left: 5px solid #f59e0b !important; }
-  .status-unpaid { border-left: 5px solid #ef4444 !important; }
-
-  .payment-panel { background: #ffffff; border-radius: 20px; padding: 25px; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
-  .total-display { font-size: 3rem; font-weight: 800; color: #0f172a; text-align: right; line-height: 1; margin: 15px 0; letter-spacing: -1px; }
-  
-  .pay-method-btn { border: 2px solid #e2e8f0; border-radius: 16px; background: #fff; color: #64748b; font-weight: bold; transition: all 0.2s ease; padding: 15px; }
-  .pay-method-btn:hover { border-color: #93c5fd; color: #3b82f6; background: #f8fafc; transform: translateY(-2px); }
-  .pay-method-btn.selected { border-color: #3b82f6; background: #3b82f6; color: #fff; box-shadow: 0 8px 20px rgba(59,130,246,0.3); }
-
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-</style>
-
-<div class="container-fluid py-4 px-lg-5" style="max-width: 1800px; height: 100vh; display: flex; flex-direction: column;">
-  <!-- Header & ปิดหน้าต่าง -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold text-success m-0"><i class="fa-solid fa-cash-register me-2"></i> ระบบชำระเงิน (POS)</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
-      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
-    </button>
-  </div>
-
-  <!-- 🔍 1. กล่องค้นหา (Hero Search) -->
-  <div class="search-hero">
-    <div class="row align-items-center">
-      <div class="col-md-5">
-        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-info"></i> ค้นหาคนไข้เพื่อชำระเงิน</h5>
-        <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden border-0">
-          <input type="text" id="posSearchInput" class="form-control border-0 bg-white" placeholder="พิมพ์ชื่อ, HN หรือเบอร์โทร..." onkeypress="if(event.key === 'Enter') searchPosPatientNew()">
-          <button class="btn btn-primary px-4 fw-bold" onclick="searchPosPatientNew()">ค้นหา</button>
-        </div>
-      </div>
-      
-      <div class="col-md-7 ps-md-5 mt-4 mt-md-0" id="posPatientSummary" style="display: none; border-left: 1px solid rgba(255,255,255,0.2);">
-        <div class="text-white opacity-75 small fw-bold mb-1">กำลังทำรายการให้:</div>
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <h3 class="fw-bold text-white m-0 mb-2" id="p_summary_name">-</h3>
-            <div class="d-flex gap-3 text-white opacity-75">
-              <span><i class="fa-solid fa-address-card me-1 text-info"></i> <span id="p_summary_hn">-</span></span>
-              <span><i class="fa-solid fa-phone me-1 text-info"></i> <span id="p_summary_phone">-</span></span>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="clearPosSearch()">ล้างข้อมูล</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- พื้นที่หลัก (ซ้าย: กล่องคอร์ส, ขวา: แผงชำระเงิน) -->
-  <div class="row g-4 flex-grow-1" style="min-height: 0;">
-    
-    <!-- 📦 2. ฝั่งซ้าย: กล่องโปรโมชั่นและคอร์ส -->
-    <div class="col-lg-7 col-md-6 h-100 d-flex flex-column">
-      <div class="bg-white p-4 rounded-4 shadow-sm border h-100 flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0 text-dark"><i class="fa-solid fa-boxes-stacked me-2 text-primary"></i> รายการบิล / คอร์สของคนไข้</h5>
-          <span class="badge bg-light text-dark border px-3 py-2" id="billCountBadge">รอค้นหาคนไข้</span>
-        </div>
-
-        <!-- หน้าจอว่างเปล่า -->
-        <div id="emptyBoxesState" class="text-center py-5 mt-5">
-          <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-4" style="width: 100px; height: 100px;">
-            <i class="fa-solid fa-box-open fa-2x text-muted opacity-50"></i>
-          </div>
-          <h5 class="fw-bold text-secondary">ยังไม่มีรายการ</h5>
-          <p class="text-muted">กรุณาค้นหาคนไข้จากช่องด้านบน</p>
-        </div>
-
-        <!-- กริดแสดงกล่อง -->
-        <div class="row g-3" id="billBoxesGrid" style="display: none;"></div>
-      </div>
-    </div>
-
-    <!-- 💳 3. ฝั่งขวา: แผงรับชำระเงิน (คลิกจากกล่อง) -->
-    <div class="col-lg-5 col-md-6 h-100">
-      <div class="payment-panel position-relative">
-        
-        <div id="paymentEmptyState" class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
-          <i class="fa-solid fa-hand-pointer fa-3x mb-3 opacity-25"></i>
-          <h5 class="fw-bold text-secondary">กรุณาเลือกกล่องรายการ</h5>
-          <p class="text-muted small">คลิกที่กล่อง "ค้างชำระ" หรือ "จ่ายบางส่วน" ด้านซ้ายเพื่อชำระเงิน</p>
-        </div>
-
-        <div id="paymentActiveState" style="display: none; flex-direction: column; height: 100%;">
-          
-          <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-            <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-file-invoice-dollar me-2"></i> สรุปยอดชำระ</h5>
-            <span class="badge bg-light text-dark border" id="pay_bill_id">#BILL-ID</span>
-          </div>
-
-          <!-- รายละเอียดคอร์ส/โปร -->
-          <div class="bg-light p-3 rounded-4 border mb-4">
-            <div class="fw-bold text-dark fs-5 mb-2" id="pay_item_name">ชื่อรายการ</div>
-            <div class="d-flex justify-content-between text-muted small mb-1">
-              <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
-            </div>
-            <div class="d-flex justify-content-between text-muted small border-bottom pb-2 mb-2">
-              <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">-</span>
-            </div>
-            
-            <!-- ส่วนแสดงรายละเอียดในคอร์ส (Bundle items) -->
-            <div id="pay_item_details" class="small text-secondary mt-2"></div>
-          </div>
-
-          <!-- 4. ส่วนคำนวณและแบ่งจ่าย -->
-          <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-bold text-secondary">ยอดชำระแล้ว:</span>
-              <span class="fw-bold text-success fs-5" id="pay_already_paid">฿0.00</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-danger bg-opacity-10 border border-danger rounded-3">
-              <span class="fw-bold text-danger">ยอดคงเหลือ (ยอดที่ต้องจ่าย):</span>
-              <span class="fw-bold text-danger fs-4" id="pay_balance">฿0.00</span>
-            </div>
-
-            <div class="mb-4">
-              <label class="fw-bold text-dark mb-2">ระบุจำนวนเงินที่ต้องการชำระรอบนี้ (฿)</label>
-              <input type="number" id="pay_input_amount" class="form-control form-control-lg text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()">
-              <small class="text-muted mt-1 d-block"><i class="fa-solid fa-circle-info me-1"></i> สามารถแก้ไขตัวเลขเพื่อแบ่งชำระได้</small>
-            </div>
-          </div>
-
-          <!-- วิธีชำระ & ปุ่มยืนยัน -->
-          <div class="border-top pt-4">
-            <label class="fw-bold text-muted small mb-2">วิธีชำระเงิน:</label>
-            <div class="d-flex gap-2 mb-4">
-              <button class="btn pay-method-btn flex-grow-1 selected" id="pay_cash" onclick="selectMethodNew('CASH')"><i class="fa-solid fa-money-bill-wave d-block fs-5 mb-1"></i> เงินสด</button>
-              <button class="btn pay-method-btn flex-grow-1" id="pay_qr" onclick="selectMethodNew('QR')"><i class="fa-solid fa-qrcode d-block fs-5 mb-1"></i> โอน / QR</button>
-              <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectMethodNew('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-5 mb-1"></i> บัตรเครดิต</button>
-            </div>
-            
-            <button class="btn btn-success w-100 py-3 rounded-4 fw-bold shadow fs-5" onclick="submitSinglePayment()">
-              <i class="fa-solid fa-check-circle me-2"></i> บันทึกรับชำระเงิน <span id="pay_btn_amount">฿0.00</span>
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
 <script>
   var currentPosPatient = null;
-  var currentPatientBills = [];
+  var currentPatientBills = []; // จะเก็บข้อมูลบิลที่จัดกลุ่มแล้ว
   var currentInventory = [];
   var selectedBill = null;
   var selectedMethod = 'CASH';
@@ -190,22 +29,77 @@
     resetPaymentPanel();
   }
 
-  // 🌟 1. ค้นหาคนไข้ (ดึงประวัติบิล)
+  // 🌟 1. ค้นหาคนไข้ (แก้ไขให้มี Pop-up ให้เลือกกรณีเจอหลายคน)
   async function searchPosPatientNew() {
     let searchVal = document.getElementById('posSearchInput').value.trim();
     if(!searchVal) return;
     
-    Swal.fire({ title: 'กำลังดึงข้อมูล...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'กำลังค้นหา...', didOpen: () => Swal.showLoading() });
     try {
-      const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(searchVal)}`);
+      // ค้นหารายชื่อคนไข้ทั้งหมดที่ตรงกับคำค้นหา
+      const res = await fetch(`/api/patients?search=${encodeURIComponent(searchVal)}`);
+      const data = await res.json();
+      
+      if (data.data.length === 0) {
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบประวัติคนไข้รายนี้ในระบบ', 'warning');
+      } else if (data.data.length === 1) {
+        // ถ้าเจอคนเดียว โหลดบิลเลย
+        selectPatientForPos(data.data[0].id);
+      } else {
+        // ถ้าเจอหลายคน เด้งหน้าต่างให้เลือก
+        Swal.close();
+        let html = '<div class="list-group text-start mt-3 custom-scrollbar" style="max-height:300px; overflow-y:auto;">';
+        data.data.forEach(p => {
+          html += `<button class="list-group-item list-group-item-action py-3 border-bottom" onclick="selectPatientForPos('${p.id}')">
+                     <div class="d-flex w-100 justify-content-between"><h6 class="mb-1 fw-bold text-primary">${p.full_name}</h6><span class="badge bg-light text-dark border">${p.id}</span></div>
+                     <small class="text-muted"><i class="fa-solid fa-phone me-1"></i>${p.phone || '-'}</small>
+                   </button>`;
+        });
+        html += '</div>';
+        Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
+      }
+    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
+  }
+
+  // 🌟 ฟังก์ชันดึงประวัติบิลและ "จับกลุ่มยาเข้ากล่องคอร์ส"
+  async function selectPatientForPos(hn) {
+    Swal.fire({ title: 'กำลังดึงข้อมูลบิล...', didOpen: () => Swal.showLoading() });
+    try {
+      const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(hn)}`);
       const data = await res.json();
       Swal.close();
       
       if (data.status === 'success' && data.patient) {
         currentPosPatient = data.patient;
-        currentPatientBills = data.data || [];
+        let rawBills = data.data || [];
         
-        // แสดงข้อมูลคนไข้ที่แถบด้านบน
+        // --- 🌟 ระบบจับกลุ่มบิล (Bill Bundling) ---
+        let groupedBoxes = [];
+        let medBills = rawBills.filter(b => b.type === 'MEDICINE' || b.type === 'SKINCARE');
+        let mainBills = rawBills.filter(b => b.type !== 'MEDICINE' && b.type !== 'SKINCARE');
+
+        // เอายาไปยัดใส่กล่องคอร์สหลักของวันนั้นๆ
+        mainBills.forEach(main => {
+           main.attached_meds = [];
+           // หายาที่สั่งในวันเดียวกัน (bill_date)
+           let medsForThisDate = medBills.filter(m => m.bill_date === main.bill_date && !m.attached);
+           medsForThisDate.forEach(m => {
+              main.attached_meds.push(m);
+              m.attached = true; // ทำเครื่องหมายว่ายานี้ถูกจับลงกล่องแล้ว
+           });
+           groupedBoxes.push(main);
+        });
+
+        // ถ้ายามีบิลยาที่ไม่ได้ถูกจับลงกล่อง (เช่น มาซื้อยาอย่างเดียว) ให้สร้างกล่องแยกให้
+        medBills.filter(m => !m.attached).forEach(m => {
+           m.attached_meds = [];
+           groupedBoxes.push(m);
+        });
+
+        currentPatientBills = groupedBoxes;
+        // ----------------------------------------
+        
+        document.getElementById('posSearchInput').value = currentPosPatient.id;
         document.getElementById('posPatientSummary').style.display = 'block';
         document.getElementById('p_summary_name').innerText = currentPosPatient.full_name;
         document.getElementById('p_summary_hn').innerText = currentPosPatient.id;
@@ -213,28 +107,20 @@
         
         renderBillBoxes();
         resetPaymentPanel();
-      } else {
-        Swal.fire('ไม่พบข้อมูล', data.message || 'ไม่พบประวัติบิล/คอร์สของคนไข้รายนี้', 'warning');
       }
     } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
-  // 🌟 2. แสดงผลเป็นกล่อง (Cards) ตามสถานะการจ่ายเงิน
+  // 🌟 2. แสดงผลกล่องที่รวมยาเรียบร้อยแล้ว
   function renderBillBoxes() {
     const grid = document.getElementById('billBoxesGrid');
     const emptyState = document.getElementById('emptyBoxesState');
     
-    document.getElementById('billCountBadge').innerText = `${currentPatientBills.length} รายการ`;
+    document.getElementById('billCountBadge').innerText = `${currentPatientBills.length} กล่อง`;
 
     if (currentPatientBills.length === 0) {
       grid.style.display = 'none';
       emptyState.style.display = 'block';
-      emptyState.innerHTML = `
-        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-4" style="width: 100px; height: 100px;">
-          <i class="fa-solid fa-check-double fa-2x text-success opacity-50"></i>
-        </div>
-        <h5 class="fw-bold text-success">ไม่มีค้างชำระ</h5>
-        <p class="text-muted">คนไข้รายนี้ไม่มีบิลค้างชำระในระบบ</p>`;
       return;
     }
 
@@ -243,18 +129,20 @@
     grid.innerHTML = '';
 
     currentPatientBills.forEach((bill, index) => {
-      let balance = bill.total_price - bill.paid_amount;
+      // คำนวณยอดรวมของกล่อง (คอร์ส + ยา)
+      let boxTotalPrice = bill.total_price + bill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+      let boxPaidAmount = bill.paid_amount + bill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+      let balance = boxTotalPrice - boxPaidAmount;
       
-      // กำหนดสถานะและสีกล่อง
       let statusClass = '';
       let statusBadge = '';
       let isPayable = true;
 
-      if (bill.status === 'PAID' || balance <= 0) {
+      if (balance <= 0) {
         statusClass = 'status-paid bg-light opacity-75';
         statusBadge = '<span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i> จ่ายครบแล้ว</span>';
         isPayable = false;
-      } else if (bill.paid_amount > 0) {
+      } else if (boxPaidAmount > 0) {
         statusClass = 'status-partial';
         statusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock-rotate-left me-1"></i> จ่ายบางส่วน</span>';
       } else {
@@ -264,7 +152,16 @@
 
       let typeIcon = bill.type === 'PROMOTION' ? 'fa-gift text-primary' : 'fa-wand-magic-sparkles text-info';
       
-      // กล่อง HTML
+      // แสดงรายการยาในกล่องเล็กๆ ใต้ชื่อคอร์ส
+      let medsHtml = '';
+      if (bill.attached_meds.length > 0) {
+        medsHtml = '<div class="mt-2 pt-2 border-top border-light">';
+        bill.attached_meds.forEach(m => {
+           medsHtml += `<div class="small text-muted mb-1"><i class="fa-solid fa-pills me-1 text-danger opacity-75"></i> ${m.item_name} (+฿${m.total_price.toLocaleString()})</div>`;
+        });
+        medsHtml += '</div>';
+      }
+
       grid.innerHTML += `
         <div class="col-md-6">
           <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="${isPayable ? `selectBillToPay(${index})` : 'showPaidAlert()'}">
@@ -272,13 +169,16 @@
               <span class="small fw-bold text-muted">บิล #${bill.id}</span>
               ${statusBadge}
             </div>
-            <div class="bill-card-body">
-              <h6 class="fw-bold text-dark mb-3"><i class="fa-solid ${typeIcon} me-2"></i> ${bill.item_name}</h6>
+            <div class="bill-card-body pb-2">
+              <h6 class="fw-bold text-dark mb-0"><i class="fa-solid ${typeIcon} me-2"></i> ${bill.item_name}</h6>
+              ${medsHtml}
+            </div>
+            <div class="px-4 pb-2">
               <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
-                <span>ราคาเต็ม:</span> <span>฿${bill.total_price.toLocaleString()}</span>
+                <span>ราคาเต็มรวม:</span> <span>฿${boxTotalPrice.toLocaleString()}</span>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-1 small text-success fw-bold">
-                <span>ชำระแล้ว:</span> <span>฿${bill.paid_amount.toLocaleString()}</span>
+                <span>ชำระแล้วรวม:</span> <span>฿${boxPaidAmount.toLocaleString()}</span>
               </div>
             </div>
             <div class="bill-card-footer d-flex justify-content-between align-items-center">
@@ -291,17 +191,19 @@
   }
 
   function showPaidAlert() {
-    Swal.fire({ icon: 'info', title: 'รายการนี้ชำระครบแล้ว', text: 'ไม่มียอดค้างชำระสำหรับรายการนี้', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    Swal.fire({ icon: 'info', title: 'รายการนี้ชำระครบแล้ว', text: 'ไม่มียอดค้างชำระสำหรับกล่องนี้', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
   }
 
-  // 🌟 3. เลือกกล่องเพื่อดึงรายละเอียดมาที่แผงขวามือ[cite: 3, 4]
+  // 🌟 3. โหลดรายละเอียดกล่องที่เลือกลงแถบชำระเงินขวามือ
   function selectBillToPay(index) {
-    // รีเซ็ตขอบกล่องที่เลือก
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
     document.getElementById(`bill_box_${index}`).classList.add('selected');
 
     selectedBill = currentPatientBills[index];
-    let balance = selectedBill.total_price - selectedBill.paid_amount;
+    
+    let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+    let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+    let balance = boxTotalPrice - boxPaidAmount;
 
     document.getElementById('paymentEmptyState').style.display = 'none';
     document.getElementById('paymentActiveState').style.display = 'flex';
@@ -309,30 +211,42 @@
     document.getElementById('pay_bill_id').innerText = `บิล #${selectedBill.id}`;
     document.getElementById('pay_item_name').innerText = selectedBill.item_name;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปรโมชั่น / เซ็ต' : 'คอร์สเดี่ยว / บริการ';
-    document.getElementById('pay_item_full_price').innerText = `฿${selectedBill.total_price.toLocaleString()}`;
+    document.getElementById('pay_item_full_price').innerText = `฿${boxTotalPrice.toLocaleString()}`;
     
-    document.getElementById('pay_already_paid').innerText = `฿${selectedBill.paid_amount.toLocaleString()}`;
+    document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
-    // ตั้งค่า Input สำหรับแบ่งจ่าย
     let inputEl = document.getElementById('pay_input_amount');
     inputEl.value = balance;
     inputEl.setAttribute('max', balance);
     
-    // ดึงรายละเอียดสินค้า (ถ้ามี)
+    // ดึงรายละเอียดโปรโมชั่น (แถมอะไรบ้าง)
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
     if (prodDef && prodDef.type === 'PROMOTION' && prodDef.bundle_items) {
        try {
          let items = JSON.parse(prodDef.bundle_items);
-         detailsHtml = '<div class="fw-bold text-primary mt-3 mb-1"><i class="fa-solid fa-list-check me-1"></i> รายการในเซ็ตโปรโมชั่น:</div>';
+         detailsHtml += '<div class="fw-bold text-primary mt-3 mb-1"><i class="fa-solid fa-list-check me-1"></i> รายการในเซ็ตโปรโมชั่น:</div>';
          items.forEach(i => {
            detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom border-light"><span>- ${i.name}</span> <span class="fw-bold">x${i.qty}</span></div>`;
          });
        } catch(e) {}
     }
-    document.getElementById('pay_item_details').innerHTML = detailsHtml;
 
+    // แสดงรายละเอียดบิลยาที่รวมมาด้วย
+    if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
+      detailsHtml += '<div class="fw-bold text-danger mt-3 mb-1"><i class="fa-solid fa-pills me-1"></i> รายการยาที่สั่งจ่ายร่วมด้วย:</div>';
+      selectedBill.attached_meds.forEach(m => {
+         let mBalance = m.total_price - m.paid_amount;
+         let mStatus = mBalance <= 0 ? '(จ่ายแล้ว)' : '';
+         detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom border-light">
+                           <span>- ${m.item_name} <small class="text-success">${mStatus}</small></span> 
+                           <span class="fw-bold">฿${m.total_price.toLocaleString()}</span>
+                         </div>`;
+      });
+    }
+
+    document.getElementById('pay_item_details').innerHTML = detailsHtml;
     calculatePreview();
   }
 
@@ -362,7 +276,7 @@
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
   }
 
-  // 🌟 4. ยืนยันการรับชำระเงิน (รองรับการแบ่งจ่าย)[cite: 3]
+  // 🌟 4. ยืนยันการรับชำระเงิน (กระจายยอดจ่ายให้บิลหลักและบิลยาอัตโนมัติ)
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
@@ -371,7 +285,7 @@
 
     Swal.fire({
       title: 'ยืนยันรับชำระเงิน?',
-      html: `รายการ: <b>${selectedBill.item_name}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
+      html: `รายการ: <b>${selectedBill.item_name} ${selectedBill.attached_meds.length > 0 ? '(รวมยา)' : ''}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
@@ -381,15 +295,35 @@
       if (result.isConfirmed) {
         Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        // 🌟 ส่งข้อมูลไปที่ API เดิม `/api/pos/pay/:hn`[cite: 3]
+        let remainingPay = payAmount;
+        let paymentsPayload = [];
+
+        // 1. นำยอดไปตัดบิลคอร์สหลักก่อน
+        let mainBalance = selectedBill.total_price - selectedBill.paid_amount;
+        let payForMain = Math.min(mainBalance, remainingPay);
+        if (payForMain > 0) {
+            paymentsPayload.push({ bill_id: selectedBill.id, pay_amount: payForMain, payment_method: selectedMethod });
+            remainingPay -= payForMain;
+        }
+
+        // 2. ถ้าเงินยังเหลือ นำยอดไปทยอยตัดบิลยาทุกตัวในกล่อง
+        if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
+            for (let m of selectedBill.attached_meds) {
+                if (remainingPay <= 0) break;
+                let mBalance = m.total_price - m.paid_amount;
+                let payForMed = Math.min(mBalance, remainingPay);
+                if (payForMed > 0) {
+                    paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod });
+                    remainingPay -= payForMed;
+                }
+            }
+        }
+        
+        // ส่ง Payload เป็น Array ไปให้ API ทำการบันทึกลง Database
         let payload = {
           sales_rep: '-',
           payment_method: selectedMethod,
-          payments: [{
-            bill_id: selectedBill.id,
-            pay_amount: payAmount,
-            payment_method: selectedMethod
-          }],
+          payments: paymentsPayload,
           new_items: []
         };
 
@@ -403,10 +337,8 @@
 
           if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: 'รับชำระเงินสำเร็จ!', text: `อัปเดตประวัติของ ${currentPosPatient.full_name} แล้ว`, timer: 2000, showConfirmButton: false });
-            
-            // โหลดข้อมูลคนไข้คนเดิมซ้ำ เพื่อให้กล่องอัปเดตสถานะแบบเรียลไทม์
-            document.getElementById('posSearchInput').value = currentPosPatient.id;
-            searchPosPatientNew();
+            // โหลดกล่องใหม่ เพื่ออัปเดตตัวเลขแบบ Realtime
+            selectPatientForPos(currentPosPatient.id);
           } else {
             Swal.fire('Error', data.message || 'บันทึกล้มเหลว', 'error');
           }
