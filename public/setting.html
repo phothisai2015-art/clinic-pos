@@ -38,7 +38,7 @@
       <div id="nav-clinic" class="settings-menu-item" onclick="switchSettingTab('clinic')">
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
-	  <div id="nav-logs" class="settings-menu-item" onclick="switchSettingTab('logs')">
+      <div id="nav-logs" class="settings-menu-item" onclick="switchSettingTab('logs')">
         <i class="fa-solid fa-clipboard-list me-3 fs-5"></i> ประวัติการใช้งาน (Logs)
       </div>
       
@@ -50,7 +50,7 @@
     <!-- รายละเอียดด้านขวา (Content) -->
     <div class="settings-content col-9 position-relative">
       
-      <!-- TAB 1: พนักงาน (🌟 แก้ไขตรงนี้ไม่ให้ดื้อโชว์ตลอดเวลา) -->
+      <!-- TAB 1: พนักงาน -->
       <div id="tab-users" class="h-100 flex-column" style="display: flex;">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
@@ -69,7 +69,6 @@
         </div>
         
         <div class="bg-white p-4 rounded-4 shadow-sm border custom-scrollbar" style="overflow-y: auto; max-height: calc(100vh - 150px);">
-          
           <div class="row align-items-center mb-4 border-bottom pb-4">
             <div class="col-md-3 text-center">
               <label class="fw-bold small text-muted mb-2 d-block">โลโก้ร้าน (คลิกเพื่อเปลี่ยน)</label>
@@ -105,15 +104,10 @@
               <input type="text" id="c_bank_name" class="form-control rounded-3" placeholder="เช่น บจก. คลินิกความงาม">
             </div>
           </div>
-
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
-
-<!-- TAB 3: ประวัติการทำงาน (Logs) -->
+      <!-- TAB 3: ประวัติการทำงาน (Logs) -->
       <div id="tab-logs" class="h-100 flex-column" style="display: none;">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-check me-2"></i> ประวัติการใช้งานระบบ (System Logs)</h4>
@@ -149,6 +143,10 @@
           </table>
         </div>
       </div>
+
+    </div>
+  </div>
+</div>
 
 <!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน -->
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
@@ -195,7 +193,6 @@
             <div class="row g-2">
               <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="BOOKING" id="cb_1"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_1">1. นัดหมาย & คิว</label></div></div>
               <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_1" id="cb_2"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_2">2. ลงทะเบียน & คัดกรอง</label></div></div>
-              
               <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="POS" id="cb_4"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_4">4. ขาย & ชำระเงิน (POS)</label></div></div>
               <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="STOCK" id="cb_5"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_5">5. คลังยา (Inventory)</label></div></div>
               <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="DASH" id="cb_6"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_6">6. รายงานยอดขาย (Reports)</label></div></div>
@@ -227,11 +224,11 @@
     
     document.getElementById('tab-users').style.display = 'none';
     document.getElementById('tab-clinic').style.display = 'none';
-    document.getElementById('tab-logs').style.display = 'none'; // 🌟 ซ่อนแท็บ log
+    document.getElementById('tab-logs').style.display = 'none';
     
     document.getElementById('tab-' + tab).style.display = 'flex';
     if(tab === 'clinic') loadClinicData();
-    if(tab === 'logs') loadSystemLogs(); // 🌟 โหลดประวัติเมื่อกดมาหน้านี้
+    if(tab === 'logs') loadSystemLogs(); 
   }
 
   // ==========================================
@@ -244,7 +241,6 @@
       const data = await res.json();
       allLogs = data.data || [];
       
-      // ดึงชื่อพนักงานทั้งหมดที่มีใน Log มาใส่ Dropdown อัตโนมัติ
       let users = [...new Set(allLogs.map(l => l.user_name))];
       let userOpt = '<option value="">-- พนักงานทุกคน --</option>';
       users.forEach(u => userOpt += `<option value="${u}">${u}</option>`);
@@ -258,7 +254,6 @@
     let user = document.getElementById('logUserFilter').value;
     let action = document.getElementById('logActionFilter').value;
     
-    // กรองข้อมูลตามที่เลือก
     let filtered = allLogs.filter(l => {
       let matchUser = user === '' || l.user_name === user;
       let matchAction = action === '' || l.action === action;
@@ -276,13 +271,13 @@
       let dateObj = new Date(l.created_at);
       let dStr = dateObj.toLocaleDateString('th-TH') + ' ' + dateObj.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) + ' น.';
       
-      // ใส่สีป้ายหมวดหมู่ให้ดูง่าย
       let badge = `<span class="badge bg-secondary">${l.action}</span>`;
       if(l.action==='LOGIN') badge = '<span class="badge bg-info text-dark"><i class="fa-solid fa-right-to-bracket me-1"></i> เข้าสู่ระบบ</span>';
       else if(l.action==='ADD_PATIENT') badge = '<span class="badge bg-primary"><i class="fa-solid fa-user-plus me-1"></i> เพิ่มคนไข้</span>';
       else if(l.action==='EMR') badge = '<span class="badge bg-danger"><i class="fa-solid fa-stethoscope me-1"></i> บันทึก EMR</span>';
       else if(l.action==='POS') badge = '<span class="badge bg-success"><i class="fa-solid fa-cash-register me-1"></i> POS</span>';
       else if(l.action==='STOCK') badge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-box me-1"></i> สต็อกสินค้า</span>';
+      else if(l.action==='BOOKING') badge = '<span class="badge bg-dark"><i class="fa-regular fa-calendar-check me-1"></i> นัดหมาย</span>';
       
       html += `<tr style="border-bottom: 1px dashed #e2e8f0;">
         <td class="py-3 px-4 text-muted small">${dStr}</td>
