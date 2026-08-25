@@ -93,27 +93,22 @@
     <div class="col-lg-5 col-md-6 h-100">
       <div class="payment-panel position-relative">
         
-        <div id="paymentEmptyState" class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
-          <i class="fa-solid fa-hand-pointer fa-3x mb-3 opacity-25"></i>
-          <h5 class="fw-bold text-secondary">กรุณาเลือกกล่องรายการ</h5>
-          <p class="text-muted small">คลิกที่กล่อง "ค้างชำระ" หรือ "จ่ายบางส่วน" ด้านซ้ายเพื่อชำระเงิน</p>
-        </div>
-
-        <div id="paymentActiveState" style="display: none; flex-direction: column; height: 100%;">
+        <!-- 🌟 โชว์แผงสรุปยอดเสมอ ไม่เอาหน้าจอว่างแล้ว -->
+        <div id="paymentActiveState" style="display: flex; flex-direction: column; height: 100%;">
           
           <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
             <h5 class="fw-bold text-primary m-0"><i class="fa-solid fa-file-invoice-dollar me-2"></i> สรุปยอดชำระ</h5>
-            <span class="badge bg-light text-dark border" id="pay_bill_id">#BILL-ID</span>
+            <span class="badge bg-light text-dark border" id="pay_bill_id">-</span>
           </div>
 
           <!-- รายละเอียดคอร์ส/โปร -->
           <div class="bg-light p-3 rounded-4 border mb-4">
-            <div class="fw-bold text-dark fs-5 mb-2" id="pay_item_name">ชื่อรายการ</div>
+            <div class="fw-bold text-dark fs-5 mb-2" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
             <div class="d-flex justify-content-between text-muted small mb-1">
               <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
             </div>
             <div class="d-flex justify-content-between text-muted small border-bottom pb-2 mb-2">
-              <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">-</span>
+              <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">฿0.00</span>
             </div>
             
             <!-- ส่วนแสดงรายละเอียดในคอร์ส (Bundle items) -->
@@ -133,7 +128,8 @@
 
             <div class="mb-4">
               <label class="fw-bold text-dark mb-2">ระบุจำนวนเงินที่ต้องการชำระรอบนี้ (฿)</label>
-              <input type="number" id="pay_input_amount" class="form-control form-control-lg text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()">
+              <!-- 🌟 ปิดการพิมพ์ไว้ก่อนจนกว่าจะเลือกกล่อง -->
+              <input type="number" id="pay_input_amount" class="form-control form-control-lg text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()" disabled>
               <small class="text-muted mt-1 d-block"><i class="fa-solid fa-circle-info me-1"></i> สามารถแก้ไขตัวเลขเพื่อแบ่งชำระได้</small>
             </div>
           </div>
@@ -147,7 +143,7 @@
               <button class="btn pay-method-btn flex-grow-1" id="pay_credit" onclick="selectMethodNew('CREDIT')"><i class="fa-solid fa-credit-card d-block fs-5 mb-1"></i> บัตรเครดิต</button>
             </div>
             
-            <button class="btn btn-success w-100 py-3 rounded-4 fw-bold shadow fs-5" onclick="submitSinglePayment()">
+            <button id="pay_submit_btn" class="btn btn-secondary w-100 py-3 rounded-4 fw-bold shadow fs-5" onclick="submitSinglePayment()" disabled>
               <i class="fa-solid fa-check-circle me-2"></i> บันทึกรับชำระเงิน <span id="pay_btn_amount">฿0.00</span>
             </button>
           </div>
@@ -190,7 +186,7 @@
     resetPaymentPanel();
   }
 
-  // 🌟 1. ค้นหาคนไข้ (แก้ไขให้มี Pop-up ให้เลือกกรณีเจอหลายคน)
+  // 🌟 1. ค้นหาคนไข้ (มี Pop-up ให้เลือกกรณีเจอหลายคน)
   async function searchPosPatientNew() {
     let searchVal = document.getElementById('posSearchInput').value.trim();
     if(!searchVal) return;
@@ -252,7 +248,6 @@
         });
 
         currentPatientBills = groupedBoxes;
-        // ----------------------------------------
         
         document.getElementById('posSearchInput').value = currentPosPatient.id;
         document.getElementById('posPatientSummary').style.display = 'block';
@@ -261,7 +256,24 @@
         document.getElementById('p_summary_phone').innerText = currentPosPatient.phone || '-';
         
         renderBillBoxes();
-        resetPaymentPanel();
+        
+        // 🌟 Auto-Select: เลือกลายการแรกที่ "ค้างชำระ" ให้ทันที
+        if (currentPatientBills.length > 0) {
+          let firstPayable = currentPatientBills.findIndex(b => {
+            let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+            let boxPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+            return (boxTotal - boxPaid) > 0;
+          });
+          
+          if(firstPayable !== -1) {
+            selectBillToPay(firstPayable);
+          } else {
+            selectBillToPay(0); // ถ้าจ่ายครบหมดแล้ว ให้เลือกกล่องแรกสุด
+          }
+        } else {
+          resetPaymentPanel();
+        }
+
       }
     } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
@@ -358,9 +370,7 @@
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     let balance = boxTotalPrice - boxPaidAmount;
 
-    document.getElementById('paymentEmptyState').style.display = 'none';
-    document.getElementById('paymentActiveState').style.display = 'flex';
-
+    // เติมข้อมูลลงแผงขวามือ
     document.getElementById('pay_bill_id').innerText = `บิล #${selectedBill.id}`;
     document.getElementById('pay_item_name').innerText = selectedBill.item_name;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปรโมชั่น / เซ็ต' : 'คอร์สเดี่ยว / บริการ';
@@ -369,9 +379,17 @@
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
+    // เปิดให้พิมพ์ช่องจ่ายเงิน
     let inputEl = document.getElementById('pay_input_amount');
+    inputEl.disabled = false;
     inputEl.value = balance;
     inputEl.setAttribute('max', balance);
+    
+    // เปิดปุ่มบันทึกรับชำระ
+    let submitBtn = document.getElementById('pay_submit_btn');
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('btn-secondary');
+    submitBtn.classList.add('btn-success');
     
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
@@ -420,14 +438,33 @@
     if(method === 'CREDIT') document.getElementById('pay_credit').classList.add('selected');
   }
 
+  // 🌟 ฟังก์ชันล้างข้อมูลหน้าจอขวา (ให้เป็นสีเทา กดไม่ได้)
   function resetPaymentPanel() {
     selectedBill = null;
-    document.getElementById('paymentEmptyState').style.display = 'flex';
-    document.getElementById('paymentActiveState').style.display = 'none';
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
+    
+    document.getElementById('pay_bill_id').innerText = `-`;
+    document.getElementById('pay_item_name').innerText = 'ยังไม่ได้เลือกรายการ';
+    document.getElementById('pay_item_type').innerText = '-';
+    document.getElementById('pay_item_full_price').innerText = `฿0.00`;
+    document.getElementById('pay_already_paid').innerText = `฿0.00`;
+    document.getElementById('pay_balance').innerText = `฿0.00`;
+    document.getElementById('pay_item_details').innerHTML = '';
+    
+    let inputEl = document.getElementById('pay_input_amount');
+    inputEl.value = 0;
+    inputEl.setAttribute('max', 0);
+    inputEl.disabled = true; // ล็อกช่องพิมพ์
+    
+    document.getElementById('pay_btn_amount').innerText = `฿0.00`;
+    
+    let submitBtn = document.getElementById('pay_submit_btn');
+    submitBtn.disabled = true; // ล็อกปุ่มกด
+    submitBtn.classList.remove('btn-success');
+    submitBtn.classList.add('btn-secondary');
   }
 
-  // 🌟 4. ยืนยันการรับชำระเงิน (กระจายยอดจ่ายให้บิลหลักและบิลยาอัตโนมัติ)
+  // 🌟 4. ยืนยันการรับชำระเงิน
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
