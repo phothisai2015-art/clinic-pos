@@ -275,12 +275,17 @@
       lot_number: document.getElementById('pd_lot').value, 
       expiry_date: document.getElementById('pd_expiry').value, 
       bundle_items: JSON.stringify(bundleItems),
-      status: document.getElementById('pd_status').value // 🌟 ดึงสถานะปัจจุบันไปเซฟด้วย
+      status: document.getElementById('pd_status').value
     };
     
     Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
     try {
       await fetch('/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      
+      // 🌟 ส่งประวัติเข้า System Logs
+      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `บันทึก/แก้ไขข้อมูลรายการ: ${payload.name} (${payload.id})` }) });
+
       Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       clearProductForm(); 
       loadInventory();
@@ -327,7 +332,6 @@
     }
   }
 
-  // 🌟 ฟังก์ชันใหม่สำหรับสลับปุ่ม ระงับการขาย / นำกลับมาขาย
   async function toggleItemStatus(id, newStatus) {
     let titleMsg = newStatus === 'INACTIVE' ? 'ยืนยันการระงับขายสินค้านี้?' : 'นำสินค้านี้กลับมาขายใหม่?';
     let textMsg = newStatus === 'INACTIVE' ? 'ประวัติคนไข้ที่เคยซื้อไปแล้วจะยังอยู่ครบถ้วน แต่จะไม่สามารถเปิดบิลใหม่ให้คนไข้รายอื่นได้' : '';
@@ -341,6 +345,12 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ status: newStatus })
         });
+
+        // 🌟 ส่งประวัติเข้า System Logs
+        let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+        let actDesc = newStatus === 'INACTIVE' ? 'ระงับการขาย' : 'นำกลับมาเปิดขายใหม่';
+        fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `${actDesc} รหัสรายการ: ${id}` }) });
+
         Swal.fire({ icon: 'success', title: 'อัปเดตเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         loadInventory();
       } catch (e) {
@@ -362,8 +372,28 @@
       if (res.isConfirmed && res.value) {
         let qty = parseFloat(res.value); if(mode === 'remove') qty = -Math.abs(qty);
         await fetch(`/api/inventory/${id}/stock`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ adjust_qty: qty }) });
+
+        // 🌟 ส่งประวัติเข้า System Logs
+        let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+        let actDesc = mode === 'add' ? 'รับเข้าสต็อก' : 'เบิกออกสต็อก';
+        fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `${actDesc} จำนวน ${Math.abs(qty)} หน่วย สำหรับรายการ: ${name} (${id})` }) });
+
         loadInventory();
       }
     });
   }
+  
+  // 🌟 ลบสินค้า (พร้อมเก็บ Log)
+  async function deleteProduct(id) { 
+    if ((await Swal.fire({ title: 'ลบสินค้านี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { 
+      await fetch(`/api/inventory/${id}`, { method: 'DELETE' }); 
+
+      // 🌟 ส่งประวัติเข้า System Logs
+      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `ลบรายการสินค้าออกจากระบบอย่างถาวร รหัส: ${id}` }) });
+
+      loadInventory(); 
+    } 
+  }
+  
 </script>
