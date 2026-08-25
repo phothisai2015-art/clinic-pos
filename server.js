@@ -514,7 +514,8 @@ app.get('/api/settings', async (req, res) => {
 app.post('/api/settings', async (req, res) => {
   try {
     const { open_time, close_time } = req.body;
-    await dbRun(`UPDATE clinics SET open_time=?, close_time=? WHERE id=1`, [open_time, close_time]);
+    // เอา WHERE id=1 ออก เพื่อป้องกันบั๊กกรณี ID เลื่อน
+    await dbRun(`UPDATE clinics SET open_time=?, close_time=?`, [open_time, close_time]);
     res.json({ status: 'success' });
   } catch(err) { res.status(500).json({ status: 'error', message: err.message }); }
 });
