@@ -28,7 +28,7 @@ const dbAll = (sql, params = []) => new Promise((resolve, reject) => db.all(sql,
 // ==========================================
 app.use('/api', (req, res, next) => {
   // ยกเว้น API ที่ไม่ต้องล็อกอิน
-  const publicRoutes = ['/login', '/status', '/check-setup', '/setup-admin'];
+  const publicRoutes = ['/login', '/status', '/check-setup', '/setup-admin', '/clinic'];
   if (publicRoutes.includes(req.path)) return next();
 
   const userId = req.headers['x-user-id'];
