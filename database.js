@@ -85,6 +85,15 @@ db.serialize(() => {
     used_qty INTEGER DEFAULT 0
   )`);
   
+  // 8. ประวัติการทำงานระบบ (System Logs)
+  db.run(`CREATE TABLE IF NOT EXISTS system_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_name TEXT,
+    action TEXT,
+    details TEXT,
+    created_at TEXT
+  )`);
+  
   console.log("✅ Database tables initialized successfully.");
 
   // ❌ ส่วนที่เคยสร้างผู้ใช้งานเริ่มต้น PIN 1234 ถูกลบออกแล้ว เพื่อให้ไปสร้างจากหน้าเว็บแทน
