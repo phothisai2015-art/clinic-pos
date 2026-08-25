@@ -38,6 +38,9 @@
       <div id="nav-clinic" class="settings-menu-item" onclick="switchSettingTab('clinic')">
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
+	  <div id="nav-logs" class="settings-menu-item" onclick="switchSettingTab('logs')">
+        <i class="fa-solid fa-clipboard-list me-3 fs-5"></i> ประวัติการใช้งาน (Logs)
+      </div>
       
       <div class="settings-menu-item text-muted text-danger mt-auto border-top pt-3" style="position:absolute; bottom: 30px; width: calc(25% - 40px);" onclick="closeModule(); document.getElementById('userModal')?.remove();">
         <i class="fa-solid fa-arrow-right-from-bracket me-3 fs-5"></i> ออกจากการตั้งค่า
@@ -109,6 +112,43 @@
     </div>
   </div>
 </div>
+
+<!-- TAB 3: ประวัติการทำงาน (Logs) -->
+      <div id="tab-logs" class="h-100 flex-column" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-check me-2"></i> ประวัติการใช้งานระบบ (System Logs)</h4>
+          <div class="d-flex gap-2">
+            <!-- ฟิลเตอร์กรองข้อมูล -->
+            <select id="logUserFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
+              <option value="">-- พนักงานทุกคน --</option>
+            </select>
+            <select id="logActionFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
+              <option value="">-- ทุกหมวดหมู่ --</option>
+              <option value="LOGIN">เข้าสู่ระบบ</option>
+              <option value="ADD_PATIENT">เพิ่มคนไข้</option>
+              <option value="EMR">บันทึกประวัติ (EMR)</option>
+              <option value="POS">รับชำระเงิน (POS)</option>
+              <option value="STOCK">จัดการคลังสินค้า</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="bg-white p-0 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
+          <table class="table table-hover mb-0">
+            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
+              <tr>
+                <th class="py-3 px-4 text-muted fw-bold">วัน - เวลา</th>
+                <th class="py-3 text-muted fw-bold">ผู้ทำรายการ</th>
+                <th class="py-3 text-muted fw-bold">หมวดหมู่</th>
+                <th class="py-3 text-muted fw-bold">รายละเอียด (Details)</th>
+              </tr>
+            </thead>
+            <tbody id="logsListBody">
+              <tr><td colspan="4" class="text-center py-5 text-muted">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
 <!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน -->
 <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
@@ -187,10 +227,71 @@
     
     document.getElementById('tab-users').style.display = 'none';
     document.getElementById('tab-clinic').style.display = 'none';
+    document.getElementById('tab-logs').style.display = 'none'; // 🌟 ซ่อนแท็บ log
     
-    // โชว์หน้าใหม่
     document.getElementById('tab-' + tab).style.display = 'flex';
     if(tab === 'clinic') loadClinicData();
+    if(tab === 'logs') loadSystemLogs(); // 🌟 โหลดประวัติเมื่อกดมาหน้านี้
+  }
+
+  // ==========================================
+  // 📋 ฟังก์ชันสำหรับหน้าประวัติการใช้งาน (Logs)
+  // ==========================================
+  var allLogs = [];
+  async function loadSystemLogs() {
+    try {
+      const res = await fetch('/api/logs');
+      const data = await res.json();
+      allLogs = data.data || [];
+      
+      // ดึงชื่อพนักงานทั้งหมดที่มีใน Log มาใส่ Dropdown อัตโนมัติ
+      let users = [...new Set(allLogs.map(l => l.user_name))];
+      let userOpt = '<option value="">-- พนักงานทุกคน --</option>';
+      users.forEach(u => userOpt += `<option value="${u}">${u}</option>`);
+      document.getElementById('logUserFilter').innerHTML = userOpt;
+      
+      filterLogs();
+    } catch(e) { console.error(e); }
+  }
+
+  function filterLogs() {
+    let user = document.getElementById('logUserFilter').value;
+    let action = document.getElementById('logActionFilter').value;
+    
+    // กรองข้อมูลตามที่เลือก
+    let filtered = allLogs.filter(l => {
+      let matchUser = user === '' || l.user_name === user;
+      let matchAction = action === '' || l.action === action;
+      return matchUser && matchAction;
+    });
+    
+    let tbody = document.getElementById('logsListBody');
+    if(filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted"><i class="fa-solid fa-clock-rotate-left fa-2x mb-3 opacity-50"></i><br>ไม่พบประวัติการทำรายการ</td></tr>';
+      return;
+    }
+    
+    let html = '';
+    filtered.forEach(l => {
+      let dateObj = new Date(l.created_at);
+      let dStr = dateObj.toLocaleDateString('th-TH') + ' ' + dateObj.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) + ' น.';
+      
+      // ใส่สีป้ายหมวดหมู่ให้ดูง่าย
+      let badge = `<span class="badge bg-secondary">${l.action}</span>`;
+      if(l.action==='LOGIN') badge = '<span class="badge bg-info text-dark"><i class="fa-solid fa-right-to-bracket me-1"></i> เข้าสู่ระบบ</span>';
+      else if(l.action==='ADD_PATIENT') badge = '<span class="badge bg-primary"><i class="fa-solid fa-user-plus me-1"></i> เพิ่มคนไข้</span>';
+      else if(l.action==='EMR') badge = '<span class="badge bg-danger"><i class="fa-solid fa-stethoscope me-1"></i> บันทึก EMR</span>';
+      else if(l.action==='POS') badge = '<span class="badge bg-success"><i class="fa-solid fa-cash-register me-1"></i> POS</span>';
+      else if(l.action==='STOCK') badge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-box me-1"></i> สต็อกสินค้า</span>';
+      
+      html += `<tr style="border-bottom: 1px dashed #e2e8f0;">
+        <td class="py-3 px-4 text-muted small">${dStr}</td>
+        <td class="py-3 fw-bold text-dark"><i class="fa-solid fa-user-circle me-1 text-secondary"></i> ${l.user_name}</td>
+        <td class="py-3">${badge}</td>
+        <td class="py-3 text-secondary small">${l.details}</td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
   }
 
   // --- 🌟 ระบบจัดการข้อมูลคลินิก ---

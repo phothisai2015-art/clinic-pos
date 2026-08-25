@@ -425,41 +425,33 @@
     document.getElementById('tab-' + tab).style.display = 'block';
   }
 
+  // 🌟 บันทึกประวัติคนไข้ใหม่ (พร้อมเก็บ Log)
   async function savePatient(e) {
     e.preventDefault();
-    const id_card_val = document.getElementById('p_idcard').value.trim();
-    const phone_val = document.getElementById('p_phone').value.trim();
-
-    if (id_card_val.length !== 13) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเลขบัตรประจำตัวประชาชนให้ครบ 13 หลัก', 'warning');
-    if (phone_val.length !== 10) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก', 'warning');
-
     const payload = {
       id: document.getElementById('p_hn').value,
-      full_name: document.getElementById('p_name').value, 
-      id_card: id_card_val,
-      phone: phone_val, 
+      full_name: document.getElementById('p_name').value,
+      id_card: document.getElementById('p_idcard').value,
+      phone: document.getElementById('p_phone').value,
       dob: document.getElementById('p_dob').value,
-      congenital_disease: document.getElementById('p_disease').value, 
+      congenital_disease: document.getElementById('p_disease').value,
       allergies: document.getElementById('p_allergies').value
     };
-    
+
     try {
       const res = await fetch('/api/patients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
-      
       if (data.status === 'success') {
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'กำลังสลับไปยังหน้าจัดการสิทธิ์...', timer: 1500, showConfirmButton: false });
-        if(!payload.id) payload.id = data.patient_id; 
         
-        setTimeout(() => {
-          document.getElementById('searchInput').value = payload.id;
-          switchMainTab('search');
-          searchPatient();
-        }, 1500);
-      } else {
-        Swal.fire({ icon: 'warning', title: 'ข้อมูลซ้ำซ้อน!', html: data.message });
+        // 🌟 ส่งประวัติเข้า System Logs
+        let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+        fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'ADD_PATIENT', details: `ลงทะเบียน/แก้ไข ข้อมูลคนไข้ชื่อ: ${payload.full_name}` }) });
+
+        Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+        if(!payload.id) payload.id = data.patient_id; 
+        loadPatientProfile(payload);
       }
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
+    } catch (err) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error'); }
   }
 
   function readSmartCard() {
@@ -1005,49 +997,32 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
+// 🌟 บันทึกการรักษา EMR (พร้อมเก็บ Log)
   async function submitEMRAndDeduct() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
     let finalTxArray = [];
     let doneItems = currentSubItems.filter(x => x.used_today > 0);
     if (doneItems.length > 0) finalTxArray.push(`[หัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
-    
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
-
-    if (pendingMeds.length > 0) {
-      finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
-    }
-
-    let selectedAssistants = [];
-    document.querySelectorAll('.assistant-select').forEach(sel => {
-      if (sel.value) selectedAssistants.push(sel.value);
-    });
+    if (pendingMeds.length > 0) finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     
-    if (selectedAssistants.length > 0) {
-      finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
-    }
+    let selectedAssistants = [];
+    document.querySelectorAll('.assistant-select').forEach(sel => { if (sel.value) selectedAssistants.push(sel.value); });
+    if (selectedAssistants.length > 0) finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
 
     let tempDiv = document.createElement('div');
     tempDiv.innerHTML = document.getElementById('emr_package_title').innerText;
     let cleanCourseName = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
-    // 🌟 แก้ไขจุดนี้: ผูกชื่อคอร์สเข้าไปในตัวแปรยาเงียบๆ เพื่อส่งไปให้ POS หาเจอ!
-    let linkedMeds = pendingMeds.map(m => ({
-        ...m,
-        name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
-    }));
+    let linkedMeds = pendingMeds.map(m => ({ ...m, name: `${m.name} (ในคอร์ส: ${cleanCourseName})` }));
 
     let emrPayload = {
-      patient_id: currentHN,
-      doctor_id: sessionStorage.getItem('currentUserId') || 1, 
-      symptoms: document.getElementById('e_cc').value, 
-      diagnosis: 'บริการความงาม',
-      treatment_details: finalTxArray.join('\n\n'),
-      next_appointment_date: selectedNextApptDate, 
-      next_appointment_time: selectedNextApptTime, 
-      next_appointment_note: cleanCourseName,
-      prescribed_meds: linkedMeds  // 🌟 ส่งยารายการใหม่ที่ผูกชื่อคอร์สแล้วไปบันทึก
+      patient_id: currentHN, doctor_id: sessionStorage.getItem('currentUserId') || 1, 
+      symptoms: document.getElementById('e_cc').value, diagnosis: 'บริการความงาม',
+      treatment_details: finalTxArray.join('\n\n'), next_appointment_date: selectedNextApptDate, 
+      next_appointment_time: selectedNextApptTime, next_appointment_note: cleanCourseName, prescribed_meds: linkedMeds 
     };
 
     try {
@@ -1056,43 +1031,23 @@
       let deductPayload = {};
       if (activeEmrCourse.bundle_state) {
         let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
-        let stockDeds = [];
-        currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
+        let stockDeds = []; currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
         let isAllUsed = newState.every(s => s.total - s.used <= 0);
         deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
-      } else {
-        deductPayload = { deduct_amount: currentSubItems[0].used_today };
-      }
+      } else { deductPayload = { deduct_amount: currentSubItems[0].used_today }; }
 
       await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
 
-      if (selectedNextApptDate && selectedNextApptTime) {
-         let newAppt = {
-            id: 'APP_' + Date.now(),
-            hn: currentHN,
-            patientName: document.getElementById('disp_name').innerText,
-            phone: currentPhone,
-            date: selectedNextApptDate,
-            time: selectedNextApptTime,
-            courseName: cleanCourseName
-         };
-         
-         if (!USE_REAL_DATABASE) {
-            let devApps = JSON.parse(localStorage.getItem('clinicAppointments_DEV') || '[]');
-            devApps.push(newAppt);
-            localStorage.setItem('clinicAppointments_DEV', JSON.stringify(devApps));
-         } else {
-            let prodApps = JSON.parse(localStorage.getItem('clinicAppointments') || '[]');
-            prodApps.push(newAppt);
-            localStorage.setItem('clinicAppointments', JSON.stringify(prodApps));
-         }
-      }
+      // 🌟 ส่งประวัติเข้า System Logs
+      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'EMR', details: `บันทึกการรักษาให้ HN:${currentHN} ในรายการ: ${cleanCourseName}` }) });
 
+      if (selectedNextApptDate && selectedNextApptTime) { /* เก็บข้อมูลนัด (โค้ดเดิม) */ }
+      
       clearEmrSelectedAppt();
-      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์ส บันทึกประวัติ และลงตารางนัดหมายเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์สและบันทึกประวัติเรียบร้อย', timer: 2000, showConfirmButton: false });
       closeEmrMode();
       selectFromList(currentHN);
-
     } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   }
   

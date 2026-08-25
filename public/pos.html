@@ -434,6 +434,7 @@
     submitBtn.disabled = true; submitBtn.classList.remove('btn-success'); submitBtn.classList.add('btn-secondary');
   }
 
+  // 🌟 ยืนยันการรับชำระเงิน (พร้อมเก็บ Log)
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
@@ -464,6 +465,11 @@
           const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sales_rep: '-', payment_method: selectedMethod, payments: paymentsPayload, new_items: [] }) });
           const data = await res.json();
           if (data.status === 'success') {
+            
+            // 🌟 ส่งประวัติเข้า System Logs
+            let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'POS', details: `รับชำระเงินจาก HN:${currentPosPatient.id} จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod}` }) });
+
             Swal.fire({ icon: 'success', title: 'รับชำระสำเร็จ!', timer: 1500, showConfirmButton: false });
             selectPatientForPos(currentPosPatient.id);
           } else { Swal.fire('Error', data.message, 'error'); }
