@@ -93,7 +93,6 @@
     <div class="col-lg-5 col-md-6 h-100">
       <div class="payment-panel position-relative">
         
-        <!-- 🌟 โชว์แผงสรุปยอดเสมอ ไม่เอาหน้าจอว่างแล้ว -->
         <div id="paymentActiveState" style="display: flex; flex-direction: column; height: 100%;">
           
           <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
@@ -101,8 +100,8 @@
             <span class="badge bg-light text-dark border" id="pay_bill_id">-</span>
           </div>
 
-          <!-- รายละเอียดคอร์ส/โปร -->
-          <div class="bg-light p-3 rounded-4 border mb-4">
+          <!-- 🌟 รายละเอียดคอร์ส/โปร (ถูกปรับให้ยืดเต็มพื้นที่ด้วย flex-grow-1) -->
+          <div class="bg-light p-3 rounded-4 border mb-4 d-flex flex-column flex-grow-1" style="min-height: 0;">
             <div class="fw-bold text-dark fs-5 mb-2" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
             <div class="d-flex justify-content-between text-muted small mb-1">
               <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
@@ -111,12 +110,12 @@
               <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">฿0.00</span>
             </div>
             
-            <!-- ส่วนแสดงรายละเอียดในคอร์ส (Bundle items) -->
-            <div id="pay_item_details" class="small text-secondary mt-2 custom-scrollbar" style="max-height: 120px; overflow-y: auto;"></div>
+            <!-- ส่วนแสดงรายละเอียดในคอร์ส (Bundle items) ยืดขยายได้ -->
+            <div id="pay_item_details" class="small text-secondary mt-2 custom-scrollbar flex-grow-1" style="overflow-y: auto;"></div>
           </div>
 
-          <!-- 4. ส่วนคำนวณและแบ่งจ่าย -->
-          <div class="flex-grow-1">
+          <!-- 4. ส่วนคำนวณและแบ่งจ่าย (อยู่ติดด้านล่าง) -->
+          <div>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-bold text-secondary">ยอดชำระแล้วรวม:</span>
               <span class="fw-bold text-success fs-5" id="pay_already_paid">฿0.00</span>
@@ -128,7 +127,6 @@
 
             <div class="mb-4">
               <label class="fw-bold text-dark mb-2">ระบุจำนวนเงินที่ต้องการชำระรอบนี้ (฿)</label>
-              <!-- 🌟 ปิดการพิมพ์ไว้ก่อนจนกว่าจะเลือกกล่อง -->
               <input type="number" id="pay_input_amount" class="form-control form-control-lg text-end fw-bold text-primary border-primary shadow-sm" value="0" min="0" oninput="calculatePreview()" disabled>
               <small class="text-muted mt-1 d-block"><i class="fa-solid fa-circle-info me-1"></i> สามารถแก้ไขตัวเลขเพื่อแบ่งชำระได้</small>
             </div>
@@ -162,7 +160,7 @@
   var selectedBill = null;
   var selectedMethod = 'CASH';
 
-  // 🌟 โหลดข้อมูลคลังสินค้าไว้เพื่อดูรายละเอียดในโปรโมชั่น (Bundle items)
+  // 🌟 โหลดข้อมูลคลังสินค้าไว้เพื่อดูรายละเอียดในโปรโมชั่น (Bundle items)[cite: 3]
   async function loadInventoryForPos() {
     try {
       const res = await fetch('/api/inventory');
@@ -278,7 +276,7 @@
     } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
-  // 🌟 2. แสดงผลกล่องที่รวมยาเรียบร้อยแล้ว
+  // 🌟 2. แสดงผลกล่องที่รวมยาเรียบร้อยแล้ว[cite: 4]
   function renderBillBoxes() {
     const grid = document.getElementById('billBoxesGrid');
     const emptyState = document.getElementById('emptyBoxesState');
@@ -464,7 +462,7 @@
     submitBtn.classList.add('btn-secondary');
   }
 
-  // 🌟 4. ยืนยันการรับชำระเงิน
+  // 🌟 4. ยืนยันการรับชำระเงิน[cite: 3]
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
