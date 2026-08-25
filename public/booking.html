@@ -258,7 +258,8 @@
             phone: item.phone || '-',
             date: item.date,
             time: item.time,
-            courseName: item.note || 'นัดหมาย'
+            courseName: item.note || 'นัดหมาย',
+            status: item.status // 🌟 เพิ่มบรรทัดนี้เข้ามา เพื่อเก็บค่าสถานะ
         }));
       }
     } catch (e) {
@@ -691,18 +692,29 @@
 
     let html = '';
     tomorrowList.sort((a,b) => a.time.localeCompare(b.time)).forEach(app => {
+      // 🌟 เช็คว่าคอนเฟิร์มหรือยัง
+      let isConfirmed = app.status === 'CONFIRMED';
+      let statusBadge = isConfirmed
+        ? `<span class="badge bg-success shadow-sm"><i class="fa-solid fa-phone-volume me-1"></i> โทรแล้ว</span>`
+        : `<span class="badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-phone-slash me-1"></i> ยังไม่ได้โทร</span>`;
+
+      let actionBtn = isConfirmed
+        ? `<button class="btn btn-sm btn-outline-success rounded-pill px-3 mt-2 w-100 fw-bold" disabled><i class="fa-solid fa-check me-1"></i> คอนเฟิร์มเรียบร้อย</button>`
+        : `<button class="btn btn-sm btn-primary rounded-pill px-3 mt-2 w-100 shadow-sm fw-bold" onclick="markAsContacted('${app.id}', '${app.patientName}')"><i class="fa-solid fa-phone me-1"></i> กดเมื่อโทรคอนเฟิร์มแล้ว</button>`;
+
       html += `
-        <div class="col-md-6">
-          <div class="appointment-card">
-            <div class="d-flex justify-content-between mb-2">
+        <div class="col-md-6 col-xl-4">
+          <div class="appointment-card d-flex flex-column h-100">
+            <div class="d-flex justify-content-between mb-2 align-items-start">
               <span class="badge bg-primary fs-6"><i class="fa-regular fa-clock me-1"></i> ${app.time} น.</span>
-              <span class="badge bg-light text-dark border">${app.hn}</span>
+              ${statusBadge}
             </div>
             <h5 class="fw-bold text-dark mt-2 mb-1">${app.patientName}</h5>
-            <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> ${app.phone}</div>
-            <div class="bg-light p-2 rounded small text-secondary mt-3 border">
+            <div class="text-muted small mb-2"><i class="fa-solid fa-phone me-1"></i> ${app.phone} <span class="ms-2 opacity-50">(${app.hn})</span></div>
+            <div class="bg-light p-2 rounded small text-secondary mt-auto mb-2 border">
               <strong>รายการนัด:</strong> ${app.courseName}
             </div>
+            ${actionBtn}
           </div>
         </div>
       `;
@@ -741,5 +753,39 @@
   }
 
   initCalendar();
+  
+  // 🌟 ฟังก์ชันสำหรับกดปุ่ม "โทรคอนเฟิร์มแล้ว" (พร้อมเก็บประวัติ Log)
+  function markAsContacted(appId, patientName) {
+    Swal.fire({
+      title: 'โทรคอนเฟิร์มแล้วใช่ไหม?',
+      text: `ยืนยันว่าติดต่อคุณ ${patientName} เรียบร้อยแล้ว ระบบจะบันทึกสถานะไว้`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<i class="fa-solid fa-phone me-1"></i> ยืนยันการโทร',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#10b981'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({ title: 'กำลังอัปเดตสถานะ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        try {
+          const res = await fetch(`/api/appointments/${appId}/confirm`, { method: 'PUT' });
+          if (!res.ok) throw new Error("อัปเดตไม่สำเร็จ");
+
+          // 🌟 ส่งประวัติเข้า System Logs
+          let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+          fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `โทรคอนเฟิร์มนัดหมายของคนไข้: ${patientName} (คิว #${appId})` }) });
+
+          // โหลดข้อมูลใหม่และวาดหน้าจอใหม่ทันที
+          await loadAppointmentsFromDB();
+          renderTomorrowAppointments();
+          
+          Swal.fire({ icon: 'success', title: 'อัปเดตสถานะสำเร็จ!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        } catch(e) {
+          Swal.fire('ข้อผิดพลาด', 'เชื่อมต่อฐานข้อมูลไม่สำเร็จ', 'error');
+        }
+      }
+    });
+  }
 </script>
 
