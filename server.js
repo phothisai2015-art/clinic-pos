@@ -75,6 +75,14 @@ db.serialize(() => {
     stock_deducted BOOLEAN DEFAULT 0,
     payment_method TEXT DEFAULT 'CASH',
     payment_history TEXT DEFAULT '[]'
+	// 8. ประวัติการทำงานในระบบ (System Logs)
+    db.run(`CREATE TABLE IF NOT EXISTS system_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_name TEXT,
+    action TEXT,
+    details TEXT,
+    created_at TEXT
+	
   )`);
 });
 
@@ -106,7 +114,29 @@ app.post('/api/login', (req, res) => {
   const { pin } = req.body;
   db.get(`SELECT id, name, role, permissions FROM users WHERE pin = ?`, [pin], (err, row) => {
     if (!row) return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
+    
+    // 🌟 แอบบันทึก Log ทันทีที่มีคนเข้าสู่ระบบ
+    const time = new Date().toISOString();
+    db.run(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, 'LOGIN', 'เข้าสู่ระบบ', ?)`, [row.name, time]);
+    
     res.json({ status: 'success', user: row });
+  });
+});
+
+// ==========================================
+// 📋 API สำหรับระบบประวัติการทำงาน (Logs)
+// ==========================================
+app.get('/api/logs', (req, res) => {
+  db.all(`SELECT * FROM system_logs ORDER BY id DESC LIMIT 500`, [], (err, rows) => {
+    res.json({ status: 'success', data: rows || [] });
+  });
+});
+
+app.post('/api/logs', (req, res) => {
+  const { user_name, action, details } = req.body;
+  const time = new Date().toISOString();
+  db.run(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, ?, ?, ?)`, [user_name, action, details, time], () => {
+    res.json({ status: 'success' });
   });
 });
 
