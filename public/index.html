@@ -269,7 +269,7 @@
         })
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 500 });
+            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
             
             sessionStorage.setItem('currentUserId', data.user.id); 
             document.getElementById('display-staff-name').innerText = data.user.name;
