@@ -381,6 +381,25 @@
       document.getElementById('module-container').style.display = 'none';
       loadGlobalClinicInfo(); // อัปเดตโลโก้เผื่อตั้งค่ามาใหม่
     }
+	
+	// 🌟 ฟังก์ชันฝังตัว: ดักจับการใช้ fetch API ทั้งหมดบนระบบ
+  // เพื่อแอบแนบ Header 'X-User-Id' เข้าไปส่งให้ Server อัตโนมัติ ป้องกันการแฮ็กยิง API ตรงๆ
+  const originalFetch = window.fetch;
+  window.fetch = async function() {
+      let [resource, config] = arguments;
+      
+      if (!config) { config = {}; }
+      if (!config.headers) { config.headers = {}; }
+      
+      // ดึง ID ที่ได้ตอนพนักงานกรอก PIN ผ่านหน้าจอ Lock Screen
+      const userId = sessionStorage.getItem('currentUserId');
+      if (userId) {
+          config.headers['X-User-Id'] = userId;
+      }
+      
+      return originalFetch(resource, config);
+  };
+  
   </script>
 </body>
 </html>
