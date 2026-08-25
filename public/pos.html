@@ -209,34 +209,59 @@
     } catch(e) {}
   }
 
+// 🌟 ฟังก์ชันดึงประวัติบิลและจับกลุ่ม (อัปเดตให้ดึงบิลทุกวันและเช็คแท็กชื่อเป๊ะๆ 100%)
   async function selectPatientForPos(hn) {
     Swal.fire({ title: 'กำลังดึงบิล...', didOpen: () => Swal.showLoading() });
     try {
-      const res = await fetch(`/api/pos/patient-search?search=${encodeURIComponent(hn)}`);
-      const data = await res.json();
+      // ดึงประวัติคนไข้ และ ดึงบิล *ทั้งหมด* ของคนไข้คนนี้
+      const [pRes, bRes] = await Promise.all([
+          fetch(`/api/patients/${hn}`),
+          fetch(`/api/pos/bill/${hn}`)
+      ]);
+      const pData = await pRes.json();
+      const bData = await bRes.json();
       Swal.close();
-      
-      if (data.status === 'success' && data.patient) {
-        currentPosPatient = data.patient;
-        let rawBills = data.data || [];
-        
+
+      if (pData.status === 'success' && pData.data) {
+        currentPosPatient = pData.data;
+        let rawBills = bData.data || []; // บิลทั้งหมดทุกวัน
+
+        // --- 🌟 ระบบจับกลุ่มบิลแบบเจาะจงคอร์ส (แม่นยำ 100%) ---
         let groupedBoxes = [];
         let medBills = rawBills.filter(b => b.type === 'MEDICINE' || b.type === 'SKINCARE');
         let mainBills = rawBills.filter(b => b.type !== 'MEDICINE' && b.type !== 'SKINCARE');
 
         mainBills.forEach(main => {
            main.attached_meds = [];
-           let medsForThisMain = medBills.filter(m => (!m.attached) && (m.item_name.includes(`(ในคอร์ส: ${main.item_name})`) || m.bill_date === main.bill_date));
-           medsForThisMain.forEach(m => { main.attached_meds.push(m); m.attached = true; });
+           // ค้นหายาที่มีคำว่า (ในคอร์ส: ชื่อโปรเป๊ะๆ) เท่านั้น ไม่เอาวันที่มาเกี่ยวแล้ว
+           let medsForThisMain = medBills.filter(m => {
+             if (m.attached) return false;
+             let tagMatch = m.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
+             if (tagMatch && tagMatch[1].trim() === main.item_name.trim()) return true;
+             return false;
+           });
+
+           medsForThisMain.forEach(m => {
+              main.attached_meds.push(m);
+              m.attached = true; 
+           });
            groupedBoxes.push(main);
         });
 
+        // ถ้ายามีหลงเหลือ (ไม่ได้สั่งในคอร์ส หรือซื้อแยก) ให้แยกกล่องต่างหาก
         medBills.filter(m => !m.attached).forEach(m => {
            m.attached_meds = [];
            groupedBoxes.push(m);
         });
 
-        currentPatientBills = groupedBoxes;
+        // 🌟 คัดกรองแสดงเฉพาะกล่องที่ "ค้างชำระ" หรือ "มีประวัติทำรายการในวันนี้" เท่านั้น
+        let todayStr = new Date().toISOString().split('T')[0];
+        currentPatientBills = groupedBoxes.filter(b => {
+           let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+           let boxPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+           return (boxTotal - boxPaid > 0) || (b.bill_date === todayStr) || b.attached_meds.some(m => m.bill_date === todayStr);
+        });
+        
         document.getElementById('posSearchInput').value = currentPosPatient.id;
         document.getElementById('posPatientSummary').style.display = 'block';
         document.getElementById('p_summary_name').innerText = currentPosPatient.full_name;
@@ -245,18 +270,25 @@
         
         renderBillBoxes();
         
+        // 🌟 Auto-Select: เลือกลายการแรกที่ "ค้างชำระ" ให้ทันที
         if (currentPatientBills.length > 0) {
           let firstPayable = currentPatientBills.findIndex(b => {
             let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
             let boxPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
             return (boxTotal - boxPaid) > 0;
           });
-          selectBillToPay(firstPayable !== -1 ? firstPayable : 0);
+          
+          if(firstPayable !== -1) {
+            selectBillToPay(firstPayable);
+          } else {
+            selectBillToPay(0);
+          }
         } else {
           resetPaymentPanel();
         }
+
       }
-    } catch(e) {}
+    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
   function renderBillBoxes() {
