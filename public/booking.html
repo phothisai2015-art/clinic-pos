@@ -556,10 +556,20 @@
       if (result.isConfirmed) {
         Swal.fire({ title: 'กำลังบันทึกลง Database...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        var payload = { patient_id: currentBookingPatientHN, appointment_date: currentBookingDateStr, appointment_time: currentBookingTime, notes: courseName };
+        var payload = {
+          patient_id: currentBookingPatientHN,
+          appointment_date: currentBookingDateStr,
+          appointment_time: currentBookingTime,
+          notes: courseName 
+        };
 
         try {
-            const res = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
             if (!res.ok) throw new Error("API บันทึกล้มเหลว");
 
             // 🌟 ส่งประวัติเข้า System Logs
@@ -567,12 +577,16 @@
             fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ลงนัดหมายให้ ${currentBookingPatientName} (${courseName}) วันที่ ${currentBookingDateStr} เวลา ${currentBookingTime} น.` }) });
 
             await loadAppointmentsFromDB();
+
             closeBookingCourseModal();
             renderTimeSlots();
             renderCalendar(currentMonth, currentYear);
             renderTomorrowAppointments();
             Swal.fire({ icon: 'success', title: 'ลงนัดหมายสำเร็จ!', text: 'บันทึกเข้าสู่ฐานข้อมูลเรียบร้อย', timer: 2000, showConfirmButton: false });
-        } catch(e) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
+
+        } catch(e) {
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+        }
       }
     });
   }
@@ -596,14 +610,17 @@
 
             // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ยกเลิกและลบคิวนัดหมายระบบ (รหัสคิว #${appId})` }) });
+            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ยกเลิกและลบคิวนัดหมาย (รหัสคิว #${appId})` }) });
 
             await loadAppointmentsFromDB();
+            
             renderTimeSlots();
             renderCalendar(currentMonth, currentYear);
             renderTomorrowAppointments();
             Swal.fire({ icon: 'success', title: 'ลบนัดหมายเรียบร้อยแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-        } catch(e) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้', 'error'); }
+        } catch(e) {
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถลบข้อมูลจากฐานข้อมูลได้', 'error');
+        }
       }
     });
   }

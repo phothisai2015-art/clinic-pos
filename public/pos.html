@@ -468,7 +468,7 @@
             
             // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'POS', details: `รับชำระเงินจาก HN:${currentPosPatient.id} จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod}` }) });
+            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'POS', details: `รับชำระเงินจาก ${currentPosPatient.full_name} (${currentPosPatient.id}) จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod}` }) });
 
             Swal.fire({ icon: 'success', title: 'รับชำระสำเร็จ!', timer: 1500, showConfirmButton: false });
             selectPatientForPos(currentPosPatient.id);
