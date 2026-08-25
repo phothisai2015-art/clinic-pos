@@ -553,6 +553,7 @@
     renderPatientCourses(rawPatientCourses);
   }
 
+  // 🌟 ส่วนที่แก้ไขให้ดึงสถานะ จ่ายบางส่วน / ค้างชำระ โดยบวกค่ายาเพิ่มเข้าไปด้วย
   function renderPatientCourses(courses) {
     const grid = document.getElementById('patientCoursesGrid');
     if(courses.length === 0) {
@@ -566,11 +567,27 @@
        let displayName = c.product_name || c.product_id;
        let isPromo = prodDef && prodDef.type === 'PROMOTION';
        
-       let isUnpaid = allBillsList.some(bill => bill.product_id === c.product_id && bill.status !== 'PAID');
+       // 🌟 คำนวณยอดรวมของบิลคอร์สนี้ + ยาที่พ่วงด้วยชื่อเดียวกัน
+       let relatedBills = allBillsList.filter(bill => 
+           bill.product_id === c.product_id || 
+           (bill.item_name && bill.item_name.includes(`(ในคอร์ส: ${displayName})`))
+       );
        
-       let payBadge = isUnpaid 
-         ? `<button class="btn btn-sm btn-danger ms-2 shadow-sm rounded-pill fw-bold" onclick="goToPOS('${currentHN}')"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</button>` 
-         : `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`; 
+       let totalBilled = 0;
+       let totalPaid = 0;
+       relatedBills.forEach(b => { 
+           totalBilled += b.total_price; 
+           totalPaid += b.paid_amount; 
+       });
+
+       let payBadge = '';
+       if (relatedBills.length === 0 || totalPaid >= totalBilled) {
+         payBadge = `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
+       } else if (totalPaid > 0 && totalPaid < totalBilled) {
+         payBadge = `<button class="btn btn-sm btn-warning text-dark ms-2 shadow-sm rounded-pill fw-bold" onclick="goToPOS('${currentHN}')"><i class="fa-solid fa-clock-rotate-left me-1"></i> จ่ายบางส่วน</button>`;
+       } else {
+         payBadge = `<button class="btn btn-sm btn-danger ms-2 shadow-sm rounded-pill fw-bold" onclick="goToPOS('${currentHN}')"><i class="fa-solid fa-money-bill me-1"></i> ค้างชำระ</button>`;
+       }
 
        if (isPromo) {
           let state = JSON.parse(c.bundle_state || '[]');
