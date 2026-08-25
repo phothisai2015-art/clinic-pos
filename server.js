@@ -75,14 +75,6 @@ db.serialize(() => {
     stock_deducted BOOLEAN DEFAULT 0,
     payment_method TEXT DEFAULT 'CASH',
     payment_history TEXT DEFAULT '[]'
-	// 8. ประวัติการทำงานในระบบ (System Logs)
-    db.run(`CREATE TABLE IF NOT EXISTS system_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_name TEXT,
-    action TEXT,
-    details TEXT,
-    created_at TEXT
-	
   )`);
 });
 
