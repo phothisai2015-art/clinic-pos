@@ -114,13 +114,7 @@
           <small class="text-muted" style="font-size: 0.75rem;">สร้างประวัติและซักถามอาการ</small>
         </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('doctor.html')">
-          <div class="menu-icon-wrap bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-stethoscope"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">ห้องตรวจแพทย์</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">บันทึกเวชระเบียน (EMR)</small>
-        </button>
-      </div>
+      
       <div class="col-6 col-md-4">
         <button class="menu-card-btn w-100" onclick="openModule('pos.html')">
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
@@ -300,14 +294,14 @@
       if (!perms) return; 
       let p = perms.toUpperCase();
       
+      // 🌟 อัปเดต Index ใหม่เมื่อปุ่มห้องแพทย์ถูกลบออกไป
       let buttons = {
         'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   
         'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], 
-        'PATIENT_2': document.querySelectorAll('.menu-card-btn')[2], 
-        'POS': document.querySelectorAll('.menu-card-btn')[3],       
-        'STOCK': document.querySelectorAll('.menu-card-btn')[4],     
-        'DASH': document.querySelectorAll('.menu-card-btn')[5],      
-        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[6]  
+        'POS': document.querySelectorAll('.menu-card-btn')[2],       
+        'STOCK': document.querySelectorAll('.menu-card-btn')[3],     
+        'DASH': document.querySelectorAll('.menu-card-btn')[4],      
+        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[5]  
       };
 
       for (const [key, btn] of Object.entries(buttons)) {
