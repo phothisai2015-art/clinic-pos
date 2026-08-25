@@ -37,6 +37,33 @@
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  /* 🌟 สไตล์สำหรับช่วงเวลาปัจจุบัน (Live Time Slot) */
+  .time-slot-row.current-time-slot {
+    background-color: #f0fdf4 !important; /* สีพื้นหลังเขียวอ่อน */
+    border-left: 5px solid #10b981; /* แถบสีเขียวเข้มด้านซ้าย */
+    box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.05);
+  }
+  .time-slot-row.current-time-slot .time-label {
+    color: #10b981; /* เปลี่ยนสีเวลาให้เด่นขึ้น */
+    border-right-color: #10b981;
+  }
+  
+  /* ป้ายกำกับคำว่า Live */
+  .now-indicator {
+    display: inline-block;
+    background-color: #ef4444; /* สีแดง Live */
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    animation: live-pulse 1.5s infinite;
+  }
+  @keyframes live-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
@@ -343,6 +370,12 @@
     let startMins = (startH * 60) + startM;
     let endMins = (endH * 60) + endM;
 
+    // 🌟 1. ดึงเวลาปัจจุบันเพื่อเช็ค
+    let now = new Date();
+    let todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    let isTodayView = (currentBookingDateStr === todayStr); // เช็คว่ากำลังดูของ "วันนี้" อยู่หรือไม่
+    let currentTotalMins = (now.getHours() * 60) + now.getMinutes();
+
     let html = '';
     
     for (let m = startMins; m < endMins; m += 30) {
@@ -350,12 +383,17 @@
       let min = (m % 60).toString().padStart(2, '0');
       let timeStr = `${h}:${min}`;
 
+      // 🌟 2. คำนวณว่าช่วงเวลา 30 นาทีนี้ ตรงกับเวลาปัจจุบันหรือไม่
+      let isCurrentSlot = (isTodayView && currentTotalMins >= m && currentTotalMins < m + 30);
+      let currentSlotClass = isCurrentSlot ? ' current-time-slot' : '';
+      let timeLabelHtml = isCurrentSlot ? `${timeStr}<br><span class="now-indicator mt-1">Live</span>` : timeStr;
+
       let matchedApp = appointmentsList.find(a => a.date === currentBookingDateStr && a.time === timeStr);
 
       if (matchedApp) {
         html += `
-          <div class="time-slot-row booked-slot">
-            <div class="time-label">${timeStr}</div>
+          <div class="time-slot-row booked-slot${currentSlotClass}">
+            <div class="time-label">${timeLabelHtml}</div>
             <div class="slot-content d-flex justify-content-between align-items-center w-100 py-1">
               <div>
                 <span class="badge bg-primary me-2"><i class="fa-solid fa-user-check me-1"></i> นัดแล้ว</span>
@@ -373,8 +411,8 @@
         `;
       } else {
         html += `
-          <div class="time-slot-row" onclick="bookSlot('${timeStr}')">
-            <div class="time-label">${timeStr}</div>
+          <div class="time-slot-row${currentSlotClass}" onclick="bookSlot('${timeStr}')">
+            <div class="time-label">${timeLabelHtml}</div>
             <div class="slot-content"><i class="fa-solid fa-plus me-2"></i> ว่าง - กดเพื่อลงนัดหมาย</div>
           </div>
         `;
