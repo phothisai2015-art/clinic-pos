@@ -1013,7 +1013,79 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
- 
+ // 🌟 บันทึกการรักษา EMR (หักคอร์ส + ลงตารางนัดอัตโนมัติ)
+  async function submitEMRAndDeduct() {
+    Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
+    
+    let finalTxArray = [];
+    let doneItems = currentSubItems.filter(x => x.used_today > 0);
+    if (doneItems.length > 0) finalTxArray.push(`[หัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
+    
+    let manualTx = document.getElementById('e_tx').value;
+    if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
+
+    if (pendingMeds.length > 0) {
+      finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
+    }
+
+    let selectedAssistants = [];
+    document.querySelectorAll('.assistant-select').forEach(sel => {
+      if (sel.value) selectedAssistants.push(sel.value);
+    });
+    
+    if (selectedAssistants.length > 0) {
+      finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
+    }
+
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = document.getElementById('emr_package_title').innerText;
+    let cleanCourseName = (tempDiv.textContent || tempDiv.innerText || '').trim();
+
+    let linkedMeds = pendingMeds.map(m => ({
+        ...m,
+        name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
+    }));
+
+    let emrPayload = {
+      patient_id: currentHN,
+      doctor_id: sessionStorage.getItem('currentUserId') || 1, 
+      symptoms: document.getElementById('e_cc').value, 
+      diagnosis: 'บริการความงาม',
+      treatment_details: finalTxArray.join('\n\n'),
+      next_appointment_date: selectedNextApptDate, 
+      next_appointment_time: selectedNextApptTime, 
+      next_appointment_note: cleanCourseName,
+      prescribed_meds: linkedMeds  
+    };
+
+    try {
+      // API นี้จะบันทึก EMR และสร้างคิวนัดหมายลง Database ให้อัตโนมัติ
+      await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
+      
+      let deductPayload = {};
+      if (activeEmrCourse.bundle_state) {
+        let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
+        let stockDeds = [];
+        currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
+        let isAllUsed = newState.every(s => s.total - s.used <= 0);
+        deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
+      } else {
+        deductPayload = { deduct_amount: currentSubItems[0].used_today };
+      }
+
+      await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
+
+      // ส่งประวัติเข้า System Logs
+      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'EMR', details: `บันทึกการรักษาให้ HN:${currentHN} ในรายการ: ${cleanCourseName}` }) });
+
+      clearEmrSelectedAppt();
+      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์ส บันทึกประวัติ และลงตารางนัดหมายเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
+      closeEmrMode();
+      selectFromList(currentHN);
+
+    } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
+  }
   
   // ==========================================
   // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
@@ -1300,13 +1372,7 @@
   async function loadEmrAppointmentsList() {
     emrAppointmentsList = [];
 
-    if (!USE_REAL_DATABASE) {
-      let localData = localStorage.getItem('clinicAppointments_DEV');
-      if (localData) {
-        try { emrAppointmentsList = JSON.parse(localData); } catch(e){}
-      }
-      return;
-    }
+    
 
     try {
       const res = await fetch('/api/appointments');
