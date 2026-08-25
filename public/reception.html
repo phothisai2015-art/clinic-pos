@@ -1006,6 +1006,12 @@
     tempDiv.innerHTML = document.getElementById('emr_package_title').innerText;
     let cleanCourseName = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
+    // 🌟 แก้ไขจุดนี้: ผูกชื่อคอร์สเข้าไปในตัวแปรยาเงียบๆ เพื่อส่งไปให้ POS หาเจอ!
+    let linkedMeds = pendingMeds.map(m => ({
+        ...m,
+        name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
+    }));
+
     let emrPayload = {
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
@@ -1015,7 +1021,7 @@
       next_appointment_date: selectedNextApptDate, 
       next_appointment_time: selectedNextApptTime, 
       next_appointment_note: cleanCourseName,
-      prescribed_meds: pendingMeds
+      prescribed_meds: linkedMeds  // 🌟 ส่งยารายการใหม่ที่ผูกชื่อคอร์สแล้วไปบันทึก
     };
 
     try {

@@ -160,7 +160,7 @@
   var selectedBill = null;
   var selectedMethod = 'CASH';
 
-  // 🌟 โหลดข้อมูลคลังสินค้าไว้เพื่อดูรายละเอียดในโปรโมชั่น (Bundle items)[cite: 3]
+  // 🌟 โหลดข้อมูลคลังสินค้าไว้เพื่อดูรายละเอียดในโปรโมชั่น (Bundle items)
   async function loadInventoryForPos() {
     try {
       const res = await fetch('/api/inventory');
@@ -213,7 +213,7 @@
     } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
-  // 🌟 ฟังก์ชันดึงประวัติบิลและ "จับกลุ่มยาเข้ากล่องคอร์ส"
+  // 🌟 ฟังก์ชันดึงประวัติบิลและ "จับกลุ่มยาเข้ากล่องคอร์ส (จาก Tag ที่เราแนบมา)"
   async function selectPatientForPos(hn) {
     Swal.fire({ title: 'กำลังดึงข้อมูลบิล...', didOpen: () => Swal.showLoading() });
     try {
@@ -225,21 +225,27 @@
         currentPosPatient = data.patient;
         let rawBills = data.data || [];
         
-        // --- 🌟 ระบบจับกลุ่มบิล (Bill Bundling) ---
+        // --- 🌟 ระบบจับกลุ่มบิลแบบเจาะจงคอร์ส ---
         let groupedBoxes = [];
         let medBills = rawBills.filter(b => b.type === 'MEDICINE' || b.type === 'SKINCARE');
         let mainBills = rawBills.filter(b => b.type !== 'MEDICINE' && b.type !== 'SKINCARE');
 
         mainBills.forEach(main => {
            main.attached_meds = [];
-           let medsForThisDate = medBills.filter(m => m.bill_date === main.bill_date && !m.attached);
-           medsForThisDate.forEach(m => {
+           // ค้นหายาที่มีคำว่า (ในคอร์ส: ชื่อโปร) หรือสั่งในวันเดียวกัน
+           let medsForThisMain = medBills.filter(m => 
+             (!m.attached) && 
+             (m.item_name.includes(`(ในคอร์ส: ${main.item_name})`) || m.bill_date === main.bill_date)
+           );
+           
+           medsForThisMain.forEach(m => {
               main.attached_meds.push(m);
               m.attached = true; 
            });
            groupedBoxes.push(main);
         });
 
+        // ถ้ายามีหลงเหลือ (ไม่ได้สั่งในคอร์ส) ให้แยกกล่องต่างหาก
         medBills.filter(m => !m.attached).forEach(m => {
            m.attached_meds = [];
            groupedBoxes.push(m);
@@ -266,7 +272,7 @@
           if(firstPayable !== -1) {
             selectBillToPay(firstPayable);
           } else {
-            selectBillToPay(0); // ถ้าจ่ายครบหมดแล้ว ให้เลือกกล่องแรกสุด
+            selectBillToPay(0);
           }
         } else {
           resetPaymentPanel();
@@ -276,7 +282,7 @@
     } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
-  // 🌟 2. แสดงผลกล่องที่รวมยาเรียบร้อยแล้ว[cite: 4]
+  // 🌟 2. แสดงผลกล่อง (หั่นข้อความ Tag ทิ้งเพื่อให้หน้าจอดูสะอาด)
   function renderBillBoxes() {
     const grid = document.getElementById('billBoxesGrid');
     const emptyState = document.getElementById('emptyBoxesState');
@@ -320,7 +326,9 @@
       if (bill.attached_meds.length > 0) {
         medsHtml = '<div class="mt-2 pt-2 border-top border-light">';
         bill.attached_meds.forEach(m => {
-           medsHtml += `<div class="small text-muted mb-1"><i class="fa-solid fa-pills me-1 text-danger opacity-75"></i> ${m.item_name} (+฿${m.total_price.toLocaleString()})</div>`;
+           // 🌟 ตัดคำว่า (ในคอร์ส: ...) ออกเพื่อให้ UI สะอาดตา
+           let cleanMedName = m.item_name.split(' (ในคอร์ส:')[0];
+           medsHtml += `<div class="small text-muted mb-1"><i class="fa-solid fa-pills me-1 text-danger opacity-75"></i> ${cleanMedName} (+฿${m.total_price.toLocaleString()})</div>`;
         });
         medsHtml += '</div>';
       }
@@ -368,22 +376,21 @@
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     let balance = boxTotalPrice - boxPaidAmount;
 
-    // เติมข้อมูลลงแผงขวามือ
     document.getElementById('pay_bill_id').innerText = `บิล #${selectedBill.id}`;
-    document.getElementById('pay_item_name').innerText = selectedBill.item_name;
+    
+    let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
+    document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปรโมชั่น / เซ็ต' : 'คอร์สเดี่ยว / บริการ';
     document.getElementById('pay_item_full_price').innerText = `฿${boxTotalPrice.toLocaleString()}`;
     
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
-    // เปิดให้พิมพ์ช่องจ่ายเงิน
     let inputEl = document.getElementById('pay_input_amount');
     inputEl.disabled = false;
     inputEl.value = balance;
     inputEl.setAttribute('max', balance);
     
-    // เปิดปุ่มบันทึกรับชำระ
     let submitBtn = document.getElementById('pay_submit_btn');
     submitBtn.disabled = false;
     submitBtn.classList.remove('btn-secondary');
@@ -406,8 +413,9 @@
       selectedBill.attached_meds.forEach(m => {
          let mBalance = m.total_price - m.paid_amount;
          let mStatus = mBalance <= 0 ? '(จ่ายแล้ว)' : '';
+         let cleanMedName = m.item_name.split(' (ในคอร์ส:')[0];
          detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom border-light">
-                           <span>- ${m.item_name} <small class="text-success">${mStatus}</small></span> 
+                           <span>- ${cleanMedName} <small class="text-success">${mStatus}</small></span> 
                            <span class="fw-bold">฿${m.total_price.toLocaleString()}</span>
                          </div>`;
       });
@@ -436,7 +444,6 @@
     if(method === 'CREDIT') document.getElementById('pay_credit').classList.add('selected');
   }
 
-  // 🌟 ฟังก์ชันล้างข้อมูลหน้าจอขวา (ให้เป็นสีเทา กดไม่ได้)
   function resetPaymentPanel() {
     selectedBill = null;
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
@@ -452,26 +459,28 @@
     let inputEl = document.getElementById('pay_input_amount');
     inputEl.value = 0;
     inputEl.setAttribute('max', 0);
-    inputEl.disabled = true; // ล็อกช่องพิมพ์
+    inputEl.disabled = true; 
     
     document.getElementById('pay_btn_amount').innerText = `฿0.00`;
     
     let submitBtn = document.getElementById('pay_submit_btn');
-    submitBtn.disabled = true; // ล็อกปุ่มกด
+    submitBtn.disabled = true; 
     submitBtn.classList.remove('btn-success');
     submitBtn.classList.add('btn-secondary');
   }
 
-  // 🌟 4. ยืนยันการรับชำระเงิน[cite: 3]
+  // 🌟 4. ยืนยันการรับชำระเงิน
   async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
     if (payAmount <= 0) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาระบุยอดชำระที่มากกว่า 0', 'warning');
 
+    let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
+
     Swal.fire({
       title: 'ยืนยันรับชำระเงิน?',
-      html: `รายการ: <b>${selectedBill.item_name} ${selectedBill.attached_meds.length > 0 ? '(รวมยา)' : ''}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
+      html: `รายการ: <b>${cleanMainName} ${selectedBill.attached_meds.length > 0 ? '(รวมยา)' : ''}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
