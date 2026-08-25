@@ -816,8 +816,7 @@
       document.getElementById('emr_input_section').style.display = 'flex';
       document.getElementById('emr_view_only_msg').style.display = 'none';
       
-      // 👇 เปลี่ยนตรงนี้ให้เป็นค่าว่าง
-      document.getElementById('e_cc').value = ''; 
+      document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_tx').value = '';
       
       resetAssistantDropdowns();
