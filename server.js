@@ -310,11 +310,10 @@ app.delete('/api/appointments/:id', async (req, res) => {
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.put('/api/appointments/:id/checkin', async (req, res) => {
+// 🌟 [เพิ่มโค้ดนี้ลงไป] API สำหรับกดโทรคอนเฟิร์มนัดหมายพรุ่งนี้
+app.put('/api/appointments/:id/confirm', async (req, res) => {
   try {
-    const { bp, pulse, weight, height, notes } = req.body;
-    await dbRun(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
-      [bp || '', pulse || '', weight || '', height || '', notes || '', req.params.id]);
+    await dbRun(`UPDATE appointments SET status = 'CONFIRMED' WHERE id = ?`, [req.params.id]);
     res.json({ status: 'success' });
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
