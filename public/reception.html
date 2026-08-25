@@ -832,15 +832,26 @@
         }
       });
       document.getElementById('e_med_select').innerHTML = medOptions;
+	  
+
+      // 🌟 บังคับโชว์กล่องปรับจำนวนเสมอ (ทั้งแบบเซ็ต และ แบบคอร์สเดี่ยว)
+      document.getElementById('emr_sub_items_section').style.display = 'block';
 
       if (isPromo) {
-        document.getElementById('emr_sub_items_section').style.display = 'block';
         let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
-        currentSubItems = state.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used, remain_qty: s.total - s.used, used_today: (s.total - s.used) > 0 ? 1 : 0 }));
+        currentSubItems = state.map(s => {
+          // ค้นหาว่าเป็นยาหรือหัตถการ
+          let prod = allInventoryList.find(p => p.id === s.id);
+          let pType = prod ? prod.type : 'COURSE';
+          return { id: s.id, name: s.name, total: s.total, used: s.used, remain_qty: s.total - s.used, used_today: (s.total - s.used) > 0 ? 1 : 0, type: pType, sig: '' };
+        });
         renderSubItemsList();
       } else {
-        document.getElementById('emr_sub_items_section').style.display = 'none';
-        currentSubItems = [{ id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty, remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1 }];
+        // กรณีคอร์สเดี่ยว (เช่น ซื้อครีม 10 ปุก) ให้โชว์กล่องให้ปรับจำนวนได้
+        let prod = allInventoryList.find(p => p.id === activeEmrCourse.product_id);
+        let pType = prod ? prod.type : 'COURSE';
+        currentSubItems = [{ id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty, remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1, type: pType, sig: '' }];
+        renderSubItemsList();
       }
     }
 
@@ -971,26 +982,45 @@
       let isNotDone = sub.used_today === 0;
       let cardClass = isNotDone ? 'bg-light border-secondary opacity-50' : 'bg-white border-primary';
       
+      // 🌟 เช็คว่าเป็น ยา/สกินแคร์ หรือไม่
+      let isMed = (sub.type === 'MEDICINE' || sub.type === 'SKINCARE');
+      let actionLabel = isMed ? (isNotDone ? 'จ่าย' : 'ไม่จ่าย') : (isNotDone ? 'ทำ' : 'ไม่ทำ');
+      let qtyLabel = isMed ? 'จำนวนจ่ายวันนี้:' : 'จำนวนทำวันนี้:';
+      
+      // 🌟 เพิ่มช่องกรอกวิธีใช้ (SIG) เฉพาะกรณีที่เป็นยาและถูกเลือกจ่าย
+      let sigHtml = '';
+      if (isMed && !isNotDone) {
+        sigHtml = `<div class="mt-2 pt-2 border-top">
+                     <input type="text" class="form-control form-control-sm text-primary" placeholder="ระบุวิธีใช้ (SIG)..." value="${sub.sig || ''}" onchange="updateSubItemSig(${idx}, this.value)">
+                   </div>`;
+      }
+
       container.innerHTML += `
         <div class="col-md-6">
           <div class="p-2 rounded-3 shadow-sm border ${cardClass}">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <div class="fw-bold fs-6">${sub.name} (เหลือ ${sub.remain_qty})</div>
               <button class="btn btn-sm ${isNotDone ? 'btn-outline-primary' : 'btn-outline-danger'} rounded-pill py-0" onclick="toggleSubItemStatus(${idx})">
-                ${isNotDone ? 'ทำ' : 'ไม่ทำ'}
+                ${actionLabel}
               </button>
             </div>
             <div class="d-flex align-items-center justify-content-between">
-              <small class="text-muted">จำนวนทำวันนี้:</small>
+              <small class="text-muted">${qtyLabel}</small>
               <div class="input-group input-group-sm w-50">
                 <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, -1)" ${isNotDone ? 'disabled' : ''}>-</button>
                 <input type="text" class="form-control text-center fw-bold" value="${sub.used_today}" readonly>
                 <button class="btn btn-outline-secondary fw-bold" onclick="adjustSubItemQty(${idx}, 1)" ${isNotDone || sub.used_today >= sub.remain_qty ? 'disabled' : ''}>+</button>
               </div>
             </div>
+            ${sigHtml}
           </div>
         </div>`;
     });
+  }
+
+  // ฟังก์ชันเล็กๆ เอาไว้จำค่าที่พนักงานพิมพ์ในช่องวิธีใช้
+  function updateSubItemSig(index, val) {
+    currentSubItems[index].sig = val;
   }
 
   function toggleSubItemStatus(index) {
@@ -1013,19 +1043,29 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
- // 🌟 บันทึกการรักษา EMR (หักคอร์ส + ลงตารางนัดอัตโนมัติ)
-  async function submitEMRAndDeduct() {
+ async function submitEMRAndDeduct() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
     let finalTxArray = [];
-    let doneItems = currentSubItems.filter(x => x.used_today > 0);
-    if (doneItems.length > 0) finalTxArray.push(`[หัตถการวันนี้]\n` + doneItems.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
+    
+    // 🌟 แยกประเภท "หัตถการ" กับ "ยาที่อยู่ในคอร์ส"
+    let doneProcedures = currentSubItems.filter(x => x.used_today > 0 && x.type !== 'MEDICINE' && x.type !== 'SKINCARE');
+    let doneMeds = currentSubItems.filter(x => x.used_today > 0 && (x.type === 'MEDICINE' || x.type === 'SKINCARE'));
+
+    if (doneProcedures.length > 0) {
+      finalTxArray.push(`[หัตถการในคอร์สวันนี้]\n` + doneProcedures.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
+    }
+
+    // 🌟 จัดรูปแบบยาฟรีที่เบิกจากคอร์ส
+    if (doneMeds.length > 0) {
+      finalTxArray.push(`[ยา/สกินแคร์ ที่ได้รับจากคอร์ส]\n` + doneMeds.map(d => `- ${d.name}: จำนวน ${d.used_today} ชิ้น (วิธีใช้: ${d.sig || 'ตามสั่ง'})`).join('\n'));
+    }
     
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
     if (pendingMeds.length > 0) {
-      finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
+      finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์ เพิ่มเติม (คิดเงิน)]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     }
 
     let selectedAssistants = [];
@@ -1036,56 +1076,6 @@
     if (selectedAssistants.length > 0) {
       finalTxArray.push(`[ผู้ให้บริการ/ผู้ช่วย]\n` + selectedAssistants.map(a => `- ${a}`).join('\n'));
     }
-
-    let tempDiv = document.createElement('div');
-    tempDiv.innerHTML = document.getElementById('emr_package_title').innerText;
-    let cleanCourseName = (tempDiv.textContent || tempDiv.innerText || '').trim();
-
-    let linkedMeds = pendingMeds.map(m => ({
-        ...m,
-        name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
-    }));
-
-    let emrPayload = {
-      patient_id: currentHN,
-      doctor_id: sessionStorage.getItem('currentUserId') || 1, 
-      symptoms: document.getElementById('e_cc').value, 
-      diagnosis: 'บริการความงาม',
-      treatment_details: finalTxArray.join('\n\n'),
-      next_appointment_date: selectedNextApptDate, 
-      next_appointment_time: selectedNextApptTime, 
-      next_appointment_note: cleanCourseName,
-      prescribed_meds: linkedMeds  
-    };
-
-    try {
-      // API นี้จะบันทึก EMR และสร้างคิวนัดหมายลง Database ให้อัตโนมัติ
-      await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
-      
-      let deductPayload = {};
-      if (activeEmrCourse.bundle_state) {
-        let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
-        let stockDeds = [];
-        currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
-        let isAllUsed = newState.every(s => s.total - s.used <= 0);
-        deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
-      } else {
-        deductPayload = { deduct_amount: currentSubItems[0].used_today };
-      }
-
-      await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
-
-      // ส่งประวัติเข้า System Logs
-      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'EMR', details: `บันทึกการรักษาให้ HN:${currentHN} ในรายการ: ${cleanCourseName}` }) });
-
-      clearEmrSelectedAppt();
-      Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'หักคอร์ส บันทึกประวัติ และลงตารางนัดหมายเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
-      closeEmrMode();
-      selectFromList(currentHN);
-
-    } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
-  }
   
   // ==========================================
   // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
