@@ -2,6 +2,10 @@
   .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 8px; cursor: pointer; }
   .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
+  
+  /* สไตล์ปุ่มแท็บยกเลิก */
+  .clinic-nav-pills .nav-link.tab-archived { color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; }
+  .clinic-nav-pills .nav-link.tab-archived.active { background-color: #e11d48; color: #fff; border-color: #e11d48; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3); }
 
   .inventory-table th { font-weight: bold; color: #64748b; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; padding: 12px; }
   .inventory-table td { padding: 12px; vertical-align: middle; border-bottom: 1px dashed #e2e8f0; }
@@ -16,16 +20,21 @@
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
-  <!-- 🌟 ระบบ Tab แยกสินค้ายิบย่อย กับ โปรโมชั่น -->
-  <ul class="nav nav-pills clinic-nav-pills mb-3">
+  <!-- 🌟 ระบบ Tab เพิ่มส่วน ยกเลิกการขาย -->
+  <ul class="nav nav-pills clinic-nav-pills mb-3 d-flex w-100">
     <li class="nav-item">
       <button class="nav-link active" id="btn-tab-general" onclick="switchInvTab('general')">
-        <i class="fa-solid fa-box me-1"></i> สินค้ายิบย่อย (General)
+        <i class="fa-solid fa-box me-1"></i> สินค้ายิบย่อย (กำลังขาย)
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link" id="btn-tab-promo" onclick="switchInvTab('promo')">
-        <i class="fa-solid fa-gift me-1"></i> โปรโมชั่น / จัดเซ็ต (Promotions)
+        <i class="fa-solid fa-gift me-1"></i> โปรโมชั่น / จัดเซ็ต (กำลังขาย)
+      </button>
+    </li>
+    <li class="nav-item ms-auto">
+      <button class="nav-link tab-archived" id="btn-tab-archived" onclick="switchInvTab('archived')">
+        <i class="fa-solid fa-folder-closed me-1"></i> ระงับ / ยกเลิกการขาย
       </button>
     </li>
   </ul>
@@ -72,6 +81,8 @@
             <small class="text-muted" style="font-size:0.7rem;">(ระบบจะหักสต็อก/เพิ่มคอร์ส ให้คนไข้ตามของแถมเหล่านี้)</small>
           </div>
           
+          <input type="hidden" id="pd_status" value="ACTIVE">
+          
           <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-light rounded-pill fw-bold shadow-sm w-50" onclick="clearProductForm()">เคลียร์</button><button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></div>
         </form>
       </div>
@@ -87,7 +98,7 @@
         <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
           <table class="table inventory-table w-100 mb-0">
             <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-              <tr><th width="15%">รหัส</th><th width="35%">ชื่อรายการ</th><th width="15%">ประเภท</th><th width="15%" class="text-center">คงเหลือ</th><th width="20%" class="text-center">จัดการ</th></tr>
+              <tr><th width="15%">รหัส</th><th width="35%">ชื่อรายการ</th><th width="15%">ประเภท</th><th width="15%" class="text-center">คงเหลือ</th><th width="20%" class="text-end pe-4">จัดการ</th></tr>
             </thead>
             <tbody id="inventoryList"></tbody>
           </table>
@@ -100,7 +111,7 @@
 <script>
   var inventoryData = []; 
   var bundleItems = [];
-  var currentInvTab = 'general'; // 🌟 สถานะ Tab ปัจจุบัน
+  var currentInvTab = 'general'; 
 
   initInventory(); 
   function initInventory() { loadInventory(); }
@@ -111,18 +122,17 @@
       const data = await res.json();
       if(data.status === 'success') { 
         inventoryData = data.data; 
-        switchInvTab(currentInvTab); // 🌟 บังคับโหลดตารางตาม Tab ปัจจุบัน
+        switchInvTab(currentInvTab); 
       }
     } catch (e) {}
   }
 
-  // 🌟 ฟังก์ชันสลับ Tab และปรับ UI
   function switchInvTab(tab) {
     currentInvTab = tab;
     
-    // อัปเดตปุ่ม Tab
     document.getElementById('btn-tab-general').classList.remove('active');
     document.getElementById('btn-tab-promo').classList.remove('active');
+    document.getElementById('btn-tab-archived').classList.remove('active');
     document.getElementById(`btn-tab-${tab}`).classList.add('active');
     
     clearProductForm();
@@ -130,7 +140,7 @@
     const typeSelect = document.getElementById('pd_type');
     if (tab === 'promo') {
       typeSelect.value = 'PROMOTION';
-      document.getElementById('type_container').style.display = 'none'; // ซ่อน dropdown หมวดหมู่
+      document.getElementById('type_container').style.display = 'none'; 
       document.getElementById('promo_fields').style.display = 'block';
       document.getElementById('normal_fields').style.display = 'none';
       document.getElementById('pd_unit').value = 'เซ็ต';
@@ -139,13 +149,14 @@
       document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-gift me-2"></i> สร้างโปรโมชั่นใหม่';
       document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-primary"></i> รายการโปรโมชั่นจัดเซ็ต';
 
-      // โหลดเฉพาะสินค้าที่ไม่ใช่โปรโมชั่น มาให้เลือกทำของแถม
       let sel = document.getElementById('promo_product_select'); 
       sel.innerHTML = '<option value="">-- เลือกหัตถการ / ของแถม --</option>';
-      inventoryData.filter(i => i.type !== 'PROMOTION').forEach(i => { 
+      inventoryData.filter(i => i.type !== 'PROMOTION' && (i.status === 'ACTIVE' || !i.status)).forEach(i => { 
         sel.innerHTML += `<option value="${i.id}" data-name="${i.name}">${i.name}</option>`; 
       });
 
+    } else if (tab === 'archived') {
+      document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-folder-closed me-2 text-danger"></i> รายการที่ระงับ / ยกเลิกขายแล้ว';
     } else {
       typeSelect.value = 'MEDICINE';
       document.getElementById('type_container').style.display = 'block';
@@ -163,10 +174,12 @@
     const list = document.getElementById('inventoryList'); 
     list.innerHTML = '';
 
-    // 🌟 ฟิลเตอร์ตาม Tab ก่อน แล้วค่อยค้นหาคำ
+    // 🌟 ดึงข้อมูลแล้วแยกตามสถานะ Active / Inactive
     let filteredItems = inventoryData.filter(item => {
-      if (currentInvTab === 'promo') return item.type === 'PROMOTION';
-      return item.type !== 'PROMOTION';
+      let stat = item.status || 'ACTIVE';
+      if (currentInvTab === 'archived') return stat === 'INACTIVE';
+      if (currentInvTab === 'promo') return item.type === 'PROMOTION' && stat === 'ACTIVE';
+      return item.type !== 'PROMOTION' && stat === 'ACTIVE';
     });
 
     if (searchTerm) {
@@ -198,8 +211,23 @@
         expiryInfo = `<div class="${warnClass}"><i class="fa-regular fa-clock me-1"></i>${expDate < new Date() ? 'หมดอายุแล้ว!' : `หมดอายุ: ${expDate.toLocaleDateString('th-TH')}`}</div>`;
       }
 
+      // 🌟 ระบบสร้างปุ่มให้เหมาะกับสถานะกล่อง (Active = ปุ่มระงับขาย, Archived = ปุ่มเอาคืนมา)
+      let actionBtns = '';
+      if (currentInvTab === 'archived') {
+        actionBtns = `<button class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3 shadow-sm" onclick="toggleItemStatus('${item.id}', 'ACTIVE')"><i class="fa-solid fa-rotate-left me-1"></i> นำกลับมาขายใหม่</button>`;
+      } else {
+        let stockBtns = item.type !== 'PROMOTION' ? `<button class="btn btn-sm btn-outline-success rounded-circle me-1" onclick="adjustStock('${item.id}', '${item.name}', 'add')"><i class="fa-solid fa-plus"></i></button><button class="btn btn-sm btn-outline-warning rounded-circle me-3" onclick="adjustStock('${item.id}', '${item.name}', 'remove')"><i class="fa-solid fa-minus"></i></button>` : '<span class="me-3"></span>';
+        
+        actionBtns = `
+          ${stockBtns}
+          <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm" title="ระงับการขาย/เลิกขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')"><i class="fa-solid fa-ban me-1"></i> เลิกขาย</button>
+        `;
+      }
+
+      let rowOpacity = currentInvTab === 'archived' ? 'opacity-75 bg-light' : '';
+
       list.innerHTML += `
-        <tr>
+        <tr class="${rowOpacity}">
           <td class="fw-bold text-muted small">${item.id}</td>
           <td>
             <a href="#" class="fw-bold text-primary text-decoration-none" onclick="editProduct('${item.id}')">${item.name}</a><br>
@@ -208,10 +236,7 @@
           </td>
           <td>${typeBadge}</td>
           <td class="text-center fw-bold fs-6">${stockDisplay}</td>
-          <td class="text-center">
-            ${item.type !== 'PROMOTION' ? `<button class="btn btn-sm btn-outline-success rounded-circle me-1" onclick="adjustStock('${item.id}', '${item.name}', 'add')"><i class="fa-solid fa-plus"></i></button><button class="btn btn-sm btn-outline-warning rounded-circle me-2" onclick="adjustStock('${item.id}', '${item.name}', 'remove')"><i class="fa-solid fa-minus"></i></button>` : ''}
-            <button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteProduct('${item.id}')"><i class="fa-solid fa-trash"></i></button>
-          </td>
+          <td class="text-end pe-4">${actionBtns}</td>
         </tr>`;
     });
   }
@@ -249,7 +274,8 @@
       unit: document.getElementById('pd_unit').value,
       lot_number: document.getElementById('pd_lot').value, 
       expiry_date: document.getElementById('pd_expiry').value, 
-      bundle_items: JSON.stringify(bundleItems)
+      bundle_items: JSON.stringify(bundleItems),
+      status: document.getElementById('pd_status').value // 🌟 ดึงสถานะปัจจุบันไปเซฟด้วย
     };
     
     Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
@@ -264,9 +290,11 @@
   function editProduct(id) {
     let item = inventoryData.find(i => i.id === id);
     if(item) {
-      // 🌟 สลับ Tab ไปหาหมวดหมู่ของสินค้าที่คลิกอัตโนมัติ
-      if (item.type === 'PROMOTION' && currentInvTab !== 'promo') switchInvTab('promo');
-      else if (item.type !== 'PROMOTION' && currentInvTab !== 'general') switchInvTab('general');
+      if (item.status === 'INACTIVE' && currentInvTab !== 'archived') switchInvTab('archived');
+      else if (item.status !== 'INACTIVE') {
+         if (item.type === 'PROMOTION' && currentInvTab !== 'promo') switchInvTab('promo');
+         else if (item.type !== 'PROMOTION' && currentInvTab !== 'general') switchInvTab('general');
+      }
 
       document.getElementById('pd_id').value = item.id; 
       document.getElementById('pd_name').value = item.name; 
@@ -276,6 +304,7 @@
       document.getElementById('pd_unit').value = item.unit;
       document.getElementById('pd_lot').value = item.lot_number || ''; 
       document.getElementById('pd_expiry').value = item.expiry_date || '';
+      document.getElementById('pd_status').value = item.status || 'ACTIVE'; // 🌟 โหลดสถานะใส่ฟอร์มซ่อน
       
       if (item.type === 'PROMOTION') {
         bundleItems = JSON.parse(item.bundle_items || '[]'); 
@@ -288,12 +317,35 @@
     document.getElementById('productForm').reset(); 
     bundleItems = []; 
     renderPromoItems(); 
+    document.getElementById('pd_status').value = 'ACTIVE';
     
     if(currentInvTab === 'promo') {
       document.getElementById('pd_type').value = 'PROMOTION';
       document.getElementById('pd_unit').value = 'เซ็ต';
     } else {
       document.getElementById('pd_type').value = 'MEDICINE';
+    }
+  }
+
+  // 🌟 ฟังก์ชันใหม่สำหรับสลับปุ่ม ระงับการขาย / นำกลับมาขาย
+  async function toggleItemStatus(id, newStatus) {
+    let titleMsg = newStatus === 'INACTIVE' ? 'ยืนยันการระงับขายสินค้านี้?' : 'นำสินค้านี้กลับมาขายใหม่?';
+    let textMsg = newStatus === 'INACTIVE' ? 'ประวัติคนไข้ที่เคยซื้อไปแล้วจะยังอยู่ครบถ้วน แต่จะไม่สามารถเปิดบิลใหม่ให้คนไข้รายอื่นได้' : '';
+    let btnColor = newStatus === 'INACTIVE' ? '#e11d48' : '#10b981';
+
+    if ((await Swal.fire({ title: titleMsg, text: textMsg, icon: 'question', showCancelButton: true, confirmButtonColor: btnColor })).isConfirmed) {
+      Swal.fire({title: 'กำลังอัปเดตสถานะ...', didOpen: () => Swal.showLoading()});
+      try {
+        await fetch(`/api/inventory/${id}/status`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ status: newStatus })
+        });
+        Swal.fire({ icon: 'success', title: 'อัปเดตเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        loadInventory();
+      } catch (e) {
+        Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error');
+      }
     }
   }
 
@@ -313,12 +365,5 @@
         loadInventory();
       }
     });
-  }
-
-  async function deleteProduct(id) { 
-    if ((await Swal.fire({ title: 'ลบสินค้านี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { 
-      await fetch(`/api/inventory/${id}`, { method: 'DELETE' }); 
-      loadInventory(); 
-    } 
   }
 </script>

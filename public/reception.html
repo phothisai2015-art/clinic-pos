@@ -698,7 +698,12 @@
     const generalContainer = document.getElementById('pkg-content-general');
     promoContainer.innerHTML = ''; generalContainer.innerHTML = '';
 
-    const filteredList = allInventoryList.filter(p => p.type !== 'MEDICINE' && p.type !== 'SKINCARE');
+    // 🌟 อัปเดต: ให้กรองเอาเฉพาะสินค้าที่ไม่ใช่ยา และต้องมีสถานะเป็น ACTIVE (หรือของเก่าที่ยังไม่มีสถานะ) เท่านั้น
+    const filteredList = allInventoryList.filter(p => 
+      p.type !== 'MEDICINE' && 
+      p.type !== 'SKINCARE' && 
+      (p.status === 'ACTIVE' || !p.status)
+    );
 
     filteredList.forEach(p => {
       let priceStr = `฿${p.price.toLocaleString()}`;
@@ -719,8 +724,8 @@
       else generalContainer.innerHTML += html;
     });
 
-    if(promoContainer.innerHTML === '') promoContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลแพคเกจ</div>';
-    if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อย</div>';
+    if(promoContainer.innerHTML === '') promoContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลแพคเกจที่กำลังเปิดขาย</div>';
+    if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อยที่กำลังเปิดขาย</div>';
   }
 
   function addToCart(id, name, price, type) {
