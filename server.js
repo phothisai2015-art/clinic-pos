@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
+const fsPromises = require('fs').promises; // 🌟 ใช้สำหรับเซฟไฟล์แบบ Async
 const db = require('./database');
 
 const app = express();
@@ -15,229 +16,173 @@ app.use(express.static(path.join(__dirname, 'public')));
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) { fs.mkdirSync(uploadDir, { recursive: true }); }
 
-// ✅ เพิ่มฟังก์ชันช่วยกรอง Error แจ้งเตือนเฉพาะเรื่องที่ผิดปกติจริงๆ
-const alterLog = (err) => { 
-  if (err && !err.message.includes('duplicate column')) {
-    console.warn('⚠️ Database Warning:', err.message); 
+// ==========================================
+// 🌟 Helper ฟังก์ชัน (Async DB) - ใช้ครอบคลุมทั้งระบบแล้ว
+// ==========================================
+const dbGet = (sql, params = []) => new Promise((resolve, reject) => db.get(sql, params, (err, row) => err ? reject(err) : resolve(row)));
+const dbRun = (sql, params = []) => new Promise((resolve, reject) => db.run(sql, params, function(err) { err ? reject(err) : resolve(this) }));
+const dbAll = (sql, params = []) => new Promise((resolve, reject) => db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows)));
+
+// ==========================================
+// 🔒 Middleware ตรวจสอบสิทธิ์ (Security)
+// ==========================================
+app.use('/api', (req, res, next) => {
+  // ยกเว้น API ที่ไม่ต้องล็อกอิน
+  const publicRoutes = ['/login', '/status', '/check-setup', '/setup-admin'];
+  if (publicRoutes.includes(req.path)) return next();
+
+  const userId = req.headers['x-user-id'];
+  if (!userId) {
+    console.warn(`⚠️ [Security] ตรวจพบการเข้าถึง API ${req.path} โดยไม่มี Token/User ID`);
+    // ในอนาคตสามารถปลดคอมเมนต์บรรทัดล่างเพื่อบล็อก 100% ได้ (เมื่อหน้าเว็บส่ง Token ทุกครั้งแล้ว)
+    // return res.status(401).json({ status: 'error', message: 'Unauthorized Access' });
   }
-};
-
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_date TEXT`, alterLog);
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_time TEXT`, alterLog);
-db.run(`ALTER TABLE emr_logs ADD COLUMN next_appointment_note TEXT`, alterLog);
-
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS patient_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT, photo_type TEXT, image_path TEXT, created_at TEXT)`);
-  db.run(`ALTER TABLE appointments ADD COLUMN is_walkin BOOLEAN DEFAULT 0`, alterLog);
-  db.run(`ALTER TABLE appointments ADD COLUMN bp TEXT`, alterLog);
-  db.run(`ALTER TABLE appointments ADD COLUMN pulse TEXT`, alterLog);
-  db.run(`ALTER TABLE appointments ADD COLUMN weight TEXT`, alterLog);
-  db.run(`ALTER TABLE appointments ADD COLUMN height TEXT`, alterLog);
-  db.run(`ALTER TABLE appointments ADD COLUMN sales_rep TEXT`, alterLog);
-  db.run(`ALTER TABLE products ADD COLUMN lot_number TEXT DEFAULT '-'`, alterLog);
-  db.run(`ALTER TABLE products ADD COLUMN expiry_date TEXT`, alterLog);
-  db.run(`ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT '[]'`, alterLog);
-  
-  db.run(`ALTER TABLE emr_logs ADD COLUMN bp TEXT`, alterLog);
-  db.run(`ALTER TABLE emr_logs ADD COLUMN pulse TEXT`, alterLog);
-  db.run(`ALTER TABLE emr_logs ADD COLUMN weight TEXT`, alterLog);
-  db.run(`ALTER TABLE emr_logs ADD COLUMN height TEXT`, alterLog);
-  db.run(`ALTER TABLE emr_logs ADD COLUMN payment_status TEXT DEFAULT 'WAITING'`, alterLog);
-  // 🌟 เพิ่มคอลัมน์ bundle_state ลงใน patient_courses เพื่อเก็บรายการย่อยในกล่อง
-  db.run(`ALTER TABLE patient_courses ADD COLUMN bundle_state TEXT DEFAULT '[]'`, alterLog);
-  
-  db.run(`ALTER TABLE clinics ADD COLUMN logo_url TEXT`, alterLog);
-  db.run(`ALTER TABLE clinics ADD COLUMN promptpay TEXT`, alterLog);
-  db.run(`ALTER TABLE clinics ADD COLUMN bank_account_name TEXT`, alterLog);
-  db.run(`ALTER TABLE clinics ADD COLUMN address TEXT`, alterLog);
-  db.run(`ALTER TABLE patient_bills ADD COLUMN payment_method TEXT DEFAULT 'CASH'`, alterLog);
-  
-  db.run(`ALTER TABLE patient_bills ADD COLUMN payment_history TEXT DEFAULT '[]'`, alterLog);
-  
-  db.get("SELECT count(*) as count FROM clinics", (err, row) => {
-    if (row && row.count === 0) {
-      db.run(`INSERT INTO clinics (clinic_name, email, phone) VALUES ('Clinic Management System', 'admin@clinic.com', '-')`);
-    }
-  });
-
-  db.run(`CREATE TABLE IF NOT EXISTS patient_bills (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    clinic_id INTEGER,
-    patient_id TEXT,
-    bill_date TEXT,
-    item_name TEXT,
-    type TEXT,
-    product_id TEXT,
-    qty REAL DEFAULT 1,
-    total_price REAL,
-    paid_amount REAL DEFAULT 0,
-    status TEXT DEFAULT 'UNPAID',
-    stock_deducted BOOLEAN DEFAULT 0,
-    payment_method TEXT DEFAULT 'CASH',
-    payment_history TEXT DEFAULT '[]'
-  )`);
+  next();
 });
-
-// ==========================================
-// 🌟 Helper ฟังก์ชัน (Async DB)
-// ==========================================
-const dbGet = (sql, params) => new Promise((resolve, reject) => db.get(sql, params, (err, row) => err ? reject(err) : resolve(row)));
-const dbRun = (sql, params) => new Promise((resolve, reject) => db.run(sql, params, function(err) { err ? reject(err) : resolve(this) }));
 
 // ==========================================
 // 📄 Page Routes (หน้าเว็บ)
 // ==========================================
-app.get('/reception.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reception.html')); });
-app.get('/doctor.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'doctor.html')); });
-app.get('/booking.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'booking.html')); });
-app.get('/patient.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'patient.html')); });
-app.get('/patients_list.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'patients_list.html')); });
-app.get('/inventory.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'inventory.html')); });
-app.get('/setting.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'setting.html')); });
-app.get('/reports.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'reports.html')); });
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+app.get('/reception.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reception.html')));
+app.get('/doctor.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'doctor.html')));
+app.get('/booking.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'booking.html')));
+app.get('/patient.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patient.html')));
+app.get('/patients_list.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'patients_list.html')));
+app.get('/inventory.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'inventory.html')));
+app.get('/setting.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'setting.html')));
+app.get('/reports.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reports.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.get('/api/status', (req, res) => { res.json({ status: 'success' }); });
+app.get('/api/status', (req, res) => res.json({ status: 'success' }));
 
 // ==========================================
 // 🔐 API เข้าสู่ระบบ (Login)
 // ==========================================
-app.post('/api/login', (req, res) => {
-  const { pin } = req.body;
-  db.get(`SELECT id, name, role, permissions FROM users WHERE pin = ?`, [pin], (err, row) => {
-    if (!row) return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
+app.post('/api/login', async (req, res) => {
+  try {
+    const { pin } = req.body;
+    const user = await dbGet(`SELECT id, name, role, permissions FROM users WHERE pin = ?`, [pin]);
     
-    // 🌟 แอบบันทึก Log ทันทีที่มีคนเข้าสู่ระบบ
+    if (!user) return res.json({ status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' });
+    
     const time = new Date().toISOString();
-    db.run(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, 'LOGIN', 'เข้าสู่ระบบ', ?)`, [row.name, time]);
+    await dbRun(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, 'LOGIN', 'เข้าสู่ระบบ', ?)`, [user.name, time]);
     
-    res.json({ status: 'success', user: row });
-  });
+    res.json({ status: 'success', user: user });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
 // 📋 API สำหรับระบบประวัติการทำงาน (Logs)
 // ==========================================
-app.get('/api/logs', (req, res) => {
-  db.all(`SELECT * FROM system_logs ORDER BY id DESC LIMIT 500`, [], (err, rows) => {
+app.get('/api/logs', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT * FROM system_logs ORDER BY id DESC LIMIT 500`);
     res.json({ status: 'success', data: rows || [] });
-  });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.post('/api/logs', (req, res) => {
-  const { user_name, action, details } = req.body;
-  const time = new Date().toISOString();
-  db.run(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, ?, ?, ?)`, [user_name, action, details, time], () => {
+app.post('/api/logs', async (req, res) => {
+  try {
+    const { user_name, action, details } = req.body;
+    await dbRun(`INSERT INTO system_logs (user_name, action, details, created_at) VALUES (?, ?, ?, ?)`, 
+      [user_name, action, details, new Date().toISOString()]);
     res.json({ status: 'success' });
-  });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
 // 🧑‍⚕️ API ระบบคนไข้และคอร์ส (Patients & Courses)
 // ==========================================
-app.get('/api/patients', (req, res) => {
-  const search = req.query.search || '';
-  const sql = `SELECT * FROM patients WHERE full_name LIKE ? OR phone LIKE ? OR id LIKE ?`;
-  db.all(sql, [`%${search}%`, `%${search}%`, `%${search}%`], (err, rows) => { res.json({ status: 'success', data: rows }); });
+app.get('/api/patients', async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    const rows = await dbAll(`SELECT * FROM patients WHERE full_name LIKE ? OR phone LIKE ? OR id LIKE ?`, [`%${search}%`, `%${search}%`, `%${search}%`]);
+    res.json({ status: 'success', data: rows });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.get('/api/patients/:id', (req, res) => {
-  db.get(`SELECT * FROM patients WHERE id = ?`, [req.params.id], (err, row) => { res.json({ status: 'success', data: row }); });
+app.get('/api/patients/:id', async (req, res) => {
+  try {
+    const row = await dbGet(`SELECT * FROM patients WHERE id = ?`, [req.params.id]);
+    res.json({ status: 'success', data: row });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.post('/api/patients', (req, res) => {
-  const { id, full_name, id_card, phone, dob, allergies, congenital_disease } = req.body;
-  const created_at = new Date().toISOString();
-  let patientId = id || ('HN-' + Math.floor(100000 + Math.random() * 900000)); 
-  
-  // 🌟 ฟังก์ชันบันทึกข้อมูล (แยกออกมาเพื่อเรียกใช้ทีหลัง)
-  const proceedToSave = () => {
-    const sql = `INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name, id_card=excluded.id_card, phone=excluded.phone, dob=excluded.dob, allergies=excluded.allergies, congenital_disease=excluded.congenital_disease`;
-    db.run(sql, [patientId, full_name, id_card, phone, dob, allergies, congenital_disease, created_at], function(err) { 
-      res.json({ status: 'success', patient_id: patientId }); 
-    });
-  };
-
-  // 🌟 ดักเช็คเลขบัตรประชาชนซ้ำ (ต้องมีเลขส่งมา และต้องไม่ใช่ HN ตัวเองกรณีแก้ไขประวัติ)
-  if (id_card && id_card.trim() !== '') {
-    db.get(`SELECT id, full_name FROM patients WHERE id_card = ? AND id != ?`, [id_card, patientId], (err, row) => {
-      if (row) {
-        // ถ้าเจอเลขบัตรซ้ำ ส่งข้อความ Error กลับไปหาหน้าเว็บ
-        return res.json({ 
-          status: 'error', 
-          message: `เลขบัตรประชาชนนี้ถูกลงทะเบียนไว้แล้วในชื่อ:<br><b class="text-primary fs-5">${row.full_name} (${row.id})</b><br><br><small class="text-muted">กรุณาใช้ช่องค้นหาด้านซ้ายมือเพื่อดึงประวัติคนไข้</small>` 
-        });
-      } else {
-        proceedToSave();
+app.post('/api/patients', async (req, res) => {
+  try {
+    const { id, full_name, id_card, phone, dob, allergies, congenital_disease } = req.body;
+    let patientId = id || ('HN-' + Math.floor(100000 + Math.random() * 900000)); 
+    
+    if (id_card && id_card.trim() !== '') {
+      const existing = await dbGet(`SELECT id, full_name FROM patients WHERE id_card = ? AND id != ?`, [id_card, patientId]);
+      if (existing) {
+        return res.json({ status: 'error', message: `เลขบัตรนี้ลงทะเบียนไว้แล้วในชื่อ: ${existing.full_name}` });
       }
-    });
-  } else {
-    // ถ้าไม่ได้กรอกเลขบัตรมา (เช่น ต่างชาติ หรือเด็ก) ให้ข้ามไปเซฟเลย
-    proceedToSave();
+    }
+
+    await dbRun(`INSERT INTO patients (id, clinic_id, full_name, id_card, phone, dob, allergies, congenital_disease, created_at) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name, id_card=excluded.id_card, phone=excluded.phone, dob=excluded.dob, allergies=excluded.allergies, congenital_disease=excluded.congenital_disease`, 
+      [patientId, full_name, id_card, phone, dob, allergies, congenital_disease, new Date().toISOString()]);
+    
+    res.json({ status: 'success', patient_id: patientId }); 
+  } catch (err) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+app.delete('/api/patients/:id', async (req, res) => {
+  try {
+    await dbRun(`DELETE FROM patients WHERE id = ?`, [req.params.id]);
+    res.json({ status: 'success' });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.get('/api/patients/:id/courses', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT c.*, p.name as product_name, p.unit FROM patient_courses c LEFT JOIN products p ON c.product_id = p.id WHERE c.patient_id = ?`, [req.params.id]);
+    res.json({ status: 'success', data: rows || [] });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.put('/api/courses/:id/deduct', async (req, res) => {
+  try {
+    const { deduct_amount, bundle_state, stock_deductions } = req.body;
+    const course = await dbGet(`SELECT * FROM patient_courses WHERE id = ?`, [req.params.id]);
+    if (!course) return res.status(404).json({ status: 'error' });
+
+    let sql = `UPDATE patient_courses SET used_qty = used_qty + ?`;
+    let params = [parseFloat(deduct_amount || 0)];
+    if (bundle_state) { sql += `, bundle_state = ?`; params.push(bundle_state); }
+    sql += ` WHERE id = ?`; params.push(req.params.id);
+
+    await dbRun("BEGIN TRANSACTION");
+    await dbRun(sql, params);
+
+    if (stock_deductions && stock_deductions.length > 0) {
+       for (let sd of stock_deductions) {
+          await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(sd.amount), sd.product_id]);
+       }
+    } else {
+       const prod = await dbGet(`SELECT type FROM products WHERE id = ?`, [course.product_id]);
+       if (prod && ['INJECTABLE', 'MEDICINE', 'SKINCARE'].includes(prod.type)) {
+         await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(deduct_amount || 0), course.product_id]);
+       }
+    }
+    await dbRun("COMMIT");
+    res.json({ status: 'success' });
+  } catch (err) { 
+    await dbRun("ROLLBACK").catch(()=>{}); 
+    res.status(500).json({ status: 'error' }); 
   }
 });
 
-app.delete('/api/patients/:id', (req, res) => {
-  db.run(`DELETE FROM patients WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
-});
-
-app.get('/api/patients/:id/courses', (req, res) => {
-  const sql = `SELECT c.*, p.name as product_name, p.unit FROM patient_courses c LEFT JOIN products p ON c.product_id = p.id WHERE c.patient_id = ?`;
-  db.all(sql, [req.params.id], (err, rows) => { res.json({ status: 'success', data: rows || [] }); });
-});
-
-app.post('/api/patients/:id/courses', (req, res) => {
-  const { course_name, total_qty } = req.body;
-  db.run(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, ?, 0)`, 
-    [req.params.id, course_name, parseFloat(total_qty)], function(err) { res.json({ status: 'success', course_id: this.lastID }); });
-});
-
-app.put('/api/courses/:id/deduct', (req, res) => {
-  const { deduct_amount, bundle_state, stock_deductions } = req.body;
-  db.get(`SELECT * FROM patient_courses WHERE id = ?`, [req.params.id], (err, course) => {
-    if (err || !course) return res.status(500).json({ status: 'error', message: 'ไม่พบคอร์ส' });
-    
-    let sql = `UPDATE patient_courses SET used_qty = used_qty + ?`;
-    let params = [parseFloat(deduct_amount || 0)];
-    
-    if (bundle_state) {
-      sql += `, bundle_state = ?`;
-      params.push(bundle_state);
-    }
-    sql += ` WHERE id = ?`;
-    params.push(req.params.id);
-
-    db.run(sql, params, function(err2) {
-      // 🌟 หักสต็อกของแถมย่อยในกล่อง
-      if (stock_deductions && stock_deductions.length > 0) {
-         stock_deductions.forEach(sd => {
-            db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(sd.amount), sd.product_id]);
-         });
-         res.json({ status: 'success' });
-      } else {
-         // 🌟 หักสต็อกคอร์สเดี่ยวแบบปกติ
-         db.get(`SELECT type FROM products WHERE id = ?`, [course.product_id], (err3, prod) => {
-           if (prod && (prod.type === 'INJECTABLE' || prod.type === 'MEDICINE' || prod.type === 'SKINCARE')) {
-             db.run(`UPDATE products SET stock = stock - ? WHERE id = ?`, [parseFloat(deduct_amount || 0), course.product_id], () => { 
-               res.json({ status: 'success' }); 
-             });
-           } else {
-             res.json({ status: 'success' });
-           }
-         });
-      }
-    });
-  });
-});
-
 app.post('/api/patients/:id/assign-promo', async (req, res) => {
-  const { product_id } = req.body;
-  const patient_id = req.params.id;
   try {
+    const { product_id } = req.body;
+    const patient_id = req.params.id;
     const prod = await dbGet(`SELECT * FROM products WHERE id = ?`, [product_id]);
-    if (!prod) return res.status(500).json({status: 'error', message: 'ไม่พบโปรโมชั่น'});
-    const today = new Date().toISOString().split('T')[0];
+    if (!prod) return res.status(500).json({status: 'error'});
 
+    await dbRun("BEGIN TRANSACTION");
+    const today = new Date().toISOString().split('T')[0];
     await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status) VALUES (1, ?, ?, ?, ?, ?, 1, ?, 0, 'UNPAID')`,
       [patient_id, today, prod.name, prod.type, prod.id, prod.price]);
 
@@ -252,183 +197,196 @@ app.post('/api/patients/:id/assign-promo', async (req, res) => {
       let result = await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty) VALUES (1, ?, ?, 1, 0)`, [patient_id, prod.id]);
       course_id = result.lastID;
     }
+    await dbRun("COMMIT");
     res.json({status: 'success', course_id: course_id});
-  } catch (err) { res.status(500).json({status: 'error'}); }
+  } catch (err) { 
+    await dbRun("ROLLBACK").catch(()=>{});
+    res.status(500).json({status: 'error'}); 
+  }
 });
 
 // ==========================================
-// 📝 API ระบบเวชระเบียน (EMR)
+// 📝 API ระบบเวชระเบียน (EMR) - ปรับใช้ Transaction แล้ว
 // ==========================================
-app.post('/api/emr', (req, res) => {
-  // 🌟 เพิ่มการรับค่า doctor_id เข้ามา
-  const { patient_id, doctor_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height, prescribed_meds } = req.body;
-  const visit_date = new Date().toISOString();
-  
-  // 🌟 เปลี่ยนจากฟิกซ์เลข 1 ให้ใช้ค่า doctor_id หรือ 1 เป็นค่าเริ่มต้น
-  const sql = `INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  
-  db.run(sql, [patient_id, doctor_id || 1, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || ''], function(err) {
+app.post('/api/emr', async (req, res) => {
+  try {
+    const { patient_id, doctor_id, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height, prescribed_meds } = req.body;
+    const visit_date = new Date().toISOString();
+    
+    await dbRun("BEGIN TRANSACTION");
+
+    await dbRun(`INSERT INTO emr_logs (clinic_id, patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date, next_appointment_time, next_appointment_note, bp, pulse, weight, height) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+      [patient_id, doctor_id || 1, visit_date, symptoms, diagnosis, treatment_details, next_appointment_date || '', next_appointment_time || '', next_appointment_note || '', bp || '', pulse || '', weight || '', height || '']);
+    
     if (next_appointment_date) {
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, ?, ?, ?, ?)`, [patient_id, doctor_id || 1, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
+      await dbRun(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, notes) VALUES (1, ?, ?, ?, ?, ?)`, 
+        [patient_id, doctor_id || 1, next_appointment_date, next_appointment_time || '10:00', next_appointment_note || 'นัดติดตามผลจาก EMR']);
     }
 
     if (prescribed_meds && prescribed_meds.length > 0) {
-      prescribed_meds.forEach(med => {
+      for (let med of prescribed_meds) {
         const total = med.qty * med.price;
-        db.run(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, 'MEDICINE', ?, ?, ?, 0, 'UNPAID', 0)`,
+        await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted) VALUES (1, ?, ?, ?, 'MEDICINE', ?, ?, ?, 0, 'UNPAID', 0)`,
           [patient_id, visit_date.split('T')[0], med.name, med.product_id, med.qty, total]);
-      });
+      }
     }
 
+    await dbRun("COMMIT");
     res.json({ status: 'success', message: 'บันทึก EMR สำเร็จ' });
-  });
+  } catch (err) {
+    await dbRun("ROLLBACK").catch(()=>{});
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 });
 
-app.get('/api/emr/:patient_id', (req, res) => {
-  // 🌟 เพิ่มคำสั่ง JOIN เพื่อดึงชื่อผู้ตรวจจากตาราง users
-  const sql = `
-    SELECT e.*, u.name as doctor_name 
-    FROM emr_logs e 
-    LEFT JOIN users u ON e.doctor_id = u.id 
-    WHERE e.patient_id = ? 
-    ORDER BY e.id DESC
-  `;
-  db.all(sql, [req.params.patient_id], (err, rows) => { res.json({ status: 'success', data: rows }); });
+app.get('/api/emr/:patient_id', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT e.*, u.name as doctor_name FROM emr_logs e LEFT JOIN users u ON e.doctor_id = u.id WHERE e.patient_id = ? ORDER BY e.id DESC`, [req.params.patient_id]);
+    res.json({ status: 'success', data: rows });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
-// 📸 API รูปภาพ 
+// 📸 API รูปภาพ (แก้เป็น Async File System)
 // ==========================================
-app.post('/api/patients/photos', (req, res) => {
-  const { patient_id, photo_type, image_data } = req.body;
-  const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
-  const fileName = `photo_${patient_id}_${Date.now()}.png`;
-  fs.writeFileSync(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
-  db.run(`INSERT INTO patient_photos (patient_id, photo_type, image_path, created_at) VALUES (?, ?, ?, ?)`, [patient_id, photo_type || 'MARKING', `/uploads/${fileName}`, new Date().toISOString()], function(err) { res.json({ status: 'success' }); });
+app.post('/api/patients/photos', async (req, res) => {
+  try {
+    const { patient_id, photo_type, image_data } = req.body;
+    const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
+    const fileName = `photo_${patient_id}_${Date.now()}.png`;
+    
+    // 🌟 เปลี่ยนมาใช้ fsPromises
+    await fsPromises.writeFile(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
+    
+    await dbRun(`INSERT INTO patient_photos (patient_id, photo_type, image_path, created_at) VALUES (?, ?, ?, ?)`, 
+      [patient_id, photo_type || 'MARKING', `/uploads/${fileName}`, new Date().toISOString()]);
+      
+    res.json({ status: 'success' });
+  } catch (err) { res.status(500).json({ status: 'error' }); }
 });
-app.get('/api/patients/:id/photos', (req, res) => { db.all(`SELECT * FROM patient_photos WHERE patient_id = ? ORDER BY id DESC`, [req.params.id], (err, rows) => { res.json({ status: 'success', data: rows }); }); });
-app.delete('/api/patients/photos/:id', (req, res) => {
-  db.get(`SELECT image_path FROM patient_photos WHERE id = ?`, [req.params.id], (err, row) => {
-    if (row && fs.existsSync(path.join(__dirname, 'public', row.image_path))) fs.unlinkSync(path.join(__dirname, 'public', row.image_path));
-    db.run(`DELETE FROM patient_photos WHERE id = ?`, [req.params.id], () => { res.json({ status: 'success' }); });
-  });
+
+app.get('/api/patients/:id/photos', async (req, res) => { 
+  try {
+    const rows = await dbAll(`SELECT * FROM patient_photos WHERE patient_id = ? ORDER BY id DESC`, [req.params.id]);
+    res.json({ status: 'success', data: rows }); 
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.delete('/api/patients/photos/:id', async (req, res) => {
+  try {
+    const row = await dbGet(`SELECT image_path FROM patient_photos WHERE id = ?`, [req.params.id]);
+    if (row && fs.existsSync(path.join(__dirname, 'public', row.image_path))) {
+      await fsPromises.unlink(path.join(__dirname, 'public', row.image_path)).catch(()=>{});
+    }
+    await dbRun(`DELETE FROM patient_photos WHERE id = ?`, [req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
 // 🗓️ API นัดหมายและคิว
 // ==========================================
-app.get('/api/appointments', (req, res) => {
-  db.all(`SELECT a.id, a.appointment_date as date, a.appointment_time as time, a.patient_id as hn, p.full_name as name, p.phone, a.notes as note, a.status FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
-});
-// 🌟 API สำหรับสร้างนัดหมายใหม่ด้วยตัวเอง (Manual Booking)
-app.post('/api/appointments', (req, res) => {
-  const { patient_id, appointment_date, appointment_time, notes } = req.body;
-  db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, notes) VALUES (1, ?, 1, ?, ?, 'WAITING', ?)`, 
-    [patient_id, appointment_date, appointment_time, notes || 'นัดหมายล่วงหน้า'], 
-    function(err) { res.json({ status: 'success', id: this.lastID }); });
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT a.id, a.appointment_date as date, a.appointment_time as time, a.patient_id as hn, p.full_name as name, p.phone, a.notes as note, a.status FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id ORDER BY a.appointment_date ASC, a.appointment_time ASC`);
+    res.json({ status: 'success', data: rows });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-// 🌟 API สำหรับลบ/ยกเลิกนัดหมาย
-app.delete('/api/appointments/:id', (req, res) => {
-  db.run(`DELETE FROM appointments WHERE id = ?`, [req.params.id], function(err) { res.json({ status: 'success' }); });
-});
-// 🌟 API สำหรับ Check-in นัดหมายพร้อมบันทึกข้อมูล Vitals
-// 🌟 API Check-in ส่งเข้าห้องตรวจ (หน้า Booking)
-app.put('/api/appointments/:id/checkin', (req, res) => {
-  const { bp, pulse, weight, height, notes } = req.body;
-  db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
-    [bp || '', pulse || '', weight || '', height || '', notes || '', req.params.id], 
-    function(err) { 
-      if (err) return res.status(500).json({ status: 'error', message: err.message });
-      res.json({ status: 'success' }); 
-    });
-});
-app.put('/api/appointments/:id/status', (req, res) => {
-  db.run(`UPDATE appointments SET status = ? WHERE id = ?`, [req.body.status, req.params.id], function(err) { res.json({ status: 'success' }); });
+app.post('/api/appointments', async (req, res) => {
+  try {
+    const { patient_id, appointment_date, appointment_time, notes } = req.body;
+    const result = await dbRun(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, notes) VALUES (1, ?, 1, ?, ?, 'WAITING', ?)`, 
+      [patient_id, appointment_date, appointment_time, notes || 'นัดหมายล่วงหน้า']);
+    res.json({ status: 'success', id: result.lastID });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.get('/api/queue', (req, res) => {
-  db.all(`SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time, a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'CHECKED_IN' ORDER BY a.appointment_date ASC, a.appointment_time ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
+app.delete('/api/appointments/:id', async (req, res) => {
+  try {
+    await dbRun(`DELETE FROM appointments WHERE id = ?`, [req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
-// 🌟 API ส่งคนไข้เข้าห้องตรวจ (หน้า Reception) - เพิ่มตัวดัก Error กันค้าง
-app.post('/api/queue/send-doctor', (req, res) => {
-  const { patient_id, bp, pulse, weight, height, notes } = req.body;
-  const today = new Date().toISOString().split('T')[0];
-  const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
-  
-  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today], (err, row) => {
-    if (err) return res.status(500).json({ status: 'error', message: err.message });
+
+app.put('/api/appointments/:id/checkin', async (req, res) => {
+  try {
+    const { bp, pulse, weight, height, notes } = req.body;
+    await dbRun(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
+      [bp || '', pulse || '', weight || '', height || '', notes || '', req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.get('/api/queue', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT a.id, a.patient_id as hn, p.full_name as name, a.appointment_time as time, a.is_walkin, a.bp, a.pulse, a.weight, a.height, a.notes FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'CHECKED_IN' ORDER BY a.appointment_date ASC, a.appointment_time ASC`);
+    res.json({ status: 'success', data: rows });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.post('/api/queue/send-doctor', async (req, res) => {
+  try {
+    const { patient_id, bp, pulse, weight, height, notes } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    const timeStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+    
+    const row = await dbGet(`SELECT id FROM appointments WHERE patient_id = ? AND appointment_date = ? AND status IN ('WAITING', 'CONFIRMED', 'CHECKED_IN') ORDER BY id DESC LIMIT 1`, [patient_id, today]);
     
     if (row) {
-      db.run(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, 
-        [bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in', row.id], 
-        (err2) => {
-          if (err2) return res.status(500).json({ status: 'error', message: err2.message });
-          res.json({ status: 'success' });
-        });
+      await dbRun(`UPDATE appointments SET status = 'CHECKED_IN', bp = ?, pulse = ?, weight = ?, height = ?, notes = ? WHERE id = ?`, [bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in', row.id]);
     } else {
-      db.run(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, 
-        [patient_id, today, timeStr, bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in'], 
-        (err2) => {
-          if (err2) return res.status(500).json({ status: 'error', message: err2.message });
-          res.json({ status: 'success' });
-        });
+      await dbRun(`INSERT INTO appointments (clinic_id, patient_id, doctor_id, appointment_date, appointment_time, status, is_walkin, bp, pulse, weight, height, notes) VALUES (1, ?, 1, ?, ?, 'CHECKED_IN', 1, ?, ?, ?, ?, ?)`, 
+        [patient_id, today, timeStr, bp || '', pulse || '', weight || '', height || '', notes || 'Walk-in']);
     }
-  });
-});
-app.put('/api/queue/complete/:hn', (req, res) => {
-  db.run(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status = 'CHECKED_IN'`, [req.params.hn], function(err) {
     res.json({ status: 'success' });
-  });
+  } catch (err) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+app.put('/api/queue/complete/:hn', async (req, res) => {
+  try {
+    await dbRun(`UPDATE appointments SET status = 'COMPLETED' WHERE patient_id = ? AND status = 'CHECKED_IN'`, [req.params.hn]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
 // 💳 API ระบบ POS และการชำระเงิน
-// 🌟 API ดึงข้อมูลบิลคนไข้ตาม HN (สำหรับจุดคัดกรอง Reception และ Booking)
-app.get('/api/pos/bill/:hn', (req, res) => {
-  db.all(`SELECT * FROM patient_bills WHERE patient_id = ?`, [req.params.hn], (err, rows) => {
-    if (err) return res.json({ status: 'error', data: [] });
-    res.json({ status: 'success', data: rows || [] });
-  });
-});
-
 // ==========================================
-app.put('/api/pos/send/:hn', (req, res) => {
-  db.get(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn], (err, row) => {
-    if (row) { 
-      db.run(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id]); 
-    } 
-    // 🌟 บันทึกสถานะการส่งไปการเงินลงใน EMR Log ใบล่าสุดของคนไข้โดยตรง!
-    db.run(`UPDATE emr_logs SET payment_status = 'SENT' WHERE patient_id = ? AND id = (SELECT MAX(id) FROM emr_logs WHERE patient_id = ?)`, [req.params.hn, req.params.hn], () => {
-      res.json({ status: 'success' });
-    });
-  });
+app.get('/api/pos/bill/:hn', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT * FROM patient_bills WHERE patient_id = ?`, [req.params.hn]);
+    res.json({ status: 'success', data: rows || [] });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.get('/api/pos/queue', (req, res) => {
-  db.all(`SELECT a.id as appt_id, a.patient_id as hn, p.full_name as name, a.appointment_time as time FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id WHERE a.status = 'WAITING_PAYMENT' ORDER BY a.id ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); });
+app.put('/api/pos/send/:hn', async (req, res) => {
+  try {
+    const row = await dbGet(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn]);
+    if (row) await dbRun(`UPDATE appointments SET status = 'WAITING_PAYMENT' WHERE id = ?`, [row.id]); 
+    
+    await dbRun(`UPDATE emr_logs SET payment_status = 'SENT' WHERE patient_id = ? AND id = (SELECT MAX(id) FROM emr_logs WHERE patient_id = ?)`, [req.params.hn, req.params.hn]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-// 🌟 API ค้นหาบิลคนไข้รองรับทั้ง HN, ชื่อ, เบอร์โทร และเลขบัตร ปชช.
-app.get('/api/pos/patient-search', (req, res) => {
-  const search = req.query.search || '';
-  const sql = `SELECT * FROM patients WHERE id = ? OR full_name LIKE ? OR phone = ? OR id_card = ? LIMIT 1`;
-  db.get(sql, [search, `%${search}%`, search, search], (err, patient) => {
-    if (err || !patient) return res.json({ status: 'error', message: 'ไม่พบข้อมูลคนไข้ในระบบ' });
+app.get('/api/pos/patient-search', async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    const patient = await dbGet(`SELECT * FROM patients WHERE id = ? OR full_name LIKE ? OR phone = ? OR id_card = ? LIMIT 1`, [search, `%${search}%`, search, search]);
+    if (!patient) return res.json({ status: 'error', message: 'ไม่พบข้อมูลคนไข้ในระบบ' });
     
     const today = new Date().toISOString().split('T')[0];
-    db.all(`SELECT * FROM patient_bills WHERE patient_id = ? AND (status != 'PAID' OR bill_date = ?) ORDER BY id ASC`, [patient.id, today], (err2, bills) => {
-      res.json({ status: 'success', patient: patient, data: bills || [] });
-    });
-  });
+    const bills = await dbAll(`SELECT * FROM patient_bills WHERE patient_id = ? AND (status != 'PAID' OR bill_date = ?) ORDER BY id ASC`, [patient.id, today]);
+    res.json({ status: 'success', patient: patient, data: bills || [] });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-// 🌟 API รับชำระเงิน POS (อัปเดตระบบบันทึกประวัติแบ่งจ่าย)
 app.put('/api/pos/pay/:hn', async (req, res) => {
   const { sales_rep, payments, new_items, payment_method } = req.body; 
   const hn = req.params.hn; 
   const today = new Date().toISOString().split('T')[0];
-  const currentPayMethod = payment_method || 'CASH'; // รับค่าช่องทางชำระเงิน
+  const currentPayMethod = payment_method || 'CASH'; 
 
   try {
     await dbRun("BEGIN TRANSACTION");
@@ -443,14 +401,12 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
           let newPaid = bill.paid_amount + safePayAmount;
           let newStatus = newPaid >= bill.total_price ? 'PAID' : 'PARTIAL';
           
-          // 🌟 สร้างประวัติการแบ่งจ่าย
           let history = [];
           try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
           if(safePayAmount > 0) {
             history.push({ date: new Date().toISOString(), amount: safePayAmount, method: p.payment_method || currentPayMethod });
           }
 
-          // 🌟 อัปเดตทั้งยอดเงิน สถานะ และยัดประวัติการจ่ายเก็บไว้ในช่อง payment_history
           await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ?, payment_method = ?, payment_history = ? WHERE id = ?`, 
             [newPaid, newStatus, p.payment_method || currentPayMethod, JSON.stringify(history), p.bill_id]);
 
@@ -473,7 +429,6 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
           history.push({ date: new Date().toISOString(), amount: safePayAmount, method: item.payment_method || currentPayMethod });
         }
 
-        // 🌟 แก้ไข: เอาเลข 1 ที่พิมพ์เกินมาออก เพื่อให้ฐานข้อมูลบันทึกสำเร็จ
         let insertRes = await dbRun(`INSERT INTO patient_bills (clinic_id, patient_id, bill_date, item_name, type, product_id, qty, total_price, paid_amount, status, stock_deducted, payment_method, payment_history) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [hn, today, item.name, item.type, item.product_id, item.qty, total, safePayAmount, newStatus, 0, item.payment_method || currentPayMethod, JSON.stringify(history)]);
 		  
@@ -481,7 +436,6 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
            let prod = await dbGet(`SELECT type, bundle_items FROM products WHERE id = ?`, [item.product_id]);
            if (prod && prod.type === 'PROMOTION') {
               let bItems = JSON.parse(prod.bundle_items || '[]');
-              // 🌟 สร้างสถานะของแถมในกล่อง (คูณด้วยจำนวนเซ็ตที่ซื้อ)
               let bundleState = bItems.map(i => ({ id: i.id, name: i.name, total: i.qty * item.qty, used: 0 }));
               await dbRun(`INSERT INTO patient_courses (clinic_id, patient_id, product_id, total_qty, used_qty, bundle_state) VALUES (1, ?, ?, 1, 0, ?)`, 
                 [hn, item.product_id, JSON.stringify(bundleState)]);
@@ -508,88 +462,154 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
 // ==========================================
 // 📦 API ระบบคลังสินค้า (Inventory)
 // ==========================================
-// 🌟 1. สร้างคอลัมน์ใหม่สำหรับเก็บสถานะ เลิกขาย (ถ้ายังไม่มี)
-db.run(`ALTER TABLE products ADD COLUMN status TEXT DEFAULT 'ACTIVE'`, alterLog);
-
-app.get('/api/inventory', (req, res) => { 
-  db.all(`SELECT * FROM products ORDER BY type ASC, name ASC`, [], (err, rows) => { 
+app.get('/api/inventory', async (req, res) => { 
+  try {
+    const rows = await dbAll(`SELECT * FROM products ORDER BY type ASC, name ASC`);
     res.json({ status: 'success', data: rows }); 
-  }); 
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.post('/api/inventory', (req, res) => {
-  const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status } = req.body;
-  const sql = `INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'ACTIVE')) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items, status=excluded.status`;
-  db.run(sql, [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]', status || 'ACTIVE'], () => res.json({ status: 'success' }));
+app.post('/api/inventory', async (req, res) => {
+  try {
+    const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status } = req.body;
+    await dbRun(`INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'ACTIVE')) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items, status=excluded.status`, 
+      [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]', status || 'ACTIVE']);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-// 🌟 2. API ใหม่สำหรับเปลี่ยนสถานะ ระงับการขาย / นำกลับมาขาย
-app.put('/api/inventory/:id/status', (req, res) => { 
-  db.run(`UPDATE products SET status = ? WHERE id = ?`, [req.body.status, req.params.id], () => res.json({status: 'success'})); 
+app.put('/api/inventory/:id/status', async (req, res) => { 
+  try {
+    await dbRun(`UPDATE products SET status = ? WHERE id = ?`, [req.body.status, req.params.id]);
+    res.json({status: 'success'});
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.put('/api/inventory/:id/stock', (req, res) => { 
-  db.run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id], () => res.json({status: 'success'})); 
+app.put('/api/inventory/:id/stock', async (req, res) => { 
+  try {
+    await dbRun(`UPDATE products SET stock = stock + ? WHERE id = ?`, [req.body.adjust_qty, req.params.id]);
+    res.json({status: 'success'}); 
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.delete('/api/inventory/:id', (req, res) => { 
-  db.run(`DELETE FROM products WHERE id = ?`, [req.params.id], () => res.json({status: 'success'})); 
+app.delete('/api/inventory/:id', async (req, res) => { 
+  try {
+    await dbRun(`DELETE FROM products WHERE id = ?`, [req.params.id]);
+    res.json({status: 'success'}); 
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
+
 // ==========================================
-// ⚙️ API ระบบตั้งค่า (Settings - Users & Clinic)
+// ⚙️ API ระบบตั้งค่า (Settings - Users, Clinic, Hours)
 // ==========================================
-app.get('/api/users', (req, res) => { db.all(`SELECT id, name, pin, role, permissions FROM users ORDER BY id ASC`, [], (err, rows) => { res.json({ status: 'success', data: rows }); }); });
-app.post('/api/users', (req, res) => {
-  const { name, pin, role, permissions } = req.body;
-  db.get(`SELECT id FROM users WHERE pin = ?`, [pin], (err, row) => {
-    if (row) return res.json({ status: 'error', message: 'รหัส PIN นี้มีผู้ใช้งานแล้ว กรุณาตั้งรหัสใหม่' });
-    db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, ?, ?)`, [pin, name, role, permissions], function(err) { res.json({ status: 'success', user_id: this.lastID }); });
-  });
+// 🌟 API ดึงเวลาเปิด-ปิดร้าน (แก้บั๊กตามที่คุณแจ้ง)
+app.get('/api/settings', async (req, res) => {
+  try {
+    const row = await dbGet(`SELECT open_time, close_time FROM clinics ORDER BY id ASC LIMIT 1`);
+    res.json({ status: 'success', data: row || { open_time: '10:00', close_time: '20:00' } });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
-app.put('/api/users/:id', (req, res) => {
-  const { name, pin, role, permissions } = req.body;
-  db.get(`SELECT id FROM users WHERE pin = ? AND id != ?`, [pin, req.params.id], (err, row) => {
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const { open_time, close_time } = req.body;
+    await dbRun(`UPDATE clinics SET open_time=?, close_time=? WHERE id=1`, [open_time, close_time]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+app.get('/api/users', async (req, res) => { 
+  try {
+    const rows = await dbAll(`SELECT id, name, pin, role, permissions FROM users ORDER BY id ASC`);
+    res.json({ status: 'success', data: rows });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, pin, role, permissions } = req.body;
+    const row = await dbGet(`SELECT id FROM users WHERE pin = ?`, [pin]);
+    if (row) return res.json({ status: 'error', message: 'รหัส PIN นี้มีผู้ใช้งานแล้ว' });
+    
+    const result = await dbRun(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, ?, ?)`, [pin, name, role, permissions]);
+    res.json({ status: 'success', user_id: result.lastID });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const { name, pin, role, permissions } = req.body;
+    const row = await dbGet(`SELECT id FROM users WHERE pin = ? AND id != ?`, [pin, req.params.id]);
     if (row) return res.json({ status: 'error', message: 'รหัส PIN นี้ถูกใช้ไปแล้ว' });
-    db.run(`UPDATE users SET name=?, pin=?, role=?, permissions=? WHERE id=?`, [name, pin, role, permissions, req.params.id], function(err) { res.json({ status: 'success' }); });
-  });
-});
-app.delete('/api/users/:id', (req, res) => { db.run(`DELETE FROM users WHERE id=?`, [req.params.id], function(err) { res.json({ status: 'success' }); }); });
-
-app.get('/api/check-setup', (req, res) => {
-  db.get("SELECT count(*) as count FROM users", (err, row) => { res.json({ status: 'success', needsSetup: row.count === 0 }); });
-});
-app.post('/api/setup-admin', (req, res) => {
-  const { name, pin } = req.body;
-  db.get("SELECT count(*) as count FROM users", (err, row) => {
-    if (row && row.count > 0) return res.json({ status: 'error', message: 'ระบบถูกตั้งค่าผู้ดูแลระบบไปแล้ว' });
-    db.run(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`, [pin, name], function(err) { res.json({ status: 'success' }); });
-  });
+    
+    await dbRun(`UPDATE users SET name=?, pin=?, role=?, permissions=? WHERE id=?`, [name, pin, role, permissions, req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.get('/api/clinic', (req, res) => { db.get(`SELECT * FROM clinics ORDER BY id ASC LIMIT 1`, [], (err, row) => { res.json({ status: 'success', data: row || {} }); }); });
-app.put('/api/clinic', (req, res) => {
-  const { clinic_name, phone, promptpay, bank_account_name, address } = req.body;
-  db.run(`UPDATE clinics SET clinic_name=?, phone=?, promptpay=?, bank_account_name=?, address=? WHERE id=1`, [clinic_name, phone, promptpay, bank_account_name, address], function(err) { res.json({ status: 'success' }); });
+app.delete('/api/users/:id', async (req, res) => { 
+  try {
+    await dbRun(`DELETE FROM users WHERE id=?`, [req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
-app.post('/api/clinic/logo', (req, res) => {
-  const { image_data } = req.body;
-  const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
-  const fileName = `logo_${Date.now()}.png`;
-  fs.writeFileSync(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
-  db.run(`UPDATE clinics SET logo_url = ? WHERE id = 1`, [`/uploads/${fileName}`], function(err) { res.json({ status: 'success', logo_url: `/uploads/${fileName}` }); });
+
+app.get('/api/check-setup', async (req, res) => {
+  try {
+    const row = await dbGet("SELECT count(*) as count FROM users");
+    res.json({ status: 'success', needsSetup: row.count === 0 });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.post('/api/setup-admin', async (req, res) => {
+  try {
+    const { name, pin } = req.body;
+    const row = await dbGet("SELECT count(*) as count FROM users");
+    if (row && row.count > 0) return res.json({ status: 'error', message: 'ระบบถูกตั้งค่าแล้ว' });
+    
+    await dbRun(`INSERT INTO users (clinic_id, pin, name, role, permissions) VALUES (1, ?, ?, 'ADMIN', 'ADMIN,BOOKING,PATIENT,POS,STOCK,HR,DASH')`, [pin, name]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.get('/api/clinic', async (req, res) => { 
+  try {
+    const row = await dbGet(`SELECT * FROM clinics ORDER BY id ASC LIMIT 1`);
+    res.json({ status: 'success', data: row || {} });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.put('/api/clinic', async (req, res) => {
+  try {
+    const { clinic_name, phone, promptpay, bank_account_name, address } = req.body;
+    await dbRun(`UPDATE clinics SET clinic_name=?, phone=?, promptpay=?, bank_account_name=?, address=? WHERE id=1`, [clinic_name, phone, promptpay, bank_account_name, address]);
+    res.json({ status: 'success' });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.post('/api/clinic/logo', async (req, res) => {
+  try {
+    const { image_data } = req.body;
+    const base64Data = image_data.replace(/^data:image\/\w+;base64,/, '');
+    const fileName = `logo_${Date.now()}.png`;
+    
+    await fsPromises.writeFile(path.join(uploadDir, fileName), base64Data, { encoding: 'base64' });
+    await dbRun(`UPDATE clinics SET logo_url = ? WHERE id = 1`, [`/uploads/${fileName}`]);
+    
+    res.json({ status: 'success', logo_url: `/uploads/${fileName}` });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
 // ==========================================
-// 📊 API สำหรับหน้ารายงาน (Dashboard & Analytics) แบบช่วงวันที่
+// 📊 API สำหรับหน้ารายงาน (Dashboard & Analytics) 
 // ==========================================
-app.get('/api/reports/dashboard', (req, res) => {
-  const todayStr = new Date().toISOString().split('T')[0];
-  const startDate = req.query.start_date || todayStr;
-  const endDate = req.query.end_date || todayStr;
+app.get('/api/reports/dashboard', async (req, res) => {
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const startDate = req.query.start_date || todayStr;
+    const endDate = req.query.end_date || todayStr;
 
-  // ดึงบิลทั้งหมดมาประมวลผลประวัติการจ่ายเงิน
-  db.all(`SELECT b.*, p.full_name, p.phone FROM patient_bills b LEFT JOIN patients p ON b.patient_id = p.id`, [], (err, allBills) => {
-    if (err) return res.json({ status: 'error', data: [] });
+    const allBills = await dbAll(`SELECT b.*, p.full_name, p.phone FROM patient_bills b LEFT JOIN patients p ON b.patient_id = p.id`);
 
     let totalRevenue = 0;
     let methodTotals = { CASH: 0, QR: 0, CREDIT: 0 };
@@ -597,15 +617,11 @@ app.get('/api/reports/dashboard', (req, res) => {
     let unpaidPatients = [];
     let topSellersMap = {};
 
-    // 🌟 สร้างโครงสร้างกราฟแท่งตามช่วงวันที่เลือก
     let chartDataMap = {};
     let start = new Date(startDate);
     let end = new Date(endDate);
-    
-    // สลับวันอัตโนมัติถ้าเผลอเลือกวันเริ่มต้น มากกว่าวันสิ้นสุด
     if (start > end) { let temp = start; start = end; end = temp; }
     
-    // สร้าง Array วันที่รอไว้ เพื่อให้กราฟไม่แหว่งแม้บางวันจะขายไม่ได้เลย
     let current = new Date(start);
     while (current <= end) {
       chartDataMap[current.toISOString().split('T')[0]] = 0;
@@ -618,33 +634,18 @@ app.get('/api/reports/dashboard', (req, res) => {
         let history = [];
         try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
 
-        // 1. ตรวจสอบ "ยอดที่รับชำระ" ตามช่วงวันที่ระบุ
         let paidOnTarget = 0;
         history.forEach(h => {
             let hDate = h.date.split('T')[0];
-            
-            // ถ้ารับเงินในช่วงเวลานี้
             if (hDate >= startDate && hDate <= endDate) {
-                // บวกกราฟแท่ง
-                if (chartDataMap[hDate] !== undefined) {
-                    chartDataMap[hDate] += h.amount;
-                }
-                
-                // สรุปยอดรวมและช่องทาง
+                if (chartDataMap[hDate] !== undefined) chartDataMap[hDate] += h.amount;
                 totalRevenue += h.amount;
                 let method = h.method || 'CASH';
                 if(!methodTotals[method]) methodTotals[method] = 0;
                 methodTotals[method] += h.amount;
                 paidOnTarget += h.amount;
 
-                // บันทึก Log ประวัติ
-                billLogs.push({
-                    time: h.date,
-                    patient_name: bill.full_name || 'ไม่ระบุชื่อ',
-                    item_name: bill.item_name,
-                    amount: h.amount,
-                    method: method
-                });
+                billLogs.push({ time: h.date, patient_name: bill.full_name || 'ไม่ระบุชื่อ', item_name: bill.item_name, amount: h.amount, method: method });
             }
         });
 
@@ -652,14 +653,10 @@ app.get('/api/reports/dashboard', (req, res) => {
             paidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', amount: paidOnTarget, item: bill.item_name });
         }
 
-        // 2. ตรวจสอบ "ยอดค้างชำระ" สำหรับบิลที่สร้างในช่วงวันที่ระบุ
         if (bill.bill_date >= startDate && bill.bill_date <= endDate) {
             let balance = bill.total_price - bill.paid_amount;
-            if (balance > 0) {
-                unpaidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', item: bill.item_name, balance: balance, full_price: bill.total_price });
-            }
+            if (balance > 0) unpaidPatients.push({ name: bill.full_name || 'ไม่ระบุชื่อ', item: bill.item_name, balance: balance, full_price: bill.total_price });
 
-            // 3. จัดอันดับสินค้าขายดีในระยะเวลานี้
             let cleanItemName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
             if (!topSellersMap[cleanItemName]) topSellersMap[cleanItemName] = { name: cleanItemName, type: bill.type, qty: 0, revenue: 0 };
             topSellersMap[cleanItemName].qty += bill.qty;
@@ -668,21 +665,16 @@ app.get('/api/reports/dashboard', (req, res) => {
     });
 
     let topSellers = Object.values(topSellersMap).sort((a,b) => b.qty - a.qty).slice(0, 10);
-    billLogs.sort((a,b) => new Date(b.time) - new Date(a.time)); // เรียงจากล่าสุดไปเก่า
+    billLogs.sort((a,b) => new Date(b.time) - new Date(a.time));
 
     res.json({
-        status: 'success',
-        start_date: startDate,
-        end_date: endDate,
-        total_revenue: totalRevenue,
-        methods: methodTotals,
+        status: 'success', start_date: startDate, end_date: endDate,
+        total_revenue: totalRevenue, methods: methodTotals,
         chart_data: Object.keys(chartDataMap).map(k => ({ date: k, revenue: chartDataMap[k] })),
-        paid_patients: paidPatients,
-        unpaid_patients: unpaidPatients,
-        top_sellers: topSellers,
-        bill_logs: billLogs
+        paid_patients: paidPatients, unpaid_patients: unpaidPatients,
+        top_sellers: topSellers, bill_logs: billLogs
     });
-  });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://localhost:${PORT}`); });
+app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://192.168.1.69:${3001}`); });
