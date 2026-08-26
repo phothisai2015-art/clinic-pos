@@ -317,16 +317,29 @@
       // 🌟 ระบบสร้างปุ่มให้เหมาะกับสถานะกล่อง (Active = ปุ่มระงับขาย, Archived = ปุ่มเอาคืนมา)
       let actionBtns = '';
       if (currentInvTab === 'archived') {
-        actionBtns = `<button class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3 shadow-sm" onclick="toggleItemStatus('${item.id}', 'ACTIVE')"><i class="fa-solid fa-rotate-left me-1"></i> เปิดขายใหม่</button>`;
-      } else {
-        let stockBtns = item.type !== 'PROMOTION' ? `
-          <button class="btn btn-sm btn-light text-success border shadow-sm rounded-circle me-1" onclick="adjustStock('${item.id}', '${item.name}', 'add')" title="รับเข้าสต็อก"><i class="fa-solid fa-plus"></i></button>
-          <button class="btn btn-sm btn-light text-warning border shadow-sm rounded-circle me-3" onclick="adjustStock('${item.id}', '${item.name}', 'remove')" title="เบิกออกสต็อก"><i class="fa-solid fa-minus"></i></button>
-        ` : '<span class="me-3"></span>';
-        
         actionBtns = `
-          ${stockBtns}
-          <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm" title="ระงับการขาย/เลิกขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')"><i class="fa-solid fa-ban me-1"></i> เลิกขาย</button>
+          <div class="d-flex justify-content-end">
+            <button class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3 shadow-sm text-nowrap" onclick="toggleItemStatus('${item.id}', 'ACTIVE')">
+              <i class="fa-solid fa-rotate-left me-1"></i> เปิดขายใหม่
+            </button>
+          </div>`;
+      } else {
+        // จับปุ่ม + และ - มัดรวมกันเป็นกลุ่ม (btn-group) เพื่อความเรียบร้อย
+        let stockBtns = item.type !== 'PROMOTION' ? `
+          <div class="btn-group shadow-sm me-2">
+            <button class="btn btn-sm btn-light text-success border px-2" onclick="adjustStock('${item.id}', '${item.name}', 'add')" title="รับเข้าสต็อก"><i class="fa-solid fa-plus"></i></button>
+            <button class="btn btn-sm btn-light text-warning border px-2" onclick="adjustStock('${item.id}', '${item.name}', 'remove')" title="เบิกออกสต็อก"><i class="fa-solid fa-minus"></i></button>
+          </div>
+        ` : '';
+        
+        // ใช้ d-flex เพื่อให้ปุ่มเรียงแนวนอนชิดขวาเสมอ
+        actionBtns = `
+          <div class="d-flex justify-content-end align-items-center flex-nowrap">
+            ${stockBtns}
+            <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm text-nowrap" title="ระงับการขาย/เลิกขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')">
+              <i class="fa-solid fa-ban me-1"></i> เลิกขาย
+            </button>
+          </div>
         `;
       }
 
