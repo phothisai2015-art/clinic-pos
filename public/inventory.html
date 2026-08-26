@@ -179,14 +179,12 @@
   body.dark-theme .promo-tab-active #form-title {
     color: #f472b6 !important; /* สีชมพูสว่างในโหมดมืด */
   }
-  /* 🌸 บังคับสีชมพูหัวข้อ "สร้างโปรโมชั่นใหม่" ทั้งโหมดสว่างและมืด */
-  #form-title.text-pink,
-  .promo-tab-active #form-title {
+  /* ✅ โค้ดใหม่: สีชมพูจะทำงานเฉพาะตอนที่สั่งเป็นสีชมพูเท่านั้น */
+  #form-title.text-pink {
     color: #ec4899 !important;
   }
-  body.dark-theme #form-title.text-pink,
-  body.dark-theme .promo-tab-active #form-title {
-    color: #f472b6 !important; /* สีชมพูสว่างในโหมดมืด */
+  body.dark-theme #form-title.text-pink {
+    color: #f472b6 !important;
   }
   
 </style>
@@ -681,11 +679,19 @@
     document.getElementById('pd_status').value = 'ACTIVE';
     document.getElementById('pd_min_stock').value = 5;
     
+    const titleEl = document.getElementById('form-title');
+    
     if(currentInvTab === 'promo') {
       document.getElementById('pd_type').value = 'PROMOTION';
       document.getElementById('pd_unit').value = 'เซ็ต';
+      
+      titleEl.className = 'fw-bold m-0 mb-4 text-pink d-flex align-items-center';
+      titleEl.innerHTML = '<div class="bg-pink-light text-pink rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
     } else {
       document.getElementById('pd_type').value = 'MEDICINE';
+      
+      titleEl.className = 'fw-bold m-0 mb-4 text-primary d-flex align-items-center';
+      titleEl.innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
     }
   }
 
