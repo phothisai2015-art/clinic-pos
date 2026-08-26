@@ -176,6 +176,66 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
       height: 32px !important;
       padding: 0 !important;
     }
+	
+	/* 7. ปุ่ม "ปิดหน้านี้" (มุมขวาบน) ให้เหลือแต่ไอคอน X */
+    button[onclick="closeModule()"] {
+      width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      font-size: 0 !important;
+      display: flex !important;
+      justify-content: center;
+      align-items: center;
+    }
+    button[onclick="closeModule()"] i {
+      font-size: 1.2rem !important;
+      margin: 0 !important;
+    }
+
+    /* 8. ปุ่ม "กลับไปปฏิทิน" และ "ตั้งค่าเวลา" ให้เหลือแต่ไอคอนวงกลม */
+    #dayViewPanel button[onclick="showMonthView()"],
+    #dayViewPanel button[onclick="openTimeSettings()"] {
+      width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      font-size: 0 !important;
+      display: flex !important;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    #dayViewPanel button[onclick="showMonthView()"] i,
+    #dayViewPanel button[onclick="openTimeSettings()"] i {
+      font-size: 1.1rem !important;
+      margin: 0 !important;
+    }
+
+    /* 9. ย่อขนาดวันที่ (วันพุธที่...) และบังคับให้อยู่บรรทัดเดียว */
+    #dayViewTitle {
+      font-size: 0.95rem !important;
+      white-space: nowrap !important;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      margin: 0 10px !important;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    /* 10. บังคับแถวบนสุดให้อยู่บรรทัดเดียวกันเสมอ */
+    #dayViewPanel .border-bottom {
+      flex-wrap: nowrap !important;
+      padding-bottom: 15px !important;
+    }
+	/* 11. ลดขนาดตัวอักษรและช่องว่างของตารางเวลาในแต่ละรอบ */
+    .time-label {
+      font-size: 0.9rem !important; /* ลดขนาดตัวเลขเวลา */
+      padding: 10px 10px 10px 0 !important; /* ลดระยะห่างบนล่าง */
+      width: 70px !important; /* ลดความกว้างของฝั่งเวลาลงนิดนึง */
+    }
+    .slot-content {
+      font-size: 0.85rem !important; /* ลดขนาดข้อความ ว่าง-กดเพื่อลงนัดหมาย */
+      padding: 10px 15px !important; /* ลดระยะห่างบนล่างให้กะทัดรัดขึ้น */
+    }
   }
   
 </style>
