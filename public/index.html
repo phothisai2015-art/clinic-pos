@@ -242,6 +242,109 @@
       #main-menu .panel-cat { display: none !important; }
     }
 	
+	/* ========================================================= */
+/* 🌙 อัปเดต Dark Mode หน้า POS (ขาย & ชำระเงิน) แบบครบทุกจุด */
+/* ========================================================= */
+
+/* 1. ช่องค้นหาด้านบน (Search Hero Input) */
+body.dark-theme #posSearchInput {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+body.dark-theme #posSearchInput::placeholder {
+  color: #64748b !important;
+}
+
+/* 2. การ์ดรายการบิล / คอร์ส (Bill Cards - ฝั่งซ้าย) */
+body.dark-theme .bill-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+body.dark-theme .bill-card:hover {
+  border-color: #60a5fa !important;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4) !important;
+}
+body.dark-theme .bill-card.selected {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4) !important;
+}
+body.dark-theme .bill-card-header {
+  border-bottom-color: #334155 !important;
+}
+body.dark-theme .bill-card-footer {
+  background-color: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+body.dark-theme .bill-card.status-paid {
+  background-color: #0f172a !important;
+}
+body.dark-theme #emptyBoxesState .bg-light {
+  background-color: #0f172a !important;
+}
+
+/* 3. แผงสรุปยอดและรับชำระเงิน (Payment Panel - ฝั่งขวา) */
+body.dark-theme .payment-panel {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+body.dark-theme .payment-panel .bg-light {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+body.dark-theme #pay_item_name,
+body.dark-theme #pay_item_full_price {
+  color: #f8fafc !important;
+}
+body.dark-theme #pay_input_amount {
+  background-color: #0f172a !important;
+  color: #60a5fa !important;
+  border-color: #3b82f6 !important;
+}
+body.dark-theme #pay_input_amount[disabled] {
+  background-color: #1e293b !important;
+  color: #64748b !important;
+  border-color: #334155 !important;
+}
+
+/* 4. ปุ่มเลือกวิธีชำระเงิน (เงินสด / QR / เครดิต) */
+body.dark-theme .pay-method-btn {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+body.dark-theme .pay-method-btn:hover {
+  border-color: #60a5fa !important;
+  color: #60a5fa !important;
+  background-color: #1e293b !important;
+}
+body.dark-theme .pay-method-btn.selected {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* 5. ป๊อปอัปประวัติการชำระเงิน (Payment History Modal) */
+body.dark-theme #paymentHistoryModal .modal-content {
+  background-color: #1e293b !important;
+}
+body.dark-theme #paymentHistoryModal .modal-body {
+  background-color: #0f172a !important;
+}
+body.dark-theme #paymentHistoryModal .bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+body.dark-theme #paymentHistoryModal #paymentHistoryFilter {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #0dcaf0 !important;
+}
+body.dark-theme #paymentHistoryList .bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+	
   </style>
 </head>
 <body>
