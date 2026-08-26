@@ -37,6 +37,17 @@
   .clinic-nav-pills .nav-link.tab-promo { color: #ec4899; }
   .clinic-nav-pills .nav-link.tab-promo:hover:not(.active) { background-color: #fdf2f8; border-color: #fbcfe8; }
   .clinic-nav-pills .nav-link.tab-promo.active { background-color: #ec4899; color: #fff; border-color: #ec4899; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
+  /* 🌸 เปลี่ยนสีขอบช่องกรอกข้อมูลตอนคลิก (Focus) ให้เป็นสีชมพู */
+  .promo-mode .form-control:focus, 
+  .promo-mode .form-select:focus { 
+    border-color: #ec4899 !important; 
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2) !important; 
+  }
+  
+  /* ให้กรอบช่องกรอกที่เป็นสีน้ำเงิน เปลี่ยนเป็นสีชมพูอัตโนมัติในโหมดนี้ */
+  .promo-mode .border-primary {
+    border-color: #ec4899 !important;
+  }
   
 </style>
 
@@ -225,10 +236,12 @@
     document.getElementById(`btn-tab-${tab}`).classList.add('active');
     
     clearProductForm();
+	document.getElementById('productForm').classList.remove('promo-mode');
 
     const typeSelect = document.getElementById('pd_type');
     if (tab === 'promo') {
       typeSelect.value = 'PROMOTION';
+	  document.getElementById('productForm').classList.add('promo-mode');
       document.getElementById('type_container').style.display = 'none'; 
       document.getElementById('promo_fields').style.display = 'block';
       document.getElementById('normal_fields').style.display = 'none';
