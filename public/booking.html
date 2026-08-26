@@ -127,6 +127,57 @@ body.dark-theme .border-end { border-right-color: #334155 !important; }
 body.dark-theme .text-dark { color: #f8fafc !important; }
 body.dark-theme .text-muted { color: #94a3b8 !important; }
 body.dark-theme .text-primary { color: #60a5fa !important; }
+
+/* ========================================================= */
+  /* 📱 ปรับปฏิทินให้พอดีจอมือถือ (ไม่ต้องเลื่อน) */
+  /* ========================================================= */
+  @media (max-width: 768px) {
+    /* 1. ลดช่องว่างรอบๆ และระหว่างกล่อง */
+    .calendar-wrapper { padding: 10px !important; }
+    .calendar-grid { gap: 4px !important; }
+    
+    /* 2. บีบความสูงของกล่องวันที่ให้เล็กลง */
+    .calendar-cell { 
+      height: 9vh !important; 
+      min-height: 45px !important; 
+      max-height: 75px !important; 
+      padding: 4px 2px !important; 
+      justify-content: flex-start !important;
+    }
+    
+    /* 3. ย่อขนาดวงกลมและตัวเลขวันที่ */
+    .date-number { 
+      width: 28px !important; 
+      height: 28px !important; 
+      font-size: 0.9rem !important; 
+      margin-bottom: 2px !important;
+    }
+    
+    /* 4. ย่อขนาดตัวอักษรหัวตาราง (อาทิตย์-เสาร์) */
+    .calendar-header-row { 
+      font-size: 0.75rem !important; 
+      padding-bottom: 5px !important; 
+      margin-bottom: 5px !important; 
+    }
+    
+    /* 5. ปรับขนาดตัวหนังสือเดือน-ปี ด้านบน */
+    #calendarMonthYearDisplay { 
+      font-size: 1.15rem !important; 
+      margin-right: 10px !important; 
+    }
+    
+    /* 6. ย่อปุ่มและไอคอนด้านบน */
+    .d-flex.align-items-center.gap-3 .btn {
+      padding: 4px 10px !important;
+      font-size: 0.85rem !important;
+    }
+    .d-flex.align-items-center.gap-3 .btn-outline-secondary {
+      width: 32px !important;
+      height: 32px !important;
+      padding: 0 !important;
+    }
+  }
+  
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
