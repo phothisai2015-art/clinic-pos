@@ -63,7 +63,10 @@
               <span><i class="fa-solid fa-phone me-1 text-info"></i> <span id="p_summary_phone">-</span></span>
             </div>
           </div>
-          <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" style="font-size: 0.75rem;" onclick="clearPosSearch()">ล้างข้อมูล</button>
+          <div class="d-flex gap-2 mt-1">
+            <button class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm fw-bold" style="font-size: 0.75rem;" onclick="openPaymentHistoryModal()"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติจ่ายเงิน</button>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3" style="font-size: 0.75rem;" onclick="clearPosSearch()">ล้างข้อมูล</button>
+          </div>
         </div>
       </div>
     </div>
@@ -152,6 +155,31 @@
   </div>
 </div>
 
+<!-- 🌟 Modal ดูประวัติการชำระเงิน -->
+<div class="modal fade" id="paymentHistoryModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-info text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold m-0"><i class="fa-solid fa-receipt me-2"></i> ประวัติการชำระเงิน: <span id="paymentHistoryModalName"></span></h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closePaymentHistoryModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light">
+        <!-- ตัวกรอง -->
+        <div class="mb-4 bg-white p-3 rounded-3 shadow-sm border border-info">
+          <label class="fw-bold text-info small mb-2"><i class="fa-solid fa-filter me-1"></i> ตัวกรองโปรโมชั่น / คอร์ส</label>
+          <select id="paymentHistoryFilter" class="form-select border-info bg-light fw-bold text-dark" onchange="renderPaymentHistory()">
+            <option value="ALL">-- ดูประวัติการชำระเงินทั้งหมด --</option>
+          </select>
+        </div>
+        <!-- รายการชำระเงิน -->
+        <div class="custom-scrollbar bg-white p-3 border rounded-4 shadow-sm" id="paymentHistoryList" style="height: 50vh; overflow-y: auto;">
+          <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   var currentPosPatient = null;
   var currentPatientBills = [];
@@ -159,6 +187,7 @@
   var currentInventory = [];
   var selectedBill = null;
   var selectedMethod = 'CASH';
+  var allPatientBillsHistory = []; // 🌟 เพิ่มตัวแปรใหม่เก็บประวัติทั้งหมด
 
   // โหลดคลังสินค้า
   async function loadInventoryForPos() {
@@ -230,6 +259,7 @@
       if (pData.status === 'success' && pData.data) {
         currentPosPatient = pData.data;
         let rawBills = bData.data || []; // บิลทั้งหมดทุกวัน
+		allPatientBillsHistory = rawBills; // 🌟 เก็บประวัติบิลลงตัวแปรสำหรับป๊อปอัป
 
         // --- 🌟 ระบบจับกลุ่มบิลแบบเจาะจงคอร์ส (แม่นยำ 100%) ---
         let groupedBoxes = [];
@@ -536,4 +566,100 @@
       sessionStorage.removeItem('targetHN'); // คืนค่า
     }
   }, 300);
+  
+  // ==========================================
+  // 🌟 ระบบประวัติการชำระเงินของคนไข้ใน POS
+  // ==========================================
+  function openPaymentHistoryModal() {
+    if (!currentPosPatient) return;
+    const modalEl = document.getElementById('paymentHistoryModal');
+    if (!modalEl) return;
+
+    if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!modalInstance) modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+
+    document.getElementById('paymentHistoryModalName').innerText = `${currentPosPatient.full_name} (${currentPosPatient.id})`;
+    modalInstance.show();
+
+    // สร้างตัวเลือก (Filter) จากบิลทั้งหมด
+    let promos = new Set();
+    allPatientBillsHistory.forEach(bill => {
+      let cleanName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
+      if (cleanName) promos.add(cleanName);
+    });
+
+    let filterHtml = '<option value="ALL">-- ดูประวัติการชำระเงินทั้งหมด --</option>';
+    promos.forEach(p => { filterHtml += `<option value="${p}">เฉพาะ: ${p}</option>`; });
+    document.getElementById('paymentHistoryFilter').innerHTML = filterHtml;
+
+    renderPaymentHistory();
+  }
+
+  function closePaymentHistoryModal() {
+    const modalEl = document.getElementById('paymentHistoryModal');
+    if (modalEl) {
+      let m = bootstrap.Modal.getInstance(modalEl);
+      if (m) m.hide();
+    }
+  }
+
+  function renderPaymentHistory() {
+    const filter = document.getElementById('paymentHistoryFilter').value;
+    const container = document.getElementById('paymentHistoryList');
+    let allPayments = [];
+
+    // ดึงและแกะประวัติการจ่ายเงิน (payment_history) จากทุกๆ บิล
+    allPatientBillsHistory.forEach(bill => {
+      let cleanName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
+      
+      // กรองตามหมวดหมู่ที่เลือก
+      if (filter !== 'ALL' && cleanName !== filter) return;
+
+      let history = [];
+      try { history = JSON.parse(bill.payment_history || '[]'); } catch(e) {}
+
+      history.forEach(h => {
+        allPayments.push({
+          date: h.date, amount: h.amount, method: h.method || 'CASH',
+          itemName: bill.item_name, billId: bill.id
+        });
+      });
+    });
+
+    // เรียงวันที่จาก ใหม่ -> เก่า
+    allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (allPayments.length === 0) {
+      container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-receipt fa-3x mb-3 opacity-25"></i><br>ไม่พบประวัติการชำระเงิน</div>';
+      return;
+    }
+
+    let html = '';
+    allPayments.forEach(p => {
+      const dateObj = new Date(p.date);
+      const dateStr = dateObj.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+      const timeStr = dateObj.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+
+      let mColor = p.method === 'CASH' ? 'success' : (p.method === 'QR' ? 'primary' : 'warning text-dark');
+      let mIcon = p.method === 'CASH' ? 'fa-money-bill-wave' : (p.method === 'QR' ? 'fa-qrcode' : 'fa-credit-card');
+
+      html += `
+        <div class="border-start border-4 border-${mColor} ps-3 pb-2 pt-2 mb-3 bg-white rounded-end shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+             <span class="fw-bold text-dark"><i class="fa-solid fa-calendar-day me-1 text-muted"></i> ${dateStr} เวลา ${timeStr} น.</span>
+             <span class="badge bg-${mColor}"><i class="fa-solid ${mIcon} me-1"></i> ${p.method}</span>
+          </div>
+          <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">${p.itemName} <span class="text-muted small fw-normal">(บิล #${p.billId})</span></div>
+          <div class="text-end mt-1">
+             <span class="text-muted small me-2">ยอดรับชำระ:</span>
+             <span class="fw-bold text-success fs-5">฿${p.amount.toLocaleString()}</span>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+  }
+  
 </script>
