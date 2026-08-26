@@ -142,6 +142,44 @@
       margin: 0 !important;
     }
   }
+  
+  /* ========================================================= */
+  /* 🌙 1. แก้ไขสีตัวหนังสือและ Placeholder ในฟอร์มฝั่งซ้าย (โหมดมืด) */
+  /* ========================================================= */
+  body.dark-theme #productForm .form-control,
+  body.dark-theme #productForm .form-select,
+  body.dark-theme #promo_fields select,
+  body.dark-theme #promo_fields input {
+    background-color: #0f172a !important;
+    color: #f8fafc !important; /* ตัวหนังสือที่พิมพ์เป็นสีขาวสว่าง */
+    border-color: #334155 !important;
+  }
+
+  body.dark-theme #productForm .form-control::placeholder {
+    color: #94a3b8 !important; /* ข้อความตัวอย่าง (Placeholder) สว่างขึ้น มองเห็นชัดเจน */
+    opacity: 1 !important;
+  }
+
+  body.dark-theme #productForm .form-label,
+  body.dark-theme #productForm .form-section-title {
+    color: #cbd5e1 !important; /* สีหัวข้อข้อความสว่างขึ้น */
+  }
+
+  /* ========================================================= */
+  /* 🌸 2. เปลี่ยนข้อความในแท็บโปรโมชั่นให้เป็นสีชมพูทั้งหมด */
+  /* ========================================================= */
+  .promo-tab-active .text-primary,
+  .promo-tab-active a.text-primary,
+  .promo-tab-active #form-title {
+    color: #ec4899 !important; /* สีชมพูในโหมดสว่าง */
+  }
+
+  body.dark-theme .promo-tab-active .text-primary,
+  body.dark-theme .promo-tab-active a.text-primary,
+  body.dark-theme .promo-tab-active #form-title {
+    color: #f472b6 !important; /* สีชมพูสว่างในโหมดมืด */
+  }
+  
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
@@ -403,6 +441,18 @@
     document.getElementById(`btn-tab-${tab}`).classList.add('active');
     
     clearProductForm();
+    document.getElementById('productForm').classList.remove('promo-mode');
+
+    // 🌸 สลับการเปิด/ปิด สไตล์สีชมพูของแท็บโปรโมชั่น
+    const formCard = document.getElementById('productForm');
+    const tableList = document.getElementById('inventoryList');
+    if (tab === 'promo') {
+      formCard.classList.add('promo-tab-active');
+      tableList.classList.add('promo-tab-active');
+    } else {
+      formCard.classList.remove('promo-tab-active');
+      tableList.classList.remove('promo-tab-active');
+    }
 
     const typeSelect = document.getElementById('pd_type');
     if (tab === 'promo') {
