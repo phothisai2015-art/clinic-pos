@@ -155,6 +155,7 @@
 <script>
   var currentPosPatient = null;
   var currentPatientBills = [];
+  var currentPatientEmr = []; // 🌟 เพิ่มตัวแปรเก็บประวัติ EMR
   var currentInventory = [];
   var selectedBill = null;
   var selectedMethod = 'CASH';
@@ -213,13 +214,17 @@
   async function selectPatientForPos(hn) {
     Swal.fire({ title: 'กำลังดึงบิล...', didOpen: () => Swal.showLoading() });
     try {
-      // ดึงประวัติคนไข้ และ ดึงบิล *ทั้งหมด* ของคนไข้คนนี้
-      const [pRes, bRes] = await Promise.all([
+      // 🌟 อัปเดต: ดึงประวัติ EMR มาด้วยเพื่อดูว่าทำอะไรไปบ้างในแต่ละครั้ง
+      const [pRes, bRes, emrRes] = await Promise.all([
           fetch(`/api/patients/${hn}`),
-          fetch(`/api/pos/bill/${hn}`)
+          fetch(`/api/pos/bill/${hn}`),
+          fetch(`/api/emr/${hn}`)
       ]);
       const pData = await pRes.json();
       const bData = await bRes.json();
+      const emrData = await emrRes.json();
+      
+      currentPatientEmr = emrData.status === 'success' ? emrData.data : []; // 🌟 เก็บประวัติลงตัวแปร
       Swal.close();
 
       if (pData.status === 'success' && pData.data) {
@@ -395,6 +400,32 @@
          let mStatus = mBalance <= 0 ? '(จ่ายแล้ว)' : '';
          let cleanMedName = m.item_name.split(' (ในคอร์ส:')[0];
          detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom"><span>- ${cleanMedName} <small class="text-success">${mStatus}</small></span> <b>฿${m.total_price.toLocaleString()}</b></div>`;
+      });
+    }
+	
+	// 🌟 ดึงประวัติการใช้บริการจาก EMR ที่ตรงกับชื่อคอร์สนี้
+    let relatedEmr = currentPatientEmr.filter(log => {
+      let cc = log.symptoms || '';
+      return cc.includes(cleanMainName); // ตรวจสอบว่าในประวัติมีชื่อคอร์ส/บิล นี้ไหม
+    });
+    
+    // เรียงวันที่จากเก่าไปใหม่ (ครั้งที่ 1, 2, 3...)
+    relatedEmr.sort((a,b) => new Date(a.visit_date) - new Date(b.visit_date));
+
+    if (relatedEmr.length > 0) {
+      detailsHtml += '<div class="fw-bold text-info mt-3 mb-2"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการเข้าใช้บริการ:</div>';
+      relatedEmr.forEach((log, i) => {
+         let dateStr = new Date(log.visit_date).toLocaleDateString('th-TH');
+         let txDetails = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : 'ไม่มีรายละเอียด';
+         
+         detailsHtml += `
+           <div class="p-2 mb-2 bg-white border border-info rounded-3 shadow-sm">
+             <div class="fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+               <span class="badge bg-info text-dark me-1">ครั้งที่ ${i+1}</span> 
+               วันที่: ${dateStr}
+             </div>
+             <div class="text-muted" style="font-size: 0.75rem;">${txDetails}</div>
+           </div>`;
       });
     }
 
