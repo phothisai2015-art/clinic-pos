@@ -25,6 +25,19 @@
   .custom-scrollbar::-webkit-scrollbar { width: 6px; } 
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } 
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  /* 🌸 สีชมพูสำหรับหมวดโปรโมชั่น */
+  .text-pink { color: #ec4899 !important; }
+  .bg-pink { background-color: #ec4899 !important; }
+  .border-pink { border-color: #ec4899 !important; }
+  .bg-pink-light { background-color: rgba(236, 72, 153, 0.1) !important; }
+  .btn-pink { background-color: #ec4899; color: white; border-color: #ec4899; }
+  .btn-pink:hover { background-color: #db2777; color: white; border-color: #db2777; }
+  
+  .clinic-nav-pills .nav-link.tab-promo { color: #ec4899; }
+  .clinic-nav-pills .nav-link.tab-promo:hover:not(.active) { background-color: #fdf2f8; border-color: #fbcfe8; }
+  .clinic-nav-pills .nav-link.tab-promo.active { background-color: #ec4899; color: #fff; border-color: #ec4899; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
+  
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
@@ -41,7 +54,7 @@
           </button>
         </li>
         <li class="nav-item">
-          <button class="nav-link" id="btn-tab-promo" onclick="switchInvTab('promo')">
+          <button class="nav-link tab-promo" id="btn-tab-promo" onclick="switchInvTab('promo')">
             <i class="fa-solid fa-gift me-1"></i> โปรโมชั่น / จัดเซ็ต
           </button>
         </li>
@@ -128,12 +141,12 @@
           <!-- Section 3(Alt): การจัดเซ็ต (แสดงเฉพาะแท็บโปรโมชั่น) -->
           <div id="promo_fields" style="display:none;">
             <div class="form-section-title">3. รายการของแถม (Bundle Items)</div>
-            <div class="p-3 bg-primary bg-opacity-10 border border-primary rounded-4 mb-3">
+            <div class="p-3 bg-pink-light border border-pink rounded-4 mb-3">
               <div id="promo_items_list" class="mb-3 d-flex flex-wrap gap-1"></div>
               <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
                 <select id="promo_product_select" class="form-select border-0"></select>
                 <input type="number" id="promo_product_qty" class="form-control border-0 text-center" placeholder="จำนวน" style="max-width: 80px;">
-                <button type="button" class="btn btn-primary fw-bold px-3" onclick="addPromoItem()">เพิ่ม</button>
+                <button type="button" class="btn btn-pink fw-bold px-3" onclick="addPromoItem()">เพิ่ม</button>
               </div>
               <div class="text-muted mt-2" style="font-size:0.75rem;"><i class="fa-solid fa-circle-info me-1"></i> ระบบจะหักสต็อก/เพิ่มคอร์ส ให้คนไข้ตามของแถมในนี้อัตโนมัติ</div>
             </div>
@@ -144,7 +157,7 @@
           <!-- ปุ่ม Action -->
           <div class="d-flex gap-2 mt-4 pt-3 border-top">
             <button type="button" class="btn btn-light border rounded-pill fw-bold shadow-sm w-50 py-2" onclick="clearProductForm()">ล้างข้อมูล</button>
-            <button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
+            <button type="submit" id="btn_save_product" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
           </div>
         </form>
       </div>
@@ -222,8 +235,9 @@
       document.getElementById('pd_unit').value = 'เซ็ต';
       document.getElementById('pd_stock').value = 0;
       
-      document.getElementById('form-title').innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
-      document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-primary"></i> รายการโปรโมชั่นจัดเซ็ต';
+      document.getElementById('form-title').innerHTML = '<div class="bg-pink-light text-pink rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
+      document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-pink"></i> รายการโปรโมชั่นจัดเซ็ต';
+      document.getElementById('btn_save_product').className = 'btn btn-pink rounded-pill fw-bold shadow-sm w-50 py-2';
 
       let sel = document.getElementById('promo_product_select'); 
       sel.innerHTML = '<option value="">-- เลือกหัตถการ / ของแถม --</option>';
@@ -239,7 +253,7 @@
       document.getElementById('promo_fields').style.display = 'none';
       document.getElementById('normal_fields').style.display = 'block';
       
-      document.getElementById('form-title').innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
+      document.getElementById('btn_save_product').className = 'btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2';
       document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-boxes-stacked me-2 text-warning"></i> รายการสินค้าทั่วไป';
     }
     
@@ -274,7 +288,7 @@
       if(item.type === 'MEDICINE') typeBadge = '<span class="badge bg-secondary">ยา/เวชภัณฑ์</span>';
       else if(item.type === 'INJECTABLE') typeBadge = '<span class="badge bg-danger">กลุ่มฉีด</span>';
       else if(item.type === 'COURSE') typeBadge = '<span class="badge bg-info text-dark">คอร์สเลเซอร์</span>';
-      else if(item.type === 'PROMOTION') typeBadge = '<span class="badge bg-primary">โปรโมชั่น</span>';
+      else if(item.type === 'PROMOTION') typeBadge = '<span class="badge bg-pink">โปรโมชั่น</span>';
       else typeBadge = '<span class="badge bg-success">สกินแคร์</span>';
 
       let stockDisplay = item.type === 'PROMOTION' ? '<span class="text-muted">-</span>' : (item.stock <= 5 && item.type !== 'COURSE' ? `<span class="stock-low shadow-sm">${item.stock} ${item.unit}</span>` : `<span class="fw-bold text-dark">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`);
@@ -340,7 +354,7 @@
     let html = '';
     bundleItems.forEach((b, index) => { 
       html += `<span class="badge bg-white text-dark border shadow-sm px-3 py-2" style="font-size:0.8rem;">
-                 ${b.name} <b class="text-primary ms-1">x ${b.qty}</b> 
+                 ${b.name} <b class="text-pink ms-1">x ${b.qty}</b> 
                  <i class="fa-solid fa-xmark text-danger ms-2" style="cursor:pointer" onclick="bundleItems.splice(${index},1); renderPromoItems()"></i>
                </span>`; 
     });
