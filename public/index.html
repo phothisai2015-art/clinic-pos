@@ -17,64 +17,135 @@
     body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; transition: 0.3s; }
     body.dark-theme { background-color: #0f172a; color: #f1f5f9; }
     
-    /* 🌟 Lock Screen & Numpad (Minimal) */
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    body.dark-theme #lock-screen { background: #0f172a; }
+    /* ========================================================= */
+    /* 🌟 Lock Screen & Numpad (Glassmorphism Style) */
+    /* ========================================================= */
+    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+    body.dark-theme #lock-screen { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     
-    .numpad-container { background: #ffffff; border: 1px solid #f1f5f9; box-shadow: 0 20px 40px rgba(0,0,0,0.03); border-radius: 32px; padding: 40px; width: 90%; max-width: 360px; }
-    body.dark-theme .numpad-container { background: #1e293b; border-color: #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .numpad-container { position: relative; z-index: 10; width: 90%; max-width: 380px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(25px) saturate(120%) !important; -webkit-backdrop-filter: blur(25px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.8) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important; border-radius: 40px !important; padding: 40px 30px 45px 30px !important; }
+    body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; }
     
-    /* เอฟเฟกต์จุดสีเขียวออนไลน์ (Pulse) */
-    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
-    @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    .numpad-header-wrap { text-align: center; }
+    @keyframes popIn { 0% { opacity: 0; transform: translateY(30px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
     
-    .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: #e2e8f0; transition: 0.3s; margin: 0 6px; }
-    .pin-dot.filled { background: #3b82f6; transform: scale(1.2); }
-    body.dark-theme .pin-dot { background: #334155; }
-    body.dark-theme .pin-dot.filled { background: #60a5fa; }
-    
-    .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-    .num-btn { background: #f8fafc; border: none; border-radius: 20px; height: 75px; font-size: 24px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s ease; }
-    .num-btn:hover { background: #3b82f6; color: #ffffff; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(59,130,246,0.2); }
-    body.dark-theme .num-btn { background: #334155; color: #f1f5f9; }
-    body.dark-theme .num-btn:hover { background: #60a5fa; color: #ffffff; }
+    .error-shake { animation: shakeError 0.4s ease-in-out; }
+    @keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
-    /* 🌟 Main Menu (Minimal & Clean) */
+    /* จุดแสดงรหัส PIN */
+    .pin-display { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 35px; height: 50px; }
+    .pin-dot { width: 18px !important; height: 18px !important; border-radius: 50% !important; background: rgba(0, 0, 0, 0.08) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
+    body.dark-theme .pin-dot { background: rgba(255, 255, 255, 0.1) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important; }
+    .pin-dot.filled { background: #3b82f6 !important; transform: scale(1.3) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+    body.dark-theme .pin-dot.filled { background: #60a5fa !important; box-shadow: 0 0 15px rgba(96, 165, 250, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
+
+    /* ปุ่มกดตัวเลข */
+    .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .num-btn { background: rgba(255, 255, 255, 0.85) !important; border: 1px solid rgba(255, 255, 255, 0.5) !important; border-radius: 20px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; width: 100%; height: 75px; font-size: 26px !important; font-weight: 800 !important; color: #334155 !important; cursor: pointer; display: flex; justify-content: center; align-items: center; -webkit-tap-highlight-color: transparent; user-select: none; }
+    .num-btn:active { transform: translateY(2px) scale(0.95) !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+    .num-btn-del { color: #ef4444 !important; background: rgba(254, 242, 242, 0.8) !important; }
+    body.dark-theme .num-btn { background: rgba(30, 41, 59, 0.8) !important; border-color: rgba(255, 255, 255, 0.05) !important; color: #f1f5f9 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; }
+    body.dark-theme .num-btn-del { color: #f87171 !important; background: rgba(69, 10, 10, 0.4) !important; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .num-btn:hover { transform: translateY(-4px) scale(1.02) !important; background: #ffffff !important; box-shadow: 0 12px 20px rgba(59, 130, 246, 0.15) !important; border-color: #3b82f6 !important; color: #3b82f6 !important; }
+      .num-btn-del:hover { background: #fef2f2 !important; border-color: #ef4444 !important; box-shadow: 0 12px 20px rgba(239, 68, 68, 0.15) !important; }
+      body.dark-theme .num-btn:hover { background: #1e293b !important; border-color: #60a5fa !important; color: #60a5fa !important; box-shadow: 0 12px 20px rgba(96, 165, 250, 0.2) !important; }
+      body.dark-theme .num-btn-del:hover { border-color: #f87171 !important; box-shadow: 0 12px 20px rgba(248, 113, 113, 0.2) !important; }
+    }
+
+    @keyframes floatLock { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ========================================================= */
+    /* 🐾 CSS อนิเมชั่นน้องแมวเดินเล่น */
+    /* ========================================================= */
+    .detailed-cat { position: absolute; width: 95px; height: 70px; z-index: 1; cursor: grab; will-change: top, left, transform; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+    .detailed-cat:active { cursor: grabbing; }
+    .cat-black-coat { --coat: #1e293b; --coat-dark: #0f172a; --collar: #ef4444; } .cat-white-coat { --coat: #ffffff; --coat-dark: #e2e8f0; --collar: #3b82f6; } .cat-orange-coat { --coat: #f97316; --coat-dark: #ea580c; --collar: #10b981; }
+    .cat-wrapper { position: relative; width: 100%; height: 100%; animation: catBobbing 0.22s ease-in-out infinite alternate; pointer-events: none; }
+    .cat-body-main { position: absolute; width: 58px; height: 34px; background: var(--coat); border-radius: 18px; top: 18px; left: 10px; box-shadow: inset -3px -4px 0 rgba(0,0,0,0.12); }
+    .cat-head-main { position: absolute; width: 30px; height: 28px; background: var(--coat); border-radius: 50%; top: 6px; left: 55px; box-shadow: inset -1px -2px 0 rgba(0,0,0,0.1); }
+    .cat-ear { position: absolute; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--coat); top: -6px; }
+    .cat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 2.5px solid transparent; border-right: 2.5px solid transparent; border-bottom: 5px solid #fda4af; left: -2.5px; top: 3px; }
+    .ear-l { left: 2px; transform: rotate(-12deg); } .ear-r { right: 2px; transform: rotate(12deg); }
+    .cat-eye { position: absolute; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; top: 9px; animation: catBlinking 3.5s infinite; }
+    .cat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+    .eye-l { left: 8px; } .eye-r { right: 8px; }
+    .cat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 14px; left: 13px; }
+    .cat-whiskers { position: absolute; width: 14px; height: 1px; background: rgba(71, 85, 105, 0.4); top: 16px; animation: whiskerTwitch 0.5s ease-in-out infinite alternate; }
+    .whisker-l { left: -6px; transform: rotate(-5deg); transform-origin: right center; } .whisker-r { right: -6px; transform: rotate(5deg); transform-origin: left center; }
+    .cat-collar-line { position: absolute; width: 12px; height: 24px; border-radius: 50%; border-left: 4px solid var(--collar); top: 16px; left: 50px; transform: rotate(-20deg); }
+    .cat-gold-bell { position: absolute; width: 7px; height: 7px; background: #f59e0b; border-radius: 50%; top: 32px; left: 54px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transform-origin: top center; animation: bellJingle 0.22s ease-in-out infinite alternate; }
+    .cat-tail-soft { position: absolute; width: 7px; height: 30px; background: var(--coat); border-radius: 4px; left: 6px; top: -4px; transform-origin: bottom center; animation: tailWavingSoft 0.45s ease-in-out infinite alternate; box-shadow: inset -1px 0 0 rgba(0,0,0,0.1); }
+    .cat-leg-detailed { position: absolute; width: 6px; height: 20px; background: var(--coat); border-radius: 4px; top: 45px; transform-origin: top center; }
+    .leg-front-left { left: 52px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate; }
+    .leg-front-right { left: 59px; animation: swingLeg 0.22s linear infinite alternate-reverse; }
+    .leg-back-left { left: 16px; background: var(--coat-dark); animation: swingLeg 0.22s linear infinite alternate-reverse; }
+    .leg-back-right { left: 23px; animation: swingLeg 0.22s linear infinite alternate; }
+    @keyframes swingLeg { 0% { transform: rotate(-30deg); } 100% { transform: rotate(30deg); } }
+    @keyframes tailWavingSoft { 0% { transform: rotate(-40deg); } 100% { transform: rotate(20deg); } }
+    @keyframes catBobbing { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+    @keyframes bellJingle { 0% { transform: rotate(-20deg); } 100% { transform: rotate(20deg); } }
+    @keyframes whiskerTwitch { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
+    @keyframes catBlinking { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+    
+    .panel-cat { position: absolute; width: 58px; height: 50px; top: -43px; z-index: 12; pointer-events: none; will-change: transform; animation: catPanelPeekLook 3.5s ease-in-out infinite alternate; }
+    .cat-orange-peeking { --pcoat: #f97316; --pcoat-dark: #ea580c; --peye: #22c55e; }
+    .pcat-head { position: absolute; width: 48px; height: 44px; background: var(--pcoat); border-radius: 24px 24px 18px 18px; bottom: 0; left: 5px; box-shadow: 0 5px 12px rgba(15, 23, 42, 0.05), inset -2px -3px 0 rgba(0,0,0,0.1); }
+    .pcat-ear { position: absolute; width: 0; height: 0; border-left: 6.5px solid transparent; border-right: 6.5px solid transparent; border-bottom: 11px solid var(--pcoat); bottom: 37px; }
+    .pcat-ear::after { content: ''; position: absolute; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-bottom: 6px solid #fda4af; left: -3px; top: 4px; }
+    .pcat-ear.ear-l { left: 6px; transform: rotate(-13deg); } .pcat-ear.ear-r { right: 6px; transform: rotate(13deg); }
+    .pcat-eye { position: absolute; width: 6px; height: 6px; background: var(--peye); border-radius: 50%; top: 15px; animation: catBlinking 3s infinite; }
+    .pcat-eye::after { content: ''; position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; top: 1px; left: 1px; }
+    .pcat-eye.eye-l { left: 10px; } .pcat-eye.eye-r { right: 10px; }
+    .pcat-nose { position: absolute; width: 4px; height: 3px; background: #f43f5e; border-radius: 50%; top: 20px; left: 22px; }
+    .pcat-paw { position: absolute; width: 13px; height: 13px; background: var(--pcoat); border-radius: 50% 50% 3px 3px; bottom: -6px; z-index: 15; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08); }
+    .pcat-paw::after { content: ''; position: absolute; width: 9px; height: 5px; background: #fda4af; border-radius: 50% 50% 2px 2px; top: 2px; left: 2px; }
+    .pcat-paw.paw-l { left: 10px; } .pcat-paw.paw-r { right: 10px; }
+    @keyframes catPanelPeekLook { 0% { transform: translateY(0) rotate(0deg); } 35% { transform: translateY(-4px) rotate(3deg); } 70% { transform: translateY(1px) rotate(-3deg); } 100% { transform: translateY(-1px) rotate(1deg); } }
+
+    .detailed-cat.cat-resting { animation: none !important; }
+    .detailed-cat.cat-resting .cat-wrapper { animation: catSleeping 1.5s ease-in-out infinite alternate !important; }
+    .detailed-cat.cat-resting .cat-body-main { transform: translateY(6px) scaleY(0.85); transition: transform 0.5s ease; }
+    .detailed-cat.cat-resting .cat-head-main { transform: translateY(8px) translateX(-3px); transition: transform 0.5s ease; }
+    .detailed-cat.cat-resting .cat-leg-detailed { height: 6px !important; top: 42px !important; animation: none !important; transition: all 0.5s ease; }
+    @keyframes catSleeping { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(2px) scale(0.98, 1.02); } }
+
+    /* ========================================================= */
+    /* 🌟 Main Menu & General System (Minimal) */
+    /* ========================================================= */
     .menu-card-btn { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 24px; padding: 35px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; height: 100%; position: relative; overflow: hidden; }
     .menu-card-btn::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.3s; }
-    
-    /* สีของแถบตกแต่งด้านบนตอน Hover */
     .menu-card-btn:nth-child(1):hover::before { background: #3b82f6; }
     .menu-card-btn:nth-child(2):hover::before { background: #0ea5e9; }
     .menu-card-btn:nth-child(3):hover::before { background: #10b981; }
     .menu-card-btn:nth-child(4):hover::before { background: #f59e0b; }
     .menu-card-btn:nth-child(5):hover::before { background: #64748b; }
     .menu-card-btn:nth-child(6):hover::before { background: #334155; }
-
     .menu-card-btn:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border-color: transparent; }
     body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; color: #f8fafc; }
     body.dark-theme .menu-card-btn:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
     
     .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 28px; transition: 0.3s; margin-bottom: 20px; }
     .menu-card-btn:hover .menu-icon-wrap { transform: scale(1.1); }
-    
     .menu-card-btn h6 { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #1e293b; transition: 0.3s; }
     body.dark-theme .menu-card-btn h6 { color: #f1f5f9; }
     .menu-card-btn small { font-size: 0.8rem; color: #64748b; font-weight: 400; transition: 0.3s; }
     
-    /* 🌟 User Info Badge */
     .user-info-badge { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
     body.dark-theme .user-info-badge { background: #1e293b; border-color: #334155; color: #f8fafc; }
     .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
     body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
+    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
 
-    /* 🌟 ระบบ Responsive */
     @media (max-height: 800px) {
       .menu-card-btn { padding: 25px 15px; border-radius: 20px; }
       .menu-icon-wrap { width: 55px; height: 55px; font-size: 22px; margin-bottom: 15px; }
       #main-clinic-logo { width: 80px !important; height: 80px !important; }
       #main-menu { padding-top: 2rem !important; }
       h2#main-clinic-name { font-size: 1.75rem; margin-bottom: 0.5rem; }
+      .numpad-container { padding: 25px 15px !important; width: 95% !important; max-width: 350px !important; }
+      .num-btn { height: 60px !important; font-size: 24px !important; border-radius: 16px !important; }
     }
 
     .theme-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 10000; cursor: pointer; font-size: 18px; transition: 0.3s; }
@@ -83,39 +154,56 @@
     body.dark-theme .theme-toggle-btn:hover { background: #334155; }
 
     .version-text { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; }
-    
-    /* Subtle background pattern */
-    .bg-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-    body.dark-theme .bg-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); opacity: 0.5; }
   </style>
 </head>
 <body>
 
-  <div class="bg-pattern"></div>
-
   <!-- ปุ่มสลับโหมด -->
   <button class="theme-toggle-btn" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
 
-  <!-- 🔒 Numpad Lock Screen -->
+  <!-- 🔒 Numpad Lock Screen พร้อมน้องแมว -->
   <div id="lock-screen">
-    <div class="numpad-container">
-      <div class="text-center mb-4">
-        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center mx-auto mb-4" style="width: 70px; height: 70px;">
-           <i class="fa-solid fa-lock fs-3"></i>
-        </div>
-        <h5 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">เข้าสู่ระบบ</h5>
-        <p class="text-muted small mb-0">กรุณาใส่รหัส PIN พนักงาน</p>
-        <div class="d-flex justify-content-center mt-4" id="pin-display">
+    
+    <!-- แมว 3 ตัว -->
+    <div class="detailed-cat cat-black-coat">
+      <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+    </div>
+    <div class="detailed-cat cat-white-coat">
+      <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+    </div>
+    <div class="detailed-cat cat-orange-coat">
+      <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
+    </div>
+
+    <!-- แป้นกด Glassmorphism -->
+    <div class="numpad-container" id="numpad-box">
+      <!-- แมวแอบมองบนกล่อง -->
+      <div class="panel-cat cat-orange-peeking" style="right: 40px;">
+        <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
+        <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
+        <div class="pcat-paw paw-l"></div><div class="pcat-paw paw-r"></div>
+      </div>
+
+      <div class="numpad-header-wrap">
+        <h4 class="fw-bold text-primary mb-2"><i class="fa-solid fa-lock mb-2 fa-2x lock-icon-anim" style="display:inline-block; color:#3b82f6; text-shadow:0 8px 12px rgba(59,130,246,0.25); animation:floatLock 3s ease-in-out infinite;"></i><br> <span>กรุณาใส่รหัสพนักงาน</span> </h4>
+        <p class="text-muted small mb-4"> ระบบถูกล็อกเพื่อความปลอดภัย </p>
+        <div class="pin-display" id="pin-display">
           <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
       </div>
       <div class="numpad-grid">
-        <button class="num-btn" onclick="pressNum('1')">1</button><button class="num-btn" onclick="pressNum('2')">2</button><button class="num-btn" onclick="pressNum('3')">3</button>
-        <button class="num-btn" onclick="pressNum('4')">4</button><button class="num-btn" onclick="pressNum('5')">5</button><button class="num-btn" onclick="pressNum('6')">6</button>
-        <button class="num-btn" onclick="pressNum('7')">7</button><button class="num-btn" onclick="pressNum('8')">8</button><button class="num-btn" onclick="pressNum('9')">9</button>
-        <button class="num-btn text-danger" onclick="pressNum('del')"><i class="fa-solid fa-delete-left"></i></button>
+        <button class="num-btn" onclick="pressNum('1')">1</button>
+        <button class="num-btn" onclick="pressNum('2')">2</button>
+        <button class="num-btn" onclick="pressNum('3')">3</button>
+        <button class="num-btn" onclick="pressNum('4')">4</button>
+        <button class="num-btn" onclick="pressNum('5')">5</button>
+        <button class="num-btn" onclick="pressNum('6')">6</button>
+        <button class="num-btn" onclick="pressNum('7')">7</button>
+        <button class="num-btn" onclick="pressNum('8')">8</button>
+        <button class="num-btn" onclick="pressNum('9')">9</button>
+        <button class="num-btn num-btn-del" onclick="pressNum('del')"><i class="fa-solid fa-delete-left"></i></button>
         <button class="num-btn" onclick="pressNum('0')">0</button>
-        <button class="num-btn text-secondary fs-6" onclick="pressNum('clear')">C</button>
+        <button class="num-btn" onclick="pressNum('clear')" style="color: #64748b; font-size: 16px;">C</button>
       </div>
     </div>
   </div>
@@ -206,11 +294,13 @@
 
   <script>
     let currentPin = "";
+    let isCheckingPin = false; // กันกดรัวตอนเช็ค PIN
     
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
       loadGlobalClinicInfo(); 
+      initCats(); // เปิดใช้งานน้องแมว 🐈
     });
 
     async function loadGlobalClinicInfo() {
@@ -291,6 +381,9 @@
     }
 
     function pressNum(val) {
+      if (document.activeElement) document.activeElement.blur(); 
+      if (isCheckingPin) return;
+
       if(val === 'clear') currentPin = "";
       else if(val === 'del') currentPin = currentPin.slice(0, -1);
       else if(currentPin.length < 4) currentPin += val;
@@ -298,6 +391,7 @@
       updatePinDisplay();
       
       if(currentPin.length === 4) {
+        isCheckingPin = true;
         fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: currentPin }) })
         .then(async res => {
           if (!res.ok) throw new Error(`เซิร์ฟเวอร์อาจกำลังรีสตาร์ท โปรดรอสักครู่`);
@@ -310,18 +404,32 @@
             document.getElementById('display-staff-initial').innerText = data.user.name.substring(0, 1);
             
             document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('numpad-box').style.animation = 'none';
             document.getElementById('main-menu').style.display = 'block';
             document.getElementById('footer-menu').style.display = 'flex'; 
             
             if(data.user.permissions) applyPermissions(data.user.permissions);
+            
+            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
           } else {
-            Swal.fire({ icon: 'error', title: 'รหัสผิดพลาด', text: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            // สั่นแป้นพิมพ์เวลารหัสผิดแบบใน shop_menu
+            let numpad = document.getElementById('numpad-box'); 
+            numpad.classList.add('error-shake'); 
+            document.getElementById('pin-display').innerHTML = '<div class="pin-dot filled bg-danger" style="box-shadow: 0 0 15px rgba(239,68,68,0.6) !important;"></div>'.repeat(4);
+            
+            setTimeout(() => { 
+              numpad.classList.remove('error-shake'); 
+              currentPin = ""; 
+              updatePinDisplay(); 
+              isCheckingPin = false; 
+            }, 400);
+            return; // จบการทำงาน ไม่ต้องรีเซ็ตล่างสุด
           }
-          currentPin = ""; updatePinDisplay();
+          currentPin = ""; updatePinDisplay(); isCheckingPin = false;
         })
         .catch(err => {
           Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
-          currentPin = ""; updatePinDisplay();
+          currentPin = ""; updatePinDisplay(); isCheckingPin = false;
         });
       }
     }
@@ -364,6 +472,12 @@
     function lockSystem() {
       document.getElementById('main-menu').style.display = 'none';
       document.getElementById('footer-menu').style.display = 'none'; 
+      
+      let numpad = document.getElementById('numpad-box'); 
+      numpad.style.animation = 'none'; 
+      void numpad.offsetWidth; 
+      numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+      
       document.getElementById('lock-screen').style.display = 'flex';
     }
 
@@ -417,16 +531,159 @@
       loadGlobalClinicInfo(); 
     }
 	
-  const originalFetch = window.fetch;
-  window.fetch = async function() {
-      let [resource, config] = arguments;
-      if (!config) { config = {}; }
-      if (!config.headers) { config.headers = {}; }
-      const userId = sessionStorage.getItem('currentUserId');
-      if (userId) { config.headers['X-User-Id'] = userId; }
-      return originalFetch(resource, config);
-  };
-  
+    const originalFetch = window.fetch;
+    window.fetch = async function() {
+        let [resource, config] = arguments;
+        if (!config) { config = {}; }
+        if (!config.headers) { config.headers = {}; }
+        const userId = sessionStorage.getItem('currentUserId');
+        if (userId) { config.headers['X-User-Id'] = userId; }
+        return originalFetch(resource, config);
+    };
+
+    // =========================================================
+    // 🐾 Script อนิเมชั่นน้องแมวเดินเล่น
+    // =========================================================
+    function initCats() {
+      const cats = document.querySelectorAll('.detailed-cat'); 
+      let isDragging = false; 
+      let currentCat = null; 
+      let offsetX = 0, offsetY = 0;
+
+      function startDrag(e, cat) {
+        if (e.type === 'mousedown') e.preventDefault();
+        isDragging = true; 
+        currentCat = cat;
+        
+        if (currentCat.walkInterval) clearInterval(currentCat.walkInterval);
+        if (currentCat.actionTimeout) clearTimeout(currentCat.actionTimeout);
+        currentCat.classList.remove('cat-resting');
+
+        const computed = window.getComputedStyle(currentCat); 
+        const startLeft = parseFloat(computed.left); 
+        const startTop = parseFloat(computed.top);
+        
+        currentCat.style.left = startLeft + 'px'; 
+        currentCat.style.top = startTop + 'px';
+        currentCat.style.animation = 'none'; 
+        currentCat.style.transition = 'none'; 
+        currentCat.style.zIndex = '1000';
+
+        let clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX; 
+        let clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+        offsetX = clientX - startLeft; 
+        offsetY = clientY - startTop;
+      }
+
+      function drag(e) {
+        if (!isDragging || !currentCat) return; 
+        e.preventDefault(); 
+        let clientX = e.clientX !== undefined ? e.clientX : (e.touches.length > 0 ? e.touches[0].clientX : 0); 
+        let clientY = e.clientY !== undefined ? e.clientY : (e.touches.length > 0 ? e.touches[0].clientY : 0);
+        currentCat.style.left = (clientX - offsetX) + 'px'; 
+        currentCat.style.top = (clientY - offsetY) + 'px';
+      }
+
+      function endDrag() {
+        if (!currentCat) return;
+        let cat = currentCat; 
+        cat.style.zIndex = '1';
+        isDragging = false; 
+        currentCat = null;
+        
+        startCatBehavior(cat);
+      }
+
+      function startCatBehavior(cat) {
+        if (cat.walkInterval) clearInterval(cat.walkInterval);
+        if (cat.actionTimeout) clearTimeout(cat.actionTimeout);
+
+        let directionX = cat.dataset.dir ? parseInt(cat.dataset.dir) : 1; 
+        let directionY = (Math.random() * 1.6 - 0.8); 
+        
+        cat.style.transform = `scaleX(${directionX})`;
+        let walkDuration = Math.floor(Math.random() * 10000) + 10000;
+
+        cat.classList.remove('cat-resting');
+        cat.walkInterval = setInterval(() => {
+          if (document.getElementById('lock-screen') && document.getElementById('lock-screen').style.display === 'none') return;
+          
+          let currentLeft = parseFloat(cat.style.left); 
+          let currentTop = parseFloat(cat.style.top);
+          
+          if (isNaN(currentLeft)) {
+            const computed = window.getComputedStyle(cat);
+            currentLeft = parseFloat(computed.left) || 0;
+            currentTop = parseFloat(computed.top) || 0;
+          }
+          
+          currentLeft += directionX * 1.5; 
+          currentTop += directionY;
+
+          let minTop = window.innerHeight * 0.08;
+          let maxTop = window.innerHeight * 0.75;
+          if (currentTop < minTop || currentTop > maxTop) {
+            directionY = -directionY; 
+          }
+
+          cat.style.left = currentLeft + 'px';
+          cat.style.top = currentTop + 'px';
+
+          if (directionX === 1 && currentLeft > window.innerWidth + 100) { 
+            cat.style.left = '-120px';
+            cat.style.top = (Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.12)) + 'px';
+            directionY = (Math.random() * 1.6 - 0.8);
+          }
+          
+          if (directionX === -1 && currentLeft < -150) { 
+            cat.style.left = (window.innerWidth + 50) + 'px';
+            cat.style.top = (Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.12)) + 'px';
+            directionY = (Math.random() * 1.6 - 0.8);
+          }
+        }, 30);
+
+        cat.actionTimeout = setTimeout(() => {
+          clearInterval(cat.walkInterval);
+          cat.classList.add('cat-resting');
+
+          let sleepDuration = Math.floor(Math.random() * 15000) + 5000;
+          cat.actionTimeout = setTimeout(() => {
+            if (Math.random() > 0.5) {
+              directionX = directionX * -1;
+              cat.dataset.dir = directionX;
+            }
+            startCatBehavior(cat);
+          }, sleepDuration);
+
+        }, walkDuration);
+      }
+
+      cats.forEach((cat, index) => { 
+        cat.ondragstart = function() { return false; }; 
+        cat.addEventListener('mousedown', (e) => startDrag(e, cat)); 
+        cat.addEventListener('touchstart', (e) => startDrag(e, cat), {passive: false}); 
+        
+        let startFromLeft = Math.random() > 0.5;
+        let initialLeft = startFromLeft ? -120 : window.innerWidth + 20;
+        let initialTop = Math.floor(Math.random() * (window.innerHeight * 0.6)) + (window.innerHeight * 0.15);
+        
+        let initialDir = startFromLeft ? 1 : -1;
+        cat.dataset.dir = initialDir;
+        
+        cat.style.left = initialLeft + 'px';
+        cat.style.top = initialTop + 'px';
+
+        setTimeout(() => {
+          startCatBehavior(cat);
+        }, index * 1500 + Math.random() * 1000);
+      });
+
+      document.addEventListener('mousemove', drag); 
+      document.addEventListener('touchmove', drag, {passive: false});
+      document.addEventListener('mouseup', endDrag); 
+      document.addEventListener('touchend', endDrag); 
+      document.addEventListener('mouseleave', endDrag);
+    }
   </script>
 </body>
 </html>
