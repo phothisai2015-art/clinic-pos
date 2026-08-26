@@ -236,6 +236,22 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
       font-size: 0.85rem !important; /* ลดขนาดข้อความ ว่าง-กดเพื่อลงนัดหมาย */
       padding: 10px 15px !important; /* ลดระยะห่างบนล่างให้กะทัดรัดขึ้น */
     }
+	/* 12. ย่อปุ่มยกเลิกนัดในตารางเวลา ให้เหลือเฉพาะไอคอนถังขยะ */
+    .time-slot-row button[onclick^="cancelAppointment"] {
+      width: 32px !important;
+      height: 32px !important;
+      padding: 0 !important;
+      font-size: 0 !important; /* ซ่อนตัวหนังสือ ยกเลิกนัด */
+      border-radius: 50% !important; /* ปรับปุ่มเป็นทรงกลมมินิมอล */
+      display: inline-flex !important;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0; /* ป้องกันปุ่มเบี้ยวโดนบีบ */
+    }
+    .time-slot-row button[onclick^="cancelAppointment"] i {
+      font-size: 0.9rem !important; /* แสดงไอคอนถังขยะ */
+      margin: 0 !important;
+    }
   }
   
   /* ========================================================= */
@@ -273,6 +289,17 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     body.dark-theme .swal2-validation-message {
       background-color: #0f172a !important;
       color: #f87171 !important;
+    }
+	/* ========================================================= */
+    /* 🌙 ปรับแต่งช่องเลือกเวลา (Time Input) ในโหมดมืด */
+    /* ========================================================= */
+    body.dark-theme input[type="time"],
+    body.dark-theme input[type="date"] {
+      background-color: #0f172a !important; /* เปลี่ยนพื้นหลังช่องเวลาเป็นสีเข้ม */
+    }
+    body.dark-theme input[type="time"]::-webkit-calendar-picker-indicator,
+    body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) !important; /* เปลี่ยนไอคอนรูปนาฬิกาเป็นสีสว่าง */
     }
   
 </style>
