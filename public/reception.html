@@ -32,18 +32,17 @@
 
   /* 📱 ปรับแต่ง UI สำหรับจอมือถือ */
   @media (max-width: 768px) {
-    /* 1. เว้นระยะห่างด้านล่างของกล่องค้นหา ดันข้อมูลคนไข้ลงมา ไม่ให้ชื่อเกยขึ้นไปทับ */
     .search-divider { border-right: none !important; border-bottom: 1px dashed #cbd5e1; padding-right: 0 !important; padding-bottom: 15px; margin-bottom: 15px !important; }
     
-    /* 2. เพิ่มระยะห่างด้านบนให้ข้อมูลคนไข้ดันตัวลงมาด้านล่าง */
-    .info-padding { padding-left: 0 !important; margin-top: 15px !important; }
+    /* 1. ดันกล่องข้อมูลคนไข้ลงมาจากขอบบนให้มากขึ้น ไม่ให้ชนช่องค้นหา */
+    .info-padding { padding-left: 0 !important; margin-top: 20px !important; }
     
-    /* 3. ปรับปุ่มเลือกแพคเกจสีฟ้าให้อยู่ตรงกลางแนวตั้ง และขยับเข้ามาทางซ้ายนิดนึง */
-    .btn-pkg-mobile { width: 40px; height: 40px; padding: 0 !important; display: flex; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; margin-left: 8px; margin-top: 2px; }
+    /* 2. จัดปุ่มกลม (ลบ margin-right ทิ้งเพราะปุ่มมาอยู่ข้างข้อความแล้ว) */
+    .btn-pkg-mobile { width: 42px; height: 42px; padding: 0 !important; display: flex; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
     .btn-pkg-mobile span { display: none !important; }
-    .btn-pkg-mobile i { margin: 0 !important; font-size: 1rem; }
+    .btn-pkg-mobile i { margin: 0 !important; font-size: 1.1rem; }
 
-    /* 4. จัดข้อมูล HN, เลข ปชช, อายุ เรียงแถวเดียวกัน */
+    /* 3. จัดข้อมูล HN, เลข ปชช, อายุ เรียงแถวเดียวกัน */
     .patient-details-row { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.78rem !important; margin-top: 6px; }
     .patient-details-row .divider { display: inline-block !important; opacity: 0.4; }
   }
@@ -133,9 +132,9 @@
           
           <div class="col-md-7 ps-4">
             <div id="patientInfoDisplay" style="display: none;">
-              <!-- เปลี่ยนเป็น align-items-center เพื่อให้ปุ่มสีฟ้าอยู่ตรงกลางระดับเดียวกับชื่อ -->
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="flex-grow-1 pe-1 overflow-hidden">
+              <!-- นำ justify-content-between และ flex-grow-1 ออก เพื่อให้ปุ่มมาอยู่ข้างๆ ข้อมูล -->
+              <div class="d-flex align-items-center mb-2 pt-2">
+                <div class="pe-3 overflow-hidden">
                   <h5 class="fw-bold text-dark m-0 text-truncate" id="disp_name">-</h5>
                   <div class="text-muted patient-details-row">
                     <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
