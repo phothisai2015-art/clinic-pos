@@ -18,6 +18,11 @@
     body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; min-height: 100vh; position: relative; }
     body.dark-theme { background-color: #0f172a; color: #f1f5f9; }
     
+    /* 🌟 ปรับสีสำหรับ Dark Mode โดยเฉพาะ (แก้บั๊กกลืนกับพื้นหลัง) */
+    body.dark-theme .text-dark { color: #f8fafc !important; }
+    body.dark-theme .text-muted { color: #94a3b8 !important; }
+    body.dark-theme .menu-icon-wrap.bg-dark { background-color: rgba(255, 255, 255, 0.15) !important; color: #f8fafc !important; }
+    
     /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) ทำให้ Glassmorphism ดูมีสีสัน */
     .ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
     .orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
@@ -36,7 +41,7 @@
     #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: opacity 0.4s ease; }
     body.dark-theme #lock-screen { background: rgba(15, 23, 42, 0.6); }
     
-    /* 🌟 Numpad (Glassmorphism Style แบบต้นฉบับ) */
+    /* 🌟 Numpad (Glassmorphism Style) */
     .numpad-container { position: relative; z-index: 10; width: 90%; max-width: 380px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; background: rgba(255, 255, 255, 0.65) !important; backdrop-filter: blur(25px) saturate(150%) !important; -webkit-backdrop-filter: blur(25px) saturate(150%) !important; border: 1px solid rgba(255, 255, 255, 0.8) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important; border-radius: 40px !important; padding: 40px 30px 45px 30px !important; }
     body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.6) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; }
     
@@ -69,7 +74,7 @@
     @keyframes floatLock { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
     /* ========================================================= */
-    /* 🌟 Main Menu & Menu Cards (ขาวสะอาด มินิมอล) */
+    /* 🌟 Main Menu & Menu Cards */
     /* ========================================================= */
     .menu-card-btn { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; outline: none; }
     .menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 1); border-color: #ffffff; }
@@ -188,7 +193,7 @@
       <div class="d-flex justify-content-center mb-4">
         <img id="main-clinic-logo" src="" style="width: 110px; height: 110px; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; background: #fff; padding: 6px;">
       </div>
-      <h2 class="fw-bold text-dark mb-4" id="main-clinic-name" style="letter-spacing: -1px; font-size: 2.2rem;">Clinic Management</h2>
+      <h2 class="fw-bold text-dark mb-4" id="main-clinic-name" style="letter-spacing: -1px; font-size: 2.2rem;">Clinic Management System</h2>
       
       <div class="user-info-badge">
         <div class="user-avatar" id="display-staff-initial">A</div>
@@ -209,7 +214,7 @@
       </div>
     </div>
 
-    <!-- 🌟 เมนูต่างๆ (Cards) -> ใส่ d-flex ใน col และ w-100 h-100 ในปุ่ม เพื่อแก้ปัญหากล่องเหลื่อมกัน -->
+    <!-- 🌟 เมนูต่างๆ (Cards) -> แก้ปัญหากล่องเหลื่อมกันด้วย d-flex ให้เต็มความสูง -->
     <div class="row g-4 justify-content-center align-items-stretch">
       <div class="col-6 col-md-4 d-flex">
         <button class="menu-card-btn w-100 h-100" id="btn-menu-booking" onclick="openModule('booking.html')" disabled>
@@ -258,7 +263,7 @@
 
   <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
-    <span class="text-muted version-text">v1.0.2</span>
+    <span class="text-muted version-text">Version 2.0.0</span>
     <span class="mx-3 text-muted opacity-25">•</span>
     
     <button id="btn-setting" class="btn btn-link text-secondary fw-semibold p-0 text-decoration-none me-4" onclick="openModule('setting.html')">
@@ -480,6 +485,7 @@
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
+          // 🌟 ให้ปุ่มที่เป็นสิทธิ์เข้าไม่ได้ แสดงสถานะ "ล็อก" แบบเดียวกับต้นฉบับ
           if (p.includes('ADMIN') || p.includes(key)) {
             btn.disabled = false;
           } else {
@@ -509,6 +515,8 @@
       numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
       
       document.getElementById('lock-screen').style.display = 'flex';
+      
+      // ปิดโมดูลทุกหน้า กลับมาที่เมนูหลัก
       closeModule();
     }
 
