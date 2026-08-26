@@ -36,7 +36,14 @@
     
     .info-padding { padding-left: 0 !important; margin-top: 15px !important; }
     
-    /* ลบ margin ขวาซ้าย ออก เพื่อปล่อยให้ปุ่มชิดขอบขวาสุด (ตรงกับปุ่มค้นหา) */
+    /* 🌟 เพิ่มโค้ดส่วนนี้: ย่อขนาดช่องค้นหาและปุ่มให้เล็กลง */
+    .input-group-lg > .form-control,
+    .input-group-lg > .btn {
+      padding: 6px 12px !important;
+      font-size: 0.85rem !important;
+      height: 38px !important;
+    }
+
     .btn-pkg-mobile { width: 42px; height: 42px; padding: 0 !important; display: flex; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
     .btn-pkg-mobile span { display: none !important; }
     .btn-pkg-mobile i { margin: 0 !important; font-size: 1.1rem; }
