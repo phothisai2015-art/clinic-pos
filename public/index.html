@@ -8,7 +8,7 @@
   <!-- Libraries พื้นฐาน -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -17,45 +17,81 @@
     body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; transition: 0.3s; }
     body.dark-theme { background-color: #0f172a; color: #f1f5f9; }
     
-    /* Lock Screen & Numpad */
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    body.dark-theme #lock-screen { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-    .numpad-container { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 30px 60px rgba(0,0,0,0.15); border-radius: 40px; padding: 40px 30px; width: 90%; max-width: 380px; }
-    body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65); border-color: rgba(255,255,255,0.1); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+    /* 🌟 Lock Screen & Numpad (Minimal) */
+    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    body.dark-theme #lock-screen { background: #0f172a; }
+    
+    .numpad-container { background: #ffffff; border: 1px solid #f1f5f9; box-shadow: 0 20px 40px rgba(0,0,0,0.03); border-radius: 32px; padding: 40px; width: 90%; max-width: 360px; }
+    body.dark-theme .numpad-container { background: #1e293b; border-color: #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
     
     /* เอฟเฟกต์จุดสีเขียวออนไลน์ (Pulse) */
-    .online-dot { width: 12px; height: 12px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulse-green 2s infinite; }
-    @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
     
-    .pin-dot { width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.3s; }
-    .pin-dot.filled { background: #3b82f6; transform: scale(1.3); }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: #e2e8f0; transition: 0.3s; margin: 0 6px; }
+    .pin-dot.filled { background: #3b82f6; transform: scale(1.2); }
+    body.dark-theme .pin-dot { background: #334155; }
     body.dark-theme .pin-dot.filled { background: #60a5fa; }
-    .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .num-btn { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; height: 70px; font-size: 26px; font-weight: 800; color: #334155; cursor: pointer; transition: 0.2s; }
-    .num-btn:hover { background: #fff; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; }
-    body.dark-theme .num-btn { background: rgba(30,41,59,0.8); color: #f1f5f9; border-color: rgba(255,255,255,0.05); }
-
-    /* 🌟 Main Menu ปรับขนาดให้พอดีตา */
-    .menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px 15px; text-align: center; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; height: 100%; }
-    .menu-card-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: #cbd5e1; }
-    body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; color: #fff; }
-    .menu-icon-wrap { width: 65px; height: 65px; border-radius: 18px; display: flex; justify-content: center; align-items: center; font-size: 28px; transition: 0.3s; }
     
-    /* 🌟 ระบบ Responsive: ถ้าย่อจอ หรือจอเตี้ยกว่า 800px ระบบจะหดขนาดกล่องอัตโนมัติ */
+    .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+    .num-btn { background: #f8fafc; border: none; border-radius: 20px; height: 75px; font-size: 24px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s ease; }
+    .num-btn:hover { background: #3b82f6; color: #ffffff; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(59,130,246,0.2); }
+    body.dark-theme .num-btn { background: #334155; color: #f1f5f9; }
+    body.dark-theme .num-btn:hover { background: #60a5fa; color: #ffffff; }
+
+    /* 🌟 Main Menu (Minimal & Clean) */
+    .menu-card-btn { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 24px; padding: 35px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; height: 100%; position: relative; overflow: hidden; }
+    .menu-card-btn::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.3s; }
+    
+    /* สีของแถบตกแต่งด้านบนตอน Hover */
+    .menu-card-btn:nth-child(1):hover::before { background: #3b82f6; }
+    .menu-card-btn:nth-child(2):hover::before { background: #0ea5e9; }
+    .menu-card-btn:nth-child(3):hover::before { background: #10b981; }
+    .menu-card-btn:nth-child(4):hover::before { background: #f59e0b; }
+    .menu-card-btn:nth-child(5):hover::before { background: #64748b; }
+    .menu-card-btn:nth-child(6):hover::before { background: #334155; }
+
+    .menu-card-btn:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border-color: transparent; }
+    body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; color: #f8fafc; }
+    body.dark-theme .menu-card-btn:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
+    
+    .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 28px; transition: 0.3s; margin-bottom: 20px; }
+    .menu-card-btn:hover .menu-icon-wrap { transform: scale(1.1); }
+    
+    .menu-card-btn h6 { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #1e293b; transition: 0.3s; }
+    body.dark-theme .menu-card-btn h6 { color: #f1f5f9; }
+    .menu-card-btn small { font-size: 0.8rem; color: #64748b; font-weight: 400; transition: 0.3s; }
+    
+    /* 🌟 User Info Badge */
+    .user-info-badge { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    body.dark-theme .user-info-badge { background: #1e293b; border-color: #334155; color: #f8fafc; }
+    .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
+    body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
+
+    /* 🌟 ระบบ Responsive */
     @media (max-height: 800px) {
-      .menu-card-btn { padding: 15px 10px; border-radius: 16px; }
-      .menu-icon-wrap { width: 50px; height: 50px; font-size: 22px; }
-      #main-clinic-logo { width: 75px !important; height: 75px !important; }
-      #main-menu { padding-top: 1.5rem !important; }
-      h2#main-clinic-name { font-size: 1.5rem; margin-bottom: 0.5rem; }
+      .menu-card-btn { padding: 25px 15px; border-radius: 20px; }
+      .menu-icon-wrap { width: 55px; height: 55px; font-size: 22px; margin-bottom: 15px; }
+      #main-clinic-logo { width: 80px !important; height: 80px !important; }
+      #main-menu { padding-top: 2rem !important; }
+      h2#main-clinic-name { font-size: 1.75rem; margin-bottom: 0.5rem; }
     }
 
-    .theme-toggle-btn { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; border: none; box-shadow: 0 10px 25px rgba(59,130,246,0.4); z-index: 10000; cursor: pointer; font-size: 20px; }
-    .version-text { color: #000000; }
-    body.dark-theme .version-text { color: #cbd5e1; }
+    .theme-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 10000; cursor: pointer; font-size: 18px; transition: 0.3s; }
+    .theme-toggle-btn:hover { background: #f8fafc; transform: rotate(15deg); }
+    body.dark-theme .theme-toggle-btn { background: #1e293b; color: #f8fafc; border-color: #334155; }
+    body.dark-theme .theme-toggle-btn:hover { background: #334155; }
+
+    .version-text { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; }
+    
+    /* Subtle background pattern */
+    .bg-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+    body.dark-theme .bg-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); opacity: 0.5; }
   </style>
 </head>
 <body>
+
+  <div class="bg-pattern"></div>
 
   <!-- ปุ่มสลับโหมด -->
   <button class="theme-toggle-btn" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
@@ -64,9 +100,12 @@
   <div id="lock-screen">
     <div class="numpad-container">
       <div class="text-center mb-4">
-        <i class="fa-solid fa-user-doctor fa-3x text-primary mb-3"></i>
-        <h4 class="fw-bold text-primary">กรุณาใส่รหัสพนักงาน</h4>
-        <div class="d-flex justify-content-center gap-3 mt-4" id="pin-display">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center mx-auto mb-4" style="width: 70px; height: 70px;">
+           <i class="fa-solid fa-lock fs-3"></i>
+        </div>
+        <h5 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">เข้าสู่ระบบ</h5>
+        <p class="text-muted small mb-0">กรุณาใส่รหัส PIN พนักงาน</p>
+        <div class="d-flex justify-content-center mt-4" id="pin-display">
           <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
       </div>
@@ -81,81 +120,83 @@
     </div>
   </div>
 
-<!-- 🏠 Main Menu -->
-  <!-- 🌟 เพิ่ม mb-5 pb-5 เพื่อดันไม่ให้แถบเมนูด้านล่างมาบังกล่องล่างสุด -->
-  <div class="container py-4 mb-5 pb-5" id="main-menu" style="display: none; max-width: 950px;">
+  <!-- 🏠 Main Menu -->
+  <div class="container py-5 mb-5 pb-5" id="main-menu" style="display: none; max-width: 1000px;">
     
     <!-- ส่วนหัว: รูป Logo และชื่อร้าน -->
-    <div class="text-center mb-4">
-      <div class="d-flex justify-content-center mb-3">
-        <img id="main-clinic-logo" src="" style="width: 100px; height: 100px; object-fit: cover; border-radius: 26px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; background: #fff; padding: 5px;">
+    <div class="text-center mb-5">
+      <div class="d-flex justify-content-center mb-4">
+        <img id="main-clinic-logo" src="" style="width: 110px; height: 110px; object-fit: cover; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; background: #fff; padding: 4px;">
       </div>
-      <h2 class="fw-bold text-dark" id="main-clinic-name"><i class="fa-solid fa-hospital text-primary me-2"></i> Clinic Management</h2>
-      <div class="d-inline-flex align-items-center bg-white px-4 py-2 mt-2 rounded-pill shadow-sm border dark-bg-fix">
-        <div class="online-dot me-2"></div>
-        <span class="text-muted fw-bold small me-2">พนักงาน:</span> 
-        <span id="display-staff-name" class="fw-bold text-primary">Admin</span>
+      <h2 class="fw-bold text-dark mb-4" id="main-clinic-name" style="letter-spacing: -1px; font-size: 2.2rem;">Clinic Management</h2>
+      
+      <div class="user-info-badge">
+        <div class="user-avatar" id="display-staff-initial">A</div>
+        <div class="d-flex align-items-center">
+           <span class="text-muted small me-2">เข้าใช้งานโดย:</span>
+           <span id="display-staff-name" class="fw-bold text-dark me-3">Admin</span>
+           <div class="online-dot"></div>
+        </div>
       </div>
     </div>
 
-    <!-- 🌟 เปลี่ยน g-4 เป็น g-3 เพื่อให้กล่องชิดกันขึ้น ประหยัดพื้นที่ -->
-    <div class="row g-3 justify-content-center">
+    <!-- 🌟 เมนูต่างๆ (Minimal Grid) -->
+    <div class="row g-4 justify-content-center">
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('booking.html')">
+        <div class="menu-card-btn" onclick="openModule('booking.html')">
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">นัดหมาย & คิว</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">จัดการตารางนัดหมาย</small>
-        </button>
+          <h6>นัดหมาย & คิว</h6>
+          <small>ตารางและคิวนัดหมาย</small>
+        </div>
       </div>
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('reception.html')">
+        <div class="menu-card-btn" onclick="openModule('reception.html')">
           <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">ลงทะเบียน & คัดกรอง</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">สร้างประวัติและซักถามอาการ</small>
-        </button>
+          <h6>ลงทะเบียน & คัดกรอง</h6>
+          <small>ประวัติและซักถามอาการ</small>
+        </div>
       </div>
-      
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('pos.html')">
+        <div class="menu-card-btn" onclick="openModule('pos.html')">
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">ขาย & ชำระเงิน</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">เปิดหน้าร้านและรับชำระเงิน</small>
-        </button>
+          <h6>ขาย & ชำระเงิน</h6>
+          <small>เปิดบิลและรับชำระเงิน</small>
+        </div>
       </div>
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('inventory.html')">
+        <div class="menu-card-btn" onclick="openModule('inventory.html')">
           <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-box-open"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">คลังสินค้า</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">จัดการสต็อกและรายการสินค้า</small>
-        </button>
+          <h6>คลังสินค้า</h6>
+          <small>จัดการสต็อกและรายการ</small>
+        </div>
       </div>
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('reports.html')">
+        <div class="menu-card-btn" onclick="openModule('reports.html')">
           <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-pie"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">สถิติยอดขาย</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">ดูสรุปรายได้และบิลย้อนหลัง</small>
-        </button>
+          <h6>สถิติยอดขาย</h6>
+          <small>สรุปรายได้และบิลย้อนหลัง</small>
+        </div>
       </div>
       <div class="col-6 col-md-4">
-        <button class="menu-card-btn w-100" onclick="openModule('patients_list.html')">
+        <div class="menu-card-btn" onclick="openModule('patients_list.html')">
           <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
-          <h6 class="fw-bold mt-3 mb-1 fs-6">ฐานข้อมูลคนไข้</h6>
-          <small class="text-muted" style="font-size: 0.75rem;">ค้นหาและจัดการข้อมูลคนไข้</small>
-        </button>
+          <h6>ฐานข้อมูลคนไข้</h6>
+          <small>ค้นหาและจัดการประวัติ</small>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- 🌟 แถบเมนูด้านล่าง (ติดขอบจอ) -->
   <div class="fixed-bottom pb-4 d-flex justify-content-center align-items-center" style="z-index: 1000;" id="footer-menu">
-    <span class="fw-bold version-text">Version 1.0.2</span>
-    <span class="mx-3 text-muted opacity-50">|</span>
+    <span class="text-muted version-text">v1.0.2</span>
+    <span class="mx-3 text-muted opacity-25">•</span>
     
-    <button id="btn-setting" class="btn btn-link text-secondary fw-bold p-0 text-decoration-none me-3" onclick="openModule('setting.html')" style="font-size: 1.05rem;">
+    <button id="btn-setting" class="btn btn-link text-secondary fw-semibold p-0 text-decoration-none me-4" onclick="openModule('setting.html')">
       <i class="fa-solid fa-gear me-1"></i> ตั้งค่าระบบ
     </button>
 
-    <button class="btn btn-link text-danger fw-bold p-0 text-decoration-none" onclick="lockSystem()" style="font-size: 1.05rem;">
+    <button class="btn btn-link text-danger fw-semibold p-0 text-decoration-none" onclick="lockSystem()">
       <i class="fa-solid fa-lock me-1"></i> ล็อกหน้าจอ
     </button>
   </div>
@@ -169,10 +210,9 @@
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
-      loadGlobalClinicInfo(); // โหลดข้อมูลร้านค้ามาโชว์ที่หน้าแรก
+      loadGlobalClinicInfo(); 
     });
 
-    // โหลดชื่อคลินิกและรูปโลโก้มาแสดง (พร้อมเปลี่ยนไอคอนบนแท็บเบราว์เซอร์)
     async function loadGlobalClinicInfo() {
       try {
         const res = await fetch('/api/clinic?t=' + new Date().getTime());
@@ -182,7 +222,6 @@
           
           if (c.clinic_name) {
             document.getElementById('main-clinic-name').innerText = c.clinic_name;
-            // เปลี่ยนชื่อบนแท็บเบราว์เซอร์
             document.title = c.clinic_name; 
           }
           
@@ -191,7 +230,6 @@
             logoImg.src = c.logo_url;
             logoImg.style.display = 'block';
 
-            // 🌟 สร้างหรืออัปเดตไอคอน Favicon บนแท็บเบราว์เซอร์
             let link = document.querySelector("link[rel~='icon']");
             if (!link) {
               link = document.createElement('link');
@@ -260,8 +298,6 @@
       updatePinDisplay();
       
       if(currentPin.length === 4) {
-        Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
         fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: currentPin }) })
         .then(async res => {
           if (!res.ok) throw new Error(`เซิร์ฟเวอร์อาจกำลังรีสตาร์ท โปรดรอสักครู่`);
@@ -269,10 +305,10 @@
         })
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 500 });
-            
             sessionStorage.setItem('currentUserId', data.user.id); 
             document.getElementById('display-staff-name').innerText = data.user.name;
+            document.getElementById('display-staff-initial').innerText = data.user.name.substring(0, 1);
+            
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main-menu').style.display = 'block';
             document.getElementById('footer-menu').style.display = 'flex'; 
@@ -294,7 +330,6 @@
       if (!perms) return; 
       let p = perms.toUpperCase();
       
-      // 🌟 อัปเดต Index ใหม่เมื่อปุ่มห้องแพทย์ถูกลบออกไป
       let buttons = {
         'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   
         'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], 
@@ -306,11 +341,10 @@
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
-          // 🌟 อัปเดต: ให้เช็คชื่อสิทธิ์ (key) แบบตรงตัวเป๊ะๆ เพื่อไม่ให้มันเหมารวม PATIENT_1 กับ PATIENT_3
           if (p.includes('ADMIN') || p.includes(key)) {
-            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+            btn.style.display = 'flex';
           } else {
-            btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+            btn.style.display = 'none';
           }
         }
       }
@@ -338,16 +372,17 @@
       const icon = document.getElementById('theme-icon');
       icon.className = document.body.classList.contains('dark-theme') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
       
-      const nameBox = document.querySelector('.dark-bg-fix');
-      if(document.body.classList.contains('dark-theme')) {
-        nameBox.classList.remove('bg-white'); nameBox.classList.add('bg-dark');
-      } else {
-        nameBox.classList.remove('bg-dark'); nameBox.classList.add('bg-white');
+      const nameBox = document.querySelector('.user-info-badge');
+      if (nameBox) {
+        if(document.body.classList.contains('dark-theme')) {
+          nameBox.classList.remove('bg-white'); nameBox.classList.add('bg-dark');
+        } else {
+          nameBox.classList.remove('bg-dark'); nameBox.classList.add('bg-white');
+        }
       }
     }
 
    async function openModule(pageUrl) {
-      // ✅ 1. เคลียร์ Interval ของ Module เดิมทิ้งก่อนโหลดหน้าใหม่ (ป้องกัน API Spam)
       if(window.bookingInterval) { clearInterval(window.bookingInterval); window.bookingInterval = null; }
       if(window.emrQueueInterval) { clearInterval(window.emrQueueInterval); window.emrQueueInterval = null; }
       if(window.posQueueInterval) { clearInterval(window.posQueueInterval); window.posQueueInterval = null; }
@@ -379,24 +414,16 @@
       
       document.getElementById('module-container').innerHTML = '';
       document.getElementById('module-container').style.display = 'none';
-      loadGlobalClinicInfo(); // อัปเดตโลโก้เผื่อตั้งค่ามาใหม่
+      loadGlobalClinicInfo(); 
     }
 	
-	// 🌟 ฟังก์ชันฝังตัว: ดักจับการใช้ fetch API ทั้งหมดบนระบบ
-  // เพื่อแอบแนบ Header 'X-User-Id' เข้าไปส่งให้ Server อัตโนมัติ ป้องกันการแฮ็กยิง API ตรงๆ
   const originalFetch = window.fetch;
   window.fetch = async function() {
       let [resource, config] = arguments;
-      
       if (!config) { config = {}; }
       if (!config.headers) { config.headers = {}; }
-      
-      // ดึง ID ที่ได้ตอนพนักงานกรอก PIN ผ่านหน้าจอ Lock Screen
       const userId = sessionStorage.getItem('currentUserId');
-      if (userId) {
-          config.headers['X-User-Id'] = userId;
-      }
-      
+      if (userId) { config.headers['X-User-Id'] = userId; }
       return originalFetch(resource, config);
   };
   
