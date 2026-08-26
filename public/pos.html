@@ -336,7 +336,7 @@
         <div class="col-md-6">
           <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="${isPayable ? `selectBillToPay(${index})` : 'showPaidAlert()'}">
             <div class="bill-card-header">
-              <span class="fw-bold text-muted">#${bill.id}</span>${statusBadge}
+              <span class="fw-bold text-muted">#${index + 1}</span>${statusBadge}
             </div>
             <div class="bill-card-body pb-1">
               <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><i class="fa-solid ${typeIcon} me-1"></i> ${bill.item_name}</h6>
@@ -366,7 +366,7 @@
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     let balance = boxTotalPrice - boxPaidAmount;
 
-    document.getElementById('pay_bill_id').innerText = `บิล #${selectedBill.id}`;
+    document.getElementById('pay_bill_id').innerText = `บิล #${index + 1}`;
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
