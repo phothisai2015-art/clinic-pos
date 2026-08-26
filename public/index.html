@@ -14,15 +14,20 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
-    body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; transition: 0.3s; }
-    body.dark-theme { background-color: #0f172a; color: #f1f5f9; }
+    /* 🌟 พื้นหลังไล่สี (Gradient Background) แบบต้นฉบับ */
+    body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); color: #334155; overflow-x: hidden; transition: 0.3s; min-height: 100vh; }
+    body.dark-theme { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f1f5f9; }
     
-    /* ========================================================= */
-    /* 🌟 Lock Screen & Numpad (Glassmorphism Style) */
-    /* ========================================================= */
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
-    body.dark-theme #lock-screen { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+    /* 🌟 Lock Screen (โปร่งใสเพื่อให้เห็นสีพื้นหลัง Body) */
+    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; background: transparent; }
     
+    /* 🌟 Module Container (พื้นหลังแบบเดียวกับหน้าหลัก) */
+    #module-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); z-index: 1050; overflow-y: auto; }
+    body.dark-theme #module-container { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+
+    /* ========================================================= */
+    /* 🌟 Numpad (Glassmorphism Style) */
+    /* ========================================================= */
     .numpad-container { position: relative; z-index: 10; width: 90%; max-width: 380px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(25px) saturate(120%) !important; -webkit-backdrop-filter: blur(25px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.8) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important; border-radius: 40px !important; padding: 40px 30px 45px 30px !important; }
     body.dark-theme .numpad-container { background: rgba(30, 41, 59, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; }
     
@@ -32,14 +37,12 @@
     .error-shake { animation: shakeError 0.4s ease-in-out; }
     @keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
-    /* จุดแสดงรหัส PIN */
     .pin-display { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 35px; height: 50px; }
     .pin-dot { width: 18px !important; height: 18px !important; border-radius: 50% !important; background: rgba(0, 0, 0, 0.08) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
     body.dark-theme .pin-dot { background: rgba(255, 255, 255, 0.1) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important; }
     .pin-dot.filled { background: #3b82f6 !important; transform: scale(1.3) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
     body.dark-theme .pin-dot.filled { background: #60a5fa !important; box-shadow: 0 0 15px rgba(96, 165, 250, 0.6), inset 0 0 4px rgba(255,255,255,0.5) !important; }
 
-    /* ปุ่มกดตัวเลข */
     .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .num-btn { background: rgba(255, 255, 255, 0.85) !important; border: 1px solid rgba(255, 255, 255, 0.5) !important; border-radius: 20px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; width: 100%; height: 75px; font-size: 26px !important; font-weight: 800 !important; color: #334155 !important; cursor: pointer; display: flex; justify-content: center; align-items: center; -webkit-tap-highlight-color: transparent; user-select: none; }
     .num-btn:active { transform: translateY(2px) scale(0.95) !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
@@ -55,6 +58,36 @@
     }
 
     @keyframes floatLock { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ========================================================= */
+    /* 🌟 Main Menu & Menu Cards (เหมือนต้นฉบับ) */
+    /* ========================================================= */
+    .menu-card-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; height: 100%; outline: none; }
+    .menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+    .menu-card-btn:active:not(:disabled) { transform: translateY(-2px); }
+    .menu-card-btn:disabled { background: #f8fafc; opacity: 0.6; cursor: not-allowed; filter: grayscale(100%); }
+    
+    .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: transform 0.3s ease; margin-bottom: 15px; }
+    .menu-card-btn:hover:not(:disabled) .menu-icon-wrap { transform: scale(1.1) rotate(5deg); }
+    
+    .menu-card-btn h5 { font-weight: 700; font-size: 1.15rem; margin-bottom: 5px; color: #1e293b; transition: 0.3s; }
+    body.dark-theme .menu-card-btn h5 { color: #f1f5f9; }
+    .menu-card-btn small { font-size: 0.85rem; color: #64748b; font-weight: 400; transition: 0.3s; }
+
+    body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; }
+    body.dark-theme .menu-card-btn:hover:not(:disabled) { border-color: #475569; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
+    /* 🌟 User Info Badge */
+    .user-info-badge { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    body.dark-theme .user-info-badge { background: #1e293b; border-color: #334155; color: #f8fafc; }
+    .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
+    body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
+    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
+
+    .theme-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 10000; cursor: pointer; font-size: 18px; transition: 0.3s; }
+    .theme-toggle-btn:hover { background: #f8fafc; transform: rotate(15deg); }
+    body.dark-theme .theme-toggle-btn { background: #1e293b; color: #f8fafc; border-color: #334155; }
+    body.dark-theme .theme-toggle-btn:hover { background: #334155; }
 
     /* ========================================================= */
     /* 🐾 CSS อนิเมชั่นน้องแมวเดินเล่น */
@@ -110,50 +143,7 @@
     .detailed-cat.cat-resting .cat-head-main { transform: translateY(8px) translateX(-3px); transition: transform 0.5s ease; }
     .detailed-cat.cat-resting .cat-leg-detailed { height: 6px !important; top: 42px !important; animation: none !important; transition: all 0.5s ease; }
     @keyframes catSleeping { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(2px) scale(0.98, 1.02); } }
-
-    /* ========================================================= */
-    /* 🌟 Main Menu & General System (Minimal) */
-    /* ========================================================= */
-    .menu-card-btn { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 24px; padding: 35px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; height: 100%; position: relative; overflow: hidden; }
-    .menu-card-btn::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: transparent; transition: 0.3s; }
-    .menu-card-btn:nth-child(1):hover::before { background: #3b82f6; }
-    .menu-card-btn:nth-child(2):hover::before { background: #0ea5e9; }
-    .menu-card-btn:nth-child(3):hover::before { background: #10b981; }
-    .menu-card-btn:nth-child(4):hover::before { background: #f59e0b; }
-    .menu-card-btn:nth-child(5):hover::before { background: #64748b; }
-    .menu-card-btn:nth-child(6):hover::before { background: #334155; }
-    .menu-card-btn:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border-color: transparent; }
-    body.dark-theme .menu-card-btn { background: #1e293b; border-color: #334155; color: #f8fafc; }
-    body.dark-theme .menu-card-btn:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
     
-    .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 28px; transition: 0.3s; margin-bottom: 20px; }
-    .menu-card-btn:hover .menu-icon-wrap { transform: scale(1.1); }
-    .menu-card-btn h6 { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; color: #1e293b; transition: 0.3s; }
-    body.dark-theme .menu-card-btn h6 { color: #f1f5f9; }
-    .menu-card-btn small { font-size: 0.8rem; color: #64748b; font-weight: 400; transition: 0.3s; }
-    
-    .user-info-badge { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-    body.dark-theme .user-info-badge { background: #1e293b; border-color: #334155; color: #f8fafc; }
-    .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
-    body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
-    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
-
-    @media (max-height: 800px) {
-      .menu-card-btn { padding: 25px 15px; border-radius: 20px; }
-      .menu-icon-wrap { width: 55px; height: 55px; font-size: 22px; margin-bottom: 15px; }
-      #main-clinic-logo { width: 80px !important; height: 80px !important; }
-      #main-menu { padding-top: 2rem !important; }
-      h2#main-clinic-name { font-size: 1.75rem; margin-bottom: 0.5rem; }
-      .numpad-container { padding: 25px 15px !important; width: 95% !important; max-width: 350px !important; }
-      .num-btn { height: 60px !important; font-size: 24px !important; border-radius: 16px !important; }
-    }
-
-    .theme-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 10000; cursor: pointer; font-size: 18px; transition: 0.3s; }
-    .theme-toggle-btn:hover { background: #f8fafc; transform: rotate(15deg); }
-    body.dark-theme .theme-toggle-btn { background: #1e293b; color: #f8fafc; border-color: #334155; }
-    body.dark-theme .theme-toggle-btn:hover { background: #334155; }
-
-    .version-text { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -208,8 +198,8 @@
     </div>
   </div>
 
-  <!-- 🏠 Main Menu -->
-  <div class="container py-5 mb-5 pb-5" id="main-menu" style="display: none; max-width: 1000px;">
+  <!-- 🏠 Main Menu (Premium UI เหมือนแอปต้นฉบับ) -->
+  <div class="container py-5 mb-5 pb-5" id="main-menu" style="display: none; max-width: 900px;">
     
     <!-- ส่วนหัว: รูป Logo และชื่อร้าน -->
     <div class="text-center mb-5">
@@ -227,50 +217,59 @@
         </div>
       </div>
     </div>
+    
+    <!-- แมวแอบมองบนกล่องเมนู -->
+    <div style="position: relative; width: 100%;">
+      <div class="panel-cat cat-orange-peeking" style="right: 50px; top: -40px;">
+        <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
+        <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
+        <div class="pcat-paw paw-l"></div><div class="pcat-paw paw-r"></div>
+      </div>
+    </div>
 
-    <!-- 🌟 เมนูต่างๆ (Minimal Grid) -->
+    <!-- 🌟 เมนูต่างๆ (Cards) -->
     <div class="row g-4 justify-content-center">
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('booking.html')">
+        <button class="menu-card-btn" id="btn-menu-booking" onclick="openModule('booking.html')" disabled>
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
-          <h6>นัดหมาย & คิว</h6>
-          <small>ตารางและคิวนัดหมาย</small>
-        </div>
+          <h5>นัดหมาย & คิว</h5>
+          <small>จัดการตารางนัดหมาย</small>
+        </button>
       </div>
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('reception.html')">
+        <button class="menu-card-btn" id="btn-menu-reception" onclick="openModule('reception.html')" disabled>
           <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
-          <h6>ลงทะเบียน & คัดกรอง</h6>
-          <small>ประวัติและซักถามอาการ</small>
-        </div>
+          <h5>ลงทะเบียน & คัดกรอง</h5>
+          <small>สร้างประวัติและซักถามอาการ</small>
+        </button>
       </div>
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('pos.html')">
+        <button class="menu-card-btn" id="btn-menu-pos" onclick="openModule('pos.html')" disabled>
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
-          <h6>ขาย & ชำระเงิน</h6>
-          <small>เปิดบิลและรับชำระเงิน</small>
-        </div>
+          <h5>ขาย & ชำระเงิน</h5>
+          <small>เปิดหน้าร้านและรับชำระเงิน</small>
+        </button>
       </div>
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('inventory.html')">
+        <button class="menu-card-btn" id="btn-menu-stock" onclick="openModule('inventory.html')" disabled>
           <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-box-open"></i></div>
-          <h6>คลังสินค้า</h6>
-          <small>จัดการสต็อกและรายการ</small>
-        </div>
+          <h5>คลังสินค้า</h5>
+          <small>จัดการสต็อกและรายการสินค้า</small>
+        </button>
       </div>
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('reports.html')">
+        <button class="menu-card-btn" id="btn-menu-dash" onclick="openModule('reports.html')" disabled>
           <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-pie"></i></div>
-          <h6>สถิติยอดขาย</h6>
-          <small>สรุปรายได้และบิลย้อนหลัง</small>
-        </div>
+          <h5>สถิติยอดขาย</h5>
+          <small>ดูสรุปรายได้และบิลย้อนหลัง</small>
+        </button>
       </div>
       <div class="col-6 col-md-4">
-        <div class="menu-card-btn" onclick="openModule('patients_list.html')">
+        <button class="menu-card-btn" id="btn-menu-patients" onclick="openModule('patients_list.html')" disabled>
           <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
-          <h6>ฐานข้อมูลคนไข้</h6>
-          <small>ค้นหาและจัดการประวัติ</small>
-        </div>
+          <h5>ฐานข้อมูลคนไข้</h5>
+          <small>ค้นหาและจัดการประวัติคนไข้</small>
+        </button>
       </div>
     </div>
   </div>
@@ -290,17 +289,17 @@
   </div>
 
   <!-- Container สำหรับโหลดหน้าต่างๆ (Module) -->
-  <div id="module-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8fafc; z-index: 1050; overflow-y: auto;"></div>
+  <div id="module-container"></div>
 
   <script>
     let currentPin = "";
-    let isCheckingPin = false; // กันกดรัวตอนเช็ค PIN
+    let isCheckingPin = false; 
     
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
       loadGlobalClinicInfo(); 
-      initCats(); // เปิดใช้งานน้องแมว 🐈
+      initCats(); 
     });
 
     async function loadGlobalClinicInfo() {
@@ -412,7 +411,6 @@
             
             Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
           } else {
-            // สั่นแป้นพิมพ์เวลารหัสผิดแบบใน shop_menu
             let numpad = document.getElementById('numpad-box'); 
             numpad.classList.add('error-shake'); 
             document.getElementById('pin-display').innerHTML = '<div class="pin-dot filled bg-danger" style="box-shadow: 0 0 15px rgba(239,68,68,0.6) !important;"></div>'.repeat(4);
@@ -423,7 +421,7 @@
               updatePinDisplay(); 
               isCheckingPin = false; 
             }, 400);
-            return; // จบการทำงาน ไม่ต้องรีเซ็ตล่างสุด
+            return; 
           }
           currentPin = ""; updatePinDisplay(); isCheckingPin = false;
         })
@@ -439,20 +437,21 @@
       let p = perms.toUpperCase();
       
       let buttons = {
-        'BOOKING': document.querySelectorAll('.menu-card-btn')[0],   
-        'PATIENT_1': document.querySelectorAll('.menu-card-btn')[1], 
-        'POS': document.querySelectorAll('.menu-card-btn')[2],       
-        'STOCK': document.querySelectorAll('.menu-card-btn')[3],     
-        'DASH': document.querySelectorAll('.menu-card-btn')[4],      
-        'PATIENT_3': document.querySelectorAll('.menu-card-btn')[5]  
+        'BOOKING': document.getElementById('btn-menu-booking'),
+        'PATIENT_1': document.getElementById('btn-menu-reception'),
+        'POS': document.getElementById('btn-menu-pos'),
+        'STOCK': document.getElementById('btn-menu-stock'),
+        'DASH': document.getElementById('btn-menu-dash'),
+        'PATIENT_3': document.getElementById('btn-menu-patients')
       };
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
+          // 🌟 ให้ปุ่มที่เป็นสิทธิ์เข้าไม่ได้ แสดงสถานะ "ล็อก" แบบเดียวกับต้นฉบับ
           if (p.includes('ADMIN') || p.includes(key)) {
-            btn.style.display = 'flex';
+            btn.disabled = false;
           } else {
-            btn.style.display = 'none';
+            btn.disabled = true;
           }
         }
       }
