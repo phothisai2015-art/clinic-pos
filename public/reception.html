@@ -63,13 +63,32 @@
   body.dark-theme .border-bottom { border-bottom-color: #334155 !important; }
   body.dark-theme .border-end { border-right-color: #334155 !important; }
 
-  /* Input & Forms ในโหมดมืด */
+  /* Input & Forms ในโหมดมืด (ปรับให้สว่างขึ้น มองเห็นชัดเจน) */
   body.dark-theme .form-control, 
-  body.dark-theme .form-select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+  body.dark-theme .form-select,
+  body.dark-theme .form-control.bg-light { /* บังคับช่องค้นหาให้สว่างขึ้น */
+    background-color: #334155 !important; 
+    color: #f8fafc !important; 
+    border-color: #475569 !important; 
+  }
   body.dark-theme .form-control:focus, 
-  body.dark-theme .form-select:focus { background-color: #1e293b !important; border-color: #3b82f6 !important; color: #ffffff !important; }
-  body.dark-theme .form-control[readonly] { background-color: #1e293b !important; opacity: 0.7; }
+  body.dark-theme .form-select:focus { 
+    background-color: #1e293b !important; 
+    border-color: #60a5fa !important; 
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+  }
+  body.dark-theme .form-control[readonly] { 
+    background-color: #1e293b !important; 
+    color: #94a3b8 !important;
+    opacity: 0.8; 
+  }
   body.dark-theme .form-control.border-primary { border-color: #3b82f6 !important; }
+  
+  /* สีของ Placeholder (ข้อความแนะนำจางๆ ในช่องกรอก) */
+  body.dark-theme .form-control::placeholder { 
+    color: #cbd5e1 !important; 
+    opacity: 0.8 !important; 
+  }
 
   /* การ์ดคอร์สและรายการประวัติ */
   body.dark-theme .course-card { background-color: #1e293b !important; border-color: #334155 !important; }
