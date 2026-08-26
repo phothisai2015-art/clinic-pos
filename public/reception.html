@@ -53,6 +53,50 @@
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
+  
+  /* 🌙 โหมดกลางคืน (Dark Mode Sync) */
+  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .bg-light { background-color: #0f172a !important; border-color: #334155 !important; }
+  body.dark-theme .text-dark { color: #f8fafc !important; }
+  body.dark-theme .text-muted { color: #94a3b8 !important; }
+  body.dark-theme .border { border-color: #334155 !important; }
+  body.dark-theme .border-bottom { border-bottom-color: #334155 !important; }
+  body.dark-theme .border-end { border-right-color: #334155 !important; }
+
+  /* Input & Forms ในโหมดมืด */
+  body.dark-theme .form-control, 
+  body.dark-theme .form-select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+  body.dark-theme .form-control:focus, 
+  body.dark-theme .form-select:focus { background-color: #1e293b !important; border-color: #3b82f6 !important; color: #ffffff !important; }
+  body.dark-theme .form-control[readonly] { background-color: #1e293b !important; opacity: 0.7; }
+  body.dark-theme .form-control.border-primary { border-color: #3b82f6 !important; }
+
+  /* การ์ดคอร์สและรายการประวัติ */
+  body.dark-theme .course-card { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .course-card:hover { border-color: #3b82f6 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important; }
+  body.dark-theme .course-card.opacity-50 { background-color: #0f172a !important; opacity: 0.6 !important; border-color: #334155 !important; }
+  
+  body.dark-theme .history-card { background-color: #1e293b !important; }
+  body.dark-theme .history-card:hover { background-color: #334155 !important; border-color: #60a5fa !important; }
+  body.dark-theme .history-card.bg-light { background-color: #334155 !important; } 
+
+  body.dark-theme .list-group-item { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .list-group-item:hover { background-color: #334155 !important; }
+
+  /* Modal และแจ้งเตือน */
+  body.dark-theme .modal-content { background-color: #1e293b !important; }
+  body.dark-theme .modal-header.bg-light { background-color: #0f172a !important; border-bottom-color: #334155 !important; }
+  body.dark-theme .allergy-alert { background-color: rgba(225, 29, 72, 0.15) !important; border-color: #e11d48 !important; }
+
+  /* ปฏิทินและคิว EMR */
+  body.dark-theme .emr-cal-cell { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .emr-cal-cell:hover:not(.other-month) { background-color: #334155 !important; }
+  body.dark-theme .emr-cal-cell.today { background-color: #3b82f6 !important; border-color: #3b82f6 !important; }
+  
+  body.dark-theme .emr-slot-row { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .emr-slot-row:hover:not(.booked) { background-color: #334155 !important; border-color: #60a5fa !important; }
+  body.dark-theme .emr-slot-row.booked { background-color: rgba(225, 29, 72, 0.1) !important; border-color: #9f1239 !important; }
+  
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
