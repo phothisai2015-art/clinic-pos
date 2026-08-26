@@ -56,6 +56,13 @@
     .btn-close-mobile { width: 38px !important; height: 38px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; }
     .btn-close-mobile span { display: none !important; }
     .btn-close-mobile i { margin: 0 !important; font-size: 1.2rem; }
+	/* 🌟 ย่อขนาดหัวข้อ "สร้างประวัติคนไข้ใหม่" */
+    .title-create-mobile { font-size: 1.15rem !important; }
+
+    /* 🌟 เปลี่ยนปุ่มดึงข้อมูลบัตร ปชช. เป็นไอคอนวงกลม */
+    .btn-smartcard-mobile { width: 40px !important; height: 40px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
+    .btn-smartcard-mobile span { display: none !important; }
+    .btn-smartcard-mobile i { margin: 0 !important; font-size: 1.1rem; }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
@@ -177,9 +184,11 @@
     <div id="tab-new" style="display: block; height: 100%; overflow-y: auto;" class="custom-scrollbar pr-2">
       <div class="bg-white p-5 rounded-4 shadow-sm border mx-auto" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-          <h4 class="fw-bold m-0 text-primary"><i class="fa-solid fa-address-card me-2"></i> สร้างประวัติคนไข้ใหม่</h4>
-          <button class="btn btn-outline-primary fw-bold rounded-pill px-4 shadow-sm" onclick="readSmartCard()">
-            <i class="fa-solid fa-id-card me-2"></i> ดึงข้อมูลจากบัตร ปชช.
+          <h4 class="fw-bold m-0 text-primary title-create-mobile">
+            <i class="fa-solid fa-address-card me-2"></i>สร้างประวัติคนไข้ใหม่
+          </h4>
+          <button class="btn btn-outline-primary fw-bold rounded-pill px-4 shadow-sm btn-smartcard-mobile" onclick="readSmartCard()">
+            <i class="fa-solid fa-id-card me-2"></i><span>ดึงข้อมูลจากบัตร ปชช.</span>
           </button>
         </div>
         
