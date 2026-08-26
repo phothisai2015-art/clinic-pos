@@ -38,7 +38,9 @@
     /* ========================================================= */
     /* 🌟 Lock Screen (กระจกฝ้าโปร่งแสงครอบทับเมนูหลัก) */
     /* ========================================================= */
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; transition: opacity 0.4s ease; }
+    #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(248, 250, 252, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; touch-action: none; overscroll-behavior: none; transition: opacity 0.4s ease; }
+    
+    body.system-locked { overflow: hidden !important; height: 100dvh !important; }
     body.dark-theme #lock-screen { background: rgba(15, 23, 42, 0.6); }
     
     /* 🌟 Numpad (Glassmorphism Style) */
@@ -341,6 +343,7 @@
     
     // ตั้งค่าให้โชว์เมนูหลักไว้ด้านหลังกระจกฝ้าตลอดเวลา
     document.addEventListener("DOMContentLoaded", () => {
+      document.body.classList.add('system-locked');
       document.getElementById('main-menu').style.display = 'block';
       document.getElementById('footer-menu').style.display = 'none';
       checkFirstSetup();
@@ -384,6 +387,7 @@
         
         if (data.needsSetup === true) {
           document.getElementById('lock-screen').style.display = 'none'; 
+          document.body.classList.remove('system-locked');
           Swal.fire({
             title: '<h4 class="text-primary fw-bold"><i class="fa-solid fa-crown me-2"></i>สร้างผู้ดูแลระบบ</h4>',
             html: `
@@ -453,6 +457,7 @@
             
             // (เราลบโค้ดบรรทัด display-staff-initial ออก เพื่อไม่ให้เกิด Error เพราะลบ HTML ไปแล้ว)
             
+            document.body.classList.remove('system-locked');
             // เฟดหน้าจอล็อกสกรีนออก เพื่อให้เห็นเมนูหลัก
             document.getElementById('lock-screen').style.opacity = '0';
             setTimeout(() => { document.getElementById('lock-screen').style.display = 'none'; document.getElementById('lock-screen').style.opacity = '1'; }, 400);
@@ -522,6 +527,7 @@
     }
 
     function lockSystem() {
+      document.body.classList.add('system-locked');
       document.getElementById('footer-menu').style.display = 'none'; 
       
       let numpad = document.getElementById('numpad-box'); 
