@@ -567,9 +567,6 @@
     }
   }, 300);
   
-  // ==========================================
-  // 🌟 ระบบประวัติการชำระเงินของคนไข้ใน POS
-  // ==========================================
   function openPaymentHistoryModal() {
     if (!currentPosPatient) return;
     const modalEl = document.getElementById('paymentHistoryModal');
@@ -583,18 +580,28 @@
     document.getElementById('paymentHistoryModalName').innerText = `${currentPosPatient.full_name} (${currentPosPatient.id})`;
     modalInstance.show();
 
-    // สร้างตัวเลือก (Filter) จากบิลทั้งหมด
-    let promos = new Set();
+    // 🌟 1. ดึงชื่อคอร์สหลักมาทำเป็นตัวกรอง (จับกลุ่มยาพ่วงเข้ากับคอร์สหลัก)
+    let courses = new Set();
     allPatientBillsHistory.forEach(bill => {
-      let cleanName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
-      if (cleanName) promos.add(cleanName);
+      // เช็คว่ามียาที่พ่วงมาในคอร์สไหม ถ้ามีให้ดึงชื่อคอร์สหลักมา
+      let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
+      let courseName = match ? match[1].trim() : bill.item_name.trim();
+      if (courseName) courses.add(courseName);
     });
 
     let filterHtml = '<option value="ALL">-- ดูประวัติการชำระเงินทั้งหมด --</option>';
-    promos.forEach(p => { filterHtml += `<option value="${p}">เฉพาะ: ${p}</option>`; });
+    courses.forEach(c => { filterHtml += `<option value="${c}">เฉพาะ: ${c}</option>`; });
     document.getElementById('paymentHistoryFilter').innerHTML = filterHtml;
 
     renderPaymentHistory();
+  }
+
+  function closePaymentHistoryModal() {
+    const modalEl = document.getElementById('paymentHistoryModal');
+    if (modalEl) {
+      let m = bootstrap.Modal.getInstance(modalEl);
+      if (m) m.hide();
+    }
   }
 
   function closePaymentHistoryModal() {
@@ -610,34 +617,52 @@
     const container = document.getElementById('paymentHistoryList');
     let allPayments = [];
 
-    // ดึงและแกะประวัติการจ่ายเงิน (payment_history) จากทุกๆ บิล
+    // 🌟 2. ดึงประวัติและรวมยอดชำระที่จ่ายพร้อมกันในคอร์สเดียวกัน
     allPatientBillsHistory.forEach(bill => {
-      let cleanName = bill.item_name.split(' (ในคอร์ส:')[0].trim();
+      // หาชื่อคอร์สหลัก
+      let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
+      let courseName = match ? match[1].trim() : bill.item_name.trim();
       
-      // กรองตามหมวดหมู่ที่เลือก
-      if (filter !== 'ALL' && cleanName !== filter) return;
+      // ถ้าเลือกตัวกรองแล้วไม่ตรง ให้ข้ามไป
+      if (filter !== 'ALL' && courseName !== filter) return;
 
       let history = [];
       try { history = JSON.parse(bill.payment_history || '[]'); } catch(e) {}
 
       history.forEach(h => {
         allPayments.push({
-          date: h.date, amount: h.amount, method: h.method || 'CASH',
-          itemName: bill.item_name, billId: bill.id
+          date: h.date, 
+          amount: h.amount, 
+          method: h.method || 'CASH',
+          courseName: courseName
         });
       });
     });
 
-    // เรียงวันที่จาก ใหม่ -> เก่า
-    allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // 🌟 3. รวมยอดเงินที่ชำระในเวลาเดียวกัน (วินาทีเดียวกัน) ให้เป็นก้อนเดียว
+    let groupedPayments = {};
+    allPayments.forEach(p => {
+        // ใช้ substring ตัดเศษเสี้ยววินาทีออก เพื่อจัดกลุ่มเวลาที่จ่ายพร้อมกัน
+        let timeKey = p.date.substring(0, 19); 
+        let key = p.courseName + '_' + timeKey + '_' + p.method; 
+        if (!groupedPayments[key]) {
+            groupedPayments[key] = { date: p.date, courseName: p.courseName, method: p.method, amount: 0 };
+        }
+        // บวกรวมยอดคอร์สและค่ายาเข้าด้วยกัน
+        groupedPayments[key].amount += p.amount;
+    });
 
-    if (allPayments.length === 0) {
+    let finalPayments = Object.values(groupedPayments);
+    // เรียงวันที่จาก ใหม่ -> เก่า
+    finalPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (finalPayments.length === 0) {
       container.innerHTML = '<div class="text-muted text-center py-5"><i class="fa-solid fa-receipt fa-3x mb-3 opacity-25"></i><br>ไม่พบประวัติการชำระเงิน</div>';
       return;
     }
 
     let html = '';
-    allPayments.forEach(p => {
+    finalPayments.forEach(p => {
       const dateObj = new Date(p.date);
       const dateStr = dateObj.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
       const timeStr = dateObj.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
@@ -651,7 +676,7 @@
              <span class="fw-bold text-dark"><i class="fa-solid fa-calendar-day me-1 text-muted"></i> ${dateStr} เวลา ${timeStr} น.</span>
              <span class="badge bg-${mColor}"><i class="fa-solid ${mIcon} me-1"></i> ${p.method}</span>
           </div>
-          <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">${p.itemName} <span class="text-muted small fw-normal">(บิล #${p.billId})</span></div>
+          <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">${p.courseName}</div>
           <div class="text-end mt-1">
              <span class="text-muted small me-2">ยอดรับชำระ:</span>
              <span class="fw-bold text-success fs-5">฿${p.amount.toLocaleString()}</span>
