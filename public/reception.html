@@ -63,6 +63,12 @@
     .btn-smartcard-mobile { width: 40px !important; height: 40px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
     .btn-smartcard-mobile span { display: none !important; }
     .btn-smartcard-mobile i { margin: 0 !important; font-size: 1.1rem; }
+	/* 🌟 จัดปุ่ม ล้างฟอร์ม และ บันทึก ให้อยู่บรรทัดเดียวกันแบบ 50/50 */
+    .action-btn-row { justify-content: space-between !important; }
+    .action-btn-row .btn { width: 50% !important; padding-left: 0 !important; padding-right: 0 !important; }
+	/* 🌟 ปลดล็อคให้หน้าค้นหา (Tab ค้นหา) สามารถไถเลื่อนขึ้นลงได้ในมือถือ */
+    #tab-search { overflow-y: auto !important; padding-bottom: 20px !important; }
+    #tab-search .flex-grow-1 { overflow-y: visible !important; height: auto !important; }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
@@ -228,9 +234,10 @@
               <label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา / สารเคมี (ระบุให้ชัดเจน)</label>
               <textarea id="p_allergies" class="form-control border-danger" rows="2" placeholder="เช่น อาหารทะเล, ยาชา, Penicillin"></textarea>
             </div>
-            <div class="col-12 text-end mt-4">
-              <button type="button" class="btn btn-light rounded-pill px-5 me-2 fw-bold shadow-sm py-2" onclick="clearForm()">ล้างฟอร์ม</button>
-              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm py-2"><i class="fa-solid fa-floppy-disk me-2"></i> บันทึกข้อมูล</button>
+            <!-- เปลี่ยนการจัดเรียงเป็น d-flex และเพิ่มคลาส action-btn-row -->
+            <div class="col-12 d-flex justify-content-end gap-2 mt-4 action-btn-row">
+              <button type="button" class="btn btn-light rounded-pill px-5 fw-bold shadow-sm py-2" onclick="clearForm()">ล้างฟอร์ม</button>
+              <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
             </div>
           </div>
         </form>
