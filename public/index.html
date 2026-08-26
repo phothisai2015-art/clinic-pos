@@ -96,8 +96,9 @@
     body.dark-theme .user-info-badge { background: rgba(30, 41, 59, 0.8); border-color: rgba(255,255,255,0.05); color: #f8fafc; }
     .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
     body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
-    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
-
+    .online-dot { width: 12px; height: 12px; background-color: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: pulse-green-glow 1.5s infinite alternate; }
+    @keyframes pulse-green-glow { 0% { box-shadow: 0 0 4px #22c55e, 0 0 0 0 rgba(34, 197, 94, 0.6); transform: scale(0.95); } 100% { box-shadow: 0 0 14px #22c55e, 0 0 0 8px rgba(34, 197, 94, 0); transform: scale(1.1); } }
+	
     .theme-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; background: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 10000; cursor: pointer; font-size: 18px; transition: 0.3s; }
     .theme-toggle-btn:hover { background: #f8fafc; transform: rotate(15deg); }
     body.dark-theme .theme-toggle-btn { background: #1e293b; color: #f8fafc; border-color: #334155; }
@@ -196,7 +197,6 @@
       <h2 class="fw-bold text-dark mb-4" id="main-clinic-name" style="letter-spacing: -1px; font-size: 2.2rem;">Clinic Management System</h2>
       
       <div class="user-info-badge">
-        <div class="user-avatar" id="display-staff-initial">A</div>
         <div class="d-flex align-items-center">
            <span class="text-muted small me-2">เข้าใช้งานโดย:</span>
            <span id="display-staff-name" class="fw-bold text-dark me-3">Admin</span>
@@ -435,8 +435,13 @@
         .then(data => {
           if (data.status === 'success') {
             sessionStorage.setItem('currentUserId', data.user.id); 
-            document.getElementById('display-staff-name').innerText = data.user.name;
-            document.getElementById('display-staff-initial').innerText = data.user.name.substring(0, 1);
+            // แปลง Role จากภาษาอังกฤษเป็นภาษาไทย
+            let roleThai = data.user.role === 'ADMIN' ? 'ผู้บริหาร' : (data.user.role === 'DOCTOR' ? 'แพทย์' : 'พนักงาน');
+            
+            // นำตำแหน่งมาโชว์ก่อนชื่อ
+            document.getElementById('display-staff-name').innerText = `${roleThai} | ${data.user.name}`;
+            
+            // (เราลบโค้ดบรรทัด display-staff-initial ออก เพื่อไม่ให้เกิด Error เพราะลบ HTML ไปแล้ว)
             
             // เฟดหน้าจอล็อกสกรีนออก เพื่อให้เห็นเมนูหลัก
             document.getElementById('lock-screen').style.opacity = '0';
