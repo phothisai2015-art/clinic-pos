@@ -186,6 +186,62 @@
   /* 🌙 สีของแถบเลื่อนในโหมดกลางคืน (Dark Mode) */
   body.dark-theme ::-webkit-scrollbar-thumb { background: #475569; }
   body.dark-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  
+  /* ========================================================= */
+    /* 📱 ปรับหน้าเมนูหลักให้พอดีจอ ไม่ต้องเลื่อน (เฉพาะโหมดมือถือ) */
+    /* ========================================================= */
+    @media (max-width: 768px) {
+      /* ลดพื้นที่ว่างด้านบนและล่างของกล่องครอบ */
+      #main-menu {
+        padding-top: 3vh !important; /* ใช้ vh คำนวณจากความสูงจอ */
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+      }
+
+      /* ปรับขนาดโลโก้และชื่อร้านให้กะทัดรัด */
+      #main-menu .text-center.mb-5 { margin-bottom: 1.5rem !important; }
+      #main-clinic-logo { width: 60px !important; height: 60px !important; }
+      #main-clinic-name { font-size: 1.35rem !important; margin-bottom: 0.5rem !important; }
+      
+      /* ป้ายชื่อพนักงาน (User Badge) */
+      .user-info-badge { padding: 4px 12px; font-size: 0.75rem; }
+
+      /* ลดช่องว่าง (Gap) ระหว่างกล่องเมนูทั้ง 6 กล่อง */
+      #main-menu .row {
+        --bs-gutter-x: 0.5rem;
+        --bs-gutter-y: 0.5rem;
+      }
+
+      /* ปรับขนาดกล่องเมนู ไอคอน และตัวหนังสือให้เล็กลงพอดีจอ */
+      .menu-card-btn {
+        padding: 10px 5px !important;
+        border-radius: 16px !important;
+      }
+      .menu-icon-wrap {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+        border-radius: 10px !important;
+      }
+      .menu-card-btn h5 {
+        font-size: 0.8rem !important;
+        margin-bottom: 2px !important;
+      }
+      .menu-card-btn small {
+        font-size: 0.6rem !important;
+        line-height: 1.2;
+      }
+
+      /* ปรับแถบเมนูด้านล่างสุด (ปุ่มล็อกจอ/ตั้งค่า) ให้ชิดขอบล่างมากขึ้น */
+      #footer-menu { padding-bottom: 10px !important; }
+      #footer-menu .btn { font-size: 0.85rem !important; margin-right: 15px !important; }
+      .version-text { font-size: 0.7rem !important; }
+      
+      /* ซ่อนน้องแมวแอบมองที่เมนูเพื่อประหยัดพื้นที่ในมือถือ */
+      #main-menu .panel-cat { display: none !important; }
+    }
+	
   </style>
 </head>
 <body>
