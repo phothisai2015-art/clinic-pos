@@ -376,7 +376,12 @@
     
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
+    // 🌟 โค้ดส่วนที่หายไป (ใช้ปลดล็อคช่องกรอกเงินและปุ่ม)
+    let inputEl = document.getElementById('pay_input_amount');
+    inputEl.disabled = false; inputEl.value = balance; inputEl.setAttribute('max', balance);
     
+    let submitBtn = document.getElementById('pay_submit_btn');
+    submitBtn.disabled = false; submitBtn.classList.remove('btn-secondary'); submitBtn.classList.add('btn-success');
     // 🌟 ซ่อน/แสดง แผงรับชำระเงินตามสถานะยอดคงเหลือ
     let paymentSection1 = document.getElementById('pay_input_amount').parentElement.parentElement;
     let paymentSection2 = document.getElementById('pay_submit_btn').parentElement;
