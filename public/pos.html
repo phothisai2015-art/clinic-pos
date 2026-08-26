@@ -31,6 +31,64 @@
   /* บังคับลดขนาด Bootstrap Padding พื้นฐานในหน้านี้ */
   .p-4 { padding: 1rem !important; }
   .py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  
+  /* ========================================================= */
+  /* 🌙 แก้ไขโหมดมืดหน้า POS ( SweetAlert2 & พื้นหลัง) */
+  /* ========================================================= */
+
+  /* 1. ป๊อปอัปแจ้งเตือน ยืนยัน และโหลดข้อมูล (SweetAlert2) */
+  body.dark-theme .swal2-popup {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6) !important;
+  }
+  body.dark-theme .swal2-title,
+  body.dark-theme .swal2-html-container,
+  body.dark-theme .swal2-content {
+    color: #f8fafc !important;
+  }
+  body.dark-theme .swal2-html-container b,
+  body.dark-theme .swal2-html-container strong {
+    color: #60a5fa !important;
+  }
+
+  /* 2. พื้นหลังกล่องรายการบิล/คอร์ส ฝั่งซ้าย */
+  body.dark-theme .col-lg-7 .bg-white {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  body.dark-theme #emptyBoxesState .bg-light {
+    background-color: #0f172a !important;
+  }
+
+  /* 3. กล่องประวัติ EMR ที่แสดงแทรกในแผงรายละเอียดฝั่งขวา */
+  body.dark-theme #pay_item_details .bg-white {
+    background-color: #0f172a !important;
+    border-color: #0284c7 !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme #pay_item_details .text-dark {
+    color: #f8fafc !important;
+  }
+  body.dark-theme #pay_item_details .text-muted {
+    color: #cbd5e1 !important;
+  }
+
+  /* 4. ป๊อปอัปรายชื่อคนไข้กรณีค้นหาเจอหลายคน (List Group) */
+  body.dark-theme .swal2-html-container .list-group-item {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme .swal2-html-container .list-group-item:hover {
+    background-color: #1e293b !important;
+  }
+  body.dark-theme .swal2-html-container .list-group-item .bg-light {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+  }
 </style>
 
 <div class="container-fluid py-2 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
