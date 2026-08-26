@@ -179,6 +179,15 @@
   body.dark-theme .promo-tab-active #form-title {
     color: #f472b6 !important; /* สีชมพูสว่างในโหมดมืด */
   }
+  /* 🌸 บังคับสีชมพูหัวข้อ "สร้างโปรโมชั่นใหม่" ทั้งโหมดสว่างและมืด */
+  #form-title.text-pink,
+  .promo-tab-active #form-title {
+    color: #ec4899 !important;
+  }
+  body.dark-theme #form-title.text-pink,
+  body.dark-theme .promo-tab-active #form-title {
+    color: #f472b6 !important; /* สีชมพูสว่างในโหมดมืด */
+  }
   
 </style>
 
@@ -463,6 +472,7 @@
       document.getElementById('pd_unit').value = 'เซ็ต';
       document.getElementById('pd_stock').value = 0;
       
+      document.getElementById('form-title').className = 'fw-bold m-0 mb-4 text-pink d-flex align-items-center';
       document.getElementById('form-title').innerHTML = '<div class="bg-pink-light text-pink rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
       document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-pink"></i> รายการโปรโมชั่นจัดเซ็ต';
       document.getElementById('btn_save_product').className = 'btn btn-pink rounded-pill fw-bold shadow-sm w-50 py-2';
