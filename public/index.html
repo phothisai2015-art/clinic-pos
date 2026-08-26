@@ -269,7 +269,7 @@
         })
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + data.user.name, toast: true, position: 'top-end', showConfirmButton: false, timer: 500 });
             
             sessionStorage.setItem('currentUserId', data.user.id); 
             document.getElementById('display-staff-name').innerText = data.user.name;
@@ -306,8 +306,8 @@
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
-          let checkKey = key.includes('PATIENT') ? 'PATIENT' : key;
-          if (p.includes('ADMIN') || p.includes(checkKey)) {
+          // 🌟 อัปเดต: ให้เช็คชื่อสิทธิ์ (key) แบบตรงตัวเป๊ะๆ เพื่อไม่ให้มันเหมารวม PATIENT_1 กับ PATIENT_3
+          if (p.includes('ADMIN') || p.includes(key)) {
             btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
           } else {
             btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
