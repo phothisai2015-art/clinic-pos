@@ -53,6 +53,95 @@
   body.dark-theme .bg-light { background-color: #0f172a !important; border-color: #334155 !important; }
   body.dark-theme .stock-low { background-color: rgba(245, 158, 11, 0.15) !important; color: #fbbf24 !important; border-color: #b45309 !important; }
   body.dark-theme .stock-out { background-color: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border-color: #991b1b !important; }
+/* ========================================================= */
+  /* 🌙 แก้ไขโหมดมืดตารางคลังสินค้า และปรับปุ่มปิดในมือถือ */
+  /* ========================================================= */
+
+  /* 1. แก้ไขตารางฝั่งขวา ให้เป็นสีเข้มเนียนตา */
+  body.dark-theme .modern-card .bg-light {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme .inventory-table {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme .inventory-table th {
+    background-color: #0f172a !important;
+    color: #cbd5e1 !important;
+    border-bottom-color: #334155 !important;
+  }
+  body.dark-theme .inventory-table td {
+    background-color: #1e293b !important;
+    border-bottom-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme .inventory-table tbody tr:hover td {
+    background-color: #334155 !important;
+  }
+  body.dark-theme .inventory-table td .text-dark {
+    color: #f8fafc !important;
+  }
+  body.dark-theme .inventory-table td .text-muted {
+    color: #94a3b8 !important;
+  }
+
+  /* 2. แก้ไขช่องค้นหา ป้าย Lot และปุ่มปรับสต็อก (+/-) ในตาราง */
+  body.dark-theme #searchInventory {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  body.dark-theme #searchInventory::placeholder {
+    color: #64748b !important;
+  }
+  body.dark-theme .modern-card .input-group-text {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+  }
+  body.dark-theme .inventory-table td .bg-white {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+  }
+  body.dark-theme .inventory-table .btn-light {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+  }
+  body.dark-theme .inventory-table .btn-light:hover {
+    background-color: #334155 !important;
+  }
+
+  /* 3. แก้ไขฟอร์มฝั่งซ้าย (ปุ่มล้างข้อมูล & ช่องวันที่) */
+  body.dark-theme #productForm .btn-light {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+  }
+  body.dark-theme #productForm input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+  }
+
+  /* 4. ปรับปุ่มปิดให้แสดงเฉพาะไอคอน X ในจอมือถือ */
+  @media (max-width: 768px) {
+    button[onclick="closeModule()"] {
+      width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      display: inline-flex !important;
+      justify-content: center;
+      align-items: center;
+    }
+    button[onclick="closeModule()"] span {
+      display: none !important;
+    }
+    button[onclick="closeModule()"] i {
+      font-size: 1.2rem !important;
+      margin: 0 !important;
+    }
+  }
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
@@ -90,8 +179,8 @@
         <i class="fa-solid fa-cart-shopping me-1"></i> รายการต้องซื้อ
       </button>
       <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
-        <i class="fa-solid fa-xmark me-2"></i> ปิด
-      </button>
+      <i class="fa-solid fa-xmark me-2"></i><span>ปิดหน้านี้</span>
+    </button>
     </div>
   </div>
 
