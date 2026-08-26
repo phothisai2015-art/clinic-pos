@@ -71,10 +71,10 @@
     /* ========================================================= */
     /* 🌟 Main Menu & Menu Cards (ขาวสะอาด มินิมอล) */
     /* ========================================================= */
-    .menu-card-btn { background: #ffffff; border: 1px solid #ffffff; border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; height: 100%; outline: none; }
-    .menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); border-color: #f1f5f9; }
+    .menu-card-btn { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 24px; padding: 30px 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; outline: none; }
+    .menu-card-btn:hover:not(:disabled) { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); background: rgba(255, 255, 255, 1); border-color: #ffffff; }
     .menu-card-btn:active:not(:disabled) { transform: translateY(-2px); }
-    .menu-card-btn:disabled { background: rgba(248, 250, 252, 0.8); opacity: 0.65; cursor: not-allowed; filter: grayscale(100%); box-shadow: none; border-color: #e2e8f0; }
+    .menu-card-btn:disabled { background: rgba(248, 250, 252, 0.6); opacity: 0.65; cursor: not-allowed; filter: grayscale(100%); box-shadow: none; border-color: rgba(226, 232, 240, 0.6); }
     
     .menu-icon-wrap { width: 70px; height: 70px; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 30px; transition: transform 0.3s ease; margin-bottom: 15px; }
     .menu-card-btn:hover:not(:disabled) .menu-icon-wrap { transform: scale(1.1) rotate(5deg); }
@@ -87,8 +87,8 @@
     body.dark-theme .menu-card-btn:hover:not(:disabled) { background: rgba(30, 41, 59, 0.9); border-color: rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
 
     /* 🌟 User Info Badge */
-    .user-info-badge { background: #ffffff; border: 1px solid #ffffff; border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
-    body.dark-theme .user-info-badge { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-color: rgba(255,255,255,0.05); color: #f8fafc; }
+    .user-info-badge { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50px; padding: 6px 20px 6px 8px; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
+    body.dark-theme .user-info-badge { background: rgba(30, 41, 59, 0.8); border-color: rgba(255,255,255,0.05); color: #f8fafc; }
     .user-avatar { width: 32px; height: 32px; background: #f1f5f9; color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 0.9rem; }
     body.dark-theme .user-avatar { background: #334155; color: #60a5fa; }
     .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse-green 2s infinite; }
@@ -172,7 +172,7 @@
 </head>
 <body>
 
-  <!-- Decorative Ambient Background Orbs -->
+  <!-- 🌟 Decorative Ambient Background Orbs -->
   <div class="ambient-orb orb-1"></div>
   <div class="ambient-orb orb-2"></div>
   <div class="ambient-orb orb-3"></div>
@@ -180,13 +180,13 @@
   <!-- ปุ่มสลับโหมด -->
   <button class="theme-toggle-btn" onclick="toggleTheme()"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
 
-  <!-- 🏠 Main Menu (อยู่เลเยอร์หลังสุด) -->
-  <div class="container py-5 mb-5 pb-5" id="main-menu" style="max-width: 900px; display: none;">
+  <!-- 🏠 Main Menu (อยู่บนสุดของ DOM เพื่อให้พื้นหลังกระจกฝ้าบังได้) -->
+  <div class="container py-5 mb-5 pb-5" id="main-menu" style="max-width: 950px; display: none;">
     
     <!-- ส่วนหัว: รูป Logo และชื่อร้าน -->
     <div class="text-center mb-5">
       <div class="d-flex justify-content-center mb-4">
-        <img id="main-clinic-logo" src="" style="width: 110px; height: 110px; object-fit: cover; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; background: #fff; padding: 4px;">
+        <img id="main-clinic-logo" src="" style="width: 110px; height: 110px; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; background: #fff; padding: 6px;">
       </div>
       <h2 class="fw-bold text-dark mb-4" id="main-clinic-name" style="letter-spacing: -1px; font-size: 2.2rem;">Clinic Management</h2>
       
@@ -201,7 +201,7 @@
     </div>
     
     <!-- แมวแอบมองบนกล่องเมนู -->
-    <div style="position: relative; width: 100%;">
+    <div style="position: relative; width: 100%; height: 0;">
       <div class="panel-cat cat-orange-peeking" style="right: 50px; top: -40px;">
         <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
         <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
@@ -209,45 +209,45 @@
       </div>
     </div>
 
-    <!-- 🌟 เมนูต่างๆ (Cards) -->
-    <div class="row g-4 justify-content-center">
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-booking" onclick="openModule('booking.html')" disabled>
+    <!-- 🌟 เมนูต่างๆ (Cards) -> ใส่ d-flex ใน col และ w-100 h-100 ในปุ่ม เพื่อแก้ปัญหากล่องเหลื่อมกัน -->
+    <div class="row g-4 justify-content-center align-items-stretch">
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-booking" onclick="openModule('booking.html')" disabled>
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
           <h5>นัดหมาย & คิว</h5>
           <small>จัดการตารางนัดหมาย</small>
         </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-reception" onclick="openModule('reception.html')" disabled>
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-reception" onclick="openModule('reception.html')" disabled>
           <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
           <h5>ลงทะเบียน & คัดกรอง</h5>
           <small>สร้างประวัติและซักถามอาการ</small>
         </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-pos" onclick="openModule('pos.html')" disabled>
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-pos" onclick="openModule('pos.html')" disabled>
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
           <h5>ขาย & ชำระเงิน</h5>
           <small>เปิดหน้าร้านและรับชำระเงิน</small>
         </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-stock" onclick="openModule('inventory.html')" disabled>
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-stock" onclick="openModule('inventory.html')" disabled>
           <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-box-open"></i></div>
           <h5>คลังสินค้า</h5>
           <small>จัดการสต็อกและรายการสินค้า</small>
         </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-dash" onclick="openModule('reports.html')" disabled>
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-dash" onclick="openModule('reports.html')" disabled>
           <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-pie"></i></div>
           <h5>สถิติยอดขาย</h5>
           <small>ดูสรุปรายได้และบิลย้อนหลัง</small>
-        </div>
+        </button>
       </div>
-      <div class="col-6 col-md-4">
-        <button class="menu-card-btn" id="btn-menu-patients" onclick="openModule('patients_list.html')" disabled>
+      <div class="col-6 col-md-4 d-flex">
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-patients" onclick="openModule('patients_list.html')" disabled>
           <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
           <h5>ฐานข้อมูลคนไข้</h5>
           <small>ค้นหาและจัดการประวัติคนไข้</small>
@@ -270,10 +270,10 @@
     </button>
   </div>
 
-  <!-- 🔒 Numpad Lock Screen พร้อมน้องแมว (อยู่เลเยอร์หน้าสุดและเป็นกระจกฝ้า) -->
+  <!-- 🔒 Numpad Lock Screen (ครอบอยู่หน้าสุดเป็นกระจกฝ้า) -->
   <div id="lock-screen">
     
-    <!-- แมว 3 ตัว -->
+    <!-- แมว 3 ตัวเดินเล่น -->
     <div class="detailed-cat cat-black-coat">
       <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
     </div>
@@ -284,9 +284,9 @@
       <div class="cat-wrapper"><div class="cat-tail-soft"></div><div class="cat-body-main"></div><div class="cat-head-main"><div class="cat-ear ear-l"></div><div class="cat-ear ear-r"></div><div class="cat-eye eye-l"></div><div class="cat-eye eye-r"></div><div class="cat-nose"></div><div class="cat-whiskers whisker-l"></div><div class="cat-whiskers whisker-r"></div></div><div class="cat-collar-line"></div><div class="cat-gold-bell"></div><div class="cat-leg-detailed leg-front-left"></div><div class="cat-leg-detailed leg-front-right"></div><div class="cat-leg-detailed leg-back-left"></div><div class="cat-leg-detailed leg-back-right"></div></div>
     </div>
 
-    <!-- แป้นกด Glassmorphism -->
+    <!-- แป้นกดรหัส PIN -->
     <div class="numpad-container" id="numpad-box">
-      <!-- แมวแอบมองบนกล่อง -->
+      <!-- แมวแอบมองบนกล่อง Numpad -->
       <div class="panel-cat cat-orange-peeking" style="right: 40px;">
         <div class="pcat-ear ear-l"></div><div class="pcat-ear ear-r"></div>
         <div class="pcat-head"><div class="pcat-eye eye-l"></div><div class="pcat-eye eye-r"></div><div class="pcat-nose"></div></div>
@@ -324,7 +324,7 @@
     let currentPin = "";
     let isCheckingPin = false; 
     
-    // ตั้งค่าให้หน้าเมนูโชว์ตลอดเวลาเพื่อเป็น Background ตอนถูกกระจกฝ้าบัง
+    // ตั้งค่าให้โชว์เมนูหลักไว้ด้านหลังกระจกฝ้าตลอดเวลา
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('main-menu').style.display = 'block';
       document.getElementById('footer-menu').style.display = 'none';
@@ -433,7 +433,7 @@
             document.getElementById('display-staff-name').innerText = data.user.name;
             document.getElementById('display-staff-initial').innerText = data.user.name.substring(0, 1);
             
-            // เฟดหน้าจอล็อกสกรีนออก เพื่อให้เห็นเมนูหลังกระจกฝ้าชัดๆ
+            // เฟดหน้าจอล็อกสกรีนออก เพื่อให้เห็นเมนูหลัก
             document.getElementById('lock-screen').style.opacity = '0';
             setTimeout(() => { document.getElementById('lock-screen').style.display = 'none'; document.getElementById('lock-screen').style.opacity = '1'; }, 400);
             
@@ -480,7 +480,6 @@
 
       for (const [key, btn] of Object.entries(buttons)) {
         if (btn) {
-          // 🌟 ให้ปุ่มที่เป็นสิทธิ์เข้าไม่ได้ แสดงสถานะ "ล็อก" และเป็นสีเทาตามต้นฉบับ
           if (p.includes('ADMIN') || p.includes(key)) {
             btn.disabled = false;
           } else {
@@ -510,8 +509,6 @@
       numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
       
       document.getElementById('lock-screen').style.display = 'flex';
-      
-      // ปิดโมดูลทุกหน้า กลับมาที่เมนูหลัก
       closeModule();
     }
 
@@ -519,6 +516,15 @@
       document.body.classList.toggle('dark-theme');
       const icon = document.getElementById('theme-icon');
       icon.className = document.body.classList.contains('dark-theme') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      
+      const nameBox = document.querySelector('.user-info-badge');
+      if (nameBox) {
+        if(document.body.classList.contains('dark-theme')) {
+          nameBox.classList.remove('bg-white'); nameBox.classList.add('bg-dark');
+        } else {
+          nameBox.classList.remove('bg-dark'); nameBox.classList.add('bg-white');
+        }
+      }
     }
 
    async function openModule(pageUrl) {
