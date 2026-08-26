@@ -19,7 +19,8 @@
   .inventory-table td { padding: 12px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
   .inventory-table tbody tr:hover td { background-color: #f8fafc; }
   
-  .stock-low { color: #e11d48; font-weight: bold; background-color: #fff1f2; padding: 4px 10px; border-radius: 12px; border: 1px solid #fecdd3; }
+  .stock-low { color: #d97706; font-weight: bold; background-color: #fffbeb; padding: 4px 10px; border-radius: 12px; border: 1px solid #fde68a; }
+  .stock-out { color: #e11d48; font-weight: bold; background-color: #fff1f2; padding: 4px 10px; border-radius: 12px; border: 1px solid #fecdd3; }
   .expiry-warn { color: #d97706; font-size: 0.75rem; font-weight: bold; background: #fffbeb; padding: 3px 8px; border-radius: 8px; display: inline-block; margin-top: 4px; border: 1px solid #fde68a; }
 
   .custom-scrollbar::-webkit-scrollbar { width: 6px; } 
@@ -37,25 +38,28 @@
   .clinic-nav-pills .nav-link.tab-promo { color: #ec4899; }
   .clinic-nav-pills .nav-link.tab-promo:hover:not(.active) { background-color: #fdf2f8; border-color: #fbcfe8; }
   .clinic-nav-pills .nav-link.tab-promo.active { background-color: #ec4899; color: #fff; border-color: #ec4899; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
-  /* 🌸 เปลี่ยนสีขอบช่องกรอกข้อมูลตอนคลิก (Focus) ให้เป็นสีชมพู */
-  .promo-mode .form-control:focus, 
-  .promo-mode .form-select:focus { 
-    border-color: #ec4899 !important; 
-    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2) !important; 
-  }
   
-  /* ให้กรอบช่องกรอกที่เป็นสีน้ำเงิน เปลี่ยนเป็นสีชมพูอัตโนมัติในโหมดนี้ */
-  .promo-mode .border-primary {
-    border-color: #ec4899 !important;
-  }
-  
+  /* 🌙 Dark Mode Integration */
+  body.dark-theme .modern-card,
+  body.dark-theme .clinic-nav-pills { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .clinic-nav-pills .nav-link { color: #94a3b8; }
+  body.dark-theme .clinic-nav-pills .nav-link:hover:not(.active) { background-color: #334155; }
+  body.dark-theme .inventory-table th { background-color: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
+  body.dark-theme .inventory-table td { border-bottom-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .inventory-table tbody tr:hover td { background-color: #334155 !important; }
+  body.dark-theme .modal-content { background-color: #1e293b !important; color: #f8fafc !important; }
+  body.dark-theme .modal-header, body.dark-theme .modal-footer { border-color: #334155 !important; }
+  body.dark-theme .form-control, body.dark-theme .form-select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+  body.dark-theme .bg-light { background-color: #0f172a !important; border-color: #334155 !important; }
+  body.dark-theme .stock-low { background-color: rgba(245, 158, 11, 0.15) !important; color: #fbbf24 !important; border-color: #b45309 !important; }
+  body.dark-theme .stock-out { background-color: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border-color: #991b1b !important; }
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
   
-  <!-- 🌟 Header & Tabs -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex align-items-center gap-4">
+  <!-- 🌟 Header & Actions -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
       <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing me-2 text-warning"></i> ระบบคลังสินค้า</h3>
       
       <ul class="nav nav-pills clinic-nav-pills m-0">
@@ -77,9 +81,18 @@
       </ul>
     </div>
 
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
-      <i class="fa-solid fa-xmark me-2"></i> ปิด
-    </button>
+    <!-- ปุ่มลัดรับเข้าด่วน & รายการต้องซื้อ -->
+    <div class="d-flex gap-2">
+      <button class="btn btn-success fw-bold rounded-pill px-3 shadow-sm" onclick="openBulkModal()">
+        <i class="fa-solid fa-boxes-stacked me-1"></i> รับเข้าด่วน
+      </button>
+      <button class="btn btn-warning text-dark fw-bold rounded-pill px-3 shadow-sm" onclick="openShoppingListModal()">
+        <i class="fa-solid fa-cart-shopping me-1"></i> รายการต้องซื้อ
+      </button>
+      <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
+        <i class="fa-solid fa-xmark me-2"></i> ปิด
+      </button>
+    </div>
   </div>
 
   <div class="row g-4 flex-grow-1" style="min-height: 0;">
@@ -94,19 +107,18 @@
         
         <form id="productForm" onsubmit="saveProduct(event)">
           
-          <!-- Section 1: ข้อมูลพื้นฐาน -->
-          <div class="form-section-title">1. ข้อมูลพื้นฐาน (Basic Info)</div>
+          <div class="form-section-title">1. ข้อมูลพื้นฐาน</div>
           <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">รหัสรายการ (ID) *</label>
-            <input type="text" id="pd_id" class="form-control bg-light" required placeholder="เช่น MD-001">
+            <label class="form-label fw-bold small text-muted">รหัสรายการ (ID / บาร์โค้ด) *</label>
+            <input type="text" id="pd_id" class="form-control" required placeholder="เช่น MD-001 หรือสแกนบาร์โค้ด">
           </div>
           <div class="mb-3">
             <label class="form-label fw-bold small text-muted">ชื่อรายการ *</label>
-            <input type="text" id="pd_name" class="form-control fw-bold text-dark border-primary" required placeholder="ระบุชื่อสินค้า/บริการ">
+            <input type="text" id="pd_name" class="form-control fw-bold border-primary" required placeholder="ระบุชื่อยา/หัตถการ/สกินแคร์">
           </div>
           <div class="mb-4" id="type_container">
             <label class="form-label fw-bold small text-muted">หมวดหมู่</label>
-            <select id="pd_type" class="form-select bg-light">
+            <select id="pd_type" class="form-select">
               <option value="MEDICINE">ยาและเวชภัณฑ์</option>
               <option value="INJECTABLE">กลุ่มฉีด (Botox, Filler, Meso)</option>
               <option value="COURSE">คอร์ส / หัตถการเลเซอร์</option>
@@ -115,43 +127,43 @@
             </select>
           </div>
           
-          <!-- Section 2: ราคาและการจัดกลุ่ม -->
-          <div class="form-section-title">2. ข้อมูลการขาย (Pricing)</div>
-          <div class="row mb-4">
+          <div class="form-section-title">2. ข้อมูลการขาย & จุดเตือนสต็อก</div>
+          <div class="row mb-3">
             <div class="col-6">
               <label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label>
               <input type="number" id="pd_price" class="form-control text-success fw-bold" value="0" placeholder="0.00">
             </div>
             <div class="col-6">
               <label class="form-label fw-bold small text-muted">หน่วยนับ</label>
-              <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น เม็ด, ครั้ง, กล่อง">
+              <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น ขวด, ไซริงค์, กล่อง">
             </div>
           </div>
           
-          <!-- Section 3: สต็อกและวันหมดอายุ (ซ่อนถ้าเป็นโปรโมชั่น) -->
           <div id="normal_fields">
-            <div class="form-section-title">3. สต็อก & วันหมดอายุ (Inventory)</div>
             <div class="p-3 bg-light rounded-4 border mb-3">
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">สต็อกตั้งต้น</label>
+                  <label class="form-label fw-bold small text-muted">สต็อกปัจจุบัน</label>
                   <input type="number" id="pd_stock" class="form-control text-primary fw-bold" value="0" step="0.1">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">เลข Lot (ถ้ามี)</label>
+                  <label class="form-label fw-bold small text-muted">จุดเตือนสต็อกต่ำ (Min)</label>
+                  <input type="number" id="pd_min_stock" class="form-control text-warning fw-bold" value="5" placeholder="เช่น 5">
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-bold small text-muted">เลข Lot</label>
                   <input type="text" id="pd_lot" class="form-control" placeholder="-">
                 </div>
-                <div class="col-12">
-                  <label class="form-label fw-bold small text-muted">วันหมดอายุ (Expiry Date)</label>
+                <div class="col-6">
+                  <label class="form-label fw-bold small text-muted">วันหมดอายุ</label>
                   <input type="date" id="pd_expiry" class="form-control text-danger">
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Section 3(Alt): การจัดเซ็ต (แสดงเฉพาะแท็บโปรโมชั่น) -->
           <div id="promo_fields" style="display:none;">
-            <div class="form-section-title">3. รายการของแถม (Bundle Items)</div>
+            <div class="form-section-title">3. รายการของแถม / เซ็ตโปรโมชั่น</div>
             <div class="p-3 bg-pink-light border border-pink rounded-4 mb-3">
               <div id="promo_items_list" class="mb-3 d-flex flex-wrap gap-1"></div>
               <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
@@ -159,16 +171,14 @@
                 <input type="number" id="promo_product_qty" class="form-control border-0 text-center" placeholder="จำนวน" style="max-width: 80px;">
                 <button type="button" class="btn btn-pink fw-bold px-3" onclick="addPromoItem()">เพิ่ม</button>
               </div>
-              <div class="text-muted mt-2" style="font-size:0.75rem;"><i class="fa-solid fa-circle-info me-1"></i> ระบบจะหักสต็อก/เพิ่มคอร์ส ให้คนไข้ตามของแถมในนี้อัตโนมัติ</div>
             </div>
           </div>
           
           <input type="hidden" id="pd_status" value="ACTIVE">
           
-          <!-- ปุ่ม Action -->
           <div class="d-flex gap-2 mt-4 pt-3 border-top">
             <button type="button" class="btn btn-light border rounded-pill fw-bold shadow-sm w-50 py-2" onclick="clearProductForm()">ล้างข้อมูล</button>
-            <button type="submit" id="btn_save_product" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
+            <button type="submit" id="btn_save_product" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึก</button>
           </div>
         </form>
       </div>
@@ -178,16 +188,14 @@
     <div class="col-lg-8 col-md-7 h-100">
       <div class="modern-card p-0 h-100 d-flex flex-column">
         
-        <!-- Header ตาราง -->
         <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
           <h5 class="fw-bold m-0 text-dark" id="table-title"><i class="fa-solid fa-list-ul me-2 text-primary"></i> รายการสินค้า</h5>
           <div class="input-group shadow-sm rounded-pill overflow-hidden" style="width: 300px;">
             <span class="input-group-text bg-white border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-            <input type="text" id="searchInventory" class="form-control border-0 bg-white" placeholder="ค้นหา รหัส, ชื่อรายการ..." onkeyup="filterInventory()">
+            <input type="text" id="searchInventory" class="form-control border-0 bg-white" placeholder="ค้นหา รหัส, ชื่อ..." onkeyup="filterInventory()">
           </div>
         </div>
 
-        <!-- Body ตาราง -->
         <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1;">
           <table class="table inventory-table w-100 mb-0">
             <thead style="position: sticky; top: 0; z-index: 1;">
@@ -208,9 +216,79 @@
   </div>
 </div>
 
+<!-- 🛒 Modal รายการต้องซื้อ (Low Stock Alert) -->
+<div class="modal fade" id="shoppingListModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-warning text-dark rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold m-0"><i class="fa-solid fa-cart-shopping me-2"></i> รายการสินค้าต้องซื้อ / สต็อกต่ำ</h5>
+        <button type="button" class="btn-close" onclick="closeShoppingListModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="alert alert-warning small py-2 mb-3 fw-bold">
+          <i class="fa-solid fa-circle-info me-1"></i> แสดงรายการสินค้าที่สต็อกหมด หรือต่ำกว่าจุดเตือนภัยที่ตั้งไว้
+        </div>
+        <div class="custom-scrollbar border rounded-3 bg-white" style="max-height: 50vh; overflow-y: auto;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th>ชื่อสินค้า / รหัส</th>
+                <th class="text-center">จุดเตือน (Min)</th>
+                <th class="text-center">คงเหลือปัจจุบัน</th>
+              </tr>
+            </thead>
+            <tbody id="shoppingListBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0">
+        <button class="btn btn-secondary rounded-pill fw-bold px-4" onclick="closeShoppingListModal()">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📦 Modal รับเข้าด่วน (Bulk Stock Receive) -->
+<div class="modal fade" id="bulkModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-success text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold m-0"><i class="fa-solid fa-boxes-stacked me-2"></i> สแกน/รับสินค้าเข้าคลังด่วน</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeBulkModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
+          <span class="input-group-text bg-light border-0"><i class="fa-solid fa-barcode"></i></span>
+          <input type="text" id="bulkScanInput" class="form-control border-0 bg-light fw-bold" placeholder="พิมพ์รหัส/ชื่อ หรือยิงบาร์โค้ดที่นี่ แล้วกด Enter..." onkeypress="if(event.key==='Enter') processBulkScan()">
+        </div>
+        <div class="custom-scrollbar border rounded-3 bg-white" style="max-height: 40vh; overflow-y: auto;">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th>สินค้า</th>
+                <th class="text-center">สต็อกเดิม</th>
+                <th class="text-center" width="120px">รับเข้าเพิ่ม</th>
+                <th class="text-end pe-3">ลบ</th>
+              </tr>
+            </thead>
+            <tbody id="bulkTableBody">
+              <tr><td colspan="4" class="text-center py-4 text-muted">รอสแกนสินค้า...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0">
+        <button class="btn btn-light rounded-pill fw-bold px-4" onclick="closeBulkModal()">ยกเลิก</button>
+        <button class="btn btn-success rounded-pill fw-bold px-4 shadow-sm" onclick="saveBulkStock()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกรับเข้าทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   var inventoryData = []; 
   var bundleItems = [];
+  var bulkItems = [];
   var currentInvTab = 'general'; 
 
   initInventory(); 
@@ -236,12 +314,10 @@
     document.getElementById(`btn-tab-${tab}`).classList.add('active');
     
     clearProductForm();
-	document.getElementById('productForm').classList.remove('promo-mode');
 
     const typeSelect = document.getElementById('pd_type');
     if (tab === 'promo') {
       typeSelect.value = 'PROMOTION';
-	  document.getElementById('productForm').classList.add('promo-mode');
       document.getElementById('type_container').style.display = 'none'; 
       document.getElementById('promo_fields').style.display = 'block';
       document.getElementById('normal_fields').style.display = 'none';
@@ -268,8 +344,6 @@
       
       document.getElementById('btn_save_product').className = 'btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2';
       document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-boxes-stacked me-2 text-warning"></i> รายการสินค้าทั่วไป';
-      
-      // 🌟 เติมบรรทัดนี้ลงไป เพื่อรีเซ็ตหัวข้อให้กลับมาเป็นคำว่า 'เพิ่มรายการใหม่' และเป็นสีน้ำเงินปกติ
       document.getElementById('form-title').innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
     }
     
@@ -280,7 +354,6 @@
     const list = document.getElementById('inventoryList'); 
     list.innerHTML = '';
 
-    // 🌟 ดึงข้อมูลแล้วแยกตามสถานะ Active / Inactive
     let filteredItems = inventoryData.filter(item => {
       let stat = item.status || 'ACTIVE';
       if (currentInvTab === 'archived') return stat === 'INACTIVE';
@@ -307,7 +380,18 @@
       else if(item.type === 'PROMOTION') typeBadge = '<span class="badge bg-pink">โปรโมชั่น</span>';
       else typeBadge = '<span class="badge bg-success">สกินแคร์</span>';
 
-      let stockDisplay = item.type === 'PROMOTION' ? '<span class="text-muted">-</span>' : (item.stock <= 5 && item.type !== 'COURSE' ? `<span class="stock-low shadow-sm">${item.stock} ${item.unit}</span>` : `<span class="fw-bold text-dark">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`);
+      let minThreshold = item.min_stock || 5;
+      let stockDisplay = '<span class="text-muted">-</span>';
+      
+      if (item.type !== 'PROMOTION') {
+        if (item.stock <= 0) {
+          stockDisplay = `<span class="stock-out shadow-sm"><i class="fa-solid fa-triangle-exclamation me-1"></i>สินค้าหมด</span>`;
+        } else if (item.stock <= minThreshold && item.type !== 'COURSE') {
+          stockDisplay = `<span class="stock-low shadow-sm"><i class="fa-solid fa-bell me-1"></i>เตือนสต็อกต่ำ (${item.stock} ${item.unit})</span>`;
+        } else {
+          stockDisplay = `<span class="fw-bold text-dark">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`;
+        }
+      }
       
       let expiryInfo = '';
       if(item.expiry_date && item.type !== 'PROMOTION') {
@@ -317,7 +401,6 @@
         expiryInfo = `<div class="${warnClass} mt-1"><i class="fa-regular fa-clock me-1"></i>${expDate < new Date() ? 'หมดอายุแล้ว!' : `หมดอายุ: ${expDate.toLocaleDateString('th-TH')}`}</div>`;
       }
 
-      // 🌟 ระบบสร้างปุ่มให้เหมาะกับสถานะกล่อง (Active = ปุ่มระงับขาย, Archived = ปุ่มเอาคืนมา)
       let actionBtns = '';
       if (currentInvTab === 'archived') {
         actionBtns = `
@@ -327,7 +410,6 @@
             </button>
           </div>`;
       } else {
-        // จับปุ่ม + และ - มัดรวมกันเป็นกลุ่ม (btn-group) เพื่อความเรียบร้อย
         let stockBtns = item.type !== 'PROMOTION' ? `
           <div class="btn-group shadow-sm me-2">
             <button class="btn btn-sm btn-light text-success border px-2" onclick="adjustStock('${item.id}', '${item.name}', 'add')" title="รับเข้าสต็อก"><i class="fa-solid fa-plus"></i></button>
@@ -335,11 +417,10 @@
           </div>
         ` : '';
         
-        // ใช้ d-flex เพื่อให้ปุ่มเรียงแนวนอนชิดขวาเสมอ
         actionBtns = `
           <div class="d-flex justify-content-end align-items-center flex-nowrap">
             ${stockBtns}
-            <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm text-nowrap" title="ระงับการขาย/เลิกขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')">
+            <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm text-nowrap" title="ระงับการขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')">
               <i class="fa-solid fa-ban me-1"></i> เลิกขาย
             </button>
           </div>
@@ -409,9 +490,8 @@
     try {
       await fetch('/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
-      // 🌟 ส่งประวัติเข้า System Logs
       let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `บันทึก/แก้ไขข้อมูลรายการ: ${payload.name} (${payload.id})` }) });
+      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `บันทึก/แก้ไขรายการ: ${payload.name} (${payload.id})` }) });
 
       Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       clearProductForm(); 
@@ -436,7 +516,7 @@
       document.getElementById('pd_unit').value = item.unit;
       document.getElementById('pd_lot').value = item.lot_number || ''; 
       document.getElementById('pd_expiry').value = item.expiry_date || '';
-      document.getElementById('pd_status').value = item.status || 'ACTIVE'; // 🌟 โหลดสถานะใส่ฟอร์มซ่อน
+      document.getElementById('pd_status').value = item.status || 'ACTIVE';
       
       if (item.type === 'PROMOTION') {
         bundleItems = JSON.parse(item.bundle_items || '[]'); 
@@ -450,6 +530,7 @@
     bundleItems = []; 
     renderPromoItems(); 
     document.getElementById('pd_status').value = 'ACTIVE';
+    document.getElementById('pd_min_stock').value = 5;
     
     if(currentInvTab === 'promo') {
       document.getElementById('pd_type').value = 'PROMOTION';
@@ -460,29 +541,20 @@
   }
 
   async function toggleItemStatus(id, newStatus) {
-    let titleMsg = newStatus === 'INACTIVE' ? 'ยืนยันการระงับขายสินค้านี้?' : 'นำสินค้านี้กลับมาขายใหม่?';
-    let textMsg = newStatus === 'INACTIVE' ? 'ประวัติคนไข้ที่เคยซื้อไปแล้วจะยังอยู่ครบถ้วน แต่จะไม่สามารถเปิดบิลใหม่ให้คนไข้รายอื่นได้' : '';
+    let titleMsg = newStatus === 'INACTIVE' ? 'ระงับการขายรายการนี้?' : 'เปิดขายรายการนี้ใหม่?';
     let btnColor = newStatus === 'INACTIVE' ? '#e11d48' : '#10b981';
 
-    if ((await Swal.fire({ title: titleMsg, text: textMsg, icon: 'question', showCancelButton: true, confirmButtonColor: btnColor })).isConfirmed) {
-      Swal.fire({title: 'กำลังอัปเดตสถานะ...', didOpen: () => Swal.showLoading()});
+    if ((await Swal.fire({ title: titleMsg, icon: 'question', showCancelButton: true, confirmButtonColor: btnColor })).isConfirmed) {
+      Swal.fire({title: 'กำลังอัปเดต...', didOpen: () => Swal.showLoading()});
       try {
         await fetch(`/api/inventory/${id}/status`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ status: newStatus })
         });
-
-        // 🌟 ส่งประวัติเข้า System Logs
-        let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-        let actDesc = newStatus === 'INACTIVE' ? 'ระงับการขาย' : 'นำกลับมาเปิดขายใหม่';
-        fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `${actDesc} รหัสรายการ: ${id}` }) });
-
-        Swal.fire({ icon: 'success', title: 'อัปเดตเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         loadInventory();
-      } catch (e) {
-        Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error');
-      }
+        Swal.fire({ icon: 'success', title: 'สำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+      } catch (e) {}
     }
   }
 
@@ -499,28 +571,130 @@
       if (res.isConfirmed && res.value) {
         let qty = parseFloat(res.value); if(mode === 'remove') qty = -Math.abs(qty);
         await fetch(`/api/inventory/${id}/stock`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ adjust_qty: qty }) });
-
-        // 🌟 ส่งประวัติเข้า System Logs
-        let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-        let actDesc = mode === 'add' ? 'รับเข้าสต็อก' : 'เบิกออกสต็อก';
-        fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `${actDesc} จำนวน ${Math.abs(qty)} หน่วย สำหรับรายการ: ${name} (${id})` }) });
-
         loadInventory();
       }
     });
   }
-  
-  // 🌟 ลบสินค้า (พร้อมเก็บ Log)
-  async function deleteProduct(id) { 
-    if ((await Swal.fire({ title: 'ลบสินค้านี้?', icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { 
-      await fetch(`/api/inventory/${id}`, { method: 'DELETE' }); 
 
-      // 🌟 ส่งประวัติเข้า System Logs
-      let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-      fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'STOCK', details: `ลบรายการสินค้าออกจากระบบอย่างถาวร รหัส: ${id}` }) });
+  /* 🛒 ฟังก์ชันเปิด Modal รายการต้องซื้อ (Low Stock List) */
+  function openShoppingListModal() {
+    const modalEl = document.getElementById('shoppingListModal');
+    const tbody = document.getElementById('shoppingListBody');
+    tbody.innerHTML = '';
 
-      loadInventory(); 
-    } 
+    let lowStockItems = inventoryData.filter(i => 
+      i.type !== 'PROMOTION' && 
+      (i.status === 'ACTIVE' || !i.status) && 
+      (parseFloat(i.stock) <= (i.min_stock || 5))
+    );
+
+    if (lowStockItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-success fw-bold"><i class="fa-solid fa-circle-check me-2"></i>ไม่มีรายการสินค้าหมด หรือสต็อกต่ำ</td></tr>`;
+    } else {
+      lowStockItems.forEach(i => {
+        let minVal = i.min_stock || 5;
+        let stockBadge = i.stock <= 0 
+          ? `<span class="badge bg-danger">หมด (0 ${i.unit})</span>` 
+          : `<span class="badge bg-warning text-dark">${i.stock} ${i.unit}</span>`;
+
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${i.name}</b><br><small class="text-muted">${i.id}</small></td>
+            <td class="text-center fw-bold text-secondary">${minVal} ${i.unit}</td>
+            <td class="text-center">${stockBadge}</td>
+          </tr>`;
+      });
+    }
+
+    let modal = new bootstrap.Modal(modalEl);
+    modal.show();
   }
-  
+
+  function closeShoppingListModal() {
+    let modalEl = document.getElementById('shoppingListModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if(modal) modal.hide();
+  }
+
+  /* 📦 ฟังก์ชันสแกน/รับเข้าด่วน (Bulk Receive) */
+  function openBulkModal() {
+    bulkItems = [];
+    document.getElementById('bulkScanInput').value = '';
+    renderBulkTable();
+    let modalEl = document.getElementById('bulkModal');
+    let modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+
+  function closeBulkModal() {
+    let modalEl = document.getElementById('bulkModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if(modal) modal.hide();
+  }
+
+  function processBulkScan() {
+    let code = document.getElementById('bulkScanInput').value.trim().toLowerCase();
+    if(!code) return;
+
+    let item = inventoryData.find(i => i.id.toLowerCase() === code || i.name.toLowerCase().includes(code));
+    if(!item) {
+      Swal.fire({ icon: 'error', title: 'ไม่พบสินค้า', text: `ไม่พบรหัสหรือชื่อ: ${code}`, timer: 1500, showConfirmButton: false });
+      return;
+    }
+
+    let existing = bulkItems.find(b => b.id === item.id);
+    if(existing) {
+      existing.addQty += 1;
+    } else {
+      bulkItems.push({ id: item.id, name: item.name, oldStock: item.stock, addQty: 1, unit: item.unit });
+    }
+
+    document.getElementById('bulkScanInput').value = '';
+    renderBulkTable();
+  }
+
+  function renderBulkTable() {
+    const tbody = document.getElementById('bulkTableBody');
+    tbody.innerHTML = '';
+
+    if(bulkItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">รอสแกนสินค้า...</td></tr>`;
+      return;
+    }
+
+    bulkItems.forEach((b, idx) => {
+      tbody.innerHTML += `
+        <tr>
+          <td><b>${b.name}</b><br><small class="text-muted">${b.id}</small></td>
+          <td class="text-center">${b.oldStock} ${b.unit}</td>
+          <td class="text-center">
+            <input type="number" class="form-control form-control-sm text-center fw-bold text-success mx-auto" style="width: 80px;" value="${b.addQty}" onchange="bulkItems[${idx}].addQty = parseFloat(this.value)||1">
+          </td>
+          <td class="text-end pe-3">
+            <button class="btn btn-sm btn-outline-danger" onclick="bulkItems.splice(${idx},1); renderBulkTable();"><i class="fa-solid fa-xmark"></i></button>
+          </td>
+        </tr>`;
+    });
+  }
+
+  async function saveBulkStock() {
+    if(bulkItems.length === 0) return Swal.fire('ไม่มีรายการ', 'กรุณาสแกนหรือเลือกสินค้าอย่างน้อย 1 รายการ', 'warning');
+
+    Swal.fire({ title: 'กำลังบันทึกสต็อก...', didOpen: () => Swal.showLoading() });
+    try {
+      for(let b of bulkItems) {
+        await fetch(`/api/inventory/${b.id}/stock`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ adjust_qty: b.addQty })
+        });
+      }
+
+      Swal.fire({ icon: 'success', title: 'รับสินค้าเข้าสต็อกสำเร็จ', timer: 1500, showConfirmButton: false });
+      closeBulkModal();
+      loadInventory();
+    } catch(e) {
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error');
+    }
+  }
 </script>
