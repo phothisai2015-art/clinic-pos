@@ -26,9 +26,15 @@
   .emr-slot-row:hover:not(.booked) { background: #eff6ff; border-color: #93c5fd; }
   .emr-slot-row.booked { background: #fff1f2; border-color: #fecdd3; cursor: not-allowed; opacity: 0.85; }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  /* 🌟 เปลี่ยนแถบเลื่อน (Scrollbar) ให้มินิมอล "ทุกจุดในหน้าเว็บ" */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: 0.2s; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* 🌙 สีของแถบเลื่อนในโหมดกลางคืน (Dark Mode) */
+  body.dark-theme ::-webkit-scrollbar-thumb { background: #475569; }
+  body.dark-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
   /* 📱 ปรับแต่ง UI สำหรับจอมือถือ */
   @media (max-width: 768px) {
