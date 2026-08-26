@@ -167,14 +167,15 @@
   body.dark-theme .swal2-icon.swal2-error { border-color: #ef4444 !important; color: #ef4444 !important; }
   body.dark-theme .swal2-icon.swal2-success { border-color: #10b981 !important; color: #10b981 !important; }
   
-  /* 🛑 บังคับตัดแถบเลื่อน (Scrollbar) พื้นหลังด้านนอกสุดทิ้ง */
-  html, body {
-    overflow: hidden !important;
-    height: 100% !important;
+  /* 🛑 ล็อคพื้นหลังเฉพาะในมือถือ (โหมด PC จะได้เลื่อนได้ปกติ) */
+  @media (max-width: 768px) {
+    html, body { overflow: hidden !important; height: 100% !important; }
   }
+  /* 🌟 ดัก Layout หน้าค้นหาไม่ให้พังบน PC เวลาสลับแท็บ */
+  #tab-search[style*="display: block"] { display: flex !important; }
 </style>
 
-<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column; overflow: hidden;">
+<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-info m-0 header-title-mobile">
       <i class="fa-solid fa-clipboard-user me-2"></i><span>ลงทะเบียน & คัดกรองคนไข้</span>
