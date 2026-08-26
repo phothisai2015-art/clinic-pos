@@ -334,7 +334,7 @@
 
       grid.innerHTML += `
         <div class="col-md-6">
-          <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="${isPayable ? `selectBillToPay(${index})` : 'showPaidAlert()'}">
+          <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="selectBillToPay(${index})">
             <div class="bill-card-header">
               <span class="fw-bold text-muted">#${index + 1}</span>${statusBadge}
             </div>
@@ -377,11 +377,17 @@
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
-    let inputEl = document.getElementById('pay_input_amount');
-    inputEl.disabled = false; inputEl.value = balance; inputEl.setAttribute('max', balance);
+    // 🌟 ซ่อน/แสดง แผงรับชำระเงินตามสถานะยอดคงเหลือ
+    let paymentSection1 = document.getElementById('pay_input_amount').parentElement.parentElement;
+    let paymentSection2 = document.getElementById('pay_submit_btn').parentElement;
     
-    let submitBtn = document.getElementById('pay_submit_btn');
-    submitBtn.disabled = false; submitBtn.classList.remove('btn-secondary'); submitBtn.classList.add('btn-success');
+    if (balance <= 0) {
+        paymentSection1.style.display = 'none';
+        paymentSection2.style.display = 'none';
+    } else {
+        paymentSection1.style.display = 'block';
+        paymentSection2.style.display = 'block';
+    }
     
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
@@ -466,6 +472,10 @@
     
     let submitBtn = document.getElementById('pay_submit_btn');
     submitBtn.disabled = true; submitBtn.classList.remove('btn-success'); submitBtn.classList.add('btn-secondary');
+	
+	// 🌟 รีเซ็ตให้แผงรับเงินกลับมาแสดงปกติ
+    document.getElementById('pay_input_amount').parentElement.parentElement.style.display = 'block';
+    document.getElementById('pay_submit_btn').parentElement.style.display = 'block';
   }
 
   // 🌟 ยืนยันการรับชำระเงิน (พร้อมเก็บ Log)
