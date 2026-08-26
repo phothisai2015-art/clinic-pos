@@ -365,7 +365,10 @@
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
-    document.getElementById('pay_item_full_price').innerText = `฿${boxTotalPrice.toLocaleString()}`;
+    
+    // 🌟 อัปเดต: เปลี่ยนจาก boxTotalPrice เป็น selectedBill.total_price เพื่อให้โชว์เฉพาะราคาคอร์ส
+    document.getElementById('pay_item_full_price').innerText = `฿${selectedBill.total_price.toLocaleString()}`; 
+    
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
     
