@@ -1,22 +1,25 @@
-   <style>
+<style>
   /* การตกแต่ง UI Tabs */
   .booking-nav .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 12px 24px; transition: 0.2s; margin-right: 10px; border: 1px solid transparent; cursor: pointer; }
   .booking-nav .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
   .booking-nav .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
 
-  /* ดีไซน์ปฏิทินแบบ Minimalist */
-  .calendar-wrapper { background: #ffffff; padding: 20px 30px; border-radius: 24px; }
-  .calendar-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #94a3b8; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
-  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+  /* 🌟 ปรับดีไซน์ปฏิทินให้กางเต็มจออัตโนมัติ ไม่ต้องเลื่อน */
+  .calendar-wrapper { background: #ffffff; padding: 15px 25px; border-radius: 20px; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .calendar-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #94a3b8; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
   
-  .calendar-cell { background-color: #ffffff; min-height: 100px; border-radius: 16px; padding: 10px; cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; }
+  /* ให้กริดปฏิทินเติมพื้นที่ที่เหลือแบบ 6 แถว (เพื่อให้ช่องตารางขยายความสูงเอง) */
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 8px; flex-grow: 1; min-height: 0; }
+  
+  /* ปรับเซลล์ปฏิทินให้พอดี ไม่มี min-height เพื่อให้มันยืดหยุ่นได้ */
+  .calendar-cell { background-color: #ffffff; border-radius: 12px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
   .calendar-cell:hover:not(.other-month) { background-color: #f8fafc; border-color: #e2e8f0; transform: translateY(-2px); }
   .calendar-cell.other-month { opacity: 0.3; pointer-events: none; } 
   
-  .date-number { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold; color: #334155; border-radius: 50%; margin-bottom: 5px; transition: 0.2s; }
-  .calendar-cell.today .date-number { background-color: #3b82f6; color: #ffffff; box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); }
+  .date-number { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 1rem; font-weight: bold; color: #334155; border-radius: 50%; margin-bottom: 3px; transition: 0.2s; }
+  .calendar-cell.today .date-number { background-color: #3b82f6; color: #ffffff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
   
-  .event-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 4px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); }
+  .event-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-top: 2px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4); }
   
   .time-slot-row { display: flex; border-bottom: 1px solid #f1f5f9; transition: 0.2s; cursor: pointer; background: #fff; }
   .time-slot-row:hover:not(.booked-slot) { background-color: #eff6ff; }
@@ -40,19 +43,19 @@
   
   /* 🌟 สไตล์สำหรับช่วงเวลาปัจจุบัน (Live Time Slot) */
   .time-slot-row.current-time-slot {
-    background-color: #f0fdf4 !important; /* สีพื้นหลังเขียวอ่อน */
-    border-left: 5px solid #10b981; /* แถบสีเขียวเข้มด้านซ้าย */
+    background-color: #f0fdf4 !important; 
+    border-left: 5px solid #10b981; 
     box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.05);
   }
   .time-slot-row.current-time-slot .time-label {
-    color: #10b981; /* เปลี่ยนสีเวลาให้เด่นขึ้น */
+    color: #10b981; 
     border-right-color: #10b981;
   }
   
   /* ป้ายกำกับคำว่า Live */
   .now-indicator {
     display: inline-block;
-    background-color: #ef4444; /* สีแดง Live */
+    background-color: #ef4444; 
     color: white;
     font-size: 0.65rem;
     padding: 2px 8px;
@@ -64,15 +67,21 @@
     70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
     100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
   }
+  
+  /* 🌟 จัดระเบียบหน้าหลักของ Booking ให้เป็น Flex Column เพื่อยืดเต็มความสูงจอพอดี */
+  .booking-container { height: calc(100vh - 40px); display: flex; flex-direction: column; }
 </style>
 
-<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid py-3 booking-container" style="max-width: 1400px;">
+  
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-calendar-days me-2"></i> ตารางนัดหมาย & คิว</h3>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
-  <ul class="nav nav-pills booking-nav mb-4">
+  <!-- Tabs -->
+  <ul class="nav nav-pills booking-nav mb-3">
     <li class="nav-item">
       <button class="nav-link active" id="tabbtn-calendar" onclick="switchBookingTab('calendar')">
         <i class="fa-solid fa-calendar-check me-2"></i> ปฏิทินนัดหมาย
@@ -85,26 +94,32 @@
     </li>
   </ul>
 
-  <div class="tab-content flex-grow-1" style="min-height: 0;">
-    <div id="tab-calendar" class="w-100" style="display: block; height: 100%; position: relative;">
-      <div id="monthViewPanel" class="h-100 w-100 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+  <!-- เนื้อหา (Tab Content) -->
+  <div class="tab-content flex-grow-1" style="min-height: 0; overflow: hidden;">
+    
+    <!-- 📅 หน้าปฏิทินแบบเดือน -->
+    <div id="tab-calendar" class="w-100" style="display: block; height: 100%;">
+      <div id="monthViewPanel" class="h-100 w-100 d-flex flex-column pb-4">
+        
+        <!-- แถบเดือน-ปี และปุ่มเปลี่ยนเดือน -->
+        <div class="d-flex justify-content-between align-items-center mb-2 px-2">
           <div class="d-flex align-items-center">
-            <h3 class="fw-bold text-dark m-0 me-4" id="calendarMonthYearDisplay">สิงหาคม 2026</h3>
-            <button class="btn btn-light btn-sm rounded-pill px-4 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
+            <h4 class="fw-bold text-dark m-0 me-3" id="calendarMonthYearDisplay">สิงหาคม 2026</h4>
+            <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold shadow-sm border" onclick="goToToday()">กลับมาวันนี้</button>
           </div>
-          <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-outline-secondary rounded-circle shadow-sm" style="width: 40px; height: 40px;" onclick="openTimeSettings()" title="ตั้งค่าเวลาทำการ">
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary rounded-circle shadow-sm" style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center;" onclick="openTimeSettings()" title="ตั้งค่าเวลาทำการ">
               <i class="fa-solid fa-gear"></i>
             </button>
             <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
-              <button class="btn btn-white text-secondary px-3 py-2 border-end" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-              <button class="btn btn-white text-secondary px-3 py-2" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+              <button class="btn btn-white text-secondary px-3 py-1 border-end" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <button class="btn btn-white text-secondary px-3 py-1" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
           </div>
         </div>
 
-        <div class="calendar-wrapper shadow-sm border flex-grow-1 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
+        <!-- 🌟 ตารางปฏิทินที่ยืดตามความสูง -->
+        <div class="calendar-wrapper shadow-sm border flex-grow-1">
           <div class="calendar-header-row">
             <div class="text-danger">อาทิตย์</div>
             <div>จันทร์</div>
@@ -114,30 +129,33 @@
             <div>ศุกร์</div>
             <div class="text-primary">เสาร์</div>
           </div>
-          <div id="calendarGrid" class="calendar-grid flex-grow-1"></div>
+          <div id="calendarGrid" class="calendar-grid"></div>
         </div>
+
       </div>
 
-      <div id="dayViewPanel" class="h-100 w-100 d-none flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-3 px-2 border-bottom pb-3">
+      <!-- 🕒 หน้าลงเวลาคิวแบบวัน -->
+      <div id="dayViewPanel" class="h-100 w-100 d-none flex-column pb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2 border-bottom pb-2">
           <button class="btn btn-light rounded-pill px-4 fw-bold shadow-sm border" onclick="showMonthView()">
             <i class="fa-solid fa-arrow-left me-2"></i> กลับไปปฏิทิน
           </button>
-          <h4 class="fw-bold text-primary m-0" id="dayViewTitle">วันจันทร์ที่ 24 สิงหาคม 2026</h4>
-          <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm" onclick="openTimeSettings()">
-            <i class="fa-solid fa-clock me-2"></i> ตั้งค่าเวลา
+          <h5 class="fw-bold text-primary m-0" id="dayViewTitle">วันจันทร์ที่ 24 สิงหาคม 2026</h5>
+          <button class="btn btn-outline-secondary rounded-pill px-3 fw-bold shadow-sm" onclick="openTimeSettings()">
+            <i class="fa-solid fa-clock me-1"></i> ตั้งค่าเวลา
           </button>
         </div>
         
-        <div class="bg-white rounded-4 shadow-sm border flex-grow-1 custom-scrollbar w-100" style="overflow-y: auto; padding: 20px;">
+        <div class="bg-white rounded-4 shadow-sm border flex-grow-1 custom-scrollbar w-100" style="overflow-y: auto; padding: 15px;">
           <div id="timeSlotsContainer"></div>
         </div>
       </div>
     </div>
 
-    <div id="tab-tomorrow" class="w-100 flex-column custom-scrollbar pr-2" style="display: none; height: 100%; overflow-y: auto;">
-      <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 w-100">
-        <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-list-check me-2"></i> รายชื่อคนไข้ที่มีนัดหมายในวันพรุ่งนี้</h5>
+    <!-- 📋 หน้ารายการนัดหมายวันพรุ่งนี้ -->
+    <div id="tab-tomorrow" class="w-100 flex-column custom-scrollbar pb-4" style="display: none; height: 100%; overflow-y: auto; overflow-x: hidden;">
+      <div class="bg-white p-4 rounded-4 shadow-sm border w-100">
+        <h5 class="fw-bold text-primary mb-2"><i class="fa-solid fa-list-check me-2"></i> รายชื่อคนไข้ที่มีนัดหมายในวันพรุ่งนี้</h5>
         <div class="text-muted small mb-4">แสดงคิวนัดหมายของคนไข้ที่จะเข้ามาติดตามผลหรือใช้บริการในวันพรุ่งนี้</div>
         <div id="tomorrowAppointmentsList" class="row g-3">
           <div class="col-12 text-center py-5 text-muted">
@@ -146,6 +164,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -202,9 +221,6 @@
 </div>
 
 <script>
-  // 🌟 เปิดต่อ Database จริง 100%
-
-
   function switchBookingTab(tab) {
     document.querySelectorAll('.booking-nav .nav-link').forEach(btn => btn.classList.remove('active'));
     document.getElementById('tabbtn-' + tab).classList.add('active');
@@ -232,7 +248,6 @@
 
   async function loadClinicSettings() {
     try {
-      // เพิ่ม ?t=... เพื่อป้องกันการจำแคชของ Browser
       const res = await fetch('/api/settings?t=' + new Date().getTime());
       if (res.ok) {
         const data = await res.json();
@@ -241,7 +256,7 @@
           if (data.data.close_time) clinicCloseTime = data.data.close_time;
         }
       }
-    } catch (e) { console.warn("API Settings ออฟไลน์"); }
+    } catch (e) {}
   }
 
   async function loadAppointmentsFromDB() {
@@ -259,12 +274,10 @@
             date: item.date,
             time: item.time,
             courseName: item.note || 'นัดหมาย',
-            status: item.status // 🌟 เพิ่มบรรทัดนี้เข้ามา เพื่อเก็บค่าสถานะ
+            status: item.status
         }));
       }
-    } catch (e) {
-      console.warn("ไม่สามารถดึงข้อมูลจาก Database ได้");
-    }
+    } catch (e) {}
   }
 
   var monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -371,10 +384,9 @@
     let startMins = (startH * 60) + startM;
     let endMins = (endH * 60) + endM;
 
-    // 🌟 1. ดึงเวลาปัจจุบันเพื่อเช็ค
     let now = new Date();
     let todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    let isTodayView = (currentBookingDateStr === todayStr); // เช็คว่ากำลังดูของ "วันนี้" อยู่หรือไม่
+    let isTodayView = (currentBookingDateStr === todayStr); 
     let currentTotalMins = (now.getHours() * 60) + now.getMinutes();
 
     let html = '';
@@ -384,7 +396,6 @@
       let min = (m % 60).toString().padStart(2, '0');
       let timeStr = `${h}:${min}`;
 
-      // 🌟 2. คำนวณว่าช่วงเวลา 30 นาทีนี้ ตรงกับเวลาปัจจุบันหรือไม่
       let isCurrentSlot = (isTodayView && currentTotalMins >= m && currentTotalMins < m + 30);
       let currentSlotClass = isCurrentSlot ? ' current-time-slot' : '';
       let timeLabelHtml = isCurrentSlot ? `${timeStr}<br><span class="now-indicator mt-1">Live</span>` : timeStr;
@@ -575,7 +586,6 @@
     grid.innerHTML = html;
   }
 
- // 🌟 บันทึกลงฐานข้อมูลเซิร์ฟเวอร์จริง (พร้อมเก็บ Log)
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
@@ -612,7 +622,6 @@
 
             if (!res.ok) throw new Error("API บันทึกล้มเหลว");
 
-            // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
             fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ลงนัดหมายให้ ${currentBookingPatientName} (${courseName}) วันที่ ${currentBookingDateStr} เวลา ${currentBookingTime} น.` }) });
 
@@ -631,7 +640,6 @@
     });
   }
 
-  // 🌟 ยกเลิกนัดหมาย (พร้อมเก็บ Log)
   function cancelAppointment(appId) {
     Swal.fire({
       title: 'ยกเลิกนัดหมายนี้?',
@@ -648,7 +656,6 @@
             const res = await fetch(`/api/appointments/${appId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error("ลบจาก Database ไม่สำเร็จ");
 
-            // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
             fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ยกเลิกและลบคิวนัดหมาย (รหัสคิว #${appId})` }) });
 
@@ -692,7 +699,6 @@
 
     let html = '';
     tomorrowList.sort((a,b) => a.time.localeCompare(b.time)).forEach(app => {
-      // 🌟 เช็คว่าคอนเฟิร์มหรือยัง
       let isConfirmed = app.status === 'CONFIRMED';
       let statusBadge = isConfirmed
         ? `<span class="badge bg-success shadow-sm"><i class="fa-solid fa-phone-volume me-1"></i> โทรแล้ว</span>`
@@ -752,9 +758,6 @@
     }
   }
 
-  initCalendar();
-  
-  // 🌟 ฟังก์ชันสำหรับกดปุ่ม "โทรคอนเฟิร์มแล้ว" (พร้อมเก็บประวัติ Log)
   function markAsContacted(appId, patientName) {
     Swal.fire({
       title: 'โทรคอนเฟิร์มแล้วใช่ไหม?',
@@ -772,11 +775,9 @@
           const res = await fetch(`/api/appointments/${appId}/confirm`, { method: 'PUT' });
           if (!res.ok) throw new Error("อัปเดตไม่สำเร็จ");
 
-          // 🌟 ส่งประวัติเข้า System Logs
           let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
           fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `โทรคอนเฟิร์มนัดหมายของคนไข้: ${patientName} (คิว #${appId})` }) });
 
-          // โหลดข้อมูลใหม่และวาดหน้าจอใหม่ทันที
           await loadAppointmentsFromDB();
           renderTomorrowAppointments();
           
@@ -788,4 +789,3 @@
     });
   }
 </script>
-
