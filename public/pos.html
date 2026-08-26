@@ -651,10 +651,11 @@
       });
     });
 
-    // 🌟 3. รวมยอดเงินที่ชำระในเวลาเดียวกัน (วินาทีเดียวกัน) ให้เป็นก้อนเดียว
+    // 🌟 3. รวมยอดเงินที่ชำระในเวลาเดียวกัน (ระดับนาที) ให้เป็นก้อนเดียว
     let groupedPayments = {};
     allPayments.forEach(p => {
-        let timeKey = p.date.substring(0, 19); 
+        // อัปเดต: เปลี่ยนเป็น 16 เพื่อตัดเศษวินาทีทิ้ง ให้มันจับกลุ่มรวมกันได้แม่นยำขึ้น
+        let timeKey = p.date.substring(0, 16); 
         let key = p.courseName + '_' + timeKey + '_' + p.method; 
         if (!groupedPayments[key]) {
             groupedPayments[key] = { date: p.date, courseName: p.courseName, method: p.method, amount: 0 };
