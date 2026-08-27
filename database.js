@@ -83,7 +83,7 @@ db.serialize(() => {
     payment_status TEXT DEFAULT 'WAITING'
   )`);
 
-  // 6. สินค้า, ยา และ คอร์ส (Products & Inventory) - เพิ่มข้อมูลเชิงลึก
+  // 6. สินค้า, ยา และ คอร์ส (Products & Inventory)
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
     clinic_id INTEGER,
@@ -91,6 +91,7 @@ db.serialize(() => {
     type TEXT,
     price REAL,
     stock INTEGER,
+    min_stock INTEGER DEFAULT 5, /* 🌟 เพิ่มบรรทัดนี้ */
     unit TEXT,
     lot_number TEXT DEFAULT '-',
     expiry_date TEXT,

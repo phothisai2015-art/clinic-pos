@@ -471,9 +471,9 @@ app.get('/api/inventory', async (req, res) => {
 
 app.post('/api/inventory', async (req, res) => {
   try {
-    const { id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status } = req.body;
-    await dbRun(`INSERT INTO products (id, clinic_id, name, type, price, stock, unit, lot_number, expiry_date, bundle_items, status) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'ACTIVE')) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items, status=excluded.status`, 
-      [id, name, type, price, stock, unit, lot_number || '-', expiry_date || '', bundle_items || '[]', status || 'ACTIVE']);
+    const { id, name, type, price, stock, min_stock, unit, lot_number, expiry_date, bundle_items, status } = req.body;
+    await dbRun(`INSERT INTO products (id, clinic_id, name, type, price, stock, min_stock, unit, lot_number, expiry_date, bundle_items, status) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'ACTIVE')) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, price=excluded.price, stock=excluded.stock, min_stock=excluded.min_stock, unit=excluded.unit, lot_number=excluded.lot_number, expiry_date=excluded.expiry_date, bundle_items=excluded.bundle_items, status=excluded.status`, 
+      [id, name, type, price, stock, min_stock || 5, unit, lot_number || '-', expiry_date || '', bundle_items || '[]', status || 'ACTIVE']);
     res.json({ status: 'success' });
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
