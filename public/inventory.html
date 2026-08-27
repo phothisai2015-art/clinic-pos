@@ -725,7 +725,6 @@
   function openShoppingListModal() {
     const modalEl = document.getElementById('shoppingListModal');
     
-    // 🌟 ดึง Modal ออกมาไว้ด้านนอกสุด เพื่อไม่ให้พื้นหลังสีเทาทับ
     if (modalEl.parentNode !== document.body) {
       document.body.appendChild(modalEl);
     }
@@ -733,8 +732,10 @@
     const tbody = document.getElementById('shoppingListBody');
     tbody.innerHTML = '';
 
+    // 🌟 แก้ไข: เพิ่ม i.type !== 'COURSE' เพื่อไม่ให้ดึงกลุ่มคอร์สมาโชว์
     let lowStockItems = inventoryData.filter(i => 
       i.type !== 'PROMOTION' && 
+      i.type !== 'COURSE' && 
       (i.status === 'ACTIVE' || !i.status) && 
       (parseFloat(i.stock) <= (i.min_stock || 5))
     );
@@ -879,14 +880,24 @@
   let stockInput = document.getElementById('pd_stock');
   let minStockInput = document.getElementById('pd_min_stock');
 
+  // ดึงกล่อง div (.col-6) ที่ครอบ input กับ label เอาไว้
+  let stockCol = stockInput.closest('.col-6');
+  let minStockCol = minStockInput.closest('.col-6');
+
   if (type === 'COURSE') {
-    // คอร์สไม่ต้องมีสต็อก บังคับค่าเป็น 0 และล็อคไม่ให้พิมพ์
+    // 1. ซ่อนกล่อง "สต็อกปัจจุบัน" และ "จุดเตือนสต็อกต่ำ" ออกจากหน้าจอ
+    if(stockCol) stockCol.style.display = 'none';
+    if(minStockCol) minStockCol.style.display = 'none';
+    
+    // 2. บังคับค่าเป็น 0 เผื่อระบบส่งไปบันทึก
     stockInput.value = 0;
-    stockInput.readOnly = true;
     minStockInput.value = 0;
-    minStockInput.readOnly = true;
   } else {
-    // สินค้าอื่นปลดล็อคให้กรอกได้ตามปกติ
+    // 1. เอากล่องกลับมาแสดงตามปกติ เมื่อเลือกหมวดหมู่อื่น
+    if(stockCol) stockCol.style.display = 'block';
+    if(minStockCol) minStockCol.style.display = 'block';
+    
+    // 2. ปลดล็อคให้พิมพ์ได้ปกติ (เคลียร์ค่าเก่า)
     stockInput.readOnly = false;
     minStockInput.readOnly = false;
   }
