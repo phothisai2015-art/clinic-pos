@@ -626,6 +626,7 @@
       type: document.getElementById('pd_type').value,
       price: parseFloat(document.getElementById('pd_price').value), 
       stock: parseFloat(document.getElementById('pd_stock').value), 
+      min_stock: parseFloat(document.getElementById('pd_min_stock').value) || 5, /* 🌟 เพิ่มบรรทัดนี้ */
       unit: document.getElementById('pd_unit').value,
       lot_number: document.getElementById('pd_lot').value, 
       expiry_date: document.getElementById('pd_expiry').value, 
@@ -660,6 +661,7 @@
       document.getElementById('pd_type').value = item.type;
       document.getElementById('pd_price').value = item.price; 
       document.getElementById('pd_stock').value = item.stock; 
+	  document.getElementById('pd_min_stock').value = item.min_stock || 5; /* 🌟 เพิ่มบรรทัดนี้ */
       document.getElementById('pd_unit').value = item.unit;
       document.getElementById('pd_lot').value = item.lot_number || ''; 
       document.getElementById('pd_expiry').value = item.expiry_date || '';
