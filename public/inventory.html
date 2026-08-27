@@ -232,7 +232,8 @@
   <div class="row g-4 flex-grow-1" style="min-height: 0;">
     
     <!-- 📦 ฝั่งซ้าย: ฟอร์มเพิ่ม/แก้ไขสินค้า -->
-    <div class="col-lg-4 col-md-5 h-100">
+    <!-- 📦 ฝั่งซ้าย: ฟอร์มเพิ่ม/แก้ไขสินค้า -->
+<div class="col-lg-4 col-md-5 h-100" id="invLeftPanel">
       <div class="modern-card p-4 h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
         <h5 class="fw-bold m-0 mb-4 text-primary d-flex align-items-center" id="form-title">
           <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>
@@ -319,7 +320,8 @@
     </div>
 
     <!-- 📊 ฝั่งขวา: ตารางแสดงคลังสินค้า -->
-    <div class="col-lg-8 col-md-7 h-100">
+    <!-- 📊 ฝั่งขวา: ตารางแสดงคลังสินค้า -->
+<div class="col-lg-8 col-md-7 h-100" id="invRightPanel">
       <div class="modern-card p-0 h-100 d-flex flex-column">
         
         <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
@@ -452,6 +454,10 @@
     clearProductForm();
     document.getElementById('productForm').classList.remove('promo-mode');
 
+    // 🌟 ดึง Element ของกล่องซ้ายและขวา
+    let leftPanel = document.getElementById('invLeftPanel');
+    let rightPanel = document.getElementById('invRightPanel');
+
     // 🌸 สลับการเปิด/ปิด สไตล์สีชมพูของแท็บโปรโมชั่น
     const formCard = document.getElementById('productForm');
     const tableList = document.getElementById('inventoryList');
@@ -464,38 +470,51 @@
     }
 
     const typeSelect = document.getElementById('pd_type');
-    if (tab === 'promo') {
-      typeSelect.value = 'PROMOTION';
-      document.getElementById('type_container').style.display = 'none'; 
-      document.getElementById('promo_fields').style.display = 'block';
-      document.getElementById('normal_fields').style.display = 'none';
-      document.getElementById('pd_unit').value = 'เซ็ต';
-      document.getElementById('pd_stock').value = 0;
-      
-      document.getElementById('form-title').className = 'fw-bold m-0 mb-4 text-pink d-flex align-items-center';
-      document.getElementById('form-title').innerHTML = '<div class="bg-pink-light text-pink rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
-      document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-pink"></i> รายการโปรโมชั่นจัดเซ็ต';
-      document.getElementById('btn_save_product').className = 'btn btn-pink rounded-pill fw-bold shadow-sm w-50 py-2';
-
-      let sel = document.getElementById('promo_product_select'); 
-      sel.innerHTML = '<option value="">-- เลือกหัตถการ / ของแถม --</option>';
-      inventoryData.filter(i => i.type !== 'PROMOTION' && (i.status === 'ACTIVE' || !i.status)).forEach(i => { 
-        sel.innerHTML += `<option value="${i.id}" data-name="${i.name}">${i.name}</option>`; 
-      });
-
-    } else if (tab === 'archived') {
+    
+    if (tab === 'archived') {
       document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-folder-closed me-2 text-danger"></i> รายการที่ระงับ / ยกเลิกขายแล้ว';
-    } else {
-      typeSelect.value = 'MEDICINE';
-      document.getElementById('type_container').style.display = 'block';
-      document.getElementById('promo_fields').style.display = 'none';
-      document.getElementById('normal_fields').style.display = 'block';
       
-      document.getElementById('btn_save_product').className = 'btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2';
-      document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-boxes-stacked me-2 text-warning"></i> รายการสินค้าทั่วไป';
-      document.getElementById('form-title').innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
+      // 🌟 ซ่อนกล่องซ้าย(ฟอร์ม) และขยายกล่องขวา(ตาราง) ให้เต็มจอ
+      if(leftPanel) leftPanel.style.display = 'none';
+      if(rightPanel) rightPanel.className = 'col-12 h-100';
+
+    } else {
+      // 🌟 เอากล่องซ้ายกลับมาโชว์ และหดกล่องขวากลับไปขนาดเดิม
+      if(leftPanel) leftPanel.style.display = 'block';
+      if(rightPanel) rightPanel.className = 'col-lg-8 col-md-7 h-100';
+
+      if (tab === 'promo') {
+        typeSelect.value = 'PROMOTION';
+        document.getElementById('type_container').style.display = 'none'; 
+        document.getElementById('promo_fields').style.display = 'block';
+        document.getElementById('normal_fields').style.display = 'none';
+        document.getElementById('pd_unit').value = 'เซ็ต';
+        document.getElementById('pd_stock').value = 0;
+        
+        document.getElementById('form-title').className = 'fw-bold m-0 mb-4 text-pink d-flex align-items-center';
+        document.getElementById('form-title').innerHTML = '<div class="bg-pink-light text-pink rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-gift"></i></div>สร้างโปรโมชั่นใหม่';
+        document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-gifts me-2 text-pink"></i> รายการโปรโมชั่นจัดเซ็ต';
+        document.getElementById('btn_save_product').className = 'btn btn-pink rounded-pill fw-bold shadow-sm w-50 py-2';
+
+        let sel = document.getElementById('promo_product_select'); 
+        sel.innerHTML = '<option value="">-- เลือกหัตถการ / ของแถม --</option>';
+        inventoryData.filter(i => i.type !== 'PROMOTION' && (i.status === 'ACTIVE' || !i.status)).forEach(i => { 
+          sel.innerHTML += `<option value="${i.id}" data-name="${i.name}">${i.name}</option>`; 
+        });
+
+      } else {
+        typeSelect.value = 'MEDICINE';
+        document.getElementById('type_container').style.display = 'block';
+        document.getElementById('promo_fields').style.display = 'none';
+        document.getElementById('normal_fields').style.display = 'block';
+        
+        document.getElementById('btn_save_product').className = 'btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2';
+        document.getElementById('table-title').innerHTML = '<i class="fa-solid fa-boxes-stacked me-2 text-warning"></i> รายการสินค้าทั่วไป';
+        document.getElementById('form-title').innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
+      }
     }
     
+    handleTypeChange();
     renderInventoryList();
   }
 
