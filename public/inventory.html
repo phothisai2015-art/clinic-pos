@@ -751,9 +751,9 @@
       });
     }
 
-    let modal = new bootstrap.Modal(modalEl);
+    let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.show();
-  }
+}
 
   function closeShoppingListModal() {
     let modalEl = document.getElementById('shoppingListModal');
@@ -767,9 +767,9 @@
     document.getElementById('bulkScanInput').value = '';
     renderBulkTable();
     let modalEl = document.getElementById('bulkModal');
-    let modal = new bootstrap.Modal(modalEl);
+    let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.show();
-  }
+}
 
   function closeBulkModal() {
     let modalEl = document.getElementById('bulkModal');
