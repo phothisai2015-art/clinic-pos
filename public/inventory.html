@@ -252,7 +252,7 @@
           </div>
           <div class="mb-4" id="type_container">
             <label class="form-label fw-bold small text-muted">หมวดหมู่</label>
-            <select id="pd_type" class="form-select">
+            <select id="pd_type" class="form-select" onchange="handleTypeChange()">
               <option value="MEDICINE">ยาและเวชภัณฑ์</option>
               <option value="INJECTABLE">กลุ่มฉีด (Botox, Filler, Meso)</option>
               <option value="COURSE">คอร์ส / หัตถการเลเซอร์</option>
@@ -534,15 +534,15 @@
       let minThreshold = item.min_stock || 5;
       let stockDisplay = '<span class="text-muted">-</span>';
       
-      if (item.type !== 'PROMOTION') {
+      if (item.type === 'COURSE') {
+         // คอร์ส/เลเซอร์ ไม่มีการตัดสต็อก
+         stockDisplay = `<span class="badge bg-light text-dark border shadow-sm">ไม่มีการตัดสต็อก</span>`;
+      } else if (item.type !== 'PROMOTION') {
         if (item.stock <= 0) {
-          // กรณีสินค้าหมด: โชว์เลข 0 เป็นสีแดง พร้อมติดป้ายแดง
           stockDisplay = `<span class="fw-bold text-danger fs-6">${item.stock}</span> <span class="text-muted small">${item.unit}</span><br><span class="badge bg-danger mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa-solid fa-triangle-exclamation me-1"></i> สินค้าหมด</span>`;
-        } else if (item.stock <= minThreshold && item.type !== 'COURSE') {
-          // กรณีสต็อกต่ำ: โชว์ตัวเลขสีส้ม พร้อมติดป้ายเหลือง
+        } else if (item.stock <= minThreshold) {
           stockDisplay = `<span class="fw-bold text-warning fs-6" style="color: #d97706 !important;">${item.stock}</span> <span class="text-muted small">${item.unit}</span><br><span class="badge bg-warning text-dark mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa-solid fa-bell me-1"></i> สต็อกต่ำ</span>`;
         } else {
-          // กรณีสต็อกปกติ: โชว์ตัวเลขสีดำตามปกติ
           stockDisplay = `<span class="fw-bold text-dark fs-6">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`;
         }
       }
@@ -659,6 +659,7 @@
       document.getElementById('pd_id').value = item.id; 
       document.getElementById('pd_name').value = item.name; 
       document.getElementById('pd_type').value = item.type;
+	  
       document.getElementById('pd_price').value = item.price; 
       document.getElementById('pd_stock').value = item.stock; 
 	  document.getElementById('pd_min_stock').value = item.min_stock || 5; /* 🌟 เพิ่มบรรทัดนี้ */
@@ -666,6 +667,8 @@
       document.getElementById('pd_lot').value = item.lot_number || ''; 
       document.getElementById('pd_expiry').value = item.expiry_date || '';
       document.getElementById('pd_status').value = item.status || 'ACTIVE';
+	  
+	  handleTypeChange();
       
       if (item.type === 'PROMOTION') {
         bundleItems = JSON.parse(item.bundle_items || '[]'); 
@@ -695,6 +698,7 @@
       titleEl.className = 'fw-bold m-0 mb-4 text-primary d-flex align-items-center';
       titleEl.innerHTML = '<div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>เพิ่มรายการใหม่';
     }
+	handleTypeChange();
   }
 
   async function toggleItemStatus(id, newStatus) {
@@ -838,4 +842,22 @@
       Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error');
     }
   }
+  
+  function handleTypeChange() {
+  let type = document.getElementById('pd_type').value;
+  let stockInput = document.getElementById('pd_stock');
+  let minStockInput = document.getElementById('pd_min_stock');
+
+  if (type === 'COURSE') {
+    // คอร์สไม่ต้องมีสต็อก บังคับค่าเป็น 0 และล็อคไม่ให้พิมพ์
+    stockInput.value = 0;
+    stockInput.readOnly = true;
+    minStockInput.value = 0;
+    minStockInput.readOnly = true;
+  } else {
+    // สินค้าอื่นปลดล็อคให้กรอกได้ตามปกติ
+    stockInput.readOnly = false;
+    minStockInput.readOnly = false;
+  }
+}
 </script>
