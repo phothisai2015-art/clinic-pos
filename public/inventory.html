@@ -751,14 +751,24 @@
       });
     }
 
-    let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    // 🌟 แก้ไข: ตรวจสอบก่อนว่ามี Modal อยู่แล้วหรือไม่
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
     modal.show();
-}
+  }
 
   function closeShoppingListModal() {
     let modalEl = document.getElementById('shoppingListModal');
     let modal = bootstrap.Modal.getInstance(modalEl);
     if(modal) modal.hide();
+    
+    // 🌟 เพิ่ม: บังคับลบพื้นหลังสีเทาที่ค้างอยู่ออกให้หมด
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
   }
 
   /* 📦 ฟังก์ชันสแกน/รับเข้าด่วน (Bulk Receive) */
@@ -767,14 +777,25 @@
     document.getElementById('bulkScanInput').value = '';
     renderBulkTable();
     let modalEl = document.getElementById('bulkModal');
-    let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    
+    // 🌟 แก้ไข: ตรวจสอบก่อนว่ามี Modal อยู่แล้วหรือไม่
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
     modal.show();
-}
+  }
 
   function closeBulkModal() {
     let modalEl = document.getElementById('bulkModal');
     let modal = bootstrap.Modal.getInstance(modalEl);
     if(modal) modal.hide();
+    
+    // 🌟 เพิ่ม: บังคับลบพื้นหลังสีเทาที่ค้างอยู่ออกให้หมด
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
   }
 
   function processBulkScan() {
