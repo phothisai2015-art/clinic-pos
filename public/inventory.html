@@ -533,13 +533,17 @@
       // 2. ดึงข้อมูลสต็อก
       let minThreshold = item.min_stock || 5;
       let stockDisplay = '<span class="text-muted">-</span>';
+      
       if (item.type !== 'PROMOTION') {
         if (item.stock <= 0) {
-          stockDisplay = `<span class="stock-out shadow-sm"><i class="fa-solid fa-triangle-exclamation me-1"></i>สินค้าหมด</span>`;
+          // กรณีสินค้าหมด: โชว์เลข 0 เป็นสีแดง พร้อมติดป้ายแดง
+          stockDisplay = `<span class="fw-bold text-danger fs-6">${item.stock}</span> <span class="text-muted small">${item.unit}</span><br><span class="badge bg-danger mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa-solid fa-triangle-exclamation me-1"></i> สินค้าหมด</span>`;
         } else if (item.stock <= minThreshold && item.type !== 'COURSE') {
-          stockDisplay = `<span class="stock-low shadow-sm"><i class="fa-solid fa-bell me-1"></i>เตือนสต็อกต่ำ (${item.stock} ${item.unit})</span>`;
+          // กรณีสต็อกต่ำ: โชว์ตัวเลขสีส้ม พร้อมติดป้ายเหลือง
+          stockDisplay = `<span class="fw-bold text-warning fs-6" style="color: #d97706 !important;">${item.stock}</span> <span class="text-muted small">${item.unit}</span><br><span class="badge bg-warning text-dark mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa-solid fa-bell me-1"></i> สต็อกต่ำ</span>`;
         } else {
-          stockDisplay = `<span class="fw-bold text-dark">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`;
+          // กรณีสต็อกปกติ: โชว์ตัวเลขสีดำตามปกติ
+          stockDisplay = `<span class="fw-bold text-dark fs-6">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`;
         }
       }
       
