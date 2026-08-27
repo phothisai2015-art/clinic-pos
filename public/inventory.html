@@ -334,10 +334,11 @@
           <table class="table inventory-table w-100 mb-0">
             <thead style="position: sticky; top: 0; z-index: 1;">
   <tr>
-    <th width="15%">รหัส</th>
-    <th width="25%">ชื่อรายการ</th>
+    <th width="10%">รหัส</th>
+    <th width="20%">ชื่อรายการ</th>
     <th width="15%">ประเภท</th>
-    <th width="15%">Lot</th>
+    <th width="10%">Lot</th>
+    <th width="15%">วันหมดอายุ</th>
     <th width="15%" class="text-center">คงเหลือ</th>
     <th width="15%" class="text-end pe-4">เลิกขาย</th>
   </tr>
@@ -521,6 +522,37 @@
     }
 
     filteredItems.forEach(item => {
+      // 1. ดึงข้อมูลป้ายกำกับ (Badge)
+      let typeBadge = '';
+      if(item.type === 'MEDICINE') typeBadge = '<span class="badge bg-secondary">ยา/เวชภัณฑ์</span>';
+      else if(item.type === 'INJECTABLE') typeBadge = '<span class="badge bg-danger">กลุ่มฉีด</span>';
+      else if(item.type === 'COURSE') typeBadge = '<span class="badge bg-info text-dark">คอร์สเลเซอร์</span>';
+      else if(item.type === 'PROMOTION') typeBadge = '<span class="badge bg-pink">โปรโมชั่น</span>';
+      else typeBadge = '<span class="badge bg-success">สกินแคร์</span>';
+
+      // 2. ดึงข้อมูลสต็อก
+      let minThreshold = item.min_stock || 5;
+      let stockDisplay = '<span class="text-muted">-</span>';
+      if (item.type !== 'PROMOTION') {
+        if (item.stock <= 0) {
+          stockDisplay = `<span class="stock-out shadow-sm"><i class="fa-solid fa-triangle-exclamation me-1"></i>สินค้าหมด</span>`;
+        } else if (item.stock <= minThreshold && item.type !== 'COURSE') {
+          stockDisplay = `<span class="stock-low shadow-sm"><i class="fa-solid fa-bell me-1"></i>เตือนสต็อกต่ำ (${item.stock} ${item.unit})</span>`;
+        } else {
+          stockDisplay = `<span class="fw-bold text-dark">${item.stock}</span> <span class="text-muted small">${item.unit}</span>`;
+        }
+      }
+      
+      // 3. ดึงข้อมูลวันหมดอายุ
+      let expiryInfo = '<span class="text-muted small">-</span>';
+      if(item.expiry_date && item.type !== 'PROMOTION') {
+        let expDate = new Date(item.expiry_date); 
+        let diffDays = Math.ceil(Math.abs(expDate - new Date()) / (1000 * 60 * 60 * 24)); 
+        let warnClass = (expDate > new Date() && diffDays <= 90) ? 'expiry-warn shadow-sm' : (expDate < new Date() ? 'text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded small border border-danger' : 'text-muted small');
+        expiryInfo = `<div class="${warnClass}"><i class="fa-regular fa-clock me-1"></i>${expDate < new Date() ? 'หมดอายุแล้ว!' : expDate.toLocaleDateString('th-TH')}</div>`;
+      }
+
+      // 4. ปุ่มจัดการ (เอา +/- ออก เหลือแค่เปิด/ปิดขาย)
       let actionBtns = '';
       if (currentInvTab === 'archived') {
         actionBtns = `
@@ -530,7 +562,6 @@
             </button>
           </div>`;
       } else {
-        // เอาปุ่ม +/- ออก เหลือแค่ปุ่มเลิกขาย
         actionBtns = `
           <div class="d-flex justify-content-end align-items-center flex-nowrap">
             <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 shadow-sm text-nowrap" title="ระงับการขาย" onclick="toggleItemStatus('${item.id}', 'INACTIVE')">
@@ -542,17 +573,16 @@
 
       let rowOpacity = currentInvTab === 'archived' ? 'opacity-75 bg-light' : '';
 
+      // 5. นำข้อมูลมาวาดลงตาราง
       list.innerHTML += `
         <tr class="${rowOpacity}">
           <td class="fw-bold text-muted small">${item.id}</td>
           <td>
-            <a href="#" class="fw-bold text-primary text-decoration-none fs-6" onclick="editProduct('${item.id}')">${item.name}</a><br>
-            <div class="d-flex align-items-center mt-1">
-               ${expiryInfo}
-            </div>
+            <a href="#" class="fw-bold text-primary text-decoration-none fs-6" onclick="editProduct('${item.id}')">${item.name}</a>
           </td>
           <td>${typeBadge}</td>
           <td class="text-muted small">${item.lot_number || '-'}</td>
+          <td>${expiryInfo}</td>
           <td class="text-center">${stockDisplay}</td>
           <td class="text-end pe-4">${actionBtns}</td>
         </tr>`;
