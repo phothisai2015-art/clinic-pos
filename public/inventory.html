@@ -721,9 +721,15 @@
 
   
 
-  /* 🛒 ฟังก์ชันเปิด Modal รายการต้องซื้อ (Low Stock List) */
+/* 🛒 ฟังก์ชันเปิด Modal รายการต้องซื้อ (Low Stock List) */
   function openShoppingListModal() {
     const modalEl = document.getElementById('shoppingListModal');
+    
+    // 🌟 ดึง Modal ออกมาไว้ด้านนอกสุด เพื่อไม่ให้พื้นหลังสีเทาทับ
+    if (modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+
     const tbody = document.getElementById('shoppingListBody');
     tbody.innerHTML = '';
 
@@ -751,7 +757,6 @@
       });
     }
 
-    // 🌟 แก้ไข: ตรวจสอบก่อนว่ามี Modal อยู่แล้วหรือไม่
     let modal = bootstrap.Modal.getInstance(modalEl);
     if (!modal) modal = new bootstrap.Modal(modalEl);
     modal.show();
@@ -776,9 +781,14 @@
     bulkItems = [];
     document.getElementById('bulkScanInput').value = '';
     renderBulkTable();
+    
     let modalEl = document.getElementById('bulkModal');
     
-    // 🌟 แก้ไข: ตรวจสอบก่อนว่ามี Modal อยู่แล้วหรือไม่
+    // 🌟 ดึง Modal ออกมาไว้ด้านนอกสุด เพื่อไม่ให้พื้นหลังสีเทาทับ
+    if (modalEl.parentNode !== document.body) {
+      document.body.appendChild(modalEl);
+    }
+    
     let modal = bootstrap.Modal.getInstance(modalEl);
     if (!modal) modal = new bootstrap.Modal(modalEl);
     modal.show();
