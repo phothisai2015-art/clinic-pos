@@ -1,5 +1,5 @@
 <style>
-  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด ป้องกันฟอนต์ระบบแทรก */
+  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
   /* 🌟 Reports Dashboard UI Styles */
@@ -7,7 +7,8 @@
   .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-color: #3b82f6; }
   .kpi-icon { position: absolute; right: -10px; bottom: -20px; font-size: 5rem; opacity: 0.05; color: #334155; transform: rotate(-15deg); }
   
-  .chart-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
+  /* บังคับความสูงกล่องให้เท่ากัน (350px) */
+  .chart-container, .top-sellers-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
   .table-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); height: 100%; }
   
   .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; }
@@ -27,16 +28,18 @@
       font-family: 'Sarabun', sans-serif;
   }
 
-  /* 🌟 Modern Top Sellers List */
+  /* 🌟 Modern Top Sellers List (สีพื้น ดูสะอาดตา) */
   .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #e2e8f0; transition: all 0.2s; border-radius: 12px; }
   .top-seller-item:last-child { border-bottom: none; }
   .top-seller-item:hover { background-color: #f8fafc; transform: translateX(4px); }
   
-  .rank-badge { width: 38px; height: 38px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.1rem; margin-right: 15px; flex-shrink: 0; }
-  .rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
-  .rank-2 { background: linear-gradient(135deg, #64748b, #94a3b8); color: #fff; box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3); }
-  .rank-3 { background: linear-gradient(135deg, #d97706, #fcd34d); color: #fff; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3); }
-  .rank-other { background: #f1f5f9; color: #64748b; }
+  .rank-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1rem; margin-right: 15px; flex-shrink: 0; }
+  .rank-1 { background-color: #f59e0b; color: #fff; } /* สีทอง */
+  .rank-2 { background-color: #94a3b8; color: #fff; } /* สีเงิน */
+  .rank-3 { background-color: #d97706; color: #fff; } /* สีทองแดง */
+  .rank-other { background-color: #f1f5f9; color: #64748b; }
+
+  .text-pink { color: #ec4899 !important; }
 
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -48,10 +51,12 @@
   body.dark-theme .report-kpi-card, 
   body.dark-theme .chart-container, 
   body.dark-theme .table-container,
+  body.dark-theme .top-sellers-box,
   body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
+  body.dark-theme .text-pink { color: #f472b6 !important; }
   
   body.dark-theme .table { --bs-table-bg: transparent; --bs-table-color: #f8fafc; color: #f8fafc !important; }
   body.dark-theme .table td { border-bottom-color: #334155 !important; background-color: transparent !important; }
@@ -138,11 +143,11 @@
         </div>
       </div>
       
-      <!-- Top Sellers โฉมใหม่ -->
+      <!-- Top Sellers โฉมใหม่ (ปรับให้กล่องสูงเท่ากราฟเป๊ะ) -->
       <div class="col-lg-5 col-xl-4">
-        <div class="table-container d-flex flex-column">
+        <div class="top-sellers-box d-flex flex-column">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
-          <div class="custom-scrollbar flex-grow-1" id="topSellersContainer" style="overflow-y: auto;">
+          <div class="custom-scrollbar flex-grow-1 d-flex flex-column justify-content-between" id="topSellersContainer" style="overflow-y: auto;">
             <div class="text-center text-muted py-4">ไม่มีข้อมูล</div>
           </div>
         </div>
@@ -192,14 +197,11 @@
   let revenueChartInstance = null;
 
   function initReports() {
-    // กำหนดให้เลือก "สัปดาห์นี้" ทันทีที่เปิดหน้า
     setDateFilter('week');
   }
 
   function setDateFilter(type) {
-    // ล้างสถานะปุ่มเดิมทั้งหมด
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    // กำหนดให้ปุ่มที่ถูกคลิกสว่างขึ้น
     const activeBtn = document.getElementById('btn-' + type);
     if (activeBtn) activeBtn.classList.add('active');
 
@@ -324,12 +326,12 @@
         else if (item.type === 'INJECTABLE') { typeIcon = 'fa-syringe'; typeColor = 'text-danger'; }
 
         html += `
-        <div class="top-seller-item">
+        <div class="top-seller-item" style="flex: 1;">
             <div class="rank-badge ${rankClass}">${index + 1}</div>
             <div class="flex-grow-1 overflow-hidden pe-2">
                 <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">${item.name}</div>
                 <div class="text-muted small mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
-                    <i class="fa-solid ${typeIcon} ${typeColor} opacity-75"></i> ${item.type}
+                    <i class="fa-solid ${typeIcon} ${typeColor}"></i> <span class="${typeColor}">${item.type}</span>
                 </div>
             </div>
             <div class="text-end flex-shrink-0">
@@ -382,7 +384,14 @@
     tbody.innerHTML = html;
   }
 
-  // เรียกใช้ฟังก์ชันทันทีที่เปิดหน้า
-  initReports();
-  
+  setTimeout(() => {
+    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
+    if(weekBtn) {
+        setDateFilter('week');
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        weekBtn.classList.add('active');
+    } else {
+        initReports();
+    }
+  }, 100);
 </script>
