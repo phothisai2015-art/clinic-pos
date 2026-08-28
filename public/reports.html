@@ -196,10 +196,6 @@
 <script>
   let revenueChartInstance = null;
 
-  function initReports() {
-    setDateFilter('week');
-  }
-
   function setDateFilter(type) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     const activeBtn = document.getElementById('btn-' + type);
@@ -384,14 +380,10 @@
     tbody.innerHTML = html;
   }
 
-  setTimeout(() => {
-    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
-    if(weekBtn) {
-        setDateFilter('week');
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        weekBtn.classList.add('active');
-    } else {
-        initReports();
-    }
-  }, 100);
+  function initReports() {
+    setDateFilter('week');
+  }
+
+  // 🌟 เรียกใช้ฟังก์ชันทันที
+  initReports();
 </script>
