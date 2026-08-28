@@ -9,18 +9,72 @@
   
   .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
   
+  .table-header-sticky { position: sticky; top: 0; background-color: #fff; z-index: 1; }
+
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-  /* 🌙 Dark Mode */
-  body.dark-theme .report-kpi-card, body.dark-theme .chart-container, body.dark-theme .table-container { background-color: #1e293b; border-color: #334155; }
+  /* ========================================================= */
+  /* 🌙 Dark Mode Fixes สำหรับหน้า Reports */
+  /* ========================================================= */
+  body.dark-theme .report-kpi-card, 
+  body.dark-theme .chart-container, 
+  body.dark-theme .table-container,
+  body.dark-theme .bg-white { 
+      background-color: #1e293b !important; 
+      border-color: #334155 !important; 
+  }
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
-  body.dark-theme .table { color: #f8fafc; }
-  body.dark-theme .table td { border-bottom-color: #334155; }
-  body.dark-theme .table thead th { border-bottom-color: #475569; background-color: #0f172a; color: #cbd5e1; }
+  
+  /* จัดการสีตารางในโหมดมืด */
+  body.dark-theme .table { 
+      --bs-table-bg: transparent; 
+      --bs-table-color: #f8fafc;
+      color: #f8fafc !important; 
+  }
+  body.dark-theme .table td { 
+      border-bottom-color: #334155 !important; 
+      background-color: transparent !important;
+  }
+  body.dark-theme .table-header-sticky {
+      background-color: #1e293b !important; 
+      border-bottom-color: #475569 !important; 
+  }
+  body.dark-theme .table thead th { 
+      border-bottom-color: #475569 !important; 
+      color: #cbd5e1 !important; 
+  }
+  body.dark-theme .table tbody tr:hover td {
+      background-color: #334155 !important;
+  }
+  
+  /* จัดการช่องเลือกวันที่ในโหมดมืด */
+  body.dark-theme input[type="date"].form-control {
+      background-color: #0f172a !important;
+      color: #60a5fa !important;
+      border-color: #475569 !important;
+  }
+  body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+  }
+  
+  /* สีปุ่ม Filter */
+  body.dark-theme .btn-outline-secondary {
+      color: #cbd5e1;
+      border-color: #475569;
+  }
+  body.dark-theme .btn-outline-secondary:hover {
+      background-color: #334155;
+      color: #f8fafc;
+  }
+  body.dark-theme .filter-btn.active {
+      background-color: #3b82f6 !important;
+      color: white !important;
+      border-color: #3b82f6 !important;
+  }
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
@@ -113,7 +167,7 @@
           <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
           <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
             <table class="table table-hover align-middle mb-0">
-              <thead class="sticky-top bg-white">
+              <thead class="table-header-sticky">
                 <tr><th>คนไข้</th><th>รายการ</th><th class="text-end">ยอดค้าง</th></tr>
               </thead>
               <tbody id="unpaidTable">
@@ -130,7 +184,7 @@
           <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
           <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
             <table class="table table-hover align-middle mb-0">
-              <thead class="sticky-top bg-white">
+              <thead class="table-header-sticky">
                 <tr><th>เวลา</th><th>คนไข้</th><th>ช่องทาง</th><th class="text-end">จำนวนเงิน</th></tr>
               </thead>
               <tbody id="logsTable">
@@ -256,10 +310,9 @@
 
   function renderTopSellers(items) {
     const tbody = document.getElementById('topSellersTable');
-    if(items.length === 0) { tbody.innerHTML = '<tr><td class="text-center text-muted">ไม่มีข้อมูล</td></tr>'; return; }
+    if(items.length === 0) { tbody.innerHTML = '<tr><td class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>'; return; }
     
     let html = '';
-    // เอาแค่ Top 5
     items.slice(0, 5).forEach((item, index) => {
         let badgeColor = index === 0 ? 'bg-warning text-dark' : (index === 1 ? 'bg-secondary' : 'bg-primary');
         html += `
