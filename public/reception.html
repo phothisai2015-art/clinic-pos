@@ -1249,9 +1249,9 @@
         name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
     }));
 	
-	// 🌟 ดึงค่าเหตุผลการนัดหมายมาใช้ ถ้าไม่ได้กรอกให้ตั้งค่าเป็น "ติดตามผลการรักษา: [ชื่อคอร์ส]"
+	// 🌟 นำชื่อคอร์สมาตั้งต้น แล้วตามด้วยหมายเหตุที่พิมพ์ (ถ้ามี)
     let customReason = document.getElementById('emr_appt_reason').value.trim();
-    let finalNote = customReason ? customReason : `ติดตามผลการรักษา: ${cleanCourseName}`;
+    let finalNote = customReason ? `${cleanCourseName} (${customReason})` : `ติดตามผล: ${cleanCourseName}`;
 
     let emrPayload = {
       patient_id: currentHN,
