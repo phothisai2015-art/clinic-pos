@@ -1,4 +1,7 @@
 <style>
+  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด ป้องกันฟอนต์ระบบแทรก */
+  * { font-family: 'Sarabun', sans-serif; }
+  
   /* 🌟 Reports Dashboard UI Styles */
   .report-kpi-card { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; padding: 20px; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
   .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-color: #3b82f6; }
@@ -9,7 +12,22 @@
   
   .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
   
+  /* ปรับแต่งตารางให้ดู Modern ขึ้น */
+  .table { font-size: 0.95rem; }
   .table-header-sticky { position: sticky; top: 0; background-color: #fff; z-index: 1; }
+  .table-header-sticky th { font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.3px; }
+
+  /* ช่องเลือกวันที่ */
+  input[type="date"].date-input-modern { 
+      border: none !important; 
+      background: transparent !important; 
+      font-weight: 700; 
+      color: #3b82f6; 
+      cursor: pointer; 
+      outline: none; 
+      box-shadow: none !important; 
+      font-family: 'Sarabun', sans-serif;
+  }
 
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -86,47 +104,45 @@
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
-    <!-- ตัวกรองวันที่ -->
     <div class="bg-white p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
       <div class="d-flex align-items-center gap-2">
         <h6 class="fw-bold m-0 text-muted me-2"><i class="fa-solid fa-filter"></i> ช่วงเวลา:</h6>
-        <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold" style="width: 140px;">
-        <span class="text-muted">-</span>
-        <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold" style="width: 140px;">
-        <button class="btn btn-sm btn-primary fw-bold px-3 ms-2" onclick="loadDashboardData()">ดูรายงาน</button>
+        <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
+        <span class="text-muted fw-bold">-</span>
+        <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
+        <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData()">ดูรายงาน</button>
       </div>
       <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3" onclick="setDateFilter('today')">วันนี้</button>
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3" onclick="setDateFilter('week')">สัปดาห์นี้</button>
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3" onclick="setDateFilter('month')">เดือนนี้</button>
+        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
+        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
+        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
       </div>
     </div>
 
-    <!-- KPI Cards -->
     <div class="row g-4 mb-4">
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-primary">
+        <div class="report-kpi-card border-primary shadow-sm">
           <i class="fa-solid fa-vault kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">รายได้รวมทั้งหมด</h6>
           <h3 class="text-primary fw-bold m-0" id="kpi_total">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-success">
+        <div class="report-kpi-card border-success shadow-sm">
           <i class="fa-solid fa-money-bill-wave kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">เงินสด (CASH)</h6>
           <h3 class="text-success fw-bold m-0" id="kpi_cash">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-info">
+        <div class="report-kpi-card border-info shadow-sm">
           <i class="fa-solid fa-qrcode kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">โอนเงิน (QR)</h6>
           <h3 class="text-info fw-bold m-0" id="kpi_qr">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-warning">
+        <div class="report-kpi-card border-warning shadow-sm">
           <i class="fa-solid fa-credit-card kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">บัตรเครดิต (CREDIT)</h6>
           <h3 class="text-warning text-dark fw-bold m-0" id="kpi_credit">฿ 0</h3>
@@ -135,7 +151,6 @@
     </div>
 
     <div class="row g-4 mb-4">
-      <!-- กราฟรายได้ -->
       <div class="col-lg-8">
         <div class="chart-container d-flex flex-column">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
@@ -145,7 +160,6 @@
         </div>
       </div>
       
-      <!-- Top Sellers -->
       <div class="col-lg-4">
         <div class="table-container d-flex flex-column">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
@@ -161,7 +175,6 @@
     </div>
 
     <div class="row g-4 mb-4">
-      <!-- Unpaid -->
       <div class="col-lg-6">
         <div class="table-container d-flex flex-column" style="max-height: 400px;">
           <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
@@ -178,7 +191,6 @@
         </div>
       </div>
 
-      <!-- บิลล่าสุด -->
       <div class="col-lg-6">
         <div class="table-container d-flex flex-column" style="max-height: 400px;">
           <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
@@ -203,7 +215,8 @@
   let revenueChartInstance = null;
 
   function initReports() {
-    setDateFilter('month');
+    // 🌟 เปลี่ยนค่าเริ่มต้นให้โหลดเป็น "สัปดาห์นี้" ทันทีที่เปิดหน้าต่างขึ้นมา
+    setDateFilter('week');
   }
 
   function setDateFilter(type) {
@@ -279,6 +292,8 @@
     const gridColor = isDark ? '#334155' : '#f1f5f9';
     const textColor = isDark ? '#94a3b8' : '#64748b';
 
+    Chart.defaults.font.family = "'Sarabun', sans-serif"; // 🌟 บังคับฟอนต์กราฟ
+
     revenueChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -299,10 +314,26 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            titleFont: { family: "'Sarabun', sans-serif", size: 14 },
+            bodyFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }
+          }
+        },
         scales: {
-          x: { grid: { display: false, color: gridColor }, ticks: { color: textColor } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor, callback: (v) => '฿' + v.toLocaleString() } }
+          x: { 
+            grid: { display: false, color: gridColor }, 
+            ticks: { color: textColor, font: { family: "'Sarabun', sans-serif" } } 
+          },
+          y: { 
+            grid: { color: gridColor }, 
+            ticks: { 
+              color: textColor, 
+              font: { family: "'Sarabun', sans-serif", weight: 'bold' },
+              callback: (v) => '฿' + v.toLocaleString() 
+            } 
+          }
         }
       }
     });
@@ -313,6 +344,7 @@
     if(items.length === 0) { tbody.innerHTML = '<tr><td class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>'; return; }
     
     let html = '';
+    // เอาแค่ Top 5
     items.slice(0, 5).forEach((item, index) => {
         let badgeColor = index === 0 ? 'bg-warning text-dark' : (index === 1 ? 'bg-secondary' : 'bg-primary');
         html += `
@@ -323,7 +355,7 @@
               <small class="text-muted">${item.type}</small>
             </td>
             <td class="text-end">
-              <div class="fw-bold text-success">฿${item.revenue.toLocaleString()}</div>
+              <div class="fw-bold text-success fs-6">฿${item.revenue.toLocaleString()}</div>
               <small class="text-muted">${item.qty} ชิ้น/ครั้ง</small>
             </td>
           </tr>`;
@@ -372,5 +404,17 @@
     tbody.innerHTML = html;
   }
 
-  initReports();
+  // 🌟 บังคับรัน init เมื่อเปิดหน้า (ปุ่ม "สัปดาห์นี้" จะถูกกดอัตโนมัติ)
+  setTimeout(() => {
+    // หาปุ่มสัปดาห์นี้ และจำลองการคลิก เพื่อให้ CSS Active ขึ้นมาด้วย
+    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
+    if(weekBtn) {
+        setDateFilter('week');
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        weekBtn.classList.add('active');
+    } else {
+        initReports();
+    }
+  }, 100);
+  
 </script>
