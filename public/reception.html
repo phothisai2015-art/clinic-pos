@@ -1121,6 +1121,13 @@
       <div class="mb-3">
         <span class="badge bg-primary mb-2 fs-6"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span>
       </div>
+      
+      <!-- 🌟 เพิ่มกล่องแสดงผลการวินิจฉัย (Dx) -->
+      <div class="bg-light p-3 rounded-3 border mb-3">
+        <div class="fw-bold text-dark mb-1">ผลการวินิจฉัย (Dx)</div>
+        <div class="text-muted small">${log.diagnosis || '-'}</div>
+      </div>
+
       <div class="bg-light p-3 rounded-3 border mb-3">
         <div class="fw-bold text-dark mb-1">อาการแรกรับ / ประวัติ (CC)</div>
         <div class="text-muted small">${log.symptoms || '-'}</div>
