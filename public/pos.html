@@ -695,25 +695,12 @@
     }
   }
 
-  function renderPaymentHistory() {
+ function renderPaymentHistory() {
     const filter = document.getElementById('paymentHistoryFilter').value;
     const container = document.getElementById('paymentHistoryList');
     let allPayments = [];
 
-    // 🌟 1. คำนวณยอดรวม/ยอดจ่ายแล้ว ของแต่ละคอร์ส (เพื่อเอามาทำป้ายสถานะ)
-    let courseStatusMap = {};
-    allPatientBillsHistory.forEach(bill => {
-      let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
-      let courseName = match ? match[1].trim() : bill.item_name.trim();
-      
-      if (!courseStatusMap[courseName]) {
-        courseStatusMap[courseName] = { total: 0, paid: 0 };
-      }
-      courseStatusMap[courseName].total += bill.total_price;
-      courseStatusMap[courseName].paid += bill.paid_amount;
-    });
-
-    // 🌟 2. ดึงประวัติและรวมยอดชำระที่จ่ายพร้อมกันในคอร์สเดียวกัน
+    // 🌟 ดึงประวัติและเช็คสถานะ "จ่ายครบ/ค้างชำระ" แยกตามบิลแต่ละใบ (ไม่เอามารวมกันแล้ว)
     allPatientBillsHistory.forEach(bill => {
       let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
       let courseName = match ? match[1].trim() : bill.item_name.trim();
@@ -724,24 +711,36 @@
       let history = [];
       try { history = JSON.parse(bill.payment_history || '[]'); } catch(e) {}
 
+      // เช็คว่าบิลเฉพาะใบนี้ จ่ายครบหรือยัง
+      let isFullyPaid = bill.paid_amount >= bill.total_price;
+
       history.forEach(h => {
         allPayments.push({
           date: h.date, 
           amount: h.amount, 
           method: h.method || 'CASH',
-          courseName: courseName
+          courseName: courseName,
+          billId: bill.id,          // เก็บ ID บิลอ้างอิง
+          isFullyPaid: isFullyPaid  // เก็บสถานะบิลใบนี้
         });
       });
     });
 
-    // 🌟 3. รวมยอดเงินที่ชำระในเวลาเดียวกัน (ระดับนาที) ให้เป็นก้อนเดียว
+    // 🌟 รวมยอดเงินที่ชำระในเวลาเดียวกัน (ระดับนาที) + ต้องเป็นบิลเดียวกันด้วย
     let groupedPayments = {};
     allPayments.forEach(p => {
-        // อัปเดต: เปลี่ยนเป็น 16 เพื่อตัดเศษวินาทีทิ้ง ให้มันจับกลุ่มรวมกันได้แม่นยำขึ้น
         let timeKey = p.date.substring(0, 16); 
-        let key = p.courseName + '_' + timeKey + '_' + p.method; 
+        // แยกกลุ่มตาม: ชื่อคอร์ส + เวลา + วิธีชำระ + รหัสบิล
+        let key = p.courseName + '_' + timeKey + '_' + p.method + '_' + p.billId; 
         if (!groupedPayments[key]) {
-            groupedPayments[key] = { date: p.date, courseName: p.courseName, method: p.method, amount: 0 };
+            groupedPayments[key] = { 
+              date: p.date, 
+              courseName: p.courseName, 
+              method: p.method, 
+              amount: 0,
+              billId: p.billId,
+              isFullyPaid: p.isFullyPaid
+            };
         }
         groupedPayments[key].amount += p.amount;
     });
@@ -764,14 +763,10 @@
       let mColor = p.method === 'CASH' ? 'success' : (p.method === 'QR' ? 'primary' : 'warning text-dark');
       let mIcon = p.method === 'CASH' ? 'fa-money-bill-wave' : (p.method === 'QR' ? 'fa-qrcode' : 'fa-credit-card');
 
-      // 🌟 4. สร้างป้ายกำกับ (Badge) จ่ายครบ/ค้างชำระ
-      let cStats = courseStatusMap[p.courseName];
-      let statusBadge = '';
-      if (cStats && cStats.paid >= cStats.total) {
-          statusBadge = '<span class="badge bg-success ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-check-circle"></i> จ่ายครบ</span>';
-      } else {
-          statusBadge = '<span class="badge bg-danger ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-triangle-exclamation"></i> ค้างชำระ</span>';
-      }
+      // 🌟 สร้างป้ายกำกับตามสถานะของบิลใบนั้นๆ
+      let statusBadge = p.isFullyPaid 
+        ? '<span class="badge bg-success ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-check-circle"></i> บิลนี้จ่ายครบแล้ว</span>'
+        : '<span class="badge bg-danger ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-triangle-exclamation"></i> บิลนี้ยังค้างชำระ</span>';
 
       html += `
         <div class="border-start border-4 border-${mColor} ps-3 pb-2 pt-2 mb-3 bg-white rounded-end shadow-sm">
@@ -780,10 +775,10 @@
              <span class="badge bg-${mColor}"><i class="fa-solid ${mIcon} me-1"></i> ${p.method}</span>
           </div>
           <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">
-             ${p.courseName} ${statusBadge}
+             ${p.courseName} <span class="text-muted small fw-normal ms-1">(รหัสบิล #${p.billId})</span> ${statusBadge}
           </div>
           <div class="text-end mt-1">
-             <span class="text-muted small me-2">ยอดรับชำระ:</span>
+             <span class="text-muted small me-2">ยอดโอน/ชำระรอบนี้:</span>
              <span class="fw-bold text-success fs-5">฿${p.amount.toLocaleString()}</span>
           </div>
         </div>`;
