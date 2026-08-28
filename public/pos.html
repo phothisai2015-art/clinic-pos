@@ -702,12 +702,12 @@
     document.getElementById('paymentHistoryModalName').innerText = `${currentPosPatient.full_name} (${currentPosPatient.id})`;
     modalInstance.show();
 
-    // 🌟 1. ดึงชื่อคอร์สหลักมาทำเป็นตัวกรอง (จับกลุ่มยาพ่วงเข้ากับคอร์สหลัก)
+    // 🌟 ดักจับ Error กรณีบิลเก่าไม่มีชื่อไอเทม
     let courses = new Set();
     allPatientBillsHistory.forEach(bill => {
-      // เช็คว่ามียาที่พ่วงมาในคอร์สไหม ถ้ามีให้ดึงชื่อคอร์สหลักมา
-      let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
-      let courseName = match ? match[1].trim() : bill.item_name.trim();
+      let itemName = bill.item_name || ''; 
+      let match = itemName.match(/\(ในคอร์ส:\s*(.*?)\)/);
+      let courseName = match ? match[1].trim() : itemName.trim();
       if (courseName) courses.add(courseName);
     });
 
@@ -734,15 +734,16 @@
     }
   }
 
- // 🌟 ฟังก์ชันแสดงประวัติจ่ายเงิน (พร้อมปุ่มปริ้นท์แบบใหม่ที่ส่งชื่อไปด้วย)
+// 🌟 ฟังก์ชันแสดงประวัติจ่ายเงินที่ป้องกันการ Error ค้างแล้ว
   function renderPaymentHistory() {
     const filter = document.getElementById('paymentHistoryFilter').value;
     const container = document.getElementById('paymentHistoryList');
     let allPayments = [];
 
     allPatientBillsHistory.forEach(bill => {
-      let match = bill.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
-      let courseName = match ? match[1].trim() : bill.item_name.trim();
+      let itemName = bill.item_name || '';
+      let match = itemName.match(/\(ในคอร์ส:\s*(.*?)\)/);
+      let courseName = match ? match[1].trim() : itemName.trim();
       
       if (filter !== 'ALL' && courseName !== filter) return;
 
@@ -760,12 +761,15 @@
 
     let groupedPayments = {};
     allPayments.forEach(p => {
-        let timeKey = p.date.substring(0, 16); 
+        // 🌟 ดัก Error: ป้องกันกรณีข้อมูลเก่าไม่มีวันที่ จะใช้วันที่ปัจจุบันแทนชั่วคราว
+        let safeDate = p.date ? String(p.date) : new Date().toISOString();
+        let timeKey = safeDate.substring(0, 16); 
+        
         let key = p.courseName + '_' + timeKey + '_' + p.method + '_' + p.billId; 
         if (!groupedPayments[key]) {
-            groupedPayments[key] = { date: p.date, courseName: p.courseName, method: p.method, amount: 0, billId: p.billId, isFullyPaid: p.isFullyPaid };
+            groupedPayments[key] = { date: safeDate, courseName: p.courseName, method: p.method, amount: 0, billId: p.billId, isFullyPaid: p.isFullyPaid };
         }
-        groupedPayments[key].amount += p.amount;
+        groupedPayments[key].amount += (parseFloat(p.amount) || 0);
     });
 
     let finalPayments = Object.values(groupedPayments);
@@ -789,9 +793,8 @@
         ? '<span class="badge bg-success ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-check-circle"></i> บิลนี้จ่ายครบแล้ว</span>'
         : '<span class="badge bg-danger ms-2" style="font-size: 0.65rem;"><i class="fa-solid fa-triangle-exclamation"></i> บิลนี้ยังค้างชำระ</span>';
 
-      // 🌟 ดึงชื่อพนักงานและคนไข้เพื่อเอาไปยัดในปุ่ม
       let staffName = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText.split('|').pop().trim() : 'พนักงาน';
-      let pName = currentPosPatient.full_name;
+      let pName = currentPosPatient ? currentPosPatient.full_name : '';
 
       html += `
         <div class="border-start border-4 border-${mColor} ps-3 pb-2 pt-2 mb-3 bg-white rounded-end shadow-sm">
