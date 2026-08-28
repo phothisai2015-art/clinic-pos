@@ -1,8 +1,6 @@
 <style>
-  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
-  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) เหมือนหน้า Index */
   .rep-ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.6; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
   .rep-orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
   .rep-orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
@@ -10,10 +8,8 @@
   
   @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
 
-  /* 🌟 กล่องสไตล์ Glassmorphism (กระจกฝ้า) */
   .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 
-  /* 🌟 Reports Dashboard UI Styles */
   .report-kpi-card { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
   .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #3b82f6; }
   .kpi-icon { position: absolute; right: -10px; bottom: -20px; font-size: 5rem; opacity: 0.05; color: #334155; transform: rotate(-15deg); }
@@ -39,7 +35,6 @@
       font-family: 'Sarabun', sans-serif;
   }
 
-  /* 🌟 Modern Top Sellers List */
   .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px; }
   .top-seller-item:last-child { border-bottom: none; }
   .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
@@ -56,9 +51,7 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 10px; }
 
-  /* ========================================================= */
-  /* 🌙 Dark Mode Fixes */
-  /* ========================================================= */
+  /* 🌙 Dark Mode */
   body.dark-theme .rep-orb-1 { background: #1e3a8a; opacity: 0.3; }
   body.dark-theme .rep-orb-2 { background: #312e81; opacity: 0.4; }
   body.dark-theme .rep-orb-3 { background: #4c1d95; opacity: 0.3; }
@@ -67,11 +60,7 @@
   body.dark-theme .report-kpi-card, 
   body.dark-theme .chart-container, 
   body.dark-theme .table-container,
-  body.dark-theme .top-sellers-box { 
-      background-color: rgba(30, 41, 59, 0.85) !important; 
-      border-color: rgba(255, 255, 255, 0.05) !important; 
-  }
-  
+  body.dark-theme .top-sellers-box { background-color: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255, 255, 255, 0.05) !important; }
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
@@ -94,7 +83,6 @@
   body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
 </style>
 
-<!-- 🌟 Ambient Orbs Background -->
 <div class="rep-ambient-orb rep-orb-1"></div>
 <div class="rep-ambient-orb rep-orb-2"></div>
 <div class="rep-ambient-orb rep-orb-3"></div>
@@ -225,20 +213,23 @@
     const activeBtn = document.getElementById('btn-' + type);
     if (activeBtn) activeBtn.classList.add('active');
 
-    const today = new Date();
-    let start = new Date();
-    let end = new Date();
+    const now = new Date();
+    let start = new Date(now);
+    let end = new Date(now);
 
     if (type === 'today') {
-      // ใช้วันนี้
+      // ใช้วันนี้ ไม่ต้องปรับวัน
     } else if (type === 'week') {
-      const first = today.getDate() - today.getDay() + 1;
-      start = new Date(today.setDate(first));
+      // ปรับให้วันจันทร์เป็นวันแรกของสัปดาห์ (แก้บั๊กวันอาทิตย์)
+      const day = now.getDay();
+      const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+      start = new Date(now.setDate(diffToMonday));
+      
       end = new Date(start);
       end.setDate(end.getDate() + 6);
     } else if (type === 'month') {
-      start = new Date(today.getFullYear(), today.getMonth(), 1);
-      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
     const formatTimezone = (d) => {
@@ -317,14 +308,11 @@
         maintainAspectRatio: false,
         plugins: { 
           legend: { display: false },
-          tooltip: {
-            titleFont: { family: "'Sarabun', sans-serif", size: 14 },
-            bodyFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }
-          }
+          tooltip: { titleFont: { size: 14 }, bodyFont: { size: 14, weight: 'bold' } }
         },
         scales: {
-          x: { grid: { display: false, color: gridColor }, ticks: { color: textColor, font: { family: "'Sarabun', sans-serif" } } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, callback: (v) => '฿' + v.toLocaleString() } }
+          x: { grid: { display: false, color: gridColor }, ticks: { color: textColor } },
+          y: { grid: { color: gridColor }, ticks: { color: textColor, weight: 'bold', callback: (v) => '฿' + v.toLocaleString() } }
         }
       }
     });
@@ -404,18 +392,6 @@
     tbody.innerHTML = html;
   }
 
-  function initReports() {
-    setDateFilter('week');
-  }
-
-  setTimeout(() => {
-    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
-    if(weekBtn) {
-        setDateFilter('week');
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        weekBtn.classList.add('active');
-    } else {
-        initReports();
-    }
-  }, 100);
+  // 🌟 เรียกฟังก์ชันตั้งค่า "สัปดาห์นี้" ทันที ไม่ต้องใช้ setTimeout
+  setDateFilter('week');
 </script>
