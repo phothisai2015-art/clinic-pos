@@ -372,6 +372,10 @@
            groupedBoxes.push(m);
         });
 
+        // 🌟 เรียงลำดับตามเวลาสร้างบิล (id เก่าไปใหม่) และรันเลข 1, 2, 3... ให้คนไข้คนนี้
+        groupedBoxes.sort((a, b) => a.id - b.id);
+        groupedBoxes.forEach((box, i) => box.display_id = i + 1);
+
         // 🌟 เอาตัวกรองที่ซ่อนบิลจ่ายแล้วออก เพื่อให้โชว์บิลทั้งหมด
         currentPatientBills = groupedBoxes;
         
@@ -459,7 +463,7 @@
         <div class="col-md-6">
           <div class="bill-card ${statusClass}" id="bill_box_${index}" onclick="selectBillToPay(${index})">
             <div class="bill-card-header">
-              <span class="fw-bold text-muted"><i class="fa-solid fa-receipt me-1"></i>บิลอ้างอิง #${bill.id}</span>${statusBadge}
+              <span class="fw-bold text-muted"><i class="fa-solid fa-receipt me-1"></i>รายการที่ #${bill.display_id}</span>${statusBadge}
             </div>
             <div class="bill-card-body pb-1">
               <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><i class="fa-solid ${typeIcon} me-1"></i> ${bill.item_name}</h6>
@@ -489,7 +493,7 @@
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     let balance = boxTotalPrice - boxPaidAmount;
 
-    document.getElementById('pay_bill_id').innerText = `บิลอ้างอิง #${selectedBill.id}`;
+    document.getElementById('pay_bill_id').innerText = `รายการที่ #${selectedBill.display_id}`;
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
@@ -734,11 +738,19 @@
     }
   }
 
-// 🌟 ฟังก์ชันแสดงประวัติจ่ายเงินที่ป้องกันการ Error ค้างแล้ว
-  function renderPaymentHistory() {
+function renderPaymentHistory() {
     const filter = document.getElementById('paymentHistoryFilter').value;
     const container = document.getElementById('paymentHistoryList');
     let allPayments = [];
+
+    // 🌟 สร้าง Map จำเลขลำดับรายการ (1, 2, 3...) ของคนไข้คนนี้
+    let displayIdMap = {};
+    currentPatientBills.forEach(b => {
+        displayIdMap[b.id] = b.display_id;
+        if (b.attached_meds) {
+            b.attached_meds.forEach(m => displayIdMap[m.id] = b.display_id);
+        }
+    });
 
     allPatientBillsHistory.forEach(bill => {
       let itemName = bill.item_name || '';
@@ -751,23 +763,23 @@
       try { history = JSON.parse(bill.payment_history || '[]'); } catch(e) {}
 
       let isFullyPaid = bill.paid_amount >= bill.total_price;
+      let displayId = displayIdMap[bill.id] || '-'; // ดึงเลขลำดับรายการมาใช้
 
       history.forEach(h => {
         allPayments.push({
-          date: h.date, amount: h.amount, method: h.method || 'CASH', courseName: courseName, billId: bill.id, isFullyPaid: isFullyPaid
+          date: h.date, amount: h.amount, method: h.method || 'CASH', courseName: courseName, displayId: displayId, isFullyPaid: isFullyPaid
         });
       });
     });
 
     let groupedPayments = {};
     allPayments.forEach(p => {
-        // 🌟 ดัก Error: ป้องกันกรณีข้อมูลเก่าไม่มีวันที่ จะใช้วันที่ปัจจุบันแทนชั่วคราว
         let safeDate = p.date ? String(p.date) : new Date().toISOString();
         let timeKey = safeDate.substring(0, 16); 
         
-        let key = p.courseName + '_' + timeKey + '_' + p.method + '_' + p.billId; 
+        let key = p.courseName + '_' + timeKey + '_' + p.method + '_' + p.displayId; 
         if (!groupedPayments[key]) {
-            groupedPayments[key] = { date: safeDate, courseName: p.courseName, method: p.method, amount: 0, billId: p.billId, isFullyPaid: p.isFullyPaid };
+            groupedPayments[key] = { date: safeDate, courseName: p.courseName, method: p.method, amount: 0, displayId: p.displayId, isFullyPaid: p.isFullyPaid };
         }
         groupedPayments[key].amount += (parseFloat(p.amount) || 0);
     });
@@ -803,7 +815,7 @@
              <span class="badge bg-${mColor}"><i class="fa-solid ${mIcon} me-1"></i> ${p.method}</span>
           </div>
           <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">
-             ${p.courseName} <span class="text-muted small fw-normal ms-1">(บิลอ้างอิง #${p.billId})</span> ${statusBadge}
+             ${p.courseName} <span class="text-muted small fw-normal ms-1">(รายการที่ #${p.displayId})</span> ${statusBadge}
           </div>
           
           <div class="d-flex justify-content-between align-items-end mt-2 pt-2 border-top">
