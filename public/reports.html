@@ -1,6 +1,8 @@
 <style>
+  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
+  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
   .rep-ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.6; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
   .rep-orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
   .rep-orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
@@ -35,6 +37,7 @@
       font-family: 'Sarabun', sans-serif;
   }
 
+  /* 🌟 Modern Top Sellers List */
   .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px; }
   .top-seller-item:last-child { border-bottom: none; }
   .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
@@ -51,7 +54,9 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 10px; }
 
-  /* 🌙 Dark Mode */
+  /* ========================================================= */
+  /* 🌙 Dark Mode Fixes */
+  /* ========================================================= */
   body.dark-theme .rep-orb-1 { background: #1e3a8a; opacity: 0.3; }
   body.dark-theme .rep-orb-2 { background: #312e81; opacity: 0.4; }
   body.dark-theme .rep-orb-3 { background: #4c1d95; opacity: 0.3; }
@@ -83,6 +88,7 @@
   body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
 </style>
 
+<!-- 🌟 Ambient Orbs Background -->
 <div class="rep-ambient-orb rep-orb-1"></div>
 <div class="rep-ambient-orb rep-orb-2"></div>
 <div class="rep-ambient-orb rep-orb-3"></div>
@@ -206,7 +212,9 @@
 </div>
 
 <script>
-  let revenueChartInstance = null;
+  // 🌟 ป้องกันปัญหา Identifier 'revenueChartInstance' has already been declared
+  // โดยการเปลี่ยน let เป็น var
+  var revenueChartInstance = null;
 
   function setDateFilter(type) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -220,7 +228,6 @@
     if (type === 'today') {
       // ใช้วันนี้ ไม่ต้องปรับวัน
     } else if (type === 'week') {
-      // ปรับให้วันจันทร์เป็นวันแรกของสัปดาห์ (แก้บั๊กวันอาทิตย์)
       const day = now.getDay();
       const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
       start = new Date(now.setDate(diffToMonday));
@@ -392,6 +399,9 @@
     tbody.innerHTML = html;
   }
 
-  // 🌟 เรียกฟังก์ชันตั้งค่า "สัปดาห์นี้" ทันที ไม่ต้องใช้ setTimeout
-  setDateFilter('week');
+  // 🌟 ใช้ setTimeout แบบสั้นมาก เพื่อให้ Element ทั้งหมดถูกเรนเดอร์เรียบร้อยก่อนยัดข้อมูลลงตาราง
+  setTimeout(() => {
+    setDateFilter('week');
+  }, 50);
+
 </script>
