@@ -10,14 +10,12 @@
   .chart-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
   .table-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); height: 100%; }
   
-  .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+  .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; }
   
-  /* ปรับแต่งตารางให้ดู Modern ขึ้น */
   .table { font-size: 0.95rem; }
   .table-header-sticky { position: sticky; top: 0; background-color: #fff; z-index: 1; }
   .table-header-sticky th { font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.3px; }
 
-  /* ช่องเลือกวันที่ */
   input[type="date"].date-input-modern { 
       border: none !important; 
       background: transparent !important; 
@@ -29,70 +27,47 @@
       font-family: 'Sarabun', sans-serif;
   }
 
+  /* 🌟 Modern Top Sellers List */
+  .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #e2e8f0; transition: all 0.2s; border-radius: 12px; }
+  .top-seller-item:last-child { border-bottom: none; }
+  .top-seller-item:hover { background-color: #f8fafc; transform: translateX(4px); }
+  
+  .rank-badge { width: 38px; height: 38px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.1rem; margin-right: 15px; flex-shrink: 0; }
+  .rank-1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #fff; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+  .rank-2 { background: linear-gradient(135deg, #64748b, #94a3b8); color: #fff; box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3); }
+  .rank-3 { background: linear-gradient(135deg, #d97706, #fcd34d); color: #fff; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3); }
+  .rank-other { background: #f1f5f9; color: #64748b; }
+
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
   /* ========================================================= */
-  /* 🌙 Dark Mode Fixes สำหรับหน้า Reports */
+  /* 🌙 Dark Mode Fixes */
   /* ========================================================= */
   body.dark-theme .report-kpi-card, 
   body.dark-theme .chart-container, 
   body.dark-theme .table-container,
-  body.dark-theme .bg-white { 
-      background-color: #1e293b !important; 
-      border-color: #334155 !important; 
-  }
+  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
   
-  /* จัดการสีตารางในโหมดมืด */
-  body.dark-theme .table { 
-      --bs-table-bg: transparent; 
-      --bs-table-color: #f8fafc;
-      color: #f8fafc !important; 
-  }
-  body.dark-theme .table td { 
-      border-bottom-color: #334155 !important; 
-      background-color: transparent !important;
-  }
-  body.dark-theme .table-header-sticky {
-      background-color: #1e293b !important; 
-      border-bottom-color: #475569 !important; 
-  }
-  body.dark-theme .table thead th { 
-      border-bottom-color: #475569 !important; 
-      color: #cbd5e1 !important; 
-  }
-  body.dark-theme .table tbody tr:hover td {
-      background-color: #334155 !important;
-  }
+  body.dark-theme .table { --bs-table-bg: transparent; --bs-table-color: #f8fafc; color: #f8fafc !important; }
+  body.dark-theme .table td { border-bottom-color: #334155 !important; background-color: transparent !important; }
+  body.dark-theme .table-header-sticky { background-color: #1e293b !important; border-bottom-color: #475569 !important; }
+  body.dark-theme .table thead th { border-bottom-color: #475569 !important; color: #cbd5e1 !important; }
+  body.dark-theme .table tbody tr:hover td { background-color: #334155 !important; }
   
-  /* จัดการช่องเลือกวันที่ในโหมดมืด */
-  body.dark-theme input[type="date"].form-control {
-      background-color: #0f172a !important;
-      color: #60a5fa !important;
-      border-color: #475569 !important;
-  }
-  body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-  }
+  body.dark-theme input[type="date"].form-control { background-color: #0f172a !important; color: #60a5fa !important; border-color: #475569 !important; }
+  body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
   
-  /* สีปุ่ม Filter */
-  body.dark-theme .btn-outline-secondary {
-      color: #cbd5e1;
-      border-color: #475569;
-  }
-  body.dark-theme .btn-outline-secondary:hover {
-      background-color: #334155;
-      color: #f8fafc;
-  }
-  body.dark-theme .filter-btn.active {
-      background-color: #3b82f6 !important;
-      color: white !important;
-      border-color: #3b82f6 !important;
-  }
+  body.dark-theme .btn-outline-secondary { color: #cbd5e1; border-color: #475569; }
+  body.dark-theme .btn-outline-secondary:hover { background-color: #334155; color: #f8fafc; }
+  
+  body.dark-theme .top-seller-item { border-bottom-color: #334155; }
+  body.dark-theme .top-seller-item:hover { background-color: #0f172a; }
+  body.dark-theme .rank-other { background: #334155; color: #cbd5e1; }
 </style>
 
 <div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
@@ -104,6 +79,7 @@
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
+    <!-- ตัวกรองวันที่ -->
     <div class="bg-white p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
       <div class="d-flex align-items-center gap-2">
         <h6 class="fw-bold m-0 text-muted me-2"><i class="fa-solid fa-filter"></i> ช่วงเวลา:</h6>
@@ -113,12 +89,13 @@
         <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData()">ดูรายงาน</button>
       </div>
       <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
-        <button class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
+        <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
+        <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
+        <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
       </div>
     </div>
 
+    <!-- KPI Cards -->
     <div class="row g-4 mb-4">
       <div class="col-xl-3 col-md-6">
         <div class="report-kpi-card border-primary shadow-sm">
@@ -151,7 +128,8 @@
     </div>
 
     <div class="row g-4 mb-4">
-      <div class="col-lg-8">
+      <!-- กราฟรายได้ -->
+      <div class="col-lg-7 col-xl-8">
         <div class="chart-container d-flex flex-column">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
           <div class="flex-grow-1 position-relative">
@@ -160,21 +138,19 @@
         </div>
       </div>
       
-      <div class="col-lg-4">
+      <!-- Top Sellers โฉมใหม่ -->
+      <div class="col-lg-5 col-xl-4">
         <div class="table-container d-flex flex-column">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
-          <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
-            <table class="table table-sm table-borderless align-middle mb-0">
-              <tbody id="topSellersTable">
-                <tr><td class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>
-              </tbody>
-            </table>
+          <div class="custom-scrollbar flex-grow-1" id="topSellersContainer" style="overflow-y: auto;">
+            <div class="text-center text-muted py-4">ไม่มีข้อมูล</div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="row g-4 mb-4">
+      <!-- Unpaid -->
       <div class="col-lg-6">
         <div class="table-container d-flex flex-column" style="max-height: 400px;">
           <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
@@ -191,6 +167,7 @@
         </div>
       </div>
 
+      <!-- บิลล่าสุด -->
       <div class="col-lg-6">
         <div class="table-container d-flex flex-column" style="max-height: 400px;">
           <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
@@ -215,13 +192,16 @@
   let revenueChartInstance = null;
 
   function initReports() {
-    // 🌟 เปลี่ยนค่าเริ่มต้นให้โหลดเป็น "สัปดาห์นี้" ทันทีที่เปิดหน้าต่างขึ้นมา
+    // กำหนดให้เลือก "สัปดาห์นี้" ทันทีที่เปิดหน้า
     setDateFilter('week');
   }
 
   function setDateFilter(type) {
+    // ล้างสถานะปุ่มเดิมทั้งหมด
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    // กำหนดให้ปุ่มที่ถูกคลิกสว่างขึ้น
+    const activeBtn = document.getElementById('btn-' + type);
+    if (activeBtn) activeBtn.classList.add('active');
 
     const today = new Date();
     let start = new Date();
@@ -230,16 +210,15 @@
     if (type === 'today') {
       // ใช้วันนี้
     } else if (type === 'week') {
-      const first = today.getDate() - today.getDay() + 1; // เริ่มวันจันทร์
+      const first = today.getDate() - today.getDay() + 1;
       start = new Date(today.setDate(first));
       end = new Date(start);
-      end.setDate(end.getDate() + 6); // ถึงวันอาทิตย์
+      end.setDate(end.getDate() + 6);
     } else if (type === 'month') {
       start = new Date(today.getFullYear(), today.getMonth(), 1);
       end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     }
 
-    // แปลง YYYY-MM-DD แบบปลอดภัยไม่โดน Timezone shift
     const formatTimezone = (d) => {
         let local = new Date(d);
         local.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -292,7 +271,7 @@
     const gridColor = isDark ? '#334155' : '#f1f5f9';
     const textColor = isDark ? '#94a3b8' : '#64748b';
 
-    Chart.defaults.font.family = "'Sarabun', sans-serif"; // 🌟 บังคับฟอนต์กราฟ
+    Chart.defaults.font.family = "'Sarabun', sans-serif";
 
     revenueChartInstance = new Chart(ctx, {
       type: 'line',
@@ -322,45 +301,44 @@
           }
         },
         scales: {
-          x: { 
-            grid: { display: false, color: gridColor }, 
-            ticks: { color: textColor, font: { family: "'Sarabun', sans-serif" } } 
-          },
-          y: { 
-            grid: { color: gridColor }, 
-            ticks: { 
-              color: textColor, 
-              font: { family: "'Sarabun', sans-serif", weight: 'bold' },
-              callback: (v) => '฿' + v.toLocaleString() 
-            } 
-          }
+          x: { grid: { display: false, color: gridColor }, ticks: { color: textColor, font: { family: "'Sarabun', sans-serif" } } },
+          y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, callback: (v) => '฿' + v.toLocaleString() } }
         }
       }
     });
   }
 
   function renderTopSellers(items) {
-    const tbody = document.getElementById('topSellersTable');
-    if(items.length === 0) { tbody.innerHTML = '<tr><td class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>'; return; }
+    const container = document.getElementById('topSellersContainer');
+    if(items.length === 0) { container.innerHTML = '<div class="text-center text-muted py-4">ไม่มีข้อมูล</div>'; return; }
     
     let html = '';
-    // เอาแค่ Top 5
     items.slice(0, 5).forEach((item, index) => {
-        let badgeColor = index === 0 ? 'bg-warning text-dark' : (index === 1 ? 'bg-secondary' : 'bg-primary');
+        let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : 'rank-other'));
+        
+        let typeIcon = 'fa-box';
+        let typeColor = 'text-secondary';
+        
+        if (item.type === 'PROMOTION') { typeIcon = 'fa-gift'; typeColor = 'text-pink'; }
+        else if (item.type === 'COURSE') { typeIcon = 'fa-wand-magic-sparkles'; typeColor = 'text-info'; }
+        else if (item.type === 'INJECTABLE') { typeIcon = 'fa-syringe'; typeColor = 'text-danger'; }
+
         html += `
-          <tr class="border-bottom">
-            <td width="10%"><span class="badge ${badgeColor} rounded-circle p-2">${index+1}</span></td>
-            <td>
-              <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">${item.name}</div>
-              <small class="text-muted">${item.type}</small>
-            </td>
-            <td class="text-end">
-              <div class="fw-bold text-success fs-6">฿${item.revenue.toLocaleString()}</div>
-              <small class="text-muted">${item.qty} ชิ้น/ครั้ง</small>
-            </td>
-          </tr>`;
+        <div class="top-seller-item">
+            <div class="rank-badge ${rankClass}">${index + 1}</div>
+            <div class="flex-grow-1 overflow-hidden pe-2">
+                <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">${item.name}</div>
+                <div class="text-muted small mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="fa-solid ${typeIcon} ${typeColor} opacity-75"></i> ${item.type}
+                </div>
+            </div>
+            <div class="text-end flex-shrink-0">
+                <div class="fw-bold text-success" style="font-size: 1rem;">฿${item.revenue.toLocaleString()}</div>
+                <div class="text-muted small" style="font-size: 0.75rem;">${item.qty} ชิ้น/ครั้ง</div>
+            </div>
+        </div>`;
     });
-    tbody.innerHTML = html;
+    container.innerHTML = html;
   }
 
   function renderUnpaid(items) {
@@ -404,17 +382,7 @@
     tbody.innerHTML = html;
   }
 
-  // 🌟 บังคับรัน init เมื่อเปิดหน้า (ปุ่ม "สัปดาห์นี้" จะถูกกดอัตโนมัติ)
-  setTimeout(() => {
-    // หาปุ่มสัปดาห์นี้ และจำลองการคลิก เพื่อให้ CSS Active ขึ้นมาด้วย
-    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
-    if(weekBtn) {
-        setDateFilter('week');
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        weekBtn.classList.add('active');
-    } else {
-        initReports();
-    }
-  }, 100);
+  // เรียกใช้ฟังก์ชันทันทีที่เปิดหน้า
+  initReports();
   
 </script>
