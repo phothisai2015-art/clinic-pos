@@ -187,9 +187,35 @@
     color: #f472b6 !important;
   }
   
+  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
+  .ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
+  .orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
+  .orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
+  .orb-3 { width: 300px; height: 300px; background: #fbcfe8; top: 30%; left: 30%; animation-delay: -10s; opacity: 0.3; }
+  
+  body.dark-theme .orb-1 { background: #1e3a8a; opacity: 0.3; }
+  body.dark-theme .orb-2 { background: #312e81; opacity: 0.4; }
+  body.dark-theme .orb-3 { background: #4c1d95; opacity: 0.3; }
+  
+  @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+  /* ปรับพื้นหลังกล่องให้เป็นกระจกฝ้าเพื่อให้เห็นแสงออร่า */
+  .modern-card {
+      background-color: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+  }
+  body.dark-theme .modern-card {
+      background-color: rgba(30, 41, 59, 0.85) !important;
+  }
 </style>
 
-<div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
+<!-- 🌟 Ambient Orbs Background -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+
+<div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
   
   <!-- 🌟 Header & Actions -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
