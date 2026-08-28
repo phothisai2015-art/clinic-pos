@@ -1,4 +1,4 @@
-   <style>
+<style>
   /* การตกแต่ง UI Tabs */
   .booking-nav .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 12px 24px; transition: 0.2s; margin-right: 10px; border: 1px solid transparent; cursor: pointer; }
   .booking-nav .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
@@ -301,10 +301,39 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator {
       filter: invert(1) !important; /* เปลี่ยนไอคอนรูปนาฬิกาเป็นสีสว่าง */
     }
+
+  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
+  .ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
+  .orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
+  .orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
+  .orb-3 { width: 300px; height: 300px; background: #fbcfe8; top: 30%; left: 30%; animation-delay: -10s; opacity: 0.3; }
   
+  body.dark-theme .orb-1 { background: #1e3a8a; opacity: 0.3; }
+  body.dark-theme .orb-2 { background: #312e81; opacity: 0.4; }
+  body.dark-theme .orb-3 { background: #4c1d95; opacity: 0.3; }
+  
+  @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+  /* ปรับพื้นหลังกล่องให้เป็นกระจกฝ้าเพื่อให้เห็นแสงออร่า */
+  .bg-white, .calendar-wrapper, .appointment-card, .course-card {
+      background-color: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+  }
+  body.dark-theme .bg-white, 
+  body.dark-theme .calendar-wrapper, 
+  body.dark-theme .appointment-card, 
+  body.dark-theme .course-card {
+      background-color: rgba(30, 41, 59, 0.85) !important;
+  }
 </style>
 
-<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
+<!-- 🌟 Ambient Orbs Background -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+
+<div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-calendar-days me-2"></i> ตารางนัดหมาย & คิว</h3>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
@@ -1026,4 +1055,3 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     });
   }
 </script>
-
