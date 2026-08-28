@@ -53,6 +53,7 @@ app.get('/inventory.html', (req, res) => res.sendFile(path.join(__dirname, 'publ
 app.get('/setting.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'setting.html')));
 app.get('/reports.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reports.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/print.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'print.html')));
 
 app.get('/api/status', (req, res) => res.json({ status: 'success' }));
 
