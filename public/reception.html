@@ -339,7 +339,8 @@
                   </div>
 
                   <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-                  <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
+<div class="col-12"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="e_dx" class="form-control border-primary" rows="1" placeholder="เช่น สิวอักเสบ, ผิวหมองคล้ำ..."></textarea></div>
+<div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
 
                   <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
                     <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
@@ -978,6 +979,7 @@
       document.getElementById('emr_view_only_msg').style.display = 'none';
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
+      document.getElementById('e_dx').value = ''; // 🌟 ล้างค่า Dx ให้ว่าง
       document.getElementById('e_tx').value = '';
 	  document.getElementById('emr_appt_reason').value = ''; // 🌟 ล้างค่าเมื่อเปิดฟอร์มใหม่
       
@@ -1262,7 +1264,7 @@
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
       symptoms: document.getElementById('e_cc').value, 
-      diagnosis: 'บริการความงาม',
+      diagnosis: document.getElementById('e_dx').value || '-', // 🌟 ดึงค่า Dx ที่พิมพ์ส่งไปฐานข้อมูล
       treatment_details: finalTxArray.join('\n\n'),
       next_appointment_date: selectedNextApptDate, 
       next_appointment_time: selectedNextApptTime, 
