@@ -2,19 +2,30 @@
   /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
+  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) เหมือนหน้า Index */
+  .rep-ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.6; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
+  .rep-orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
+  .rep-orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
+  .rep-orb-3 { width: 300px; height: 300px; background: #fbcfe8; top: 30%; left: 30%; animation-delay: -10s; opacity: 0.4; }
+  
+  @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+  /* 🌟 กล่องสไตล์ Glassmorphism (กระจกฝ้า) */
+  .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
   /* 🌟 Reports Dashboard UI Styles */
-  .report-kpi-card { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; padding: 20px; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
-  .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-color: #3b82f6; }
+  .report-kpi-card { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+  .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #3b82f6; }
   .kpi-icon { position: absolute; right: -10px; bottom: -20px; font-size: 5rem; opacity: 0.05; color: #334155; transform: rotate(-15deg); }
   
-  /* บังคับความสูงกล่องให้เท่ากัน (350px) */
-  .chart-container, .top-sellers-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-  .table-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); height: 100%; }
+  .chart-container, .top-sellers-box { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+  .table-container { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; }
   
-  .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; }
+  .filter-btn { background: rgba(255, 255, 255, 0.5); }
+  .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
   
   .table { font-size: 0.95rem; }
-  .table-header-sticky { position: sticky; top: 0; background-color: #fff; z-index: 1; }
+  .table-header-sticky { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1; }
   .table-header-sticky th { font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.3px; }
 
   input[type="date"].date-input-modern { 
@@ -28,64 +39,77 @@
       font-family: 'Sarabun', sans-serif;
   }
 
-  /* 🌟 Modern Top Sellers List (สีพื้น ดูสะอาดตา) */
-  .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #e2e8f0; transition: all 0.2s; border-radius: 12px; }
+  /* 🌟 Modern Top Sellers List */
+  .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px; }
   .top-seller-item:last-child { border-bottom: none; }
-  .top-seller-item:hover { background-color: #f8fafc; transform: translateX(4px); }
+  .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
   
   .rank-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1rem; margin-right: 15px; flex-shrink: 0; }
-  .rank-1 { background-color: #f59e0b; color: #fff; } /* สีทอง */
-  .rank-2 { background-color: #94a3b8; color: #fff; } /* สีเงิน */
-  .rank-3 { background-color: #d97706; color: #fff; } /* สีทองแดง */
-  .rank-other { background-color: #f1f5f9; color: #64748b; }
+  .rank-1 { background-color: #f59e0b; color: #fff; } 
+  .rank-2 { background-color: #94a3b8; color: #fff; } 
+  .rank-3 { background-color: #d97706; color: #fff; } 
+  .rank-other { background-color: rgba(241, 245, 249, 0.8); color: #64748b; }
 
   .text-pink { color: #ec4899 !important; }
 
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 10px; }
 
   /* ========================================================= */
   /* 🌙 Dark Mode Fixes */
   /* ========================================================= */
+  body.dark-theme .rep-orb-1 { background: #1e3a8a; opacity: 0.3; }
+  body.dark-theme .rep-orb-2 { background: #312e81; opacity: 0.4; }
+  body.dark-theme .rep-orb-3 { background: #4c1d95; opacity: 0.3; }
+
+  body.dark-theme .glass-panel,
   body.dark-theme .report-kpi-card, 
   body.dark-theme .chart-container, 
   body.dark-theme .table-container,
-  body.dark-theme .top-sellers-box,
-  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .top-sellers-box { 
+      background-color: rgba(30, 41, 59, 0.85) !important; 
+      border-color: rgba(255, 255, 255, 0.05) !important; 
+  }
+  
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
   body.dark-theme .text-pink { color: #f472b6 !important; }
   
   body.dark-theme .table { --bs-table-bg: transparent; --bs-table-color: #f8fafc; color: #f8fafc !important; }
-  body.dark-theme .table td { border-bottom-color: #334155 !important; background-color: transparent !important; }
-  body.dark-theme .table-header-sticky { background-color: #1e293b !important; border-bottom-color: #475569 !important; }
+  body.dark-theme .table td { border-bottom-color: rgba(51, 65, 85, 0.5) !important; background-color: transparent !important; }
+  body.dark-theme .table-header-sticky { background-color: rgba(30, 41, 59, 0.95) !important; border-bottom-color: #475569 !important; }
   body.dark-theme .table thead th { border-bottom-color: #475569 !important; color: #cbd5e1 !important; }
-  body.dark-theme .table tbody tr:hover td { background-color: #334155 !important; }
+  body.dark-theme .table tbody tr:hover td { background-color: rgba(51, 65, 85, 0.5) !important; }
   
-  body.dark-theme input[type="date"].form-control { background-color: #0f172a !important; color: #60a5fa !important; border-color: #475569 !important; }
+  body.dark-theme input[type="date"].form-control { background-color: transparent !important; color: #60a5fa !important; }
   body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
   
-  body.dark-theme .btn-outline-secondary { color: #cbd5e1; border-color: #475569; }
+  body.dark-theme .btn-outline-secondary { color: #cbd5e1; border-color: rgba(71, 85, 105, 0.5); background: rgba(30, 41, 59, 0.5); }
   body.dark-theme .btn-outline-secondary:hover { background-color: #334155; color: #f8fafc; }
   
-  body.dark-theme .top-seller-item { border-bottom-color: #334155; }
-  body.dark-theme .top-seller-item:hover { background-color: #0f172a; }
-  body.dark-theme .rank-other { background: #334155; color: #cbd5e1; }
+  body.dark-theme .top-seller-item { border-bottom-color: rgba(51, 65, 85, 0.5); }
+  body.dark-theme .top-seller-item:hover { background-color: rgba(15, 23, 42, 0.5); }
+  body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
 </style>
 
-<div class="container-fluid py-4 px-lg-4" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
+<!-- 🌟 Ambient Orbs Background -->
+<div class="rep-ambient-orb rep-orb-1"></div>
+<div class="rep-ambient-orb rep-orb-2"></div>
+<div class="rep-ambient-orb rep-orb-3"></div>
+
+<div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h3 class="fw-bold text-secondary m-0"><i class="fa-solid fa-chart-pie me-2"></i> สถิติและรายงานยอดขาย</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()">
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm glass-panel" onclick="closeModule()">
       <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
     </button>
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
     <!-- ตัวกรองวันที่ -->
-    <div class="bg-white p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 glass-panel">
       <div class="d-flex align-items-center gap-2">
         <h6 class="fw-bold m-0 text-muted me-2"><i class="fa-solid fa-filter"></i> ช่วงเวลา:</h6>
         <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
@@ -103,28 +127,28 @@
     <!-- KPI Cards -->
     <div class="row g-4 mb-4">
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-primary shadow-sm">
+        <div class="report-kpi-card border-primary glass-panel">
           <i class="fa-solid fa-vault kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">รายได้รวมทั้งหมด</h6>
           <h3 class="text-primary fw-bold m-0" id="kpi_total">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-success shadow-sm">
+        <div class="report-kpi-card border-success glass-panel">
           <i class="fa-solid fa-money-bill-wave kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">เงินสด (CASH)</h6>
           <h3 class="text-success fw-bold m-0" id="kpi_cash">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-info shadow-sm">
+        <div class="report-kpi-card border-info glass-panel">
           <i class="fa-solid fa-qrcode kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">โอนเงิน (QR)</h6>
           <h3 class="text-info fw-bold m-0" id="kpi_qr">฿ 0</h3>
         </div>
       </div>
       <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-warning shadow-sm">
+        <div class="report-kpi-card border-warning glass-panel">
           <i class="fa-solid fa-credit-card kpi-icon"></i>
           <h6 class="text-muted fw-bold mb-1">บัตรเครดิต (CREDIT)</h6>
           <h3 class="text-warning text-dark fw-bold m-0" id="kpi_credit">฿ 0</h3>
@@ -135,7 +159,7 @@
     <div class="row g-4 mb-4">
       <!-- กราฟรายได้ -->
       <div class="col-lg-7 col-xl-8">
-        <div class="chart-container d-flex flex-column">
+        <div class="chart-container d-flex flex-column glass-panel">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
           <div class="flex-grow-1 position-relative">
             <canvas id="revenueChart"></canvas>
@@ -143,9 +167,9 @@
         </div>
       </div>
       
-      <!-- Top Sellers โฉมใหม่ (ปรับให้กล่องสูงเท่ากราฟเป๊ะ) -->
+      <!-- Top Sellers -->
       <div class="col-lg-5 col-xl-4">
-        <div class="top-sellers-box d-flex flex-column">
+        <div class="top-sellers-box d-flex flex-column glass-panel">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
           <div class="custom-scrollbar flex-grow-1 d-flex flex-column justify-content-between" id="topSellersContainer" style="overflow-y: auto;">
             <div class="text-center text-muted py-4">ไม่มีข้อมูล</div>
@@ -157,7 +181,7 @@
     <div class="row g-4 mb-4">
       <!-- Unpaid -->
       <div class="col-lg-6">
-        <div class="table-container d-flex flex-column" style="max-height: 400px;">
+        <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
           <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
           <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
             <table class="table table-hover align-middle mb-0">
@@ -174,7 +198,7 @@
 
       <!-- บิลล่าสุด -->
       <div class="col-lg-6">
-        <div class="table-container d-flex flex-column" style="max-height: 400px;">
+        <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
           <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
           <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
             <table class="table table-hover align-middle mb-0">
@@ -266,7 +290,7 @@
     const values = chartData.map(d => d.revenue);
 
     const isDark = document.body.classList.contains('dark-theme');
-    const gridColor = isDark ? '#334155' : '#f1f5f9';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)';
     const textColor = isDark ? '#94a3b8' : '#64748b';
 
     Chart.defaults.font.family = "'Sarabun', sans-serif";
@@ -384,6 +408,14 @@
     setDateFilter('week');
   }
 
-  // 🌟 เรียกใช้ฟังก์ชันทันที
-  initReports();
+  setTimeout(() => {
+    const weekBtn = document.querySelector(".filter-btn[onclick=\"setDateFilter('week')\"]");
+    if(weekBtn) {
+        setDateFilter('week');
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        weekBtn.classList.add('active');
+    } else {
+        initReports();
+    }
+  }, 100);
 </script>
