@@ -372,12 +372,22 @@
            groupedBoxes.push(m);
         });
 
-        // 🌟 คัดกรองแสดงเฉพาะกล่องที่ "ค้างชำระ" หรือ "มีประวัติทำรายการในวันนี้" เท่านั้น
-        let todayStr = new Date().toISOString().split('T')[0];
-        currentPatientBills = groupedBoxes.filter(b => {
-           let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
-           let boxPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
-           return (boxTotal - boxPaid > 0) || (b.bill_date === todayStr) || b.attached_meds.some(m => m.bill_date === todayStr);
+        // 🌟 เอาตัวกรองที่ซ่อนบิลจ่ายแล้วออก เพื่อให้โชว์บิลทั้งหมด
+        currentPatientBills = groupedBoxes;
+        
+        // 🌟 เรียงลำดับ: ให้กล่องที่ "ค้างชำระ" อยู่ด้านบนสุด และ "จ่ายครบแล้ว" ไปอยู่ล่างสุด
+        currentPatientBills.sort((a, b) => {
+           let aTotal = a.total_price + a.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+           let aPaid = a.paid_amount + a.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+           let aBalance = aTotal - aPaid;
+
+           let bTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+           let bPaid = b.paid_amount + b.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+           let bBalance = bTotal - bPaid;
+
+           if (aBalance > 0 && bBalance <= 0) return -1;
+           if (aBalance <= 0 && bBalance > 0) return 1;
+           return 0; 
         });
         
         document.getElementById('posSearchInput').value = currentPosPatient.id;
