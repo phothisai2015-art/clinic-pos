@@ -147,7 +147,7 @@
         }
       }
 
-      // 🌟 ดึงข้อมูล EMR ล่าสุดมาถมในใบรับรองแพทย์ (ดึง Dx และ Tx)
+      // 🌟 ดึงข้อมูล EMR ล่าสุดมาถมในใบรับรองแพทย์ (ดึง Dx และ Tx แบบกรองข้อความ)
       if(type === 'certificate' && emrData.data && emrData.data.length > 0) {
         const latestEmr = emrData.data[0];
         document.getElementById('c_doc_name').innerText = latestEmr.doctor_name || 'แพทย์เวร';
@@ -161,8 +161,38 @@
         if (txParam && txParam !== 'null' && txParam !== '') {
            document.getElementById('c_tx').innerText = txParam;
         } else {
-           let txLines = (latestEmr.treatment_details || '-').split('\n').filter(line => line.trim() !== '' && !line.includes('[สั่งจ่ายยา'));
-           document.getElementById('c_tx').innerHTML = txLines.join('<br>') || '-';
+           // 🌟 ระบบคัดกรองเอาเฉพาะชื่อหัตถการ ตัดบันทึกเพิ่มเติมและผู้ช่วยทิ้ง
+           let rawTx = latestEmr.treatment_details || '-';
+           let txLines = rawTx.split('\n');
+           let cleanTx = [];
+           let skipMode = false;
+
+           for (let line of txLines) {
+               let trimmed = line.trim();
+               if (trimmed === '') continue;
+
+               // ถ้าเจอหัวข้อที่ไม่ต้องการโชว์ในใบรับรองแพทย์ ให้เริ่มข้ามบรรทัด
+               if (trimmed.includes('[บันทึกเพิ่มเติม]') || 
+                   trimmed.includes('[นัดหมายครั้งถัดไป]') || 
+                   trimmed.includes('[ผู้ให้บริการ') || 
+                   trimmed.includes('[สั่งจ่ายยา')) {
+                   skipMode = true;
+                   continue;
+               }
+
+               // ถ้าเจอหัวข้อหัตถการหลัก ให้ดึงข้อมูลต่อ แต่ไม่ต้องเอาบรรทัดหัวข้อมาโชว์
+               if (trimmed.includes('[หัตถการ') || trimmed.includes('[การรักษา')) {
+                   skipMode = false;
+                   continue; 
+               }
+
+               // เก็บเฉพาะรายการที่ต้องการ
+               if (!skipMode && !trimmed.startsWith('[')) {
+                   cleanTx.push(trimmed);
+               }
+           }
+
+           document.getElementById('c_tx').innerHTML = cleanTx.length > 0 ? cleanTx.join('<br>') : '-';
         }
       }
 
