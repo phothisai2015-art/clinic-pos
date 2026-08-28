@@ -1227,6 +1227,11 @@
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
+    // 🌟 เพิ่มโค้ดส่วนนี้: ถัามีการเลือกวันนัดหมาย ให้เอาข้อความมาต่อท้าย
+    if (selectedNextApptText) {
+      finalTxArray.push(`[นัดหมายครั้งถัดไป]\n- ${selectedNextApptText}`);
+    }
+
     if (pendingMeds.length > 0) {
       finalTxArray.push(`[สั่งจ่ายยา/เวชภัณฑ์ เพิ่มเติม (คิดเงิน)]\n` + pendingMeds.map(m => `- ${m.name} จำนวน ${m.qty} ${m.unit || 'ชิ้น'} (${m.sig})`).join('\n'));
     }
