@@ -152,9 +152,19 @@ Promise.all([
     const latestEmr = emrData.data[0];
     document.getElementById('c_doc_name').innerText = latestEmr.doctor_name || 'แพทย์เวร';
     document.getElementById('c_doc_sign').innerText = latestEmr.doctor_name || '...........................................';
-    document.getElementById('c_dx').innerText = latestEmr.diagnosis || '-';
-    let txLines = (latestEmr.treatment_details || '-').split('\n').filter(line => line.trim() !== '' && !line.includes('[สั่งจ่ายยา'));
-    document.getElementById('c_tx').innerHTML = txLines.join('<br>');
+    
+    // 🌟 ดึงค่า URL (ถ้ามีการพิมพ์แก้หน้า POS) ถ้าไม่มีให้ดึงจากประวัติ EMR
+    const dxParam = urlParams.get('dx');
+    const txParam = urlParams.get('tx');
+    
+    document.getElementById('c_dx').innerText = (dxParam && dxParam !== '') ? dxParam : (latestEmr.diagnosis || '-');
+    
+    if (txParam && txParam !== '') {
+       document.getElementById('c_tx').innerText = txParam;
+    } else {
+       let txLines = (latestEmr.treatment_details || '-').split('\n').filter(line => line.trim() !== '' && !line.includes('[สั่งจ่ายยา'));
+       document.getElementById('c_tx').innerHTML = txLines.join('<br>') || '-';
+    }
   }
 
   // ดีเลย์นิดนึงให้ภาพโลโก้โหลดทัน แล้วสั่งปริ้นท์

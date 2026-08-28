@@ -339,8 +339,8 @@
                   </div>
 
                   <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-<div class="col-12"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="e_dx" class="form-control border-primary" rows="1" placeholder="เช่น สิวอักเสบ, ผิวหมองคล้ำ..."></textarea></div>
-<div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
+				  <div class="col-12"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="e_dx" class="form-control border-primary" rows="1" placeholder="เช่น สิวอักเสบ, ผิวหมองคล้ำ..."></textarea></div>
+                  <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
 
                   <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
                     <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
@@ -1264,7 +1264,7 @@
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
       symptoms: document.getElementById('e_cc').value, 
-      diagnosis: document.getElementById('e_dx').value || '-', // 🌟 ดึงค่า Dx ที่พิมพ์ส่งไปฐานข้อมูล
+      diagnosis: document.getElementById('e_dx').value || 'บริการความงาม', // 🌟 ดึงค่า Dx ที่กรอกส่งไป
       treatment_details: finalTxArray.join('\n\n'),
       next_appointment_date: selectedNextApptDate, 
       next_appointment_time: selectedNextApptTime, 
