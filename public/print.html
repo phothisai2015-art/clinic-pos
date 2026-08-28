@@ -96,80 +96,78 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-const type = urlParams.get('type');
-const hn = urlParams.get('hn');
-const pname = urlParams.get('pname') || '-';
-const staff = urlParams.get('staff') || 'พนักงาน';
+    const type = urlParams.get('type');
+    const hn = urlParams.get('hn');
+    const pname = urlParams.get('pname') || '-';
+    const staff = urlParams.get('staff') || 'พนักงาน';
 
-if (type === 'receipt') {
-  document.getElementById('section_receipt').style.display = 'block';
-  const d = urlParams.get('date') ? new Date(urlParams.get('date')) : new Date();
-  const amount = parseFloat(urlParams.get('amount') || 0);
-  document.getElementById('r_date').innerText = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) + ' น.';
-  document.getElementById('r_hn').innerText = hn;
-  document.getElementById('r_item').innerText = urlParams.get('course') || '-';
-  document.getElementById('r_method').innerText = urlParams.get('method') || '-';
-  let amtStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
-  document.getElementById('r_amount').innerText = amtStr;
-  document.getElementById('r_total').innerText = amtStr;
+    if (type === 'receipt') {
+      document.getElementById('section_receipt').style.display = 'block';
+      const d = urlParams.get('date') ? new Date(urlParams.get('date')) : new Date();
+      const amount = parseFloat(urlParams.get('amount') || 0);
+      document.getElementById('r_date').innerText = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) + ' น.';
+      document.getElementById('r_hn').innerText = hn;
+      document.getElementById('r_item').innerText = urlParams.get('course') || '-';
+      document.getElementById('r_method').innerText = urlParams.get('method') || '-';
+      let amtStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+      document.getElementById('r_amount').innerText = amtStr;
+      document.getElementById('r_total').innerText = amtStr;
 
-  // 🌟 ยัดชื่อคนไข้ และ ชื่อผู้รับเงิน
-  document.getElementById('r_name').innerText = pname;
-  document.getElementById('r_name_sign').innerText = pname;
-  document.getElementById('r_staff_sign').innerText = staff;
+      document.getElementById('r_name').innerText = pname;
+      document.getElementById('r_name_sign').innerText = pname;
+      document.getElementById('r_staff_sign').innerText = staff;
 
-} else if (type === 'certificate') {
-  document.getElementById('section_certificate').style.display = 'block';
-  document.getElementById('c_hn').innerText = hn;
-  document.getElementById('c_reason').innerText = urlParams.get('reason') || '-';
-  const days = parseInt(urlParams.get('days') || 0);
-  if(days > 0) document.getElementById('c_days').innerText = days;
-  else document.getElementById('c_rest_sentence').style.display = 'none';
-  document.getElementById('c_date').innerText = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+    } else if (type === 'certificate') {
+      document.getElementById('section_certificate').style.display = 'block';
+      document.getElementById('c_hn').innerText = hn;
+      document.getElementById('c_reason').innerText = urlParams.get('reason') || '-';
+      const days = parseInt(urlParams.get('days') || 0);
+      if(days > 0) document.getElementById('c_days').innerText = days;
+      else document.getElementById('c_rest_sentence').style.display = 'none';
+      document.getElementById('c_date').innerText = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
 
-  // 🌟 ยัดชื่อคนไข้
-  document.getElementById('c_patient_name').innerText = pname;
-}
-
-// ดึงเฉพาะชื่อคลินิกและข้อมูลแพทย์ (ไม่ต้องดึงชื่อคนไข้ซ้ำแล้ว)
-Promise.all([
-  fetch('/api/clinic').then(res => res.json()),
-  fetch(`/api/emr/${hn}`).then(res => res.json())
-]).then(([clinicData, emrData]) => {
-  // ข้อมูลคลินิก
-  if(clinicData.data) {
-    document.getElementById('c_name').innerText = clinicData.data.clinic_name || 'คลินิกความงาม';
-    document.getElementById('c_address').innerText = clinicData.data.address || '-';
-    document.getElementById('c_phone').innerText = clinicData.data.phone || '-';
-    if(clinicData.data.logo_url) {
-      document.getElementById('c_logo').src = clinicData.data.logo_url;
-      document.getElementById('c_logo').style.display = 'block';
+      document.getElementById('c_patient_name').innerText = pname;
     }
-  }
 
-  // ข้อมูลแพทย์ (สำหรับใบรับรองแพทย์)
-  if(type === 'certificate' && emrData.data && emrData.data.length > 0) {
-    const latestEmr = emrData.data[0];
-    document.getElementById('c_doc_name').innerText = latestEmr.doctor_name || 'แพทย์เวร';
-    document.getElementById('c_doc_sign').innerText = latestEmr.doctor_name || '...........................................';
-    
-    // 🌟 ดึงค่า URL (ถ้ามีการพิมพ์แก้หน้า POS) ถ้าไม่มีให้ดึงจากประวัติ EMR
-    const dxParam = urlParams.get('dx');
-    const txParam = urlParams.get('tx');
-    
-    document.getElementById('c_dx').innerText = (dxParam && dxParam !== '') ? dxParam : (latestEmr.diagnosis || '-');
-    
-    if (txParam && txParam !== '') {
-       document.getElementById('c_tx').innerText = txParam;
-    } else {
-       let txLines = (latestEmr.treatment_details || '-').split('\n').filter(line => line.trim() !== '' && !line.includes('[สั่งจ่ายยา'));
-       document.getElementById('c_tx').innerHTML = txLines.join('<br>') || '-';
-    }
-  }
+    // 🌟 ดึง ID พนักงานจากระบบ เพื่อใช้แนบไปกับการดึงข้อมูล (แก้ปัญหาข้อมูลไม่มา/แพทย์หาย)
+    const userId = sessionStorage.getItem('currentUserId') || '1';
 
-  // ดีเลย์นิดนึงให้ภาพโลโก้โหลดทัน แล้วสั่งปริ้นท์
-  setTimeout(() => window.print(), 500);
-});
+    Promise.all([
+      fetch('/api/clinic').then(res => res.json()),
+      fetch(`/api/emr/${hn}`, { headers: { 'X-User-Id': userId } }).then(res => res.json())
+    ]).then(([clinicData, emrData]) => {
+      
+      if(clinicData.data) {
+        document.getElementById('c_name').innerText = clinicData.data.clinic_name || 'คลินิกความงาม';
+        document.getElementById('c_address').innerText = clinicData.data.address || '-';
+        document.getElementById('c_phone').innerText = clinicData.data.phone || '-';
+        if(clinicData.data.logo_url) {
+          document.getElementById('c_logo').src = clinicData.data.logo_url;
+          document.getElementById('c_logo').style.display = 'block';
+        }
+      }
+
+      // 🌟 ดึงข้อมูล EMR ล่าสุดมาถมในใบรับรองแพทย์ (ดึง Dx และ Tx)
+      if(type === 'certificate' && emrData.data && emrData.data.length > 0) {
+        const latestEmr = emrData.data[0];
+        document.getElementById('c_doc_name').innerText = latestEmr.doctor_name || 'แพทย์เวร';
+        document.getElementById('c_doc_sign').innerText = latestEmr.doctor_name || '...........................................';
+        
+        const dxParam = urlParams.get('dx');
+        const txParam = urlParams.get('tx');
+        
+        document.getElementById('c_dx').innerText = (dxParam && dxParam !== 'null' && dxParam !== '') ? dxParam : (latestEmr.diagnosis || '-');
+        
+        if (txParam && txParam !== 'null' && txParam !== '') {
+           document.getElementById('c_tx').innerText = txParam;
+        } else {
+           let txLines = (latestEmr.treatment_details || '-').split('\n').filter(line => line.trim() !== '' && !line.includes('[สั่งจ่ายยา'));
+           document.getElementById('c_tx').innerHTML = txLines.join('<br>') || '-';
+        }
+      }
+
+      setTimeout(() => window.print(), 500);
+    });
   </script>
 </body>
 </html>

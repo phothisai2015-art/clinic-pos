@@ -818,14 +818,21 @@
 
     container.innerHTML = html;
   }
-  // 🌟 ฟังก์ชันรับข้อมูลเพิ่มเติมสำหรับใบรับรองแพทย์ (แบบใหม่ ส่งชื่อคนไข้ไปด้วย)
+  // 🌟 ฟังก์ชันรับข้อมูลเพิ่มเติมสำหรับใบรับรองแพทย์ (มีช่องให้กรอก Dx/Tx เพิ่ม)
   function promptMedicalCertificate(hn) {
     Swal.fire({
       title: 'ออกใบรับรองแพทย์',
       html: `
         <div class="text-start">
+          <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัย (Dx)</label>
+          <input type="text" id="cert_dx" class="form-control border-primary mb-2" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
+          
+          <label class="form-label fw-bold small text-muted">การรักษา / หัตถการที่ทำ (Tx)</label>
+          <input type="text" id="cert_tx" class="form-control border-primary mb-2" placeholder="เช่น เลเซอร์ (เว้นว่างเพื่อดึงจากระบบ)">
+
           <label class="form-label fw-bold small text-muted">ความเห็นแพทย์ / อาการป่วย</label>
-          <input type="text" id="cert_reason" class="form-control border-primary mb-3" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
+          <input type="text" id="cert_reason" class="form-control border-primary mb-2" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
+          
           <label class="form-label fw-bold small text-muted">เห็นสมควรให้พักรักษาตัว (วัน)</label>
           <input type="number" id="cert_rest_days" class="form-control border-primary text-center" value="0" min="0">
         </div>
@@ -836,6 +843,8 @@
       confirmButtonColor: '#10b981',
       preConfirm: () => {
         return {
+          dx: document.getElementById('cert_dx').value,
+          tx: document.getElementById('cert_tx').value,
           reason: document.getElementById('cert_reason').value,
           days: document.getElementById('cert_rest_days').value
         }
@@ -843,7 +852,8 @@
     }).then((res) => {
       if(res.isConfirmed) {
         let pName = currentPosPatient.full_name;
-        window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
+        // ส่งแนบ URL Parameter ให้หน้า Print
+        window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
       }
     });
   }
