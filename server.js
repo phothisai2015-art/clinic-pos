@@ -248,6 +248,17 @@ app.get('/api/emr/:patient_id', async (req, res) => {
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
+app.put('/api/emr/:id', async (req, res) => {
+  try {
+    const { symptoms, diagnosis, treatment_details } = req.body;
+    await dbRun(`UPDATE emr_logs SET symptoms = ?, diagnosis = ?, treatment_details = ? WHERE id = ?`, 
+      [symptoms, diagnosis, treatment_details, req.params.id]);
+    res.json({ status: 'success', message: 'อัปเดตข้อมูลสำเร็จ' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // ==========================================
 // 📸 API รูปภาพ (แก้เป็น Async File System)
 // ==========================================
