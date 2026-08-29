@@ -814,10 +814,10 @@
           html += `<div class="col-md-6 d-flex"><div class="course-card ${cardStyle} shadow-sm w-100">
                      <div class="ribbon-promo"><i class="fa-solid fa-star me-1"></i>โปรโมชั่น</div>
                      <div class="card-body p-4">
-                       <div class="d-flex justify-content-between align-items-start mb-2">
-                         <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-2">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
-                         ${payBadge}
-                       </div>
+                       <div class="d-flex justify-content-between align-items-start mb-2 pe-5">
+  <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-2">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
+  <div>${payBadge}</div>
+</div>
                        <h5 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} mb-3"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-2"></i> ${displayName}</h5>
                        <div class="bg-light p-3 rounded-3 border flex-grow-1" style="font-size: 0.9rem;">${bundleHtml}</div>
                        ${btnHtml}
