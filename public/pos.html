@@ -698,11 +698,11 @@
                 // พิมพ์ใบเสร็จ
                 window.open(`/print.html?type=receipt&hn=${currentPosPatient.id}&pname=${encodeURIComponent(pName)}&course=${encodeURIComponent(cleanMainName)}&amount=${payAmount}&method=${selectedMethod}&date=${encodeURIComponent(new Date().toISOString())}&staff=${encodeURIComponent(staffName)}`, '_blank');
               } else if (resAlert.dismiss === Swal.DismissReason.cancel) {
-  // หน่วงเวลาให้ป๊อปอัปแรกปิดสนิทก่อน เพื่อไม่ให้ช่องพิมพ์โดนล็อค
-  setTimeout(() => {
-    promptMedicalCertificate(currentPosPatient.id);
-  }, 300);
-}
+                // หน่วงเวลาให้ป๊อปอัปแรกปิดสนิทก่อน เพื่อไม่ให้ช่องพิมพ์โดนล็อค
+                setTimeout(() => {
+                  promptMedicalCertificate(currentPosPatient.id);
+                }, 300);
+              }
               // โหลดหน้าจอ POS ใหม่เพื่ออัปเดตยอดเงิน
               selectPatientForPos(currentPosPatient.id); 
             });
@@ -725,7 +725,7 @@
     }
   }, 300);
   
-  / 1. ฟังก์ชันเปิดป๊อปอัปประวัติ
+  // 1. ฟังก์ชันเปิดป๊อปอัปประวัติ
   function openPaymentHistoryModal() {
     if (!currentPosPatient) return;
     const modalEl = document.getElementById('paymentHistoryModal');
@@ -757,7 +757,7 @@
     renderPaymentHistory(); // โหลดข้อมูล
   }
 
- // 2. ฟังก์ชันปิดป๊อปอัป
+  // 2. ฟังก์ชันปิดป๊อปอัป
   function closePaymentHistoryModal() {
     const modalEl = document.getElementById('paymentHistoryModal');
     if (modalEl) {
@@ -773,15 +773,7 @@
     }, 150);
   }
 
-  function closePaymentHistoryModal() {
-    const modalEl = document.getElementById('paymentHistoryModal');
-    if (modalEl) {
-      let m = bootstrap.Modal.getInstance(modalEl);
-      if (m) m.hide();
-    }
-  }
-
-// 3. ฟังก์ชันวาดประวัติ (ตัวนี้แหละที่ค้าง ผมใส่ระบบป้องกันพังไว้ให้แล้ว)
+  // 3. ฟังก์ชันวาดประวัติ
   function renderPaymentHistory() {
     const container = document.getElementById('paymentHistoryList');
     if (!container) return;
@@ -890,7 +882,9 @@
       container.innerHTML = `<div class="text-danger text-center py-5"><i class="fa-solid fa-triangle-exclamation fa-3x mb-3 opacity-50"></i><br>เกิดข้อผิดพลาดในการแสดงผล<br><small>${e.message}</small></div>`;
     }
   }
- async function promptMedicalCertificate(hn) {
+
+  // 4. ใบรับรองแพทย์แบบ Custom Overlay พิมพ์ได้ 100%
+  async function promptMedicalCertificate(hn) {
     // ปิดป๊อปอัปประวัติการชำระเงินก่อน
     closePaymentHistoryModal();
 
@@ -948,7 +942,7 @@
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  // ฟังก์ชันกดยืนยันพิมพ์จาก Custom Modal
+  // 5. ฟังก์ชันกดยืนยันพิมพ์จาก Custom Modal
   function submitCustomCert(hn) {
     const doctor = document.getElementById('cert_doctor_custom').value;
     if (!doctor) {
@@ -968,6 +962,4 @@
     // เปิดหน้า Print
     window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(doctor)}&dx=${encodeURIComponent(dx)}&tx=${encodeURIComponent(tx)}&reason=${encodeURIComponent(reason)}&days=${days}`, '_blank');
   }
-  
-  
 </script>
