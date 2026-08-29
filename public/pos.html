@@ -891,75 +891,82 @@
     }
   }
  async function promptMedicalCertificate(hn) {
-    // 🌟 1. สั่งปิด Modal ประวัติการชำระเงิน (ถ้ามันเปิดอยู่) เพื่อคืนการควบคุมคีย์บอร์ด
+    // ปิดป๊อปอัปประวัติการชำระเงินก่อน
     closePaymentHistoryModal();
 
-    // 🌟 2. หน่วงเวลา 300ms ให้ฉากหลังปิดสนิทก่อน แล้วค่อยเปิดป๊อปอัป
-    setTimeout(async () => {
-      Swal.fire({ title: 'กำลังโหลดข้อมูลแพทย์...', didOpen: () => Swal.showLoading() });
+    // ดึงรายชื่อหมอ
+    let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      if (data.status === 'success' && Array.isArray(data.data)) {
+        const doctors = data.data.filter(u => u.role === 'DOCTOR' || u.role === 'ADMIN');
+        doctors.forEach(doc => {
+          doctorOptions += `<option value="${doc.name}">${doc.name}</option>`;
+        });
+      }
+    } catch (e) { console.error(e); }
 
-      let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
-      try {
-        const res = await fetch('/api/users');
-        const data = await res.json();
-        if (data.status === 'success' && Array.isArray(data.data)) {
-          const doctors = data.data.filter(u => u.role === 'DOCTOR' || u.role === 'ADMIN');
-          doctors.forEach(doc => {
-            doctorOptions += `<option value="${doc.name}">${doc.name}</option>`;
-          });
-        }
-      } catch (e) { console.error(e); }
-
-      Swal.close();
-
-      Swal.fire({
-        title: 'ออกใบรับรองแพทย์',
-        focusInput: false, 
-        html: `
+    // สร้าง Custom Modal Overlay ขึ้นมาเอง (ตัดปัญหา Focus Trap 100%)
+    const modalHtml = `
+      <div id="customCertModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="bg-white rounded-4 shadow-lg p-4" style="width: 100%; max-width: 500px; animation: popup 0.3s ease;">
+          <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-file-medical me-2 text-success"></i> ออกใบรับรองแพทย์</h5>
+            <button class="btn-close" onclick="document.getElementById('customCertModal').remove()"></button>
+          </div>
+          
           <div class="text-start">
             <label class="form-label fw-bold small text-muted">แพทย์ผู้ตรวจรักษา *</label>
-            <select id="cert_doctor" class="form-select border-primary mb-2 fw-bold text-dark">
-              ${doctorOptions}
-            </select>
+            <select id="cert_doctor_custom" class="form-select border-primary mb-3 fw-bold text-dark">${doctorOptions}</select>
 
             <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัย (Dx)</label>
-            <input type="text" id="cert_dx" class="form-control border-primary mb-2" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
+            <input type="text" id="cert_dx_custom" class="form-control border-primary mb-3" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
             
             <label class="form-label fw-bold small text-muted">การรักษา / หัตถการที่ทำ (Tx)</label>
-            <input type="text" id="cert_tx" class="form-control border-primary mb-2" placeholder="เช่น เลเซอร์ (เว้นว่างเพื่อดึงจากระบบ)">
+            <input type="text" id="cert_tx_custom" class="form-control border-primary mb-3" placeholder="เช่น เลเซอร์ (เว้นว่างเพื่อดึงจากระบบ)">
 
             <label class="form-label fw-bold small text-muted">ความเห็นแพทย์ / อาการป่วย</label>
-            <input type="text" id="cert_reason" class="form-control border-primary mb-2" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
+            <input type="text" id="cert_reason_custom" class="form-control border-primary mb-3" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
             
             <label class="form-label fw-bold small text-muted">เห็นสมควรให้พักรักษาตัว (วัน)</label>
-            <input type="number" id="cert_rest_days" class="form-control border-primary text-center" value="0" min="0">
+            <input type="number" id="cert_rest_days_custom" class="form-control border-primary text-center mb-4" value="0" min="0">
           </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบรับรอง',
-        cancelButtonText: 'ยกเลิก',
-        confirmButtonColor: '#10b981',
-        preConfirm: () => {
-          const doctor = document.getElementById('cert_doctor').value;
-          if (!doctor) {
-            Swal.showValidationMessage('กรุณาเลือกแพทย์ผู้ตรวจรักษา');
-            return false;
-          }
-          return {
-            doctor: doctor,
-            dx: document.getElementById('cert_dx').value,
-            tx: document.getElementById('cert_tx').value,
-            reason: document.getElementById('cert_reason').value,
-            days: document.getElementById('cert_rest_days').value
-          }
-        }
-      }).then((res) => {
-        if(res.isConfirmed) {
-          let pName = currentPosPatient ? currentPosPatient.full_name : '';
-          window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(res.value.doctor)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
-        }
-      });
-    }, 300); // จบการหน่วงเวลา
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <button class="btn btn-light fw-bold px-4 rounded-pill" onclick="document.getElementById('customCertModal').remove()">ยกเลิก</button>
+            <button class="btn btn-success fw-bold px-4 rounded-pill" onclick="submitCustomCert('${hn}')"><i class="fa-solid fa-print me-1"></i> พิมพ์ใบรับรอง</button>
+          </div>
+        </div>
+      </div>
+      <style>@keyframes popup { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }</style>
+    `;
+
+    // ลบอันเก่าทิ้งถ้ามีค้างอยู่ แล้วใส่เข้าไปใหม่ใน body
+    const existingModal = document.getElementById('customCertModal');
+    if (existingModal) existingModal.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  // ฟังก์ชันกดยืนยันพิมพ์จาก Custom Modal
+  function submitCustomCert(hn) {
+    const doctor = document.getElementById('cert_doctor_custom').value;
+    if (!doctor) {
+      Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบ', text: 'กรุณาเลือกแพทย์ผู้ตรวจรักษา', zIndex: 10000 });
+      return;
+    }
+
+    const dx = document.getElementById('cert_dx_custom').value;
+    const tx = document.getElementById('cert_tx_custom').value;
+    const reason = document.getElementById('cert_reason_custom').value;
+    const days = document.getElementById('cert_rest_days_custom').value;
+    let pName = currentPosPatient ? currentPosPatient.full_name : '';
+
+    // ปิดหน้าต่าง Custom Modal
+    document.getElementById('customCertModal').remove();
+
+    // เปิดหน้า Print
+    window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(doctor)}&dx=${encodeURIComponent(dx)}&tx=${encodeURIComponent(tx)}&reason=${encodeURIComponent(reason)}&days=${days}`, '_blank');
   }
   
   
