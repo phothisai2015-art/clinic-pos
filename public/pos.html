@@ -875,71 +875,75 @@ function renderPaymentHistory() {
     container.innerHTML = html;
   }
  async function promptMedicalCertificate(hn) {
-    Swal.fire({ title: 'กำลังโหลดข้อมูลแพทย์...', didOpen: () => Swal.showLoading() });
+    // 🌟 1. สั่งปิด Modal ประวัติการชำระเงิน (ถ้ามันเปิดอยู่) เพื่อคืนการควบคุมคีย์บอร์ด
+    closePaymentHistoryModal();
 
-    // 🌟 ดึงรายชื่อพนักงานทั้งหมด แล้วกรองเอาเฉพาะหมอ (role = DOCTOR หรือ ADMIN)
-    let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
-    try {
-      const res = await fetch('/api/users');
-      const data = await res.json();
-      if (data.status === 'success' && Array.isArray(data.data)) {
-        const doctors = data.data.filter(u => u.role === 'DOCTOR' || u.role === 'ADMIN');
-        doctors.forEach(doc => {
-          doctorOptions += `<option value="${doc.name}">${doc.name}</option>`;
-        });
-      }
-    } catch (e) { console.error(e); }
+    // 🌟 2. หน่วงเวลา 300ms ให้ฉากหลังปิดสนิทก่อน แล้วค่อยเปิดป๊อปอัป
+    setTimeout(async () => {
+      Swal.fire({ title: 'กำลังโหลดข้อมูลแพทย์...', didOpen: () => Swal.showLoading() });
 
-    Swal.close();
-
-    Swal.fire({
-      title: 'ออกใบรับรองแพทย์',
-      focusInput: false, // 🌟 ปลดล็อกให้สามารถพิมพ์ในช่องข้อความได้
-      html: `
-        <div class="text-start">
-          <label class="form-label fw-bold small text-muted">แพทย์ผู้ตรวจรักษา *</label>
-          <select id="cert_doctor" class="form-select border-primary mb-2 fw-bold text-dark">
-            ${doctorOptions}
-          </select>
-
-          <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัย (Dx)</label>
-          <input type="text" id="cert_dx" class="form-control border-primary mb-2" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
-          
-          <label class="form-label fw-bold small text-muted">การรักษา / หัตถการที่ทำ (Tx)</label>
-          <input type="text" id="cert_tx" class="form-control border-primary mb-2" placeholder="เช่น เลเซอร์ (เว้นว่างเพื่อดึงจากระบบ)">
-
-          <label class="form-label fw-bold small text-muted">ความเห็นแพทย์ / อาการป่วย</label>
-          <input type="text" id="cert_reason" class="form-control border-primary mb-2" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
-          
-          <label class="form-label fw-bold small text-muted">เห็นสมควรให้พักรักษาตัว (วัน)</label>
-          <input type="number" id="cert_rest_days" class="form-control border-primary text-center" value="0" min="0">
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบรับรอง',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#10b981',
-      preConfirm: () => {
-        const doctor = document.getElementById('cert_doctor').value;
-        if (!doctor) {
-          Swal.showValidationMessage('กรุณาเลือกแพทย์ผู้ตรวจรักษา');
-          return false;
+      let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
+      try {
+        const res = await fetch('/api/users');
+        const data = await res.json();
+        if (data.status === 'success' && Array.isArray(data.data)) {
+          const doctors = data.data.filter(u => u.role === 'DOCTOR' || u.role === 'ADMIN');
+          doctors.forEach(doc => {
+            doctorOptions += `<option value="${doc.name}">${doc.name}</option>`;
+          });
         }
-        return {
-          doctor: doctor,
-          dx: document.getElementById('cert_dx').value,
-          tx: document.getElementById('cert_tx').value,
-          reason: document.getElementById('cert_reason').value,
-          days: document.getElementById('cert_rest_days').value
+      } catch (e) { console.error(e); }
+
+      Swal.close();
+
+      Swal.fire({
+        title: 'ออกใบรับรองแพทย์',
+        focusInput: false, 
+        html: `
+          <div class="text-start">
+            <label class="form-label fw-bold small text-muted">แพทย์ผู้ตรวจรักษา *</label>
+            <select id="cert_doctor" class="form-select border-primary mb-2 fw-bold text-dark">
+              ${doctorOptions}
+            </select>
+
+            <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัย (Dx)</label>
+            <input type="text" id="cert_dx" class="form-control border-primary mb-2" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
+            
+            <label class="form-label fw-bold small text-muted">การรักษา / หัตถการที่ทำ (Tx)</label>
+            <input type="text" id="cert_tx" class="form-control border-primary mb-2" placeholder="เช่น เลเซอร์ (เว้นว่างเพื่อดึงจากระบบ)">
+
+            <label class="form-label fw-bold small text-muted">ความเห็นแพทย์ / อาการป่วย</label>
+            <input type="text" id="cert_reason" class="form-control border-primary mb-2" value="มารับบริการตรวจรักษาผิวพรรณและความงาม">
+            
+            <label class="form-label fw-bold small text-muted">เห็นสมควรให้พักรักษาตัว (วัน)</label>
+            <input type="number" id="cert_rest_days" class="form-control border-primary text-center" value="0" min="0">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-print me-1"></i> พิมพ์ใบรับรอง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#10b981',
+        preConfirm: () => {
+          const doctor = document.getElementById('cert_doctor').value;
+          if (!doctor) {
+            Swal.showValidationMessage('กรุณาเลือกแพทย์ผู้ตรวจรักษา');
+            return false;
+          }
+          return {
+            doctor: doctor,
+            dx: document.getElementById('cert_dx').value,
+            tx: document.getElementById('cert_tx').value,
+            reason: document.getElementById('cert_reason').value,
+            days: document.getElementById('cert_rest_days').value
+          }
         }
-      }
-    }).then((res) => {
-      if(res.isConfirmed) {
-        let pName = currentPosPatient ? currentPosPatient.full_name : '';
-        // 🌟 ส่งค่า doctor แนบไปกับ URL Parameter ให้หน้า Print
-        window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(res.value.doctor)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
-      }
-    });
+      }).then((res) => {
+        if(res.isConfirmed) {
+          let pName = currentPosPatient ? currentPosPatient.full_name : '';
+          window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(res.value.doctor)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
+        }
+      });
+    }, 300); // จบการหน่วงเวลา
   }
   
   
