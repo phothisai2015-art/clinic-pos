@@ -95,6 +95,33 @@
   /* 6. กล่องอัปโหลดโลโก้ร้าน */
   body.dark-theme .clinic-logo-upload { border-color: #475569 !important; background-color: #0f172a !important; }
   body.dark-theme .clinic-logo-upload:hover { border-color: #60a5fa !important; background-color: #1e293b !important; }
+  
+  /* 7. แก้ไขพื้นหลังฝั่งขวาที่ยังเป็นสีขาว */
+  body.dark-theme .settings-content {
+    background-color: transparent !important;
+  }
+  /* ดักจับกรณีมีกล่อง bg-white หรือ bg-light ครอบอยู่ด้านในอีกชั้น */
+  body.dark-theme .settings-content .bg-white,
+  body.dark-theme .settings-content .bg-light {
+    background-color: transparent !important;
+    border-color: #334155 !important;
+  }
+
+  /* 8. ปรับสีหัวข้อ "จัดการบัญชีพนักงาน" ให้สว่างขึ้นเนียนตา */
+  body.dark-theme .settings-content .text-primary {
+    color: #60a5fa !important;
+  }
+
+  /* 9. ปรับปุ่ม "ออกจากตั้งค่า" มุมซ้ายล่างให้สว่างและมองเห็นชัดเจน */
+  body.dark-theme .settings-sidebar .text-muted {
+    color: #cbd5e1 !important;
+  }
+  body.dark-theme .settings-sidebar .border-top {
+    border-top-color: #334155 !important;
+  }
+  body.dark-theme .settings-sidebar .text-muted:hover {
+    color: #f8fafc !important;
+  }
 </style>
 
 <!-- 🌟 Ambient Orbs Background -->
