@@ -735,14 +735,16 @@
     document.getElementById('paymentHistoryModalName').innerText = `${currentPosPatient.full_name} (${currentPosPatient.id})`;
     modalInstance.show();
 
-    // 🌟 ดักจับ Error กรณีบิลเก่าไม่มีชื่อไอเทม
+    // ดึงรายชื่อคอร์สทั้งหมดที่มีประวัติชำระเงิน
     let courses = new Set();
-    allPatientBillsHistory.forEach(bill => {
-      let itemName = bill.item_name || ''; 
-      let match = itemName.match(/\(ในคอร์ส:\s*(.*?)\)/);
-      let courseName = match ? match[1].trim() : itemName.trim();
-      if (courseName) courses.add(courseName);
-    });
+    if (Array.isArray(allPatientBillsHistory)) {
+      allPatientBillsHistory.forEach(bill => {
+        let itemName = bill.item_name || ''; 
+        let match = itemName.match(/\(ในคอร์ส:\s*(.*?)\)/);
+        let courseName = match ? match[1].trim() : itemName.trim();
+        if (courseName) courses.add(courseName);
+      });
+    }
 
     let filterHtml = '<option value="ALL">-- ดูประวัติการชำระเงินทั้งหมด --</option>';
     courses.forEach(c => { filterHtml += `<option value="${c}">เฉพาะ: ${c}</option>`; });
@@ -757,6 +759,13 @@
       let m = bootstrap.Modal.getInstance(modalEl);
       if (m) m.hide();
     }
+    // ล้างพื้นหลังสีเทาออกทันที (แก้ปัญหากดแล้วค้าง)
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 150);
   }
 
   function closePaymentHistoryModal() {
@@ -862,12 +871,34 @@ function renderPaymentHistory() {
 
     container.innerHTML = html;
   }
-  // 🌟 ฟังก์ชันรับข้อมูลเพิ่มเติมสำหรับใบรับรองแพทย์ (มีช่องให้กรอก Dx/Tx เพิ่ม)
-  function promptMedicalCertificate(hn) {
+ async function promptMedicalCertificate(hn) {
+    Swal.fire({ title: 'กำลังโหลดข้อมูลแพทย์...', didOpen: () => Swal.showLoading() });
+
+    // 🌟 ดึงรายชื่อพนักงานทั้งหมด แล้วกรองเอาเฉพาะหมอ (role = DOCTOR หรือ ADMIN)
+    let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      if (data.status === 'success' && Array.isArray(data.data)) {
+        const doctors = data.data.filter(u => u.role === 'DOCTOR' || u.role === 'ADMIN');
+        doctors.forEach(doc => {
+          doctorOptions += `<option value="${doc.name}">${doc.name}</option>`;
+        });
+      }
+    } catch (e) { console.error(e); }
+
+    Swal.close();
+
     Swal.fire({
       title: 'ออกใบรับรองแพทย์',
+      focusInput: false, // 🌟 ปลดล็อกให้สามารถพิมพ์ในช่องข้อความได้
       html: `
         <div class="text-start">
+          <label class="form-label fw-bold small text-muted">แพทย์ผู้ตรวจรักษา *</label>
+          <select id="cert_doctor" class="form-select border-primary mb-2 fw-bold text-dark">
+            ${doctorOptions}
+          </select>
+
           <label class="form-label fw-bold small text-muted">ผลการตรวจวินิจฉัย (Dx)</label>
           <input type="text" id="cert_dx" class="form-control border-primary mb-2" placeholder="เช่น สิวอักเสบ (เว้นว่างเพื่อดึงจากระบบ)">
           
@@ -886,7 +917,13 @@ function renderPaymentHistory() {
       cancelButtonText: 'ยกเลิก',
       confirmButtonColor: '#10b981',
       preConfirm: () => {
+        const doctor = document.getElementById('cert_doctor').value;
+        if (!doctor) {
+          Swal.showValidationMessage('กรุณาเลือกแพทย์ผู้ตรวจรักษา');
+          return false;
+        }
         return {
+          doctor: doctor,
           dx: document.getElementById('cert_dx').value,
           tx: document.getElementById('cert_tx').value,
           reason: document.getElementById('cert_reason').value,
@@ -895,9 +932,9 @@ function renderPaymentHistory() {
       }
     }).then((res) => {
       if(res.isConfirmed) {
-        let pName = currentPosPatient.full_name;
-        // ส่งแนบ URL Parameter ให้หน้า Print
-        window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
+        let pName = currentPosPatient ? currentPosPatient.full_name : '';
+        // 🌟 ส่งค่า doctor แนบไปกับ URL Parameter ให้หน้า Print
+        window.open(`/print.html?type=certificate&hn=${hn}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(res.value.doctor)}&dx=${encodeURIComponent(res.value.dx)}&tx=${encodeURIComponent(res.value.tx)}&reason=${encodeURIComponent(res.value.reason)}&days=${res.value.days}`, '_blank');
       }
     });
   }

@@ -177,6 +177,12 @@
            if (foundDoc) actualDoctor = foundDoc;
         }
 
+        // 🌟 ถ้าระบุหมอมาจากดร็อปดาวน์ POS ให้ใช้ชื่อนั้นแทนระบบเดิม
+        const paramDoctor = urlParams.get('doctor');
+        if (paramDoctor && paramDoctor !== 'null' && paramDoctor !== '') {
+          actualDoctor = paramDoctor;
+        }
+
         document.getElementById('c_doc_name').innerText = actualDoctor;
         document.getElementById('c_doc_sign').innerText = actualDoctor;
         
