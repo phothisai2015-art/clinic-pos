@@ -299,6 +299,9 @@
 </div>
 
 <script>
+  // 🌟 ล้างป๊อปอัปประวัติเก่าที่ค้างอยู่ในระบบ (แก้ปัญหาโหลดค้าง)
+  document.querySelectorAll('body > #paymentHistoryModal').forEach(m => m.remove());
+
   var currentPosPatient = null;
   var currentPatientBills = [];
   var currentPatientEmr = []; // 🌟 เพิ่มตัวแปรเก็บประวัติ EMR
@@ -484,6 +487,13 @@
       }
 
       let typeIcon = bill.type === 'PROMOTION' ? 'fa-gift text-primary' : (bill.type === 'MEDICINE' || bill.type === 'SKINCARE' ? 'fa-pills text-danger' : 'fa-wand-magic-sparkles text-info');
+      
+      // 🌟 เพิ่มโค้ดแปลงวันที่ซื้อคอร์ส
+      let dateStr = '-';
+      if (bill.bill_date) {
+        dateStr = new Date(bill.bill_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+      }
+
       let medsHtml = '';
       if (bill.attached_meds.length > 0) {
         medsHtml = '<div class="mt-1 pt-1 border-top border-light">';
@@ -502,6 +512,8 @@
             </div>
             <div class="bill-card-body pb-1">
               <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><i class="fa-solid ${typeIcon} me-1"></i> ${bill.item_name}</h6>
+              <!-- 🌟 แสดงวันที่ซื้อคอร์ส -->
+              <div class="text-muted mb-1" style="font-size: 0.75rem; margin-top: 3px;"><i class="fa-solid fa-calendar-plus me-1 opacity-75"></i> ซื้อเมื่อ: ${dateStr}</div>
               ${medsHtml}
             </div>
             <div class="px-3 pb-2" style="font-size: 0.75rem;">
