@@ -45,6 +45,56 @@
       background-color: rgba(30, 41, 59, 0.85) !important;
   }
   
+  /* ========================================================= */
+  /* 🌙 Dark Mode สำหรับหน้าตั้งค่า (Settings) */
+  /* ========================================================= */
+
+  /* 1. เมนูด้านซ้าย (Sidebar) และโครงสร้างหลัก */
+  body.dark-theme .settings-sidebar { background-color: #1e293b !important; border-right-color: #334155 !important; }
+  body.dark-theme .settings-content { background-color: transparent !important; }
+  body.dark-theme .settings-menu-item { color: #94a3b8 !important; }
+  body.dark-theme .settings-menu-item:hover { background-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .settings-menu-item.active { background-color: #3b82f6 !important; color: #ffffff !important; }
+  body.dark-theme .text-dark { color: #f8fafc !important; }
+  body.dark-theme .text-muted, body.dark-theme .text-secondary { color: #94a3b8 !important; }
+
+  /* 2. ฟอร์ม Input และ Dropdown */
+  body.dark-theme .form-control, 
+  body.dark-theme .form-select { 
+    background-color: #0f172a !important; 
+    color: #f8fafc !important; 
+    border-color: #334155 !important; 
+  }
+  body.dark-theme .form-control:focus, 
+  body.dark-theme .form-select:focus { 
+    border-color: #60a5fa !important; 
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+  }
+  body.dark-theme .form-control::placeholder { color: #64748b !important; }
+
+  /* 3. กล่องจัดการพนักงาน (Cards) และ กล่องเลือกสิทธิ์ (Checkboxes) */
+  body.dark-theme .user-card { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .user-card:hover { border-color: #60a5fa !important; box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important; }
+  body.dark-theme .perm-box { background-color: #0f172a !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+  body.dark-theme .perm-box:hover { background-color: #334155 !important; border-color: #475569 !important; }
+  body.dark-theme .perm-box input:checked + label { color: #60a5fa !important; }
+
+  /* 4. ป๊อปอัป (Modal) */
+  body.dark-theme .modal-content { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+  body.dark-theme .modal-header, 
+  body.dark-theme .modal-footer { border-color: #334155 !important; background-color: #0f172a !important; }
+  body.dark-theme .modal-body { background-color: #1e293b !important; }
+  body.dark-theme .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+  /* 5. ตารางประวัติการใช้งาน (System Logs) */
+  body.dark-theme .table { color: #f8fafc !important; }
+  body.dark-theme .table th { background-color: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
+  body.dark-theme .table td { background-color: #1e293b !important; border-bottom-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .table tbody tr:hover td { background-color: #334155 !important; }
+
+  /* 6. กล่องอัปโหลดโลโก้ร้าน */
+  body.dark-theme .clinic-logo-upload { border-color: #475569 !important; background-color: #0f172a !important; }
+  body.dark-theme .clinic-logo-upload:hover { border-color: #60a5fa !important; background-color: #1e293b !important; }
 </style>
 
 <!-- 🌟 Ambient Orbs Background -->
