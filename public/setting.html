@@ -21,9 +21,38 @@
   .clinic-logo-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none; }
   .upload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: 0.2s; }
   .clinic-logo-upload:hover .upload-overlay { opacity: 1; }
+  
+  /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
+  .ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
+  .orb-1 { width: 400px; height: 400px; background: #bae6fd; top: -100px; left: -100px; }
+  .orb-2 { width: 450px; height: 450px; background: #ddd6fe; bottom: -100px; right: -50px; animation-delay: -5s; }
+  .orb-3 { width: 300px; height: 300px; background: #fbcfe8; top: 30%; left: 30%; animation-delay: -10s; opacity: 0.3; }
+  
+  body.dark-theme .orb-1 { background: #1e3a8a; opacity: 0.3; }
+  body.dark-theme .orb-2 { background: #312e81; opacity: 0.4; }
+  body.dark-theme .orb-3 { background: #4c1d95; opacity: 0.3; }
+  
+  @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+  /* ปรับพื้นหลังกล่องให้เป็นกระจกฝ้าเพื่อให้เห็นแสงออร่า */
+  .bg-white, .card {
+      background-color: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+  }
+  body.dark-theme .bg-white, 
+  body.dark-theme .card {
+      background-color: rgba(30, 41, 59, 0.85) !important;
+  }
+  
 </style>
 
-<div class="container-fluid h-100" style="max-width: 1400px;">
+<!-- 🌟 Ambient Orbs Background -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+
+<div class="container-fluid h-100" style="max-width: 1400px; position: relative; z-index: 1;">
   <div class="settings-container d-flex flex-row">
     
     <!-- เมนูด้านซ้าย (Sidebar) -->
