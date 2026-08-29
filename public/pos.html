@@ -268,7 +268,8 @@
 </div>
 
 <!-- 🌟 Modal ดูประวัติการชำระเงิน -->
-<div class="modal fade" id="paymentHistoryModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+<!-- โค้ดใหม่ -->
+<div class="modal fade" id="paymentHistoryModal" aria-hidden="true" style="z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header bg-info text-white rounded-top-4 py-3">
@@ -697,9 +698,11 @@
                 // พิมพ์ใบเสร็จ
                 window.open(`/print.html?type=receipt&hn=${currentPosPatient.id}&pname=${encodeURIComponent(pName)}&course=${encodeURIComponent(cleanMainName)}&amount=${payAmount}&method=${selectedMethod}&date=${encodeURIComponent(new Date().toISOString())}&staff=${encodeURIComponent(staffName)}`, '_blank');
               } else if (resAlert.dismiss === Swal.DismissReason.cancel) {
-                // พิมพ์ใบรับรองแพทย์
-                promptMedicalCertificate(currentPosPatient.id);
-              }
+  // หน่วงเวลาให้ป๊อปอัปแรกปิดสนิทก่อน เพื่อไม่ให้ช่องพิมพ์โดนล็อค
+  setTimeout(() => {
+    promptMedicalCertificate(currentPosPatient.id);
+  }, 300);
+}
               // โหลดหน้าจอ POS ใหม่เพื่ออัปเดตยอดเงิน
               selectPatientForPos(currentPosPatient.id); 
             });
