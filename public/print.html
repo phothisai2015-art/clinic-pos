@@ -149,7 +149,14 @@
 
       // 🌟 ดึงข้อมูล EMR ล่าสุดมาถมในใบรับรองแพทย์ (ดึง Dx และ Tx แบบกรองข้อความ)
       if(type === 'certificate' && emrData.data && emrData.data.length > 0) {
-        const latestEmr = emrData.data[0];
+        // 🌟 ค้นหาประวัติ EMR ให้ตรงกับคอร์สที่กดพิมพ์
+        let latestEmr = emrData.data[0]; // ค่าเริ่มต้นคือประวัติล่าสุด
+        const targetCourse = urlParams.get('course');
+        
+        if (targetCourse && targetCourse !== 'null') {
+           const matchedEmr = emrData.data.find(log => (log.symptoms || '').includes(targetCourse));
+           if (matchedEmr) latestEmr = matchedEmr; // ถ้าเจอประวัติที่ตรงกับคอร์ส ให้ใช้อันนั้น
+        }
         
         // 🌟 1. ดึงชื่อแพทย์จาก [ผู้ให้บริการ/ผู้ช่วย] แทนคนล็อกอิน
         let actualDoctor = latestEmr.doctor_name || 'แพทย์เวร';
