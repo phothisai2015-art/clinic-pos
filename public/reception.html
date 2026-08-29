@@ -173,6 +173,36 @@
   }
   /* 🌟 ดัก Layout หน้าค้นหาไม่ให้พังบน PC เวลาสลับแท็บ */
   #tab-search[style*="display: block"] { display: flex !important; }
+  
+  /* 🌟 เพิ่มคุณสมบัติให้การ์ดรองรับการคาดมุม */
+  .course-card { 
+    position: relative; 
+    overflow: hidden; 
+  }
+
+  /* 🎀 สายสะพายโปรโมชั่นมุมขวาบน */
+  .ribbon-promo {
+    position: absolute;
+    top: 20px;
+    right: -35px;
+    background: linear-gradient(135deg, #f472b6, #db2777); /* สีชมพูไล่ระดับ */
+    color: white;
+    padding: 5px 40px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    transform: rotate(45deg);
+    box-shadow: 0 4px 10px rgba(219, 39, 119, 0.3);
+    z-index: 2;
+    letter-spacing: 1px;
+    pointer-events: none;
+  }
+
+  /* 🌙 โหมดกลางคืนสำหรับริบบิ้น */
+  body.dark-theme .ribbon-promo {
+    background: linear-gradient(135deg, #ec4899, #be185d);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+  
 </style>
 
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
@@ -781,7 +811,8 @@
             ? `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true, true)"><i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติการรักษา</button>` 
             : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', true, false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
-          html += `<div class="col-md-6"><div class="course-card ${cardStyle} shadow-sm">
+          html += `<div class="col-md-6 d-flex"><div class="course-card ${cardStyle} shadow-sm w-100">
+                     <div class="ribbon-promo"><i class="fa-solid fa-star me-1"></i>โปรโมชั่น</div>
                      <div class="card-body p-4">
                        <div class="d-flex justify-content-between align-items-start mb-2">
                          <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-2">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
@@ -800,7 +831,7 @@
             ? `<button class="btn btn-outline-secondary btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false, true)"><i class="fa-solid fa-clock-rotate-left me-1"></i> ดูประวัติการรักษา</button>` 
             : `<button class="btn btn-outline-success btn-sm w-100 fw-bold mt-3 rounded-pill" onclick="openEmrMode(${c.id}, '${displayName}', false, false)"><i class="fa-solid fa-notes-medical me-1"></i> บันทึกประวัติ / หักคอร์ส</button>`;
 
-          html += `<div class="col-md-4"><div class="course-card ${cardStyle} shadow-sm">
+          html += `<div class="col-md-6 d-flex"><div class="course-card ${cardStyle} shadow-sm w-100">
                      <div class="card-body p-4 text-center">
                        <div class="d-flex justify-content-between align-items-start w-100 mb-2">
                          <span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'}">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว #' + c.id}</span>
