@@ -122,6 +122,24 @@
   body.dark-theme .settings-sidebar .text-muted:hover {
     color: #f8fafc !important;
   }
+  /* 🌟 แก้ปัญหาพื้นหลังฝั่งขวาสีขาว (เปลี่ยนกล่องครอบหลักให้เป็นกระจกฝ้าสีเข้ม) */
+  body.dark-theme .settings-container {
+    background-color: rgba(15, 23, 42, 0.75) !important;
+    border-color: #334155 !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  /* บังคับให้เนื้อหาฝั่งขวาโปร่งใส เพื่อให้มองทะลุไปเห็นพื้นหลังและแสงออร่า */
+  body.dark-theme .settings-content {
+    background-color: transparent !important;
+  }
+  
+  /* เปลี่ยนสีกรอบและพื้นหลังของกล่องฟอร์มด้านใน (เช่น กล่องใส่โลโก้/ที่อยู่) */
+  body.dark-theme .settings-content .bg-white {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+    border-color: #334155 !important;
+  }
 </style>
 
 <!-- 🌟 Ambient Orbs Background -->
