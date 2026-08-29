@@ -1003,11 +1003,27 @@
     if (canvasFile) canvasFile.value = '';
     
     if (isViewOnly) {
-      document.getElementById('emr_input_section').style.display = 'none';
-      document.getElementById('emr_view_only_msg').style.display = 'block';
+      // 🌟 เปลี่ยนจากซ่อนฟอร์ม เป็นเปิดโหมดติดตามผลแทน
+      document.getElementById('emr_input_section').style.display = 'flex';
+      document.getElementById('emr_view_only_msg').style.display = 'none';
+      document.getElementById('emr_sub_items_section').style.display = 'none'; // ซ่อนกล่องหักคอร์ส
+      
+      document.getElementById('e_cc').value = `ติดตามผลการรักษา: ${courseName}`;
+      document.getElementById('e_dx').value = ''; 
+      document.getElementById('e_tx').value = '';
+      document.getElementById('emr_appt_reason').value = ''; 
+      
+      resetAssistantDropdowns();
+      document.getElementById('e_med_list_display').value = '';
+      pendingMeds = [];
+      currentSubItems = []; // ไม่โหลด sub items เพราะใช้ครบแล้ว
+      
+      // อัปเดตปุ่มบันทึกให้ระบุชัดเจนว่าแค่บันทึกประวัติ
+      document.querySelector('button[onclick="submitEMRAndDeduct()"]').innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติติดตามผล';
     } else {
       document.getElementById('emr_input_section').style.display = 'flex';
       document.getElementById('emr_view_only_msg').style.display = 'none';
+	  document.getElementById('emr_sub_items_section').style.display = 'block';
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
       document.getElementById('e_dx').value = ''; // 🌟 ล้างค่า Dx ให้ว่าง
@@ -1119,7 +1135,6 @@
     if(cards[index]) { cards[index].classList.remove('border-primary', 'bg-white'); cards[index].classList.add('border-danger', 'bg-light'); }
 
     let formattedTx = log.treatment_details ? log.treatment_details.replace(/\n/g, '<br>') : '-';
-    
     let photoHtml = '<div class="text-muted small mt-2">- ไม่พบรูปภาพการรักษาในวันนี้ -</div>';
     try {
       const res = await fetch(`/api/patients/${currentHN}/photos`);
@@ -1130,51 +1145,78 @@
          if (activeEmrCourse && activeEmrCourse.id) {
             matchedPhotos = matchedPhotos.filter(p => p.photo_type && p.photo_type.endsWith(`_${activeEmrCourse.id}`));
          }
-         
          if (matchedPhotos.length > 0) {
            photoHtml = '<div class="row g-2 mt-2">';
-           matchedPhotos.forEach(p => {
-              photoHtml += `
-                <div class="col-md-6 col-12">
-                  <img src="${p.image_path}" class="img-fluid rounded border shadow-sm" style="height: 180px; object-fit: cover; width: 100%; cursor: pointer;" onclick="window.open('${p.image_path}', '_blank')">
-                </div>`;
-           });
+           matchedPhotos.forEach(p => { photoHtml += `<div class="col-md-6 col-12"><img src="${p.image_path}" class="img-fluid rounded border shadow-sm" style="height: 180px; object-fit: cover; width: 100%; cursor: pointer;" onclick="window.open('${p.image_path}', '_blank')"></div>`; });
            photoHtml += '</div>';
          }
       }
-    } catch (e) { console.error('Error fetching photos', e); }
+    } catch (e) {}
+
+    // 🌟 เช็คสิทธิ์: ไอดีหมอที่บันทึก ตรงกับไอดีที่ล็อกอินอยู่หรือไม่
+    let currentUserId = parseInt(sessionStorage.getItem('currentUserId')) || 0;
+    let isOwner = (log.doctor_id === currentUserId);
+    
+    let editBtnHtml = isOwner ? `<button class="btn btn-warning rounded-pill btn-sm fw-bold px-4 shadow-sm me-2 text-dark" onclick="enableEditEmr(${log.id})"><i class="fa-solid fa-pen me-1"></i> แก้ไขประวัติ</button>` : '';
 
     detailSection.innerHTML = `
       <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
         <h6 class="fw-bold text-primary m-0"><i class="fa-solid fa-notes-medical me-2"></i>รายละเอียดการรักษา</h6>
         <span class="badge bg-light text-dark border fs-6"><i class="fa-solid fa-user-doctor me-1"></i> ${log.doctor_name || 'ไม่ระบุ'}</span>
       </div>
-      <div class="mb-3">
-        <span class="badge bg-primary mb-2 fs-6"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span>
-      </div>
+      <div class="mb-3"><span class="badge bg-primary mb-2 fs-6"><i class="fa-solid fa-calendar-day me-1"></i> ${dateStr} น.</span></div>
       
-      <!-- 🌟 เพิ่มกล่องแสดงผลการวินิจฉัย (Dx) -->
-      <div class="bg-light p-3 rounded-3 border mb-3">
-        <div class="fw-bold text-dark mb-1">ผลการวินิจฉัย (Dx)</div>
-        <div class="text-muted small">${log.diagnosis || '-'}</div>
+      <div id="emr_display_mode_${log.id}">
+        <div class="bg-light p-3 rounded-3 border mb-3"><div class="fw-bold text-dark mb-1">ผลการวินิจฉัย (Dx)</div><div class="text-muted small">${log.diagnosis || '-'}</div></div>
+        <div class="bg-light p-3 rounded-3 border mb-3"><div class="fw-bold text-dark mb-1">อาการแรกรับ / ประวัติ (CC)</div><div class="text-muted small">${log.symptoms || '-'}</div></div>
+        <div class="bg-light p-3 rounded-3 border mb-3"><div class="fw-bold text-dark mb-1">หัตถการที่ทำ (Tx)</div><div class="text-muted small">${formattedTx}</div></div>
+        <div class="mt-3"><div class="fw-bold text-dark mb-1"><i class="fa-solid fa-images me-1"></i> รูปภาพการรักษา</div>${photoHtml}</div>
+        <div class="text-end mt-4 border-top pt-3">
+          ${editBtnHtml}
+          <button class="btn btn-outline-secondary rounded-pill btn-sm fw-bold px-4 shadow-sm" onclick="resetLeftPanel()"><i class="fa-solid fa-xmark me-1"></i> ปิดรายละเอียด</button>
+        </div>
       </div>
 
-      <div class="bg-light p-3 rounded-3 border mb-3">
-        <div class="fw-bold text-dark mb-1">อาการแรกรับ / ประวัติ (CC)</div>
-        <div class="text-muted small">${log.symptoms || '-'}</div>
-      </div>
-      <div class="bg-light p-3 rounded-3 border mb-3">
-        <div class="fw-bold text-dark mb-1">หัตถการที่ทำ (Tx)</div>
-        <div class="text-muted small">${formattedTx}</div>
-      </div>
-      <div class="mt-3">
-        <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-images me-1"></i> รูปภาพการรักษา</div>
-        ${photoHtml}
-      </div>
-      <div class="text-end mt-4 border-top pt-3">
-        <button class="btn btn-outline-secondary rounded-pill btn-sm fw-bold px-4 shadow-sm" onclick="resetLeftPanel()"><i class="fa-solid fa-xmark me-1"></i> ปิดรายละเอียด</button>
+      <!-- 🌟 โหมดแก้ไข (ซ่อนไว้ก่อน) -->
+      <div id="emr_edit_mode_${log.id}" style="display: none;">
+        <div class="mb-3"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><input type="text" id="edit_dx_${log.id}" class="form-control border-primary" value="${log.diagnosis || ''}"></div>
+        <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="edit_cc_${log.id}" class="form-control bg-light" rows="2">${log.symptoms || ''}</textarea></div>
+        <div class="mb-3"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ (Tx)</label><textarea id="edit_tx_${log.id}" class="form-control border-primary" rows="6">${log.treatment_details || ''}</textarea></div>
+        <div class="text-end mt-4 border-top pt-3">
+          <button class="btn btn-success rounded-pill btn-sm fw-bold px-4 shadow-sm me-2" onclick="saveEditedEmr(${log.id}, ${index})"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึก</button>
+          <button class="btn btn-light rounded-pill btn-sm fw-bold px-4 shadow-sm border" onclick="cancelEditEmr(${log.id})">ยกเลิก</button>
+        </div>
       </div>
     `;
+  }
+
+  // 🌟 ฟังก์ชันสลับโหมดและบันทึกการแก้ไข
+  function enableEditEmr(logId) {
+    document.getElementById(`emr_display_mode_${logId}`).style.display = 'none';
+    document.getElementById(`emr_edit_mode_${logId}`).style.display = 'block';
+  }
+
+  function cancelEditEmr(logId) {
+    document.getElementById(`emr_display_mode_${logId}`).style.display = 'block';
+    document.getElementById(`emr_edit_mode_${logId}`).style.display = 'none';
+  }
+
+  async function saveEditedEmr(logId, index) {
+    let payload = {
+      diagnosis: document.getElementById(`edit_dx_${logId}`).value,
+      symptoms: document.getElementById(`edit_cc_${logId}`).value,
+      treatment_details: document.getElementById(`edit_tx_${logId}`).value
+    };
+    Swal.fire({ title: 'กำลังอัปเดต...', didOpen: () => Swal.showLoading() });
+    try {
+      const res = await fetch(`/api/emr/${logId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+      if(res.ok) {
+        Swal.fire({ icon: 'success', title: 'แก้ไขประวัติเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        let tempCourseName = activeEmrCourse ? document.getElementById('emr_package_title').innerText.replace('ชื่อแพคเกจ', '').trim() : '';
+        await loadSideEmrHistory(tempCourseName);
+        viewEmrDetail(index); // โหลดหน้ารายละเอียดใหม่
+      }
+    } catch(e) { Swal.fire('Error', 'ไม่สามารถแก้ไขได้', 'error'); }
   }
 
   function renderSubItemsList() {
@@ -1314,18 +1356,21 @@
       // API นี้จะบันทึก EMR และสร้างคิวนัดหมายลง Database ให้อัตโนมัติ
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
       
-      let deductPayload = {};
-      if (activeEmrCourse.bundle_state) {
-        let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
-        let stockDeds = [];
-        currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
-        let isAllUsed = newState.every(s => s.total - s.used <= 0);
-        deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
-      } else {
-        deductPayload = { deduct_amount: currentSubItems[0].used_today };
-      }
+      // 🌟 นำเงื่อนไข if (!isCurrentEmrViewOnly) มาครอบส่วนหักคอร์สตรงนี้ครับ
+      if (!isCurrentEmrViewOnly) {
+        let deductPayload = {};
+        if (activeEmrCourse.bundle_state) {
+          let newState = currentSubItems.map(s => ({ id: s.id, name: s.name, total: s.total, used: s.used + s.used_today }));
+          let stockDeds = [];
+          currentSubItems.forEach(s => { if(s.used_today > 0) stockDeds.push({ product_id: s.id, amount: s.used_today }); });
+          let isAllUsed = newState.every(s => s.total - s.used <= 0);
+          deductPayload = { deduct_amount: isAllUsed ? 1 : 0, bundle_state: JSON.stringify(newState), stock_deductions: stockDeds };
+        } else {
+          deductPayload = { deduct_amount: currentSubItems[0].used_today };
+        }
 
-      await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
+        await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
+      }
 
       // ส่งประวัติเข้า System Logs
       let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
