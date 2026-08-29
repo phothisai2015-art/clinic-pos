@@ -784,6 +784,12 @@
            totalPaid += b.paid_amount; 
        });
 
+       // 🌟 ดึงวันที่ซื้อคอร์สจากประวัติบิล
+       let purchaseDateStr = '-';
+       if (relatedBills.length > 0 && relatedBills[0].bill_date) {
+           purchaseDateStr = new Date(relatedBills[0].bill_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+       }
+
        let payBadge = '';
        if (relatedBills.length === 0 || totalPaid >= totalBilled) {
          payBadge = `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
@@ -818,7 +824,8 @@
   <div><span class="badge ${isAllUsed ? 'bg-secondary' : 'bg-primary'} mb-2">${isAllUsed ? 'ใช้ครบแล้ว' : 'กล่องสิทธิ์ #' + c.id}</span></div>
   <div>${payBadge}</div>
 </div>
-                       <h5 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} mb-3"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-2"></i> ${displayName}</h5>
+                       <h5 class="fw-bold ${isAllUsed ? 'text-secondary' : 'text-dark'} mb-0"><i class="fa-solid fa-gift ${isAllUsed ? 'text-secondary' : 'text-primary'} me-2"></i> ${displayName}</h5>
+                       <div class="text-muted mb-3 text-start" style="font-size: 0.75rem; margin-top: 3px;"><i class="fa-solid fa-calendar-plus me-1 opacity-75"></i> ซื้อเมื่อ: ${purchaseDateStr}</div>
                        <div class="bg-light p-3 rounded-3 border flex-grow-1" style="font-size: 0.9rem;">${bundleHtml}</div>
                        ${btnHtml}
                      </div></div></div>`;
@@ -837,7 +844,8 @@
                          <span class="badge ${isUsedUp ? 'bg-secondary' : 'bg-success'}">${isUsedUp ? 'ใช้ครบแล้ว' : 'คอร์สเดี่ยว #' + c.id}</span>
                          ${payBadge}
                        </div>
-                       <h5 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} mt-2 mb-3"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-2"></i> ${displayName}</h5>
+                       <h5 class="fw-bold ${isUsedUp ? 'text-secondary' : 'text-dark'} mt-2 mb-0"><i class="fa-solid fa-wand-magic-sparkles ${isUsedUp ? 'text-secondary' : 'text-success'} me-2"></i> ${displayName}</h5>
+                       <div class="text-muted mb-3" style="font-size: 0.75rem; margin-top: 3px;"><i class="fa-solid fa-calendar-plus me-1 opacity-75"></i> ซื้อเมื่อ: ${purchaseDateStr}</div>
                        <div class="bg-light p-2 rounded-3 border w-100 mt-auto">
                           <div class="d-flex justify-content-between small px-2">
                             <span class="${isUsedUp ? 'text-muted' : 'text-dark'}">สิทธิ์คงเหลือ</span>
