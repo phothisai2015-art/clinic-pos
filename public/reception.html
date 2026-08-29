@@ -1202,21 +1202,60 @@
   }
 
   async function saveEditedEmr(logId, index) {
+    // 1. ดึงข้อมูลเดิมมาเปรียบเทียบ
+    const log = currentFilteredEmr[index];
+    const newDx = document.getElementById(`edit_dx_${logId}`).value.trim();
+    const newCc = document.getElementById(`edit_cc_${logId}`).value.trim();
+    const newTx = document.getElementById(`edit_tx_${logId}`).value.trim();
+
+    const oldDx = (log.diagnosis || '').trim();
+    const oldCc = (log.symptoms || '').trim();
+    const oldTx = (log.treatment_details || '').trim();
+
+    // 2. เช็คว่ามีการแก้ไขข้อมูลหรือไม่
+    if (newDx === oldDx && newCc === oldCc && newTx === oldTx) {
+      Swal.fire({
+        icon: 'info',
+        title: 'ไม่มีการเปลี่ยนแปลง',
+        text: 'ข้อมูลเหมือนเดิม ไม่จำเป็นต้องบันทึก',
+        confirmButtonColor: '#3b82f6'
+      });
+      return; // หยุดการทำงาน ไม่ต้องส่งไปเซิร์ฟเวอร์
+    }
+
+    // 3. เตรียมส่งข้อมูลไปอัปเดต
     let payload = {
-      diagnosis: document.getElementById(`edit_dx_${logId}`).value,
-      symptoms: document.getElementById(`edit_cc_${logId}`).value,
-      treatment_details: document.getElementById(`edit_tx_${logId}`).value
+      diagnosis: newDx,
+      symptoms: newCc,
+      treatment_details: newTx
     };
-    Swal.fire({ title: 'กำลังอัปเดต...', didOpen: () => Swal.showLoading() });
+
+    Swal.fire({ title: 'กำลังอัปเดต...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
     try {
-      const res = await fetch(`/api/emr/${logId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-      if(res.ok) {
+      const res = await fetch(`/api/emr/${logId}`, { 
+        method: 'PUT', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(payload) 
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'แก้ไขประวัติเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+        
+        // โหลดประวัติฝั่งขวาใหม่ เพื่อให้อัปเดต
         let tempCourseName = activeEmrCourse ? document.getElementById('emr_package_title').innerText.replace('ชื่อแพคเกจ', '').trim() : '';
         await loadSideEmrHistory(tempCourseName);
-        viewEmrDetail(index); // โหลดหน้ารายละเอียดใหม่
+        
+        // โหลดหน้ารายละเอียดฝั่งซ้ายใหม่
+        viewEmrDetail(index); 
+      } else {
+        Swal.fire('ข้อผิดพลาด', data.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
       }
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถแก้ไขได้', 'error'); }
+    } catch(e) { 
+      Swal.fire('การเชื่อมต่อขัดข้อง', 'โปรดตรวจสอบว่าเซิร์ฟเวอร์ทำงานอยู่หรือไม่', 'error'); 
+    }
   }
 
   function renderSubItemsList() {
