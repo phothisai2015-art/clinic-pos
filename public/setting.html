@@ -48,126 +48,56 @@
   /* ========================================================= */
   /* 🌙 Dark Mode สำหรับหน้าตั้งค่า (Settings) */
   /* ========================================================= */
-
-  /* 1. เมนูด้านซ้าย (Sidebar) และโครงสร้างหลัก */
   body.dark-theme .settings-sidebar { background-color: #1e293b !important; border-right-color: #334155 !important; }
-  body.dark-theme .settings-content { background-color: transparent !important; }
   body.dark-theme .settings-menu-item { color: #94a3b8 !important; }
   body.dark-theme .settings-menu-item:hover { background-color: #334155 !important; color: #f8fafc !important; }
   body.dark-theme .settings-menu-item.active { background-color: #3b82f6 !important; color: #ffffff !important; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted, body.dark-theme .text-secondary { color: #94a3b8 !important; }
 
-  /* 2. ฟอร์ม Input และ Dropdown */
-  body.dark-theme .form-control, 
-  body.dark-theme .form-select { 
-    background-color: #0f172a !important; 
-    color: #f8fafc !important; 
-    border-color: #334155 !important; 
-  }
-  body.dark-theme .form-control:focus, 
-  body.dark-theme .form-select:focus { 
-    border-color: #60a5fa !important; 
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
-  }
+  body.dark-theme .form-control, body.dark-theme .form-select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+  body.dark-theme .form-control:focus, body.dark-theme .form-select:focus { border-color: #60a5fa !important; box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important; }
   body.dark-theme .form-control::placeholder { color: #64748b !important; }
 
-  /* 3. กล่องจัดการพนักงาน (Cards) และ กล่องเลือกสิทธิ์ (Checkboxes) */
   body.dark-theme .user-card { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
   body.dark-theme .user-card:hover { border-color: #60a5fa !important; box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important; }
   body.dark-theme .perm-box { background-color: #0f172a !important; border-color: #334155 !important; color: #cbd5e1 !important; }
   body.dark-theme .perm-box:hover { background-color: #334155 !important; border-color: #475569 !important; }
   body.dark-theme .perm-box input:checked + label { color: #60a5fa !important; }
 
-  /* 4. ป๊อปอัป (Modal) */
   body.dark-theme .modal-content { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
-  body.dark-theme .modal-header, 
-  body.dark-theme .modal-footer { border-color: #334155 !important; background-color: #0f172a !important; }
+  body.dark-theme .modal-header, body.dark-theme .modal-footer { border-color: #334155 !important; background-color: #0f172a !important; }
   body.dark-theme .modal-body { background-color: #1e293b !important; }
   body.dark-theme .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
 
-  /* 5. ตารางประวัติการใช้งาน (System Logs) */
   body.dark-theme .table { color: #f8fafc !important; }
   body.dark-theme .table th { background-color: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
   body.dark-theme .table td { background-color: #1e293b !important; border-bottom-color: #334155 !important; color: #f8fafc !important; }
   body.dark-theme .table tbody tr:hover td { background-color: #334155 !important; }
 
-  /* 6. กล่องอัปโหลดโลโก้ร้าน */
   body.dark-theme .clinic-logo-upload { border-color: #475569 !important; background-color: #0f172a !important; }
   body.dark-theme .clinic-logo-upload:hover { border-color: #60a5fa !important; background-color: #1e293b !important; }
   
-  /* 7. แก้ไขพื้นหลังฝั่งขวาที่ยังเป็นสีขาว */
-  body.dark-theme .settings-content {
-    background-color: transparent !important;
-  }
-  /* ดักจับกรณีมีกล่อง bg-white หรือ bg-light ครอบอยู่ด้านในอีกชั้น */
-  body.dark-theme .settings-content .bg-white,
-  body.dark-theme .settings-content .bg-light {
-    background-color: transparent !important;
-    border-color: #334155 !important;
-  }
+  body.dark-theme .settings-container { background-color: rgba(15, 23, 42, 0.75) !important; border-color: #334155 !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  body.dark-theme .settings-content { background-color: transparent !important; }
+  body.dark-theme .settings-content .bg-white, body.dark-theme .settings-content .bg-light { background-color: rgba(30, 41, 59, 0.6) !important; border-color: #334155 !important; }
+  body.dark-theme .settings-content .text-primary { color: #60a5fa !important; }
+  body.dark-theme .settings-sidebar .text-muted { color: #cbd5e1 !important; }
+  body.dark-theme .settings-sidebar .border-top { border-top-color: #334155 !important; }
+  body.dark-theme .settings-sidebar .text-muted:hover { color: #f8fafc !important; }
 
-  /* 8. ปรับสีหัวข้อ "จัดการบัญชีพนักงาน" ให้สว่างขึ้นเนียนตา */
-  body.dark-theme .settings-content .text-primary {
-    color: #60a5fa !important;
-  }
-
-  /* 9. ปรับปุ่ม "ออกจากตั้งค่า" มุมซ้ายล่างให้สว่างและมองเห็นชัดเจน */
-  body.dark-theme .settings-sidebar .text-muted {
-    color: #cbd5e1 !important;
-  }
-  body.dark-theme .settings-sidebar .border-top {
-    border-top-color: #334155 !important;
-  }
-  body.dark-theme .settings-sidebar .text-muted:hover {
-    color: #f8fafc !important;
-  }
-  /* 🌟 แก้ปัญหาพื้นหลังฝั่งขวาสีขาว (เปลี่ยนกล่องครอบหลักให้เป็นกระจกฝ้าสีเข้ม) */
-  body.dark-theme .settings-container {
-    background-color: rgba(15, 23, 42, 0.75) !important;
-    border-color: #334155 !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-  
-  /* บังคับให้เนื้อหาฝั่งขวาโปร่งใส เพื่อให้มองทะลุไปเห็นพื้นหลังและแสงออร่า */
-  body.dark-theme .settings-content {
-    background-color: transparent !important;
-  }
-  
-  /* เปลี่ยนสีกรอบและพื้นหลังของกล่องฟอร์มด้านใน (เช่น กล่องใส่โลโก้/ที่อยู่) */
-  body.dark-theme .settings-content .bg-white {
-    background-color: rgba(30, 41, 59, 0.6) !important;
-    border-color: #334155 !important;
-  }
   /* ========================================================= */
   /* 📱 ปรับหน้าตั้งค่าให้เป็นแบบสไลด์เมนูในจอมือถือ (iOS Style) */
   /* ========================================================= */
-  .mobile-back-btn { display: none; } /* ซ่อนปุ่มย้อนกลับในโหมด PC */
+  .mobile-back-btn { display: none; }
 
   @media (max-width: 768px) {
-    /* ปรับให้เมนูและเนื้อหากินพื้นที่เต็มจอ 100% */
-    .settings-sidebar, .settings-content {
-      width: 100% !important;
-      max-width: 100% !important;
-      flex: 0 0 100% !important;
-      border-right: none !important;
-    }
-    
-    /* 1. ซ่อนหน้าเนื้อหา (ฝั่งขวา) เป็นค่าเริ่มต้น */
+    .settings-sidebar, .settings-content { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; border-right: none !important; }
     .settings-content { display: none !important; }
-    
-    /* 2. เมื่อมีการเลือกเมนู ให้ซ่อนเมนู (ฝั่งซ้าย) แล้วโชว์เนื้อหา (ฝั่งขวา) */
     .settings-container.show-content .settings-sidebar { display: none !important; }
     .settings-container.show-content .settings-content { display: block !important; padding: 20px 15px !important; }
-    
-    /* 3. แสดงปุ่มย้อนกลับเฉพาะในมือถือ */
     .mobile-back-btn { display: inline-flex !important; align-items: center; justify-content: center; width: 35px; height: 35px; }
-    
-    /* 4. แก้ไขปุ่ม "ออกจากตั้งค่า" ที่เคย fix ตำแหน่งไว้ ให้ต่อท้ายเมนูได้ปกติ */
     .settings-sidebar .mt-auto { position: relative !important; bottom: auto !important; width: 100% !important; margin-top: 30px !important; padding-top: 15px !important; }
-    
-    /* ปรับขนาดตัวหนังสือให้พอดีจอ */
     .settings-content h4 { font-size: 1.25rem !important; }
   }
 </style>
@@ -187,13 +117,13 @@
       </div>
       
       <div id="nav-users" class="settings-menu-item active" onclick="switchSettingTab('users')">
-        <i class="fa-solid fa-users-gear me-3 fs-5"></i> พนักงานและสิทธิ์ (Users)
+        <i class="fa-solid fa-users-gear me-3 fs-5"></i> พนักงานและสิทธิ์
       </div>
       <div id="nav-clinic" class="settings-menu-item" onclick="switchSettingTab('clinic')">
         <i class="fa-solid fa-house-medical me-3 fs-5"></i> ข้อมูลคลินิก / สาขา
       </div>
       <div id="nav-logs" class="settings-menu-item" onclick="switchSettingTab('logs')">
-        <i class="fa-solid fa-clipboard-list me-3 fs-5"></i> ประวัติการใช้งาน (Logs)
+        <i class="fa-solid fa-clipboard-list me-3 fs-5"></i> ประวัติการใช้งาน
       </div>
       
       <div class="settings-menu-item text-muted text-danger mt-auto border-top pt-3" style="position:absolute; bottom: 30px; width: calc(25% - 40px);" onclick="closeModule(); document.getElementById('userModal')?.remove();">
@@ -205,118 +135,13 @@
     <div class="settings-content col-md-9 col-12 position-relative">
       
       <!-- TAB 1: พนักงาน -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-          <div class="d-flex align-items-center">
-            <button class="btn btn-light rounded-circle me-2 mobile-back-btn shadow-sm border" onclick="backToSettingsMenu()"><i class="fa-solid fa-chevron-left"></i></button>
-            <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
-          </div>
-          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i></button>
-        </div>
-        <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" id="usersList">
-          <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
-        </div>
-      </div>
-
-      <!-- TAB 2: ข้อมูลร้านค้า -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-          <div class="d-flex align-items-center">
-            <button class="btn btn-light rounded-circle me-2 mobile-back-btn shadow-sm border" onclick="backToSettingsMenu()"><i class="fa-solid fa-chevron-left"></i></button>
-            <h4 class="fw-bold text-primary m-0">ข้อมูลคลินิก / ร้านค้า</h4>
-          </div>
-          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveClinicData()"><i class="fa-solid fa-floppy-disk me-1"></i></button>
-        </div>
-        
-        <div class="bg-white p-4 rounded-4 shadow-sm border custom-scrollbar" style="overflow-y: auto; max-height: calc(100vh - 150px);">
-          <div class="row align-items-center mb-4 border-bottom pb-4">
-            <div class="col-md-3 text-center">
-              <label class="fw-bold small text-muted mb-2 d-block">โลโก้ร้าน (คลิกเพื่อเปลี่ยน)</label>
-              <div class="clinic-logo-upload mx-auto" onclick="document.getElementById('clinicLogoInput').click()">
-                <div class="text-muted small"><i class="fa-solid fa-cloud-arrow-up fa-2x mb-1 d-block"></i> Upload Logo</div>
-                <img id="clinic_logo_preview" class="clinic-logo-img" src="">
-                <div class="upload-overlay"><i class="fa-solid fa-camera"></i><small>เปลี่ยนรูป</small></div>
-              </div>
-              <input type="file" id="clinicLogoInput" class="d-none" accept="image/png, image/jpeg, image/jpg" onchange="uploadClinicLogo(this)">
-            </div>
-            <div class="col-md-9">
-              <label class="form-label fw-bold small text-muted">ชื่อคลินิก / ชื่อร้าน *</label>
-              <input type="text" id="c_name" class="form-control form-control-lg fw-bold text-primary border-primary rounded-3" placeholder="ระบุชื่อคลินิกของคุณ">
-            </div>
-          </div>
-
-          <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-address-book me-2"></i> ข้อมูลติดต่อ & การชำระเงิน</h6>
-          <div class="row g-4">
-            <div class="col-md-6">
-              <label class="form-label fw-bold small text-muted">เบอร์โทรศัพท์ร้าน</label>
-              <input type="text" id="c_phone" class="form-control rounded-3" placeholder="เช่น 02-xxx-xxxx">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small text-muted">ที่อยู่คลินิก</label>
-              <input type="text" id="c_address" class="form-control rounded-3" placeholder="เลขที่, ซอย, ถนน, แขวง, เขต, จังหวัด">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small text-muted">เบอร์พร้อมเพย์ (PromptPay)</label>
-              <input type="text" id="c_promptpay" class="form-control rounded-3 border-success text-success fw-bold" placeholder="เบอร์โทร / เลขบัตร ปชช. / เลขนิติบุคคล">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small text-muted">ชื่อบัญชีธนาคาร (แสดงตอนสแกน)</label>
-              <input type="text" id="c_bank_name" class="form-control rounded-3" placeholder="เช่น บจก. คลินิกความงาม">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: ประวัติการทำงาน (Logs) -->
-      <div id="tab-logs" class="h-100 flex-column" style="display: none;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-check me-2"></i> ประวัติการใช้งานระบบ (System Logs)</h4>
-          <div class="d-flex gap-2">
-            <!-- ฟิลเตอร์กรองข้อมูล -->
-            <select id="logUserFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
-              <option value="">-- พนักงานทุกคน --</option>
-            </select>
-            <select id="logActionFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
-              <option value="">-- ทุกหมวดหมู่ --</option>
-              <option value="LOGIN">เข้าสู่ระบบ</option>
-              <option value="ADD_PATIENT">เพิ่มคนไข้</option>
-              <option value="EMR">บันทึกประวัติ (EMR)</option>
-              <option value="POS">รับชำระเงิน (POS)</option>
-              <option value="STOCK">จัดการคลังสินค้า</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="bg-white p-0 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
-          <table class="table table-hover mb-0">
-            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
-              <tr>
-                <th class="py-3 px-4 text-muted fw-bold">วัน - เวลา</th>
-                <th class="py-3 text-muted fw-bold">ผู้ทำรายการ</th>
-                <th class="py-3 text-muted fw-bold">หมวดหมู่</th>
-                <th class="py-3 text-muted fw-bold">รายละเอียด (Details)</th>
-              </tr>
-            </thead>
-            <tbody id="logsListBody">
-              <tr><td colspan="4" class="text-center py-5 text-muted">กำลังโหลดข้อมูล...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- รายละเอียดด้านขวา (Content) -->
-    <div class="settings-content col-md-9 col-12 position-relative">
-      
-      <!-- TAB 1: พนักงาน -->
       <div id="tab-users" class="h-100 flex-column" style="display: flex;">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div class="d-flex align-items-center">
             <button class="btn btn-light rounded-circle me-2 mobile-back-btn shadow-sm border" onclick="backToSettingsMenu()"><i class="fa-solid fa-chevron-left"></i></button>
             <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
           </div>
-          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i> <span class="d-none d-md-inline">เพิ่มพนักงานใหม่</span></button>
+          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i> <span class="d-none d-md-inline">เพิ่มพนักงาน</span></button>
         </div>
         <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" id="usersList">
           <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
@@ -330,7 +155,7 @@
             <button class="btn btn-light rounded-circle me-2 mobile-back-btn shadow-sm border" onclick="backToSettingsMenu()"><i class="fa-solid fa-chevron-left"></i></button>
             <h4 class="fw-bold text-primary m-0">ข้อมูลคลินิก / ร้านค้า</h4>
           </div>
-          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveClinicData()"><i class="fa-solid fa-floppy-disk me-1"></i> <span class="d-none d-md-inline">บันทึกข้อมูลร้าน</span></button>
+          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveClinicData()"><i class="fa-solid fa-floppy-disk me-1"></i> <span class="d-none d-md-inline">บันทึก</span></button>
         </div>
         
         <div class="bg-white p-4 rounded-4 shadow-sm border custom-scrollbar" style="overflow-y: auto; max-height: calc(100vh - 150px);">
@@ -344,7 +169,7 @@
               </div>
               <input type="file" id="clinicLogoInput" class="d-none" accept="image/png, image/jpeg, image/jpg" onchange="uploadClinicLogo(this)">
             </div>
-            <div class="col-md-9">
+            <div class="col-md-9 mt-3 mt-md-0">
               <label class="form-label fw-bold small text-muted">ชื่อคลินิก / ชื่อร้าน *</label>
               <input type="text" id="c_name" class="form-control form-control-lg fw-bold text-primary border-primary rounded-3" placeholder="ระบุชื่อคลินิกของคุณ">
             </div>
@@ -380,17 +205,16 @@
             <h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-check me-2"></i> ประวัติการใช้งานระบบ</h4>
           </div>
           <div class="d-flex gap-2">
-            <!-- ฟิลเตอร์กรองข้อมูล -->
             <select id="logUserFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
               <option value="">-- พนักงานทุกคน --</option>
             </select>
             <select id="logActionFilter" class="form-select rounded-pill fw-bold text-secondary shadow-sm" onchange="filterLogs()">
-              <option value="">-- ทุกหมวดหมู่ --</option>
+              <option value="">-- หมวดหมู่ --</option>
               <option value="LOGIN">เข้าสู่ระบบ</option>
               <option value="ADD_PATIENT">เพิ่มคนไข้</option>
-              <option value="EMR">บันทึกประวัติ (EMR)</option>
-              <option value="POS">รับชำระเงิน (POS)</option>
-              <option value="STOCK">จัดการคลังสินค้า</option>
+              <option value="EMR">บันทึกประวัติ</option>
+              <option value="POS">ชำระเงิน</option>
+              <option value="STOCK">คลังสินค้า</option>
             </select>
           </div>
         </div>
@@ -413,6 +237,65 @@
       </div>
 
     </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal เพิ่ม/แก้ไขพนักงาน -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-bottom-0 bg-light rounded-top-4 p-4">
+        <h5 class="modal-title fw-bold text-primary" id="userModalTitle"><i class="fa-solid fa-user-pen me-2"></i>สร้าง/แก้ไขพนักงาน</h5>
+        <button type="button" class="btn-close" onclick="closeUserModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        <form id="userForm">
+          <input type="hidden" id="u_id">
+          <div class="bg-white p-3 rounded-4 shadow-sm border mb-4">
+            <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">ข้อมูลทั่วไป</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted">ชื่อ - นามสกุล *</label>
+                <input type="text" id="u_name" class="form-control rounded-3 border-primary" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">PIN (4 หลัก) *</label>
+                <input type="text" id="u_pin" class="form-control rounded-3 border-primary text-center fw-bold" maxlength="4" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">ตำแหน่ง (Role) *</label>
+                <select id="u_role" class="form-select rounded-3">
+                  <option value="ADMIN">ผู้บริหาร (Admin)</option>
+                  <option value="DOCTOR">แพทย์ (Doctor)</option>
+                  <option value="STAFF">พนักงาน (Staff)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-3 rounded-4 shadow-sm border">
+            <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">สิทธิ์การเข้าใช้งานเมนู</h6>
+            <div class="form-check mb-3 bg-danger bg-opacity-10 p-3 rounded-3 border border-danger d-flex align-items-center">
+              <input class="form-check-input ms-1 me-3" type="checkbox" id="perm_all" onchange="toggleAllPerms(this)" style="transform: scale(1.3);">
+              <label class="form-check-label fw-bold text-danger m-0" for="perm_all">ผู้ดูแลระบบ (Admin) - เข้าถึงได้ทุกเมนูโดยอัตโนมัติ</label>
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="BOOKING" id="cb_1"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_1">1. นัดหมาย & คิว</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_1" id="cb_2"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_2">2. ลงทะเบียน & คัดกรอง</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="POS" id="cb_4"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_4">3. ขาย & ชำระเงิน (POS)</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="STOCK" id="cb_5"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_5">4. คลังยา (Inventory)</label></div></div>
+              <div class="col-md-6"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="DASH" id="cb_6"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_6">5. รายงานยอดขาย</label></div></div>
+              <div class="col-md-12"><div class="perm-box"><input class="form-check-input perm-cb me-3 m-0" type="checkbox" value="PATIENT_3" id="cb_7"><label class="form-check-label w-100 text-secondary fw-bold" for="cb_7">6. ฐานข้อมูลรายชื่อคนไข้</label></div></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
+        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeUserModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   var allUsers = [];
@@ -421,7 +304,6 @@
   function initSettings() { loadUsers(); }
   initSettings();
 
-// --- 🌟 ระบบสลับ Tab ซ้ายมือ ---
   function switchSettingTab(tab) {
     document.querySelectorAll('.settings-menu-item').forEach(el => el.classList.remove('active'));
     document.getElementById('nav-' + tab).classList.add('active');
@@ -434,20 +316,14 @@
     if(tab === 'clinic') loadClinicData();
     if(tab === 'logs') loadSystemLogs(); 
 
-    // 📱 สำหรับมือถือ: เพิ่มคลาสเพื่อซ่อนเมนูและโชว์เนื้อหา
     document.querySelector('.settings-container').classList.add('show-content');
   }
 
-  // 📱 ฟังก์ชันสำหรับปุ่มย้อนกลับในจอมือถือ
   function backToSettingsMenu() {
     document.querySelector('.settings-container').classList.remove('show-content');
-    // เอาแถบสีสถานะ Active ออกเพื่อให้กลับมาเป็นหน้าเมนูหลักปกติ
     document.querySelectorAll('.settings-menu-item').forEach(el => el.classList.remove('active'));
   }
 
-  // ==========================================
-  // 📋 ฟังก์ชันสำหรับหน้าประวัติการใช้งาน (Logs)
-  // ==========================================
   var allLogs = [];
   async function loadSystemLogs() {
     try {
@@ -461,7 +337,7 @@
       document.getElementById('logUserFilter').innerHTML = userOpt;
       
       filterLogs();
-    } catch(e) { console.error(e); }
+    } catch(e) {}
   }
 
   function filterLogs() {
@@ -503,7 +379,6 @@
     tbody.innerHTML = html;
   }
 
-  // --- 🌟 ระบบจัดการข้อมูลคลินิก ---
   async function loadClinicData() {
     try {
       const res = await fetch('/api/clinic?t=' + new Date().getTime());
@@ -539,37 +414,30 @@
     try {
       await fetch('/api/clinic', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
       Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+    } catch(e) {}
   }
 
   function uploadClinicLogo(input) {
     if (input.files && input.files[0]) {
       const reader = new FileReader();
       reader.onload = async function(e) {
-        const base64Image = e.target.result;
-        
-        Swal.fire({ title: 'กำลังอัปโหลดรูปภาพ...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'กำลังอัปโหลด...', didOpen: () => Swal.showLoading() });
         try {
           const res = await fetch('/api/clinic/logo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image_data: base64Image })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image_data: e.target.result })
           });
           const data = await res.json();
           if (data.status === 'success') {
             const img = document.getElementById('clinic_logo_preview');
-            img.src = data.logo_url;
-            img.style.display = 'block';
+            img.src = data.logo_url; img.style.display = 'block';
             Swal.fire({ icon: 'success', title: 'อัปโหลดเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
           }
-        } catch(err) { Swal.fire('Error', 'อัปโหลดล้มเหลว', 'error'); }
+        } catch(err) {}
       };
       reader.readAsDataURL(input.files[0]);
     }
   }
 
-
-  // --- ระบบจัดการพนักงาน ---
   async function loadUsers() {
     try {
       const res = await fetch('/api/users');
@@ -655,7 +523,7 @@
       const data = await response.json(); 
       if(data.status === 'success') { Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); closeUserModal(); loadUsers(); } 
       else { Swal.fire('ข้อผิดพลาด', data.message, 'error'); }
-    } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
+    } catch(e) {}
   }
 
   async function deleteUser(id, name) { if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
