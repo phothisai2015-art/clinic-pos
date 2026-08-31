@@ -779,54 +779,7 @@
     }
   }
 
-  // 🌟 3. อัปเดตเปิดป๊อปอัป ให้ดึงข้อมูลเก่ามาโชว์
-  var dfModal = null;
-  function openDfModal(userId, name, role) {
-    document.getElementById('df_modal_user_id').value = userId; 
-    document.getElementById('df_modal_name').innerText = name;
-    document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
-    document.getElementById('df_modal_role').innerText = `ตำแหน่งในระบบ: ${role}`;
-    
-    let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
-    document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
 
-    document.getElementById('df_doc_type').onchange = function() {
-      let valInput = document.getElementById('df_doc_val');
-      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
-      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
-    };
-    document.getElementById('df_asst_type').onchange = function() {
-      let valInput = document.getElementById('df_asst_val');
-      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
-      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
-    };
-
-    // ค้นหาข้อมูลเก่าของพนักงาน
-    let user = allUsers.find(u => u.id === userId);
-    let rules = {};
-    try { rules = JSON.parse(user.df_rules || '{}'); } catch(e) {}
-
-    // ยัดข้อมูลเก่าใส่ฟอร์ม
-    document.getElementById('df_doc_type').value = rules.doc_type || 'NONE';
-    document.getElementById('df_doc_type').dispatchEvent(new Event('change'));
-    document.getElementById('df_doc_val').value = rules.doc_val || '';
-
-    document.getElementById('df_asst_type').value = rules.asst_type || 'NONE';
-    document.getElementById('df_asst_type').dispatchEvent(new Event('change'));
-    document.getElementById('df_asst_val').value = rules.asst_val || '';
-
-    document.getElementById('df_rules_container').innerHTML = '';
-
-    // โหลดข้อยกเว้นเดิมมาสร้างเป็นแถว
-    if(rules.custom_rules && Array.isArray(rules.custom_rules)) {
-      rules.custom_rules.forEach(r => addDfRuleRow(r.product_id, r.role, r.type, r.val));
-    }
-
-    const modalEl = document.getElementById('dfSettingModal');
-    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
-    dfModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
-    dfModal.show();
-  }
 
   // 🌟 4. อัปเดตฟังก์ชันเพิ่มแถวให้ดึงรายการคอร์สของจริงมาใช้
   function addDfRuleRow(productId = '', role = 'ASST', type = 'BAHT', val = '') {
@@ -858,13 +811,63 @@
     container.appendChild(row);
   }
 
-  // 🌟 5. ฟังก์ชันสำหรับกดปุ่มบันทึก
+// 🌟 อัปเดต openDfModal ให้โหลดค่าการหารมาแสดง
+  function openDfModal(userId, name, role) {
+    document.getElementById('df_modal_user_id').value = userId; 
+    document.getElementById('df_modal_name').innerText = name;
+    document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
+    document.getElementById('df_modal_role').innerText = `ตำแหน่งในระบบ: ${role}`;
+    
+    let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
+    document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
+
+    document.getElementById('df_doc_type').onchange = function() {
+      let valInput = document.getElementById('df_doc_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
+    };
+    document.getElementById('df_asst_type').onchange = function() {
+      let valInput = document.getElementById('df_asst_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
+    };
+
+    let user = allUsers.find(u => u.id === userId);
+    let rules = {};
+    try { rules = JSON.parse(user.df_rules || '{}'); } catch(e) {}
+
+    // ยัดข้อมูลเก่าใส่ฟอร์ม (รวมถึงค่าการหาร)
+    document.getElementById('df_doc_type').value = rules.doc_type || 'NONE';
+    document.getElementById('df_doc_type').dispatchEvent(new Event('change'));
+    document.getElementById('df_doc_val').value = rules.doc_val || '';
+    document.getElementById('df_doc_split').value = rules.doc_split || 'FULL';
+
+    document.getElementById('df_asst_type').value = rules.asst_type || 'NONE';
+    document.getElementById('df_asst_type').dispatchEvent(new Event('change'));
+    document.getElementById('df_asst_val').value = rules.asst_val || '';
+    document.getElementById('df_asst_split').value = rules.asst_split || 'SPLIT';
+
+    document.getElementById('df_rules_container').innerHTML = '';
+    if(rules.custom_rules && Array.isArray(rules.custom_rules)) {
+      rules.custom_rules.forEach(r => addDfRuleRow(r.product_id, r.role, r.type, r.val));
+    }
+
+    const modalEl = document.getElementById('dfSettingModal');
+    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
+    dfModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
+    dfModal.show();
+  }
+
+  // 🌟 อัปเดต saveDfSettings ให้ส่งค่าการหารไปเซฟที่เซิร์ฟเวอร์
   async function saveDfSettings() {
     let userId = document.getElementById('df_modal_user_id').value;
     let docType = document.getElementById('df_doc_type').value;
     let docVal = document.getElementById('df_doc_val').value;
+    let docSplit = document.getElementById('df_doc_split').value;
+
     let asstType = document.getElementById('df_asst_type').value;
     let asstVal = document.getElementById('df_asst_val').value;
+    let asstSplit = document.getElementById('df_asst_split').value;
 
     if(docType !== 'NONE' && !docVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเรทแพทย์', 'warning');
     if(asstType !== 'NONE' && !asstVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเรทผู้ช่วย', 'warning');
@@ -885,8 +888,10 @@
     let dfRules = {
         doc_type: docType,
         doc_val: docType === 'NONE' ? 0 : parseFloat(docVal),
+        doc_split: docSplit,
         asst_type: asstType,
         asst_val: asstType === 'NONE' ? 0 : parseFloat(asstVal),
+        asst_split: asstSplit,
         custom_rules: customRules
     };
 
@@ -901,7 +906,7 @@
         if(data.status === 'success') {
             Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
             closeDfModal();
-            loadUsers(); // โหลดข้อมูลพนักงานใหม่
+            loadUsers(); 
         } else {
             Swal.fire('ข้อผิดพลาด', data.message, 'error');
         }
