@@ -134,17 +134,53 @@
     <!-- รายละเอียดด้านขวา (Content) -->
     <div class="settings-content col-md-9 col-12 position-relative">
       
-      <!-- TAB 1: พนักงาน -->
+      <!-- TAB 1: พนักงานและสิทธิ์ (อัปเดตใหม่ แบ่ง 2 แท็บย่อย) -->
       <div id="tab-users" class="h-100 flex-column" style="display: flex;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="d-flex align-items-center">
             <button class="btn btn-light rounded-circle me-2 mobile-back-btn shadow-sm border" onclick="backToSettingsMenu()"><i class="fa-solid fa-chevron-left"></i></button>
-            <h4 class="fw-bold text-primary m-0">จัดการบัญชีพนักงาน</h4>
+            <h4 class="fw-bold text-primary m-0">จัดการพนักงานและ DF</h4>
           </div>
-          <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()"><i class="fa-solid fa-plus me-1"></i> <span class="d-none d-md-inline">เพิ่มพนักงาน</span></button>
         </div>
-        <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" id="usersList">
-          <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
+
+        <!-- 🌟 แถบเมนูย่อย (Sub-tabs) -->
+        <ul class="nav nav-pills mb-3 p-1 bg-white border rounded-3 shadow-sm d-inline-flex">
+          <li class="nav-item">
+            <button class="nav-link active fw-bold px-4" id="btn-subtab-acc" onclick="switchUserSubTab('acc')" style="border-radius: 8px;">
+              <i class="fa-solid fa-user-gear me-1"></i> 1. จัดการบัญชี
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link fw-bold px-4 text-secondary" id="btn-subtab-df" onclick="switchUserSubTab('df')" style="border-radius: 8px;">
+              <i class="fa-solid fa-hand-holding-dollar me-1"></i> 2. กำหนดค่ามือ (DF)
+            </button>
+          </li>
+        </ul>
+
+        <!-- 🔸 เนื้อหา Sub-tab 1: จัดการบัญชี (ของเดิม) -->
+        <div id="subtab-acc" class="flex-column flex-grow-1" style="display: flex;">
+          <div class="text-end mb-3">
+            <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="openUserModal()">
+              <i class="fa-solid fa-plus me-1"></i> เพิ่มพนักงาน
+            </button>
+          </div>
+          <div class="custom-scrollbar" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" id="usersList">
+            <div class="text-center text-muted py-5">กำลังโหลดข้อมูล...</div>
+          </div>
+        </div>
+
+        <!-- 🔸 เนื้อหา Sub-tab 2: กำหนดค่า DF (เพิ่มใหม่) -->
+        <div id="subtab-df" class="flex-column flex-grow-1" style="display: none;">
+          <div class="bg-white p-4 rounded-4 shadow-sm border h-100 d-flex flex-column">
+            <h6 class="fw-bold text-secondary mb-3 pb-2 border-bottom">
+              <i class="fa-solid fa-user-doctor me-2 text-info"></i> รายชื่อแพทย์และผู้ให้บริการ
+            </h6>
+            <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
+              <div id="dfUsersList" class="row g-3">
+                <!-- ระบบจะดึงรายชื่อมาแสดงที่นี่ -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -292,6 +328,62 @@
       <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeUserModal()">ยกเลิก</button>
         <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveUser()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🌟 Modal ตั้งค่าค่ามือ (DF) -->
+<div class="modal fade" id="dfSettingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-bottom-0 bg-light rounded-top-4 p-4">
+        <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-hand-holding-dollar me-2"></i>ตั้งค่าส่วนแบ่ง (DF)</h5>
+        <button type="button" class="btn-close" onclick="closeDfModal()"></button>
+      </div>
+      <div class="modal-body p-4 bg-light bg-opacity-50">
+        
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;" id="df_modal_icon">M</div>
+          <div>
+            <h5 class="fw-bold m-0 text-dark" id="df_modal_name">ชื่อพนักงาน</h5>
+            <div class="text-muted small" id="df_modal_role">ตำแหน่ง</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+          <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-gear text-secondary me-2"></i> 1. เรทค่ามือพื้นฐาน (Default Rate)</h6>
+          <div class="text-muted small mb-3">เรทนี้จะถูกนำไปใช้กับทุกรายการที่ไม่ได้กำหนดข้อยกเว้นไว้</div>
+          <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+              <select id="df_default_type" class="form-select border-primary fw-bold text-primary">
+                <option value="NONE">ไม่ได้รับค่ามือ / ไม่คิด DF</option>
+                <option value="PERCENT">คิดเป็นเปอร์เซ็นต์ (%)</option>
+                <option value="BAHT">จ่ายคงที่ (บาท/เคส)</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <input type="number" id="df_default_val" class="form-control fw-bold" placeholder="ระบุตัวเลข (เช่น 10)" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-4 shadow-sm border">
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-star text-warning me-2"></i> 2. ข้อยกเว้นเฉพาะคอร์ส (Custom Rules)</h6>
+            <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" onclick="addDfRuleRow()"><i class="fa-solid fa-plus"></i> เพิ่มข้อยกเว้น</button>
+          </div>
+          <div class="text-muted small mb-3">หากระบุตรงนี้ ระบบจะยึดเรทนี้แทนเรทพื้นฐานด้านบน</div>
+          
+          <div id="df_rules_container" class="d-flex flex-column gap-2">
+            <!-- แถวสำหรับเพิ่มกฎข้อยกเว้น จะแสดงตรงนี้ -->
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
+        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeDfModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า DF</button>
       </div>
     </div>
   </div>
@@ -527,4 +619,117 @@
   }
 
   async function deleteUser(id, name) { if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
+
+// 🌟 ฟังก์ชันสลับแท็บย่อย (บัญชี / DF)
+  function switchUserSubTab(tab) {
+    document.getElementById('btn-subtab-acc').classList.remove('active', 'text-primary');
+    document.getElementById('btn-subtab-acc').classList.add('text-secondary');
+    document.getElementById('btn-subtab-df').classList.remove('active', 'text-primary');
+    document.getElementById('btn-subtab-df').classList.add('text-secondary');
+    
+    const activeBtn = document.getElementById('btn-subtab-' + tab);
+    activeBtn.classList.remove('text-secondary');
+    activeBtn.classList.add('active', 'text-white');
+
+    document.getElementById('subtab-acc').style.display = 'none';
+    document.getElementById('subtab-df').style.display = 'none';
+    document.getElementById('subtab-' + tab).style.display = 'flex';
+
+    if(tab === 'df') {
+      renderDfUsersList(); // โหลดรายชื่อตอนเปิดแท็บ DF
+    }
+  }
+
+  // 🌟 ฟังก์ชันวาดรายชื่อพนักงานในแท็บ DF
+  function renderDfUsersList() {
+    const container = document.getElementById('dfUsersList');
+    container.innerHTML = '';
+    
+    // ดึงเฉพาะคนที่เป็น หมอ หรือ พนักงาน (ตัด Admin ออก หาก Admin ไม่ได้รับเคส)
+    // หรือถ้าให้ Admin รับเคสได้ด้วย ก็เอาออกได้ครับ
+    let dfUsers = allUsers.filter(u => u.role === 'DOCTOR' || u.role === 'STAFF' || u.role === 'ADMIN');
+
+    dfUsers.forEach(u => {
+      let roleColor = u.role === 'DOCTOR' ? 'info' : (u.role === 'ADMIN' ? 'danger' : 'success');
+      
+      container.innerHTML += `
+        <div class="col-md-6 col-xl-4">
+          <div class="user-card cursor-pointer h-100" onclick="openDfModal(${u.id}, '${u.name}', '${u.role}')" style="cursor: pointer;">
+            <div class="d-flex align-items-center w-100">
+              <div class="bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 flex-shrink-0" style="width: 45px; height: 45px;">${u.name.substring(0, 1)}</div>
+              <div class="flex-grow-1">
+                <h6 class="fw-bold m-0 text-dark">${u.name}</h6>
+                <div class="small text-muted">${u.role}</div>
+              </div>
+              <div class="text-end">
+                 <button class="btn btn-sm btn-light text-primary rounded-circle"><i class="fa-solid fa-gear"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // 🌟 ฟังก์ชันเปิด/ปิด ป๊อปอัปตั้งค่า DF
+  var dfModal = null;
+  function openDfModal(userId, name, role) {
+    document.getElementById('df_modal_name').innerText = name;
+    document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
+    document.getElementById('df_modal_role').innerText = `ตำแหน่ง: ${role}`;
+    
+    // ตั้งค่าสีไอคอนตามตำแหน่ง
+    let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
+    document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
+
+    // จัดการ Event ช่องกรอก
+    document.getElementById('df_default_type').onchange = function() {
+      let valInput = document.getElementById('df_default_val');
+      if(this.value === 'NONE') {
+        valInput.disabled = true; valInput.value = '';
+      } else {
+        valInput.disabled = false;
+        valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)';
+      }
+    };
+
+    // ล้างข้อมูลเก่า
+    document.getElementById('df_rules_container').innerHTML = '';
+
+    const modalEl = document.getElementById('dfSettingModal');
+    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
+    dfModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
+    dfModal.show();
+  }
+
+  function closeDfModal() {
+    if(dfModal) {
+      dfModal.hide();
+      setTimeout(() => { document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); document.body.classList.remove('modal-open'); document.body.style.overflow = ''; document.body.style.paddingRight = ''; }, 150);
+    }
+  }
+
+  // 🌟 ฟังก์ชันเพิ่มแถวข้อยกเว้นคอร์ส
+  function addDfRuleRow() {
+    const container = document.getElementById('df_rules_container');
+    const row = document.createElement('div');
+    row.className = 'input-group input-group-sm mb-2 shadow-sm rounded-3 overflow-hidden border';
+    
+    // โค้ดจำลองเลือกคอร์ส (ของจริงดึงจาก Inventory)
+    row.innerHTML = `
+      <select class="form-select border-0 bg-light fw-bold text-dark" style="max-width: 45%;">
+        <option value="">-- เลือกคอร์ส / หัตถการ --</option>
+        <option value="C1">โบท็อกซ์ 100u</option>
+        <option value="C2">เลเซอร์หน้าใส</option>
+        <option value="C3">ดริปวิตามินผิว</option>
+      </select>
+      <select class="form-select border-0 border-start text-primary fw-bold" style="max-width: 25%;">
+        <option value="PERCENT">%</option>
+        <option value="BAHT">บาท</option>
+      </select>
+      <input type="number" class="form-control border-0 text-center fw-bold" placeholder="ระบุตัวเลข">
+      <button class="btn btn-danger px-3" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+    `;
+    container.appendChild(row);
+  }
 </script>
