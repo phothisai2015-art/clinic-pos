@@ -730,9 +730,8 @@ app.get('/api/reports/df', async (req, res) => {
 
     let dfLogs = [];
 
-    // ฟังก์ชันช่วยคำนวณ DF
-    const calculateDf = (userNameRaw, roleKey, courseName) => {
-        // ตัดคำว่า (แพทย์) หรือ (พนักงาน) ออกเพื่อหาชื่อที่แท้จริงไปเทียบกับฐานข้อมูล
+    // ฟังก์ชันช่วยคำนวณ DF (รับพารามิเตอร์ count เพิ่มเติม)
+    const calculateDf = (userNameRaw, roleKey, courseName, totalPeopleInRole = 1) => {
         let cleanName = userNameRaw.replace(/\s*\(.*?\)\s*/g, '').trim();
         let user = userMap[cleanName];
         if (!user) return 0;
@@ -761,6 +760,15 @@ app.get('/api/reports/df', async (req, res) => {
             if (type === 'BAHT') dfAmount = val || 0;
             else if (type === 'PERCENT') dfAmount = (productPrice * (val || 0)) / 100;
         }
+
+        // 🌟 ตรวจสอบเงื่อนไขการหารรายบุคคล
+        let splitSetting = roleKey === 'DOCTOR' ? (rules.doc_split || 'FULL') : (rules.asst_split || 'SPLIT');
+        
+        // ถ้าพนักงานคนนี้ตั้งค่าเป็น "SPLIT" (หาร) และในเคสมีมากกว่า 1 คน จะนำยอดมาหารตามจำนวนคน
+        if (splitSetting === 'SPLIT' && totalPeopleInRole > 1) {
+            dfAmount = dfAmount / totalPeopleInRole;
+        }
+
         return dfAmount;
     };
 
@@ -784,20 +792,27 @@ app.get('/api/reports/df', async (req, res) => {
        if (log.treatment_details && log.treatment_details.includes('[ผู้ให้บริการ/ผู้ช่วย]')) {
            let lines = log.treatment_details.split('\n');
            let isAsstSection = false;
+           let asstList = [];
+
            lines.forEach(line => {
                let t = line.trim();
                if (t.startsWith('[')) { isAsstSection = t.includes('[ผู้ให้บริการ/ผู้ช่วย]'); return; }
                if (isAsstSection && t.startsWith('-')) {
-                   let asstNameRaw = t.replace('-', '').trim();
-                   dfLogs.push({
-                       date: log.visit_date,
-                       user_name: asstNameRaw,
-                       role: 'ผู้ช่วย',
-                       course: courseName,
-                       patient: log.patient_name || 'ไม่ระบุชื่อ',
-                       df_amount: calculateDf(asstNameRaw, 'ASST', courseName)
-                   });
+                   asstList.push(t.replace('-', '').trim());
                }
+           });
+
+           let asstCount = asstList.length;
+
+           asstList.forEach(asstNameRaw => {
+               dfLogs.push({
+                   date: log.visit_date,
+                   user_name: asstNameRaw,
+                   role: 'ผู้ช่วย',
+                   course: courseName,
+                   patient: log.patient_name || 'ไม่ระบุชื่อ',
+                   df_amount: calculateDf(asstNameRaw, 'ASST', courseName, asstCount) // ส่งจำนวนผู้ช่วยทั้งหมดเข้าไปคำนวณ
+               });
            });
        }
     });
