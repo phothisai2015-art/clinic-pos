@@ -12,6 +12,15 @@
 
   .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 
+  /* 🌟 Tabs Style */
+  .clinic-nav-pills { background: rgba(255,255,255,0.85); padding: 6px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: inline-flex; border: 1px solid rgba(255,255,255,0.5); backdrop-filter: blur(10px); }
+  .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; margin-right: 4px; cursor: pointer; border: 1px solid transparent; }
+  .clinic-nav-pills .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+  .clinic-nav-pills .nav-link:hover:not(.active) { background-color: rgba(241, 245, 249, 0.8); }
+
+  .clinic-nav-pills .nav-link.tab-df { color: #10b981; }
+  .clinic-nav-pills .nav-link.tab-df.active { background-color: #10b981; color: #fff; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+
   .report-kpi-card { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
   .report-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: #3b82f6; }
   .kpi-icon { position: absolute; right: -10px; bottom: -20px; font-size: 5rem; opacity: 0.05; color: #334155; transform: rotate(-15deg); }
@@ -26,27 +35,14 @@
   .table-header-sticky { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1; }
   .table-header-sticky th { font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.3px; }
 
-  input[type="date"].date-input-modern { 
-      border: none !important; 
-      background: transparent !important; 
-      font-weight: 700; 
-      color: #3b82f6; 
-      cursor: pointer; 
-      outline: none; 
-      box-shadow: none !important; 
-      font-family: 'Sarabun', sans-serif;
-  }
+  input[type="date"].date-input-modern { border: none !important; background: transparent !important; font-weight: 700; color: #3b82f6; cursor: pointer; outline: none; box-shadow: none !important; font-family: 'Sarabun', sans-serif; }
 
-  /* 🌟 Modern Top Sellers List */
   .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px; }
   .top-seller-item:last-child { border-bottom: none; }
   .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
   
   .rank-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1rem; margin-right: 15px; flex-shrink: 0; }
-  .rank-1 { background-color: #f59e0b; color: #fff; } 
-  .rank-2 { background-color: #94a3b8; color: #fff; } 
-  .rank-3 { background-color: #d97706; color: #fff; } 
-  .rank-other { background-color: rgba(241, 245, 249, 0.8); color: #64748b; }
+  .rank-1 { background-color: #f59e0b; color: #fff; } .rank-2 { background-color: #94a3b8; color: #fff; } .rank-3 { background-color: #d97706; color: #fff; } .rank-other { background-color: rgba(241, 245, 249, 0.8); color: #64748b; }
 
   .text-pink { color: #ec4899 !important; }
 
@@ -54,35 +50,28 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 10px; }
 
-  /* ========================================================= */
   /* 🌙 Dark Mode Fixes */
-  /* ========================================================= */
   body.dark-theme .rep-orb-1 { background: #1e3a8a; opacity: 0.3; }
   body.dark-theme .rep-orb-2 { background: #312e81; opacity: 0.4; }
   body.dark-theme .rep-orb-3 { background: #4c1d95; opacity: 0.3; }
+  body.dark-theme .clinic-nav-pills { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+  body.dark-theme .clinic-nav-pills .nav-link { color: #94a3b8; }
+  body.dark-theme .clinic-nav-pills .nav-link:hover:not(.active) { background-color: rgba(51, 65, 85, 0.8); }
 
-  body.dark-theme .glass-panel,
-  body.dark-theme .report-kpi-card, 
-  body.dark-theme .chart-container, 
-  body.dark-theme .table-container,
-  body.dark-theme .top-sellers-box { background-color: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255, 255, 255, 0.05) !important; }
+  body.dark-theme .glass-panel, body.dark-theme .report-kpi-card, body.dark-theme .chart-container, body.dark-theme .table-container, body.dark-theme .top-sellers-box { background-color: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255, 255, 255, 0.05) !important; }
   body.dark-theme .kpi-icon { color: #f8fafc; opacity: 0.05; }
   body.dark-theme .text-dark { color: #f8fafc !important; }
   body.dark-theme .text-muted { color: #94a3b8 !important; }
   body.dark-theme .text-pink { color: #f472b6 !important; }
-  
-  body.dark-theme .table { --bs-table-bg: transparent; --bs-table-color: #f8fafc; color: #f8fafc !important; }
-  body.dark-theme .table td { border-bottom-color: rgba(51, 65, 85, 0.5) !important; background-color: transparent !important; }
+  body.dark-theme .table { --bs-table-color: #f8fafc; color: #f8fafc !important; }
+  body.dark-theme .table td { border-bottom-color: rgba(51, 65, 85, 0.5) !important; }
   body.dark-theme .table-header-sticky { background-color: rgba(30, 41, 59, 0.95) !important; border-bottom-color: #475569 !important; }
   body.dark-theme .table thead th { border-bottom-color: #475569 !important; color: #cbd5e1 !important; }
   body.dark-theme .table tbody tr:hover td { background-color: rgba(51, 65, 85, 0.5) !important; }
-  
   body.dark-theme input[type="date"].form-control { background-color: transparent !important; color: #60a5fa !important; }
   body.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-  
   body.dark-theme .btn-outline-secondary { color: #cbd5e1; border-color: rgba(71, 85, 105, 0.5); background: rgba(30, 41, 59, 0.5); }
   body.dark-theme .btn-outline-secondary:hover { background-color: #334155; color: #f8fafc; }
-  
   body.dark-theme .top-seller-item { border-bottom-color: rgba(51, 65, 85, 0.5); }
   body.dark-theme .top-seller-item:hover { background-color: rgba(15, 23, 42, 0.5); }
   body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
@@ -95,21 +84,36 @@
 
 <div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <h3 class="fw-bold text-secondary m-0"><i class="fa-solid fa-chart-pie me-2"></i> สถิติและรายงานยอดขาย</h3>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <h3 class="fw-bold text-secondary m-0 me-3"><i class="fa-solid fa-chart-pie me-2"></i> สถิติและรายงาน</h3>
+      
+      <ul class="nav nav-pills clinic-nav-pills m-0">
+        <li class="nav-item">
+          <button class="nav-link active" id="btn-tab-dash" onclick="switchReportTab('dash')">
+            <i class="fa-solid fa-chart-line me-1"></i> ภาพรวมรายได้
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link tab-df" id="btn-tab-df" onclick="switchReportTab('df')">
+            <i class="fa-solid fa-hand-holding-dollar me-1"></i> สรุปค่ามือ (DF)
+          </button>
+        </li>
+      </ul>
+    </div>
     <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm glass-panel" onclick="closeModule()">
       <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
     </button>
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
-    <!-- ตัวกรองวันที่ -->
+    <!-- ตัวกรองวันที่ (ใช้ร่วมกันทั้ง 2 แท็บ) -->
     <div class="p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 glass-panel">
       <div class="d-flex align-items-center gap-2">
         <h6 class="fw-bold m-0 text-muted me-2"><i class="fa-solid fa-filter"></i> ช่วงเวลา:</h6>
         <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
         <span class="text-muted fw-bold">-</span>
         <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
-        <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData()">ดูรายงาน</button>
+        <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData(); loadDfReportData();">ดูรายงาน</button>
       </div>
       <div class="d-flex gap-2">
         <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
@@ -118,136 +122,212 @@
       </div>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="row g-4 mb-4">
-      <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-primary glass-panel">
-          <i class="fa-solid fa-vault kpi-icon"></i>
-          <h6 class="text-muted fw-bold mb-1">รายได้รวมทั้งหมด</h6>
-          <h3 class="text-primary fw-bold m-0" id="kpi_total">฿ 0</h3>
+    <!-- ============================================== -->
+    <!-- 📊 TAB 1: ภาพรวมรายได้ (Dashboard เดิม) -->
+    <!-- ============================================== -->
+    <div id="tab-dash" style="display: block;">
+      <!-- KPI Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="report-kpi-card border-primary glass-panel">
+            <i class="fa-solid fa-vault kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">รายได้รวมทั้งหมด</h6>
+            <h3 class="text-primary fw-bold m-0" id="kpi_total">฿ 0</h3>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="report-kpi-card border-success glass-panel">
+            <i class="fa-solid fa-money-bill-wave kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">เงินสด (CASH)</h6>
+            <h3 class="text-success fw-bold m-0" id="kpi_cash">฿ 0</h3>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="report-kpi-card border-info glass-panel">
+            <i class="fa-solid fa-qrcode kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">โอนเงิน (QR)</h6>
+            <h3 class="text-info fw-bold m-0" id="kpi_qr">฿ 0</h3>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="report-kpi-card border-warning glass-panel">
+            <i class="fa-solid fa-credit-card kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">บัตรเครดิต (CREDIT)</h6>
+            <h3 class="text-warning text-dark fw-bold m-0" id="kpi_credit">฿ 0</h3>
+          </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-success glass-panel">
-          <i class="fa-solid fa-money-bill-wave kpi-icon"></i>
-          <h6 class="text-muted fw-bold mb-1">เงินสด (CASH)</h6>
-          <h3 class="text-success fw-bold m-0" id="kpi_cash">฿ 0</h3>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-7 col-xl-8">
+          <div class="chart-container d-flex flex-column glass-panel">
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
+            <div class="flex-grow-1 position-relative"><canvas id="revenueChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-5 col-xl-4">
+          <div class="top-sellers-box d-flex flex-column glass-panel">
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
+            <div class="custom-scrollbar flex-grow-1 d-flex flex-column justify-content-between" id="topSellersContainer" style="overflow-y: auto;">
+              <div class="text-center text-muted py-4">ไม่มีข้อมูล</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-info glass-panel">
-          <i class="fa-solid fa-qrcode kpi-icon"></i>
-          <h6 class="text-muted fw-bold mb-1">โอนเงิน (QR)</h6>
-          <h3 class="text-info fw-bold m-0" id="kpi_qr">฿ 0</h3>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
+            <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
+            <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-header-sticky"><tr><th>คนไข้</th><th>รายการ</th><th class="text-end">ยอดค้าง</th></tr></thead>
+                <tbody id="unpaidTable"><tr><td colspan="3" class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="report-kpi-card border-warning glass-panel">
-          <i class="fa-solid fa-credit-card kpi-icon"></i>
-          <h6 class="text-muted fw-bold mb-1">บัตรเครดิต (CREDIT)</h6>
-          <h3 class="text-warning text-dark fw-bold m-0" id="kpi_credit">฿ 0</h3>
+        <div class="col-lg-6">
+          <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
+            <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
+            <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-header-sticky"><tr><th>เวลา</th><th>คนไข้</th><th>ช่องทาง</th><th class="text-end">จำนวนเงิน</th></tr></thead>
+                <tbody id="logsTable"><tr><td colspan="4" class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4 mb-4">
-      <!-- กราฟรายได้ -->
-      <div class="col-lg-7 col-xl-8">
-        <div class="chart-container d-flex flex-column glass-panel">
-          <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
-          <div class="flex-grow-1 position-relative">
-            <canvas id="revenueChart"></canvas>
-          </div>
-        </div>
-      </div>
+    <!-- ============================================== -->
+    <!-- 💰 TAB 2: สรุปค่ามือแพทย์และผู้ช่วย (DF Report) -->
+    <!-- ============================================== -->
+    <div id="tab-df" style="display: none;">
       
-      <!-- Top Sellers -->
-      <div class="col-lg-5 col-xl-4">
-        <div class="top-sellers-box d-flex flex-column glass-panel">
-          <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
-          <div class="custom-scrollbar flex-grow-1 d-flex flex-column justify-content-between" id="topSellersContainer" style="overflow-y: auto;">
-            <div class="text-center text-muted py-4">ไม่มีข้อมูล</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-      <!-- Unpaid -->
-      <div class="col-lg-6">
-        <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
-          <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
-          <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-header-sticky">
-                <tr><th>คนไข้</th><th>รายการ</th><th class="text-end">ยอดค้าง</th></tr>
-              </thead>
-              <tbody id="unpaidTable">
-                <tr><td colspan="3" class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <!-- ตัวกรองแพทย์/ผู้ช่วย -->
+      <div class="d-flex align-items-center mb-4 gap-3">
+        <h6 class="fw-bold m-0 text-dark"><i class="fa-solid fa-users me-2"></i> เลือกผู้ให้บริการ:</h6>
+        <select id="dfUserFilter" class="form-select border-success text-success fw-bold shadow-sm" style="max-width: 300px;" onchange="loadDfReportData()">
+          <option value="ALL">-- ดูทุกคน (แพทย์ & ผู้ช่วย) --</option>
+          <!-- จะนำรายชื่อมาใส่ที่นี่ -->
+        </select>
       </div>
 
-      <!-- บิลล่าสุด -->
-      <div class="col-lg-6">
-        <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
-          <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
-          <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-header-sticky">
-                <tr><th>เวลา</th><th>คนไข้</th><th>ช่องทาง</th><th class="text-end">จำนวนเงิน</th></tr>
-              </thead>
-              <tbody id="logsTable">
-                <tr><td colspan="4" class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>
-              </tbody>
-            </table>
+      <!-- KPI Cards สำหรับ DF -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-6 col-md-6">
+          <div class="report-kpi-card border-success glass-panel" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);">
+            <i class="fa-solid fa-hand-holding-dollar kpi-icon" style="color: #10b981;"></i>
+            <h6 class="text-muted fw-bold mb-1">ยอดรวมค่ามือ (DF) ที่ต้องจ่าย</h6>
+            <h2 class="text-success fw-bold m-0" id="df_kpi_total">฿ 0</h2>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-3">
+          <div class="report-kpi-card border-secondary glass-panel">
+            <i class="fa-solid fa-syringe kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">จำนวนเคส / หัตถการ</h6>
+            <h3 class="text-secondary fw-bold m-0" id="df_kpi_cases">0 <span class="fs-6">ครั้ง</span></h3>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-3">
+          <div class="report-kpi-card border-info glass-panel">
+            <i class="fa-solid fa-users kpi-icon"></i>
+            <h6 class="text-muted fw-bold mb-1">ให้บริการคนไข้ไป</h6>
+            <h3 class="text-info fw-bold m-0" id="df_kpi_patients">0 <span class="fs-6">คน</span></h3>
           </div>
         </div>
       </div>
+
+      <!-- ตารางรายละเอียดค่ามือ -->
+      <div class="table-container d-flex flex-column glass-panel" style="max-height: 550px;">
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-list-check me-2"></i> รายละเอียดเคสและการคำนวณ DF</h6>
+        <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-header-sticky">
+              <tr>
+                <th width="15%">วันที่ / เวลา</th>
+                <th width="20%">ผู้ให้บริการ</th>
+                <th width="10%">บทบาท</th>
+                <th width="25%">รายการหัตถการ / คอร์ส</th>
+                <th width="15%">ชื่อคนไข้</th>
+                <th width="15%" class="text-end text-success">ยอด DF (฿)</th>
+              </tr>
+            </thead>
+            <tbody id="dfTableBody">
+              <tr><td colspan="6" class="text-center text-muted py-5"><div class="spinner-border text-success"></div><br>กำลังประมวลผล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
   </div>
 </div>
 
 <script>
-  // 🌟 ป้องกันปัญหา Identifier 'revenueChartInstance' has already been declared
-  // โดยการเปลี่ยน let เป็น var
   var revenueChartInstance = null;
 
+  // 🌟 ฟังก์ชันสลับแท็บ
+  function switchReportTab(tab) {
+    document.getElementById('btn-tab-dash').classList.remove('active');
+    document.getElementById('btn-tab-df').classList.remove('active');
+    document.getElementById(`btn-tab-${tab}`).classList.add('active');
+
+    document.getElementById('tab-dash').style.display = 'none';
+    document.getElementById('tab-df').style.display = 'none';
+    document.getElementById(`tab-${tab}`).style.display = 'block';
+
+    if (tab === 'df') {
+      loadDfUsersList();
+      loadDfReportData();
+    }
+  }
+
+  // 🌟 จำลองการโหลดรายชื่อพนักงานใส่ Dropdown DF
+  async function loadDfUsersList() {
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      if(data.status === 'success') {
+        let html = '<option value="ALL">-- ดูทุกคน (แพทย์ & ผู้ช่วย) --</option>';
+        data.data.forEach(u => {
+          if(u.role === 'DOCTOR' || u.role === 'STAFF' || u.role === 'ADMIN') {
+             html += `<option value="${u.name}">${u.name} (${u.role})</option>`;
+          }
+        });
+        document.getElementById('dfUserFilter').innerHTML = html;
+      }
+    } catch(e) {}
+  }
+
+  // ==========================================
+  // ฟังก์ชันเดิมของ Dashboard 
+  // ==========================================
   function setDateFilter(type) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     const activeBtn = document.getElementById('btn-' + type);
     if (activeBtn) activeBtn.classList.add('active');
 
     const now = new Date();
-    let start = new Date(now);
-    let end = new Date(now);
+    let start = new Date(now); let end = new Date(now);
 
-    if (type === 'today') {
-      // ใช้วันนี้ ไม่ต้องปรับวัน
-    } else if (type === 'week') {
-      const day = now.getDay();
-      const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
-      start = new Date(now.setDate(diffToMonday));
-      
-      end = new Date(start);
-      end.setDate(end.getDate() + 6);
-    } else if (type === 'month') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    if (type === 'today') { } 
+    else if (type === 'week') {
+      const day = now.getDay(); const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+      start = new Date(now.setDate(diffToMonday)); end = new Date(start); end.setDate(end.getDate() + 6);
+    } 
+    else if (type === 'month') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1); end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
-    const formatTimezone = (d) => {
-        let local = new Date(d);
-        local.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        return local.toJSON().slice(0, 10);
-    };
-
-    document.getElementById('rep_start').value = formatTimezone(start);
-    document.getElementById('rep_end').value = formatTimezone(end);
+    const formatTimezone = (d) => { let local = new Date(d); local.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return local.toJSON().slice(0, 10); };
+    document.getElementById('rep_start').value = formatTimezone(start); document.getElementById('rep_end').value = formatTimezone(end);
+    
     loadDashboardData();
+    loadDfReportData(); // ให้โหลด DF ด้วยเมื่อเปลี่ยนวันที่
   }
 
   async function loadDashboardData() {
@@ -258,15 +338,10 @@
     try {
       const res = await fetch(`/api/reports/dashboard?start_date=${start}&end_date=${end}`);
       const data = await res.json();
-      
       if (data.status === 'success') {
-        renderKPI(data);
-        renderChart(data.chart_data);
-        renderTopSellers(data.top_sellers);
-        renderUnpaid(data.unpaid_patients);
-        renderLogs(data.bill_logs);
+        renderKPI(data); renderChart(data.chart_data); renderTopSellers(data.top_sellers); renderUnpaid(data.unpaid_patients); renderLogs(data.bill_logs);
       }
-    } catch(e) { console.error('Dashboard Error:', e); }
+    } catch(e) {}
   }
 
   function renderKPI(data) {
@@ -281,73 +356,33 @@
     const ctx = document.getElementById('revenueChart').getContext('2d');
     if (revenueChartInstance) revenueChartInstance.destroy();
 
-    const labels = chartData.map(d => {
-        let [y,m,day] = d.date.split('-');
-        return `${day}/${m}`;
-    });
+    const labels = chartData.map(d => { let [y,m,day] = d.date.split('-'); return `${day}/${m}`; });
     const values = chartData.map(d => d.revenue);
-
     const isDark = document.body.classList.contains('dark-theme');
-    const gridColor = isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)';
-    const textColor = isDark ? '#94a3b8' : '#64748b';
-
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)'; const textColor = isDark ? '#94a3b8' : '#64748b';
     Chart.defaults.font.family = "'Sarabun', sans-serif";
 
     revenueChartInstance = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'รายได้ (฿)',
-          data: values,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 3,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: '#3b82f6',
-          pointRadius: 4,
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { 
-          legend: { display: false },
-          tooltip: { titleFont: { size: 14 }, bodyFont: { size: 14, weight: 'bold' } }
-        },
-        scales: {
-          x: { grid: { display: false, color: gridColor }, ticks: { color: textColor } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor, weight: 'bold', callback: (v) => '฿' + v.toLocaleString() } }
-        }
-      }
+      data: { labels: labels, datasets: [{ label: 'รายได้ (฿)', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#3b82f6', pointRadius: 4, fill: true, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { titleFont: { size: 14 }, bodyFont: { size: 14, weight: 'bold' } } }, scales: { x: { grid: { display: false, color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor, weight: 'bold', callback: (v) => '฿' + v.toLocaleString() } } } }
     });
   }
 
   function renderTopSellers(items) {
     const container = document.getElementById('topSellersContainer');
     if(items.length === 0) { container.innerHTML = '<div class="text-center text-muted py-4">ไม่มีข้อมูล</div>'; return; }
-    
     let html = '';
     items.slice(0, 5).forEach((item, index) => {
         let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : 'rank-other'));
-        
-        let typeIcon = 'fa-box';
-        let typeColor = 'text-secondary';
-        
-        if (item.type === 'PROMOTION') { typeIcon = 'fa-gift'; typeColor = 'text-pink'; }
-        else if (item.type === 'COURSE') { typeIcon = 'fa-wand-magic-sparkles'; typeColor = 'text-info'; }
-        else if (item.type === 'INJECTABLE') { typeIcon = 'fa-syringe'; typeColor = 'text-danger'; }
-
+        let typeIcon = item.type === 'PROMOTION' ? 'fa-gift' : (item.type === 'COURSE' ? 'fa-wand-magic-sparkles' : 'fa-syringe');
+        let typeColor = item.type === 'PROMOTION' ? 'text-pink' : (item.type === 'COURSE' ? 'text-info' : 'text-danger');
         html += `
         <div class="top-seller-item" style="flex: 1;">
             <div class="rank-badge ${rankClass}">${index + 1}</div>
             <div class="flex-grow-1 overflow-hidden pe-2">
                 <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">${item.name}</div>
-                <div class="text-muted small mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
-                    <i class="fa-solid ${typeIcon} ${typeColor}"></i> <span class="${typeColor}">${item.type}</span>
-                </div>
+                <div class="text-muted small mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;"><i class="fa-solid ${typeIcon} ${typeColor}"></i> <span class="${typeColor}">${item.type}</span></div>
             </div>
             <div class="text-end flex-shrink-0">
                 <div class="fw-bold text-success" style="font-size: 1rem;">฿${item.revenue.toLocaleString()}</div>
@@ -361,47 +396,93 @@
   function renderUnpaid(items) {
     const tbody = document.getElementById('unpaidTable');
     if(items.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4"><i class="fa-solid fa-check-circle text-success me-2"></i>ไม่มีค้างชำระ</td></tr>'; return; }
-    
     let html = '';
-    items.forEach(item => {
-        html += `
-          <tr>
-            <td class="fw-bold text-primary">${item.name}</td>
-            <td><div class="text-truncate" style="max-width: 150px;">${item.item}</div></td>
-            <td class="text-end fw-bold text-danger">฿${item.balance.toLocaleString()}</td>
-          </tr>`;
-    });
+    items.forEach(item => { html += `<tr><td class="fw-bold text-primary">${item.name}</td><td><div class="text-truncate" style="max-width: 150px;">${item.item}</div></td><td class="text-end fw-bold text-danger">฿${item.balance.toLocaleString()}</td></tr>`; });
     tbody.innerHTML = html;
   }
 
   function renderLogs(logs) {
     const tbody = document.getElementById('logsTable');
     if(logs.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">ไม่มีประวัติ</td></tr>'; return; }
-    
     let html = '';
     logs.slice(0, 50).forEach(log => {
         const timeStr = new Date(log.time).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         const dateStr = new Date(log.time).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
-        
         let methodBadge = log.method === 'CASH' ? '<span class="badge bg-success">เงินสด</span>' : (log.method === 'QR' ? '<span class="badge bg-info">QR</span>' : '<span class="badge bg-warning text-dark">เครดิต</span>');
-
-        html += `
-          <tr>
-            <td class="text-muted small">${dateStr}<br>${timeStr} น.</td>
-            <td>
-               <div class="fw-bold text-dark">${log.patient_name}</div>
-               <div class="text-muted small text-truncate" style="max-width: 150px;">${log.item_name}</div>
-            </td>
-            <td>${methodBadge}</td>
-            <td class="text-end fw-bold text-success">฿${log.amount.toLocaleString()}</td>
-          </tr>`;
+        html += `<tr><td class="text-muted small">${dateStr}<br>${timeStr} น.</td><td><div class="fw-bold text-dark">${log.patient_name}</div><div class="text-muted small text-truncate" style="max-width: 150px;">${log.item_name}</div></td><td>${methodBadge}</td><td class="text-end fw-bold text-success">฿${log.amount.toLocaleString()}</td></tr>`;
     });
     tbody.innerHTML = html;
   }
 
-  // 🌟 ใช้ setTimeout แบบสั้นมาก เพื่อให้ Element ทั้งหมดถูกเรนเดอร์เรียบร้อยก่อนยัดข้อมูลลงตาราง
-  setTimeout(() => {
-    setDateFilter('week');
-  }, 50);
+  // ==========================================
+  // 💰 ฟังก์ชันจำลองการโหลดข้อมูล DF (Mock Data)
+  // ==========================================
+  // หมายเหตุ: โค้ดส่วนนี้เป็นการจำลองแสดงผลหน้าตา UI ไปก่อน เมื่อคุณอัปเดต server.js และ API เสร็จ 
+  // ให้ปรับ URL fetch ตรงนี้ให้ดึงข้อมูลจริงจากฐานข้อมูลได้เลยครับ
+  
+  function loadDfReportData() {
+    const start = document.getElementById('rep_start').value;
+    const end = document.getElementById('rep_end').value;
+    const userFilter = document.getElementById('dfUserFilter').value;
+    
+    // (แสดง Loading)
+    document.getElementById('dfTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><div class="spinner-border text-success"></div><br>กำลังคำนวณยอด...</td></tr>';
 
+    setTimeout(() => {
+      // 🌟 ข้อมูลจำลอง (Mock Data) สอดคล้องกับหน้าตา UI
+      let dummyDfLogs = [
+        { date: start+'T10:30:00', user_name: 'หมอมิ้น', role: 'แพทย์', course: 'โบท็อกซ์ เหมาขวด', patient: 'สมชาย รักชาติ', df_amount: 500 },
+        { date: start+'T11:15:00', user_name: 'ฟ้า', role: 'ผู้ช่วย', course: 'เลเซอร์หน้าใส (Pico)', patient: 'สมหญิง ใจดี', df_amount: 50 },
+        { date: start+'T13:45:00', user_name: 'ฟ้า', role: 'ผู้ช่วย', course: 'ดริปวิตามินผิว', patient: 'มานี ศรีใส', df_amount: 50 },
+        { date: end+'T15:00:00', user_name: 'อาจารย์ใหญ่', role: 'แพทย์', course: 'ฟิลเลอร์คาง 1cc', patient: 'ปิติ ยินดี', df_amount: 1000 },
+        { date: end+'T16:20:00', user_name: 'ชื่น', role: 'ผู้ช่วย', course: 'มาส์กสิวอักเสบ', patient: 'วีระ กล้าหาญ', df_amount: 100 },
+      ];
+
+      // กรองข้อมูลตามที่เลือก
+      if (userFilter !== 'ALL') {
+        dummyDfLogs = dummyDfLogs.filter(log => log.user_name === userFilter);
+      }
+
+      // คำนวณ KPI
+      let totalDf = 0;
+      let uniquePatients = new Set();
+      dummyDfLogs.forEach(log => {
+         totalDf += log.df_amount;
+         uniquePatients.add(log.patient);
+      });
+
+      document.getElementById('df_kpi_total').innerText = '฿ ' + totalDf.toLocaleString('th-TH');
+      document.getElementById('df_kpi_cases').innerHTML = `${dummyDfLogs.length} <span class="fs-6 text-muted">ครั้ง</span>`;
+      document.getElementById('df_kpi_patients').innerHTML = `${uniquePatients.size} <span class="fs-6 text-muted">คน</span>`;
+
+      // วาดตาราง
+      const tbody = document.getElementById('dfTableBody');
+      if(dummyDfLogs.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-box-open fa-2x mb-3 opacity-50"></i><br>ไม่มีประวัติการทำหัตถการในช่วงเวลานี้</td></tr>';
+         return;
+      }
+
+      let html = '';
+      dummyDfLogs.forEach(log => {
+         const timeStr = new Date(log.date).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+         const dateStr = new Date(log.date).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
+         
+         let roleBadge = log.role === 'แพทย์' ? '<span class="badge bg-info text-dark">แพทย์</span>' : '<span class="badge bg-success">ผู้ช่วย</span>';
+
+         html += `
+          <tr>
+            <td class="text-muted small">${dateStr}<br>${timeStr} น.</td>
+            <td class="fw-bold text-dark"><i class="fa-solid fa-user-circle text-muted me-1"></i> ${log.user_name}</td>
+            <td>${roleBadge}</td>
+            <td class="text-primary fw-bold">${log.course}</td>
+            <td class="text-secondary small">${log.patient}</td>
+            <td class="text-end fw-bold text-success fs-6">฿${log.df_amount.toLocaleString()}</td>
+          </tr>`;
+      });
+      tbody.innerHTML = html;
+
+    }, 600); // จำลองดีเลย์ดึงข้อมูล
+  }
+
+  setTimeout(() => { setDateFilter('week'); }, 50);
 </script>
