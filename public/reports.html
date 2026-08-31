@@ -420,68 +420,65 @@
   // หมายเหตุ: โค้ดส่วนนี้เป็นการจำลองแสดงผลหน้าตา UI ไปก่อน เมื่อคุณอัปเดต server.js และ API เสร็จ 
   // ให้ปรับ URL fetch ตรงนี้ให้ดึงข้อมูลจริงจากฐานข้อมูลได้เลยครับ
   
-  function loadDfReportData() {
+  async function loadDfReportData() {
     const start = document.getElementById('rep_start').value;
     const end = document.getElementById('rep_end').value;
     const userFilter = document.getElementById('dfUserFilter').value;
     
-    // (แสดง Loading)
-    document.getElementById('dfTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><div class="spinner-border text-success"></div><br>กำลังคำนวณยอด...</td></tr>';
+    const tbody = document.getElementById('dfTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><div class="spinner-border text-success"></div><br>กำลังประมวลผลข้อมูลจริง...</td></tr>';
 
-    setTimeout(() => {
-      // 🌟 ข้อมูลจำลอง (Mock Data) สอดคล้องกับหน้าตา UI
-      let dummyDfLogs = [
-        { date: start+'T10:30:00', user_name: 'หมอมิ้น', role: 'แพทย์', course: 'โบท็อกซ์ เหมาขวด', patient: 'สมชาย รักชาติ', df_amount: 500 },
-        { date: start+'T11:15:00', user_name: 'ฟ้า', role: 'ผู้ช่วย', course: 'เลเซอร์หน้าใส (Pico)', patient: 'สมหญิง ใจดี', df_amount: 50 },
-        { date: start+'T13:45:00', user_name: 'ฟ้า', role: 'ผู้ช่วย', course: 'ดริปวิตามินผิว', patient: 'มานี ศรีใส', df_amount: 50 },
-        { date: end+'T15:00:00', user_name: 'อาจารย์ใหญ่', role: 'แพทย์', course: 'ฟิลเลอร์คาง 1cc', patient: 'ปิติ ยินดี', df_amount: 1000 },
-        { date: end+'T16:20:00', user_name: 'ชื่น', role: 'ผู้ช่วย', course: 'มาส์กสิวอักเสบ', patient: 'วีระ กล้าหาญ', df_amount: 100 },
-      ];
+    try {
+      const res = await fetch(`/api/reports/df?start_date=${start}&end_date=${end}`);
+      const data = await res.json();
 
-      // กรองข้อมูลตามที่เลือก
-      if (userFilter !== 'ALL') {
-        dummyDfLogs = dummyDfLogs.filter(log => log.user_name === userFilter);
+      if (data.status === 'success') {
+        let realDfLogs = data.data;
+
+        // กรองข้อมูลตามที่เลือก (ALL หรือ ชื่อพนักงาน)
+        if (userFilter !== 'ALL') {
+          // ใช้ .includes() เผื่อกรณีชื่อมีวงเล็บตำแหน่งต่อท้าย
+          realDfLogs = realDfLogs.filter(log => userFilter.includes(log.user_name));
+        }
+
+        let totalDf = 0;
+        let uniquePatients = new Set();
+        realDfLogs.forEach(log => {
+           totalDf += log.df_amount;
+           uniquePatients.add(log.patient);
+        });
+
+        document.getElementById('df_kpi_total').innerText = '฿ ' + totalDf.toLocaleString('th-TH');
+        document.getElementById('df_kpi_cases').innerHTML = `${realDfLogs.length} <span class="fs-6 text-muted">ครั้ง</span>`;
+        document.getElementById('df_kpi_patients').innerHTML = `${uniquePatients.size} <span class="fs-6 text-muted">คน</span>`;
+
+        if(realDfLogs.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-box-open fa-2x mb-3 opacity-50"></i><br>ไม่มีประวัติการทำหัตถการในช่วงเวลานี้</td></tr>';
+           return;
+        }
+
+        let html = '';
+        realDfLogs.forEach(log => {
+           const timeStr = new Date(log.date).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+           const dateStr = new Date(log.date).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
+           
+           let roleBadge = log.role === 'แพทย์' ? '<span class="badge bg-info text-dark">แพทย์</span>' : '<span class="badge bg-success">ผู้ช่วย</span>';
+
+           html += `
+            <tr>
+              <td class="text-muted small">${dateStr}<br>${timeStr} น.</td>
+              <td class="fw-bold text-dark"><i class="fa-solid fa-user-circle text-muted me-1"></i> ${log.user_name}</td>
+              <td>${roleBadge}</td>
+              <td class="text-primary fw-bold">${log.course}</td>
+              <td class="text-secondary small">${log.patient}</td>
+              <td class="text-end fw-bold text-success fs-6">฿${log.df_amount.toLocaleString()}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
       }
-
-      // คำนวณ KPI
-      let totalDf = 0;
-      let uniquePatients = new Set();
-      dummyDfLogs.forEach(log => {
-         totalDf += log.df_amount;
-         uniquePatients.add(log.patient);
-      });
-
-      document.getElementById('df_kpi_total').innerText = '฿ ' + totalDf.toLocaleString('th-TH');
-      document.getElementById('df_kpi_cases').innerHTML = `${dummyDfLogs.length} <span class="fs-6 text-muted">ครั้ง</span>`;
-      document.getElementById('df_kpi_patients').innerHTML = `${uniquePatients.size} <span class="fs-6 text-muted">คน</span>`;
-
-      // วาดตาราง
-      const tbody = document.getElementById('dfTableBody');
-      if(dummyDfLogs.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-box-open fa-2x mb-3 opacity-50"></i><br>ไม่มีประวัติการทำหัตถการในช่วงเวลานี้</td></tr>';
-         return;
-      }
-
-      let html = '';
-      dummyDfLogs.forEach(log => {
-         const timeStr = new Date(log.date).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-         const dateStr = new Date(log.date).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
-         
-         let roleBadge = log.role === 'แพทย์' ? '<span class="badge bg-info text-dark">แพทย์</span>' : '<span class="badge bg-success">ผู้ช่วย</span>';
-
-         html += `
-          <tr>
-            <td class="text-muted small">${dateStr}<br>${timeStr} น.</td>
-            <td class="fw-bold text-dark"><i class="fa-solid fa-user-circle text-muted me-1"></i> ${log.user_name}</td>
-            <td>${roleBadge}</td>
-            <td class="text-primary fw-bold">${log.course}</td>
-            <td class="text-secondary small">${log.patient}</td>
-            <td class="text-end fw-bold text-success fs-6">฿${log.df_amount.toLocaleString()}</td>
-          </tr>`;
-      });
-      tbody.innerHTML = html;
-
-    }, 600); // จำลองดีเลย์ดึงข้อมูล
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>';
+    }
   }
 
   setTimeout(() => { setDateFilter('week'); }, 50);
