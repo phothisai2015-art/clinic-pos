@@ -533,9 +533,19 @@ app.post('/api/settings', async (req, res) => {
 
 app.get('/api/users', async (req, res) => { 
   try {
-    const rows = await dbAll(`SELECT id, name, pin, role, permissions FROM users ORDER BY id ASC`);
+    const rows = await dbAll(`SELECT id, name, pin, role, permissions, df_rules FROM users ORDER BY id ASC`);
     res.json({ status: 'success', data: rows });
   } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+app.put('/api/users/:id/df', async (req, res) => {
+  try {
+    const { df_rules } = req.body;
+    await dbRun(`UPDATE users SET df_rules = ? WHERE id = ?`, [JSON.stringify(df_rules), req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { 
+    res.status(500).json({ status: 'error', message: err.message }); 
+  }
 });
 
 app.post('/api/users', async (req, res) => {

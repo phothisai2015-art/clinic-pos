@@ -27,8 +27,12 @@ db.serialize(() => {
     pin TEXT,
     name TEXT,
     role TEXT,
-    permissions TEXT
+    permissions TEXT,
+    df_rules TEXT DEFAULT '{}'
   )`);
+
+  // บรรทัดนี้ช่วยอัปเดตตารางเดิมของคุณให้มีคอลัมน์ df_rules โดยไม่ต้องลบฐานข้อมูลทิ้ง
+  db.run(`ALTER TABLE users ADD COLUMN df_rules TEXT DEFAULT '{}'`, (err) => { /* ข้ามแจ้งเตือนถ้ามีคอลัมน์อยู่แล้ว */ });
 
   // 3. ทะเบียนคนไข้ (Patients)
   db.run(`CREATE TABLE IF NOT EXISTS patients (
