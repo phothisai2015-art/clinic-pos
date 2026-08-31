@@ -342,6 +342,7 @@
         <button type="button" class="btn-close" onclick="closeDfModal()"></button>
       </div>
       <div class="modal-body p-4 bg-light bg-opacity-50">
+	  <input type="hidden" id="df_modal_user_id">
         
         <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
           <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 55px; height: 55px; font-size: 1.5rem;" id="df_modal_icon">M</div>
@@ -405,7 +406,7 @@
       </div>
       <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeDfModal()">ยกเลิก</button>
-        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า DF</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveDfSettings()"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า DF</button>
       </div>
     </div>
   </div>
@@ -686,30 +687,7 @@
 
   async function deleteUser(id, name) { if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
 
-// 🌟 ฟังก์ชันสลับแท็บย่อย (บัญชี / DF) - แก้ปัญหาสีตัวหนังสือหาย
-  function switchUserSubTab(tab) {
-    // 1. ลบคลาสสีขาวและสถานะ active ออกจากทั้งสองปุ่มก่อน
-    document.getElementById('btn-subtab-acc').classList.remove('active', 'text-white');
-    document.getElementById('btn-subtab-df').classList.remove('active', 'text-white');
-    
-    // 2. เติมคลาสสีเทาให้ทั้งสองปุ่มเป็นสถานะเริ่มต้น (ไม่ได้เลือก)
-    document.getElementById('btn-subtab-acc').classList.add('text-secondary');
-    document.getElementById('btn-subtab-df').classList.add('text-secondary');
-    
-    // 3. ปุ่มที่ถูกกด ให้เอาสีเทาออก แล้วใส่สีขาวและคลาส active
-    const activeBtn = document.getElementById('btn-subtab-' + tab);
-    activeBtn.classList.remove('text-secondary');
-    activeBtn.classList.add('active', 'text-white');
 
-    // 4. สลับการแสดงผลเนื้อหา
-    document.getElementById('subtab-acc').style.display = 'none';
-    document.getElementById('subtab-df').style.display = 'none';
-    document.getElementById('subtab-' + tab).style.display = 'flex';
-
-    if(tab === 'df') {
-      renderDfUsersList(); 
-    }
-  }
 
   // 🌟 ฟังก์ชันวาดรายชื่อพนักงานในแท็บ DF
   function renderDfUsersList() {
@@ -742,44 +720,7 @@
     });
   }
 
-// 🌟 ฟังก์ชันเปิด/ปิด ป๊อปอัปตั้งค่า DF (อัปเดตระบบแยก แพทย์-ผู้ช่วย)
-  var dfModal = null;
-  function openDfModal(userId, name, role) {
-    document.getElementById('df_modal_name').innerText = name;
-    document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
-    document.getElementById('df_modal_role').innerText = `ตำแหน่งในระบบ: ${role}`;
-    
-    let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
-    document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
 
-    // ⚡ Event จัดการเปิด/ปิด ช่องกรอกเรทแพทย์
-    document.getElementById('df_doc_type').onchange = function() {
-      let valInput = document.getElementById('df_doc_val');
-      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
-      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
-    };
-
-    // ⚡ Event จัดการเปิด/ปิด ช่องกรอกเรทผู้ช่วย
-    document.getElementById('df_asst_type').onchange = function() {
-      let valInput = document.getElementById('df_asst_val');
-      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
-      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
-    };
-
-    // ล้างข้อมูลเก่าก่อนเปิด
-    document.getElementById('df_rules_container').innerHTML = '';
-    
-    // ตั้งค่า Default เริ่มต้นให้ (สมมติว่าเป็นพนักงาน ให้ค่าหมอถูกล็อคไว้ก่อน)
-    document.getElementById('df_doc_type').value = 'NONE';
-    document.getElementById('df_doc_type').dispatchEvent(new Event('change'));
-    document.getElementById('df_asst_type').value = 'NONE';
-    document.getElementById('df_asst_type').dispatchEvent(new Event('change'));
-
-    const modalEl = document.getElementById('dfSettingModal');
-    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
-    dfModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
-    dfModal.show();
-  }
 
   function closeDfModal() {
     if(dfModal) {
@@ -788,31 +729,169 @@
     }
   }
 
-  // 🌟 ฟังก์ชันเพิ่มแถวข้อยกเว้นคอร์ส (อัปเดตให้เลือกว่ายกเว้นในฐานะหมอ หรือผู้ช่วย)
-  function addDfRuleRow() {
+// 🌟 1. โหลดรายการคอร์สมาไว้รอสำหรับ Dropdown
+  var dfInventoryItems = [];
+  async function loadDfInventory() {
+    try {
+      const res = await fetch('/api/inventory');
+      const data = await res.json();
+      if(data.status === 'success') {
+        // กรองเอายาและครีมออก เพราะไม่ต้องคิดค่ามือ
+        dfInventoryItems = data.data.filter(i => i.status !== 'INACTIVE' && i.type !== 'MEDICINE' && i.type !== 'SKINCARE');
+      }
+    } catch(e) {}
+  }
+
+  // 🌟 2. อัปเดตตอนสลับแท็บให้โหลด Inventory
+  function switchUserSubTab(tab) {
+    document.getElementById('btn-subtab-acc').classList.remove('active', 'text-white');
+    document.getElementById('btn-subtab-df').classList.remove('active', 'text-white');
+    document.getElementById('btn-subtab-acc').classList.add('text-secondary');
+    document.getElementById('btn-subtab-df').classList.add('text-secondary');
+    
+    const activeBtn = document.getElementById('btn-subtab-' + tab);
+    activeBtn.classList.remove('text-secondary');
+    activeBtn.classList.add('active', 'text-white');
+
+    document.getElementById('subtab-acc').style.display = 'none';
+    document.getElementById('subtab-df').style.display = 'none';
+    document.getElementById('subtab-' + tab).style.display = 'flex';
+
+    if(tab === 'df') {
+      loadDfInventory();
+      renderDfUsersList();
+    }
+  }
+
+  // 🌟 3. อัปเดตเปิดป๊อปอัป ให้ดึงข้อมูลเก่ามาโชว์
+  var dfModal = null;
+  function openDfModal(userId, name, role) {
+    document.getElementById('df_modal_user_id').value = userId; 
+    document.getElementById('df_modal_name').innerText = name;
+    document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
+    document.getElementById('df_modal_role').innerText = `ตำแหน่งในระบบ: ${role}`;
+    
+    let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
+    document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
+
+    document.getElementById('df_doc_type').onchange = function() {
+      let valInput = document.getElementById('df_doc_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
+    };
+    document.getElementById('df_asst_type').onchange = function() {
+      let valInput = document.getElementById('df_asst_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
+    };
+
+    // ค้นหาข้อมูลเก่าของพนักงาน
+    let user = allUsers.find(u => u.id === userId);
+    let rules = {};
+    try { rules = JSON.parse(user.df_rules || '{}'); } catch(e) {}
+
+    // ยัดข้อมูลเก่าใส่ฟอร์ม
+    document.getElementById('df_doc_type').value = rules.doc_type || 'NONE';
+    document.getElementById('df_doc_type').dispatchEvent(new Event('change'));
+    document.getElementById('df_doc_val').value = rules.doc_val || '';
+
+    document.getElementById('df_asst_type').value = rules.asst_type || 'NONE';
+    document.getElementById('df_asst_type').dispatchEvent(new Event('change'));
+    document.getElementById('df_asst_val').value = rules.asst_val || '';
+
+    document.getElementById('df_rules_container').innerHTML = '';
+
+    // โหลดข้อยกเว้นเดิมมาสร้างเป็นแถว
+    if(rules.custom_rules && Array.isArray(rules.custom_rules)) {
+      rules.custom_rules.forEach(r => addDfRuleRow(r.product_id, r.role, r.type, r.val));
+    }
+
+    const modalEl = document.getElementById('dfSettingModal');
+    if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
+    dfModal = new bootstrap.Modal(modalEl, { backdrop: 'static' }); 
+    dfModal.show();
+  }
+
+  // 🌟 4. อัปเดตฟังก์ชันเพิ่มแถวให้ดึงรายการคอร์สของจริงมาใช้
+  function addDfRuleRow(productId = '', role = 'ASST', type = 'BAHT', val = '') {
     const container = document.getElementById('df_rules_container');
     const row = document.createElement('div');
-    row.className = 'input-group input-group-sm mb-2 shadow-sm rounded-3 overflow-hidden border bg-light';
+    row.className = 'input-group input-group-sm mb-2 shadow-sm rounded-3 overflow-hidden border bg-light df-custom-rule-row';
     
-    // ดึงรายชื่อหัตถการมาจากตัวแปรในระบบ (หรือจำลองข้อมูลไปก่อนเพื่อดู UI)
+    let optionsHtml = '<option value="">-- เลือกคอร์ส / หัตถการ --</option>';
+    dfInventoryItems.forEach(item => {
+        let selected = item.id === productId ? 'selected' : '';
+        optionsHtml += `<option value="${item.id}" ${selected}>${item.name}</option>`;
+    });
+
     row.innerHTML = `
-      <select class="form-select border-0 bg-white fw-bold text-dark" style="max-width: 35%;">
-        <option value="">-- เลือกคอร์ส / หัตถการ --</option>
-        <option value="C1">โบท็อกซ์ เหมาขวด</option>
-        <option value="C2">เลเซอร์หน้าใส (Pico)</option>
-        <option value="C3">ดริปวิตามินผิว</option>
+      <select class="form-select border-0 bg-white fw-bold text-dark df-rule-product" style="max-width: 35%;">
+        ${optionsHtml}
       </select>
-      <select class="form-select border-0 border-start text-secondary fw-bold" style="max-width: 25%; background-color: #f8fafc;">
-        <option value="ASST">ในฐานะ ผู้ช่วย</option>
-        <option value="DOCTOR">ในฐานะ แพทย์</option>
+      <select class="form-select border-0 border-start text-secondary fw-bold df-rule-role" style="max-width: 25%; background-color: #f8fafc;">
+        <option value="ASST" ${role === 'ASST' ? 'selected' : ''}>ในฐานะ ผู้ช่วย</option>
+        <option value="DOCTOR" ${role === 'DOCTOR' ? 'selected' : ''}>ในฐานะ แพทย์</option>
       </select>
-      <select class="form-select border-0 border-start text-primary fw-bold" style="max-width: 15%;">
-        <option value="BAHT">บาท</option>
-        <option value="PERCENT">%</option>
+      <select class="form-select border-0 border-start text-primary fw-bold df-rule-type" style="max-width: 15%;">
+        <option value="BAHT" ${type === 'BAHT' ? 'selected' : ''}>บาท</option>
+        <option value="PERCENT" ${type === 'PERCENT' ? 'selected' : ''}>%</option>
       </select>
-      <input type="number" class="form-control border-0 text-center fw-bold" placeholder="ระบุยอด">
+      <input type="number" class="form-control border-0 text-center fw-bold df-rule-val" placeholder="ระบุยอด" value="${val}">
       <button class="btn btn-danger px-3" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(row);
   }
+
+  // 🌟 5. ฟังก์ชันสำหรับกดปุ่มบันทึก
+  async function saveDfSettings() {
+    let userId = document.getElementById('df_modal_user_id').value;
+    let docType = document.getElementById('df_doc_type').value;
+    let docVal = document.getElementById('df_doc_val').value;
+    let asstType = document.getElementById('df_asst_type').value;
+    let asstVal = document.getElementById('df_asst_val').value;
+
+    if(docType !== 'NONE' && !docVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเรทแพทย์', 'warning');
+    if(asstType !== 'NONE' && !asstVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุเรทผู้ช่วย', 'warning');
+
+    let customRules = [];
+    let rows = document.querySelectorAll('.df-custom-rule-row');
+    for(let row of rows) {
+        let productId = row.querySelector('.df-rule-product').value;
+        let role = row.querySelector('.df-rule-role').value;
+        let type = row.querySelector('.df-rule-type').value;
+        let val = row.querySelector('.df-rule-val').value;
+
+        if(productId && val) {
+            customRules.push({ product_id: productId, role: role, type: type, val: parseFloat(val) });
+        }
+    }
+
+    let dfRules = {
+        doc_type: docType,
+        doc_val: docType === 'NONE' ? 0 : parseFloat(docVal),
+        asst_type: asstType,
+        asst_val: asstType === 'NONE' ? 0 : parseFloat(asstVal),
+        custom_rules: customRules
+    };
+
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const res = await fetch(`/api/users/${userId}/df`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ df_rules: dfRules })
+        });
+        const data = await res.json();
+        if(data.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+            closeDfModal();
+            loadUsers(); // โหลดข้อมูลพนักงานใหม่
+        } else {
+            Swal.fire('ข้อผิดพลาด', data.message, 'error');
+        }
+    } catch(e) {
+        Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+    }
+  }
+  
 </script>
