@@ -707,7 +707,18 @@ app.get('/api/reports/df', async (req, res) => {
     const startDate = req.query.start_date;
     const endDate = req.query.end_date;
 
-    // ดึงข้อมูล EMR พร้อมชื่อคนไข้และชื่อแพทย์
+    // 1. ดึงข้อมูลสินค้า (เพื่อดูราคา) และผู้ใช้งาน (เพื่อดูกฎ DF)
+    const products = await dbAll(`SELECT * FROM products`);
+    const users = await dbAll(`SELECT * FROM users`);
+    
+    const userMap = {};
+    users.forEach(u => {
+        let rules = {};
+        try { rules = JSON.parse(u.df_rules || '{}'); } catch(e) {}
+        userMap[u.name] = { ...u, rules };
+    });
+
+    // 2. ดึงข้อมูล EMR
     const logs = await dbAll(`
       SELECT e.*, p.full_name as patient_name, u.name as doctor_name 
       FROM emr_logs e 
@@ -718,23 +729,58 @@ app.get('/api/reports/df', async (req, res) => {
     `, [startDate, endDate]);
 
     let dfLogs = [];
+
+    // ฟังก์ชันช่วยคำนวณ DF
+    const calculateDf = (userNameRaw, roleKey, courseName) => {
+        // ตัดคำว่า (แพทย์) หรือ (พนักงาน) ออกเพื่อหาชื่อที่แท้จริงไปเทียบกับฐานข้อมูล
+        let cleanName = userNameRaw.replace(/\s*\(.*?\)\s*/g, '').trim();
+        let user = userMap[cleanName];
+        if (!user) return 0;
+
+        let rules = user.rules;
+        let dfAmount = 0;
+
+        let matchedProduct = products.find(p => p.name === courseName);
+        let productId = matchedProduct ? matchedProduct.id : null;
+        let productPrice = matchedProduct ? matchedProduct.price : 0;
+
+        // เช็กกฎข้อยกเว้นเฉพาะคอร์ส
+        let customRule = null;
+        if (rules.custom_rules && productId) {
+            customRule = rules.custom_rules.find(r => r.product_id === productId && r.role === roleKey);
+        }
+
+        if (customRule) {
+            if (customRule.type === 'BAHT') dfAmount = customRule.val;
+            else if (customRule.type === 'PERCENT') dfAmount = (productPrice * customRule.val) / 100;
+        } else {
+            // ใช้กฎพื้นฐาน
+            let type = roleKey === 'DOCTOR' ? rules.doc_type : rules.asst_type;
+            let val = roleKey === 'DOCTOR' ? rules.doc_val : rules.asst_val;
+
+            if (type === 'BAHT') dfAmount = val || 0;
+            else if (type === 'PERCENT') dfAmount = (productPrice * (val || 0)) / 100;
+        }
+        return dfAmount;
+    };
+
     logs.forEach(log => {
-       // ดึงชื่อคอร์สจากอาการแรกรับ
        let courseName = log.symptoms || 'ไม่ระบุ';
        if (courseName.includes('เข้ารับบริการ:')) courseName = courseName.replace('เข้ารับบริการ:', '').trim();
        if (courseName.includes('ติดตามผล:')) courseName = courseName.replace('ติดตามผล:', '').trim();
 
-       // 1. เก็บข้อมูลแพทย์ผู้ทำเคส
+       // 1. คิดยอดของแพทย์
+       let docName = log.doctor_name || 'ไม่ระบุแพทย์';
        dfLogs.push({
            date: log.visit_date,
-           user_name: log.doctor_name || 'ไม่ระบุแพทย์',
+           user_name: docName,
            role: 'แพทย์',
            course: courseName,
            patient: log.patient_name || 'ไม่ระบุชื่อ',
-           df_amount: 0 // รอเชื่อมระบบคำนวณในสเตปถัดไป
+           df_amount: calculateDf(docName, 'DOCTOR', courseName)
        });
 
-       // 2. แยกรายชื่อผู้ช่วยออกจาก treatment_details
+       // 2. คิดยอดของผู้ช่วย
        if (log.treatment_details && log.treatment_details.includes('[ผู้ให้บริการ/ผู้ช่วย]')) {
            let lines = log.treatment_details.split('\n');
            let isAsstSection = false;
@@ -742,13 +788,14 @@ app.get('/api/reports/df', async (req, res) => {
                let t = line.trim();
                if (t.startsWith('[')) { isAsstSection = t.includes('[ผู้ให้บริการ/ผู้ช่วย]'); return; }
                if (isAsstSection && t.startsWith('-')) {
+                   let asstNameRaw = t.replace('-', '').trim();
                    dfLogs.push({
                        date: log.visit_date,
-                       user_name: t.replace('-', '').trim(),
+                       user_name: asstNameRaw,
                        role: 'ผู้ช่วย',
                        course: courseName,
                        patient: log.patient_name || 'ไม่ระบุชื่อ',
-                       df_amount: 0 // รอเชื่อมระบบคำนวณในสเตปถัดไป
+                       df_amount: calculateDf(asstNameRaw, 'ASST', courseName)
                    });
                }
            });
