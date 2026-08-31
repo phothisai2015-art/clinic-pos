@@ -437,8 +437,9 @@
 
         // กรองข้อมูลตามที่เลือก (ALL หรือ ชื่อพนักงาน)
         if (userFilter !== 'ALL') {
-          // ใช้ .includes() เผื่อกรณีชื่อมีวงเล็บตำแหน่งต่อท้าย
-          realDfLogs = realDfLogs.filter(log => userFilter.includes(log.user_name));
+          // 🌟 สลับฝั่ง .includes() ให้ถูกต้อง
+          // ชื่อใน log (เช่น "หมอมิ้น (แพทย์)") ต้องเช็คว่ามีคำที่เลือก (เช่น "หมอมิ้น") ซ่อนอยู่หรือไม่
+          realDfLogs = realDfLogs.filter(log => log.user_name.includes(userFilter));
         }
 
         let totalDf = 0;
