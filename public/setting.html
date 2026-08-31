@@ -357,39 +357,55 @@
           <div class="text-muted small mb-3">ระบบจะคำนวณตาม "หน้าที่" ที่พนักงานคนนี้ได้รับมอบหมายในบิลนั้นๆ</div>
           
           <!-- เรทเมื่อเป็นแพทย์ -->
-          <div class="row g-3 mb-3 pb-3 border-bottom">
-            <div class="col-md-4 d-flex align-items-center">
+          <div class="row g-3 mb-3 pb-3 border-bottom align-items-center">
+            <div class="col-md-3">
               <span class="fw-bold text-primary"><i class="fa-solid fa-user-doctor me-2"></i> กรณีเป็น "แพทย์"</span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <select id="df_doc_type" class="form-select border-primary fw-bold text-primary">
                 <option value="NONE">ไม่ได้รับค่ามือ (ไม่มีสิทธิ์)</option>
                 <option value="PERCENT">คิดเป็นเปอร์เซ็นต์ (%)</option>
                 <option value="BAHT">จ่ายคงที่ (บาท/เคส)</option>
               </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <input type="number" id="df_doc_val" class="form-control fw-bold" placeholder="ระบุยอด..." disabled>
+            </div>
+            <div class="col-md-3">
+              <select id="df_doc_split" class="form-select border-secondary text-secondary fw-bold">
+                <option value="FULL">จ่ายเต็ม (ไม่หาร)</option>
+                <option value="SPLIT">หารตามจำนวนคน</option>
+              </select>
             </div>
           </div>
 
           <!-- เรทเมื่อเป็นผู้ช่วย -->
           <div class="row g-3">
-            <div class="col-md-4 d-flex align-items-center">
+            <div class="col-md-3">
               <span class="fw-bold text-success"><i class="fa-solid fa-user-nurse me-2"></i> กรณีเป็น "ผู้ช่วย"</span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <select id="df_asst_type" class="form-select border-success fw-bold text-success">
                 <option value="NONE">ไม่ได้รับค่ามือ (ไม่มีสิทธิ์)</option>
                 <option value="PERCENT">คิดเป็นเปอร์เซ็นต์ (%)</option>
                 <option value="BAHT">จ่ายคงที่ (บาท/เคส)</option>
               </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <input type="number" id="df_asst_val" class="form-control fw-bold" placeholder="ระบุยอด..." disabled>
             </div>
+            <div class="col-md-3">
+              <select id="df_asst_split" class="form-select border-secondary text-secondary fw-bold">
+                <option value="SPLIT">หารตามจำนวนคน</option>
+                <option value="FULL">จ่ายเต็ม (ไม่หาร)</option>
+              </select>
+            </div>
           </div>
-        </div>
+
+          <!-- หมายเหตุอธิบายการหาร -->
+          <div class="alert alert-info py-2 px-3 mt-3 mb-0 small rounded-3 border-info">
+            <i class="fa-solid fa-circle-info me-1"></i> <b>หมายเหตุการหารแบ่ง:</b> หากเคสนั้นมีผู้ช่วย 2 คน คนที่เลือก <b>"หารตามจำนวนคน"</b> ยอด DF จะถูกหาร 2 ส่วนคนที่เลือก <b>"จ่ายเต็ม (ไม่หาร)"</b> จะยังได้รับยอดเต็มจำนวนโดยไม่ถูกนำไปหาร
+          </div>
 
         <div class="bg-white p-4 rounded-4 shadow-sm border">
           <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
