@@ -689,5 +689,66 @@ app.get('/api/reports/dashboard', async (req, res) => {
     });
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
+// ==========================================
+// 💰 API สำหรับหน้ารายงานค่ามือแพทย์ (DF Report)
+// ==========================================
+app.get('/api/reports/df', async (req, res) => {
+  try {
+    const startDate = req.query.start_date;
+    const endDate = req.query.end_date;
+
+    // ดึงข้อมูล EMR พร้อมชื่อคนไข้และชื่อแพทย์
+    const logs = await dbAll(`
+      SELECT e.*, p.full_name as patient_name, u.name as doctor_name 
+      FROM emr_logs e 
+      LEFT JOIN patients p ON e.patient_id = p.id
+      LEFT JOIN users u ON e.doctor_id = u.id
+      WHERE date(e.visit_date) BETWEEN ? AND ?
+      ORDER BY e.visit_date DESC
+    `, [startDate, endDate]);
+
+    let dfLogs = [];
+    logs.forEach(log => {
+       // ดึงชื่อคอร์สจากอาการแรกรับ
+       let courseName = log.symptoms || 'ไม่ระบุ';
+       if (courseName.includes('เข้ารับบริการ:')) courseName = courseName.replace('เข้ารับบริการ:', '').trim();
+       if (courseName.includes('ติดตามผล:')) courseName = courseName.replace('ติดตามผล:', '').trim();
+
+       // 1. เก็บข้อมูลแพทย์ผู้ทำเคส
+       dfLogs.push({
+           date: log.visit_date,
+           user_name: log.doctor_name || 'ไม่ระบุแพทย์',
+           role: 'แพทย์',
+           course: courseName,
+           patient: log.patient_name || 'ไม่ระบุชื่อ',
+           df_amount: 0 // รอเชื่อมระบบคำนวณในสเตปถัดไป
+       });
+
+       // 2. แยกรายชื่อผู้ช่วยออกจาก treatment_details
+       if (log.treatment_details && log.treatment_details.includes('[ผู้ให้บริการ/ผู้ช่วย]')) {
+           let lines = log.treatment_details.split('\n');
+           let isAsstSection = false;
+           lines.forEach(line => {
+               let t = line.trim();
+               if (t.startsWith('[')) { isAsstSection = t.includes('[ผู้ให้บริการ/ผู้ช่วย]'); return; }
+               if (isAsstSection && t.startsWith('-')) {
+                   dfLogs.push({
+                       date: log.visit_date,
+                       user_name: t.replace('-', '').trim(),
+                       role: 'ผู้ช่วย',
+                       course: courseName,
+                       patient: log.patient_name || 'ไม่ระบุชื่อ',
+                       df_amount: 0 // รอเชื่อมระบบคำนวณในสเตปถัดไป
+                   });
+               }
+           });
+       }
+    });
+
+    res.json({ status: 'success', data: dfLogs });
+  } catch(err) { 
+    res.status(500).json({ status: 'error', message: err.message }); 
+  }
+});
 
 app.listen(PORT, () => { console.log(`🚀 Clinic Management Server is running on http://192.168.1.69:${3001}`); });
