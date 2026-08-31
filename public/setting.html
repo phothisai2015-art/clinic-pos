@@ -539,30 +539,74 @@
     } catch(e) {}
   }
 
+  // 🌟 เปลี่ยนการแสดงผลบัญชีพนักงานให้เป็นการ์ด (Grid) และแสดงสิทธิ์ทั้งหมด
   function renderUsers() {
     const list = document.getElementById('usersList');
-    list.innerHTML = '';
+    // สร้าง Grid Row
+    list.innerHTML = '<div class="row g-3" id="usersGrid"></div>';
+    const grid = document.getElementById('usersGrid');
+    
     const currentUserId = parseInt(sessionStorage.getItem('currentUserId'));
+
+    // แผนผังแปลงรหัสสิทธิ์ (Permission) เป็นภาษาไทย
+    const permMap = {
+      'BOOKING': 'นัดหมาย & คิว',
+      'PATIENT_1': 'ลงทะเบียน & คัดกรอง',
+      'POS': 'ขาย & ชำระเงิน',
+      'STOCK': 'คลังยา',
+      'DASH': 'รายงาน',
+      'PATIENT_3': 'ฐานข้อมูลคนไข้'
+    };
 
     allUsers.forEach(u => {
       let roleColor = u.role === 'ADMIN' ? 'danger' : (u.role === 'DOCTOR' ? 'info' : 'success');
       let isAllPerm = u.permissions.includes('ADMIN');
-      let permBadge = isAllPerm ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill">เข้าถึงได้ทุกเมนู (Full Access)</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill">กำหนดสิทธิ์เฉพาะส่วน</span>`;
+      
+      // สร้างป้ายกำกับ (Badge) สิทธิ์การใช้งาน
+      let permBadges = '';
+      if (isAllPerm) {
+        permBadges = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger mb-1"><i class="fa-solid fa-crown me-1"></i> เข้าถึงได้ทุกเมนู (Full Access)</span>`;
+      } else {
+        let perms = u.permissions.split(',');
+        perms.forEach(p => {
+           if(permMap[p]) {
+              permBadges += `<span class="badge bg-secondary bg-opacity-10 text-secondary border me-1 mb-1">${permMap[p]}</span>`;
+           }
+        });
+      }
       
       let deleteBtnHtml = (u.id === currentUserId) 
         ? `<button class="btn btn-sm btn-light text-muted rounded-circle" title="บัญชีของคุณ" onclick="Swal.fire('แจ้งเตือน', 'ไม่สามารถลบบัญชีของตัวเองขณะกำลังใช้งานได้', 'warning')"><i class="fa-solid fa-ban"></i></button>`
         : `<button class="btn btn-sm btn-light text-danger rounded-circle" onclick="deleteUser(${u.id}, '${u.name}')"><i class="fa-solid fa-trash"></i></button>`;
 
-      list.innerHTML += `
-        <div class="user-card">
-          <div class="d-flex align-items-center">
-            <div class="bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">${u.name.substring(0, 1)}</div>
-            <div>
-              <h6 class="fw-bold m-0 text-dark mb-1">${u.name} <span class="badge bg-${roleColor} ms-2">${u.role}</span></h6>
-              <div class="small"><span class="text-muted me-3"><i class="fa-solid fa-key me-1"></i> PIN: <b>${u.pin}</b></span>${permBadge}</div>
+      grid.innerHTML += `
+        <div class="col-md-6 col-xl-4">
+          <div class="user-card h-100 flex-column align-items-start position-relative shadow-sm">
+            <div class="d-flex w-100 justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center">
+                <div class="bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">${u.name.substring(0, 1)}</div>
+                <div>
+                  <h6 class="fw-bold m-0 text-dark">${u.name}</h6>
+                  <span class="badge bg-${roleColor} mt-1">${u.role}</span>
+                </div>
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>
+                ${deleteBtnHtml}
+              </div>
+            </div>
+            
+            <div class="w-100 mb-2">
+              <div class="text-muted small mb-1"><i class="fa-solid fa-key me-1"></i> รหัส PIN (สำหรับเข้าสู่ระบบ): <b class="text-dark fs-6 ms-1">${u.pin}</b></div>
+            </div>
+            
+            <div class="w-100 mt-auto border-top pt-3">
+              <div class="text-muted small fw-bold mb-2">สิทธิ์การเข้าใช้งาน:</div>
+              <div class="d-flex flex-wrap">
+                ${permBadges}
+              </div>
             </div>
           </div>
-          <div><button class="btn btn-sm btn-outline-primary rounded-circle me-1" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>${deleteBtnHtml}</div>
         </div>`;
     });
   }
@@ -620,23 +664,28 @@
 
   async function deleteUser(id, name) { if ((await Swal.fire({ title: `ลบพนักงาน ${name}?`, icon:'warning', showCancelButton: true, confirmButtonColor: '#e11d48' })).isConfirmed) { await fetch(`/api/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
 
-// 🌟 ฟังก์ชันสลับแท็บย่อย (บัญชี / DF)
+// 🌟 ฟังก์ชันสลับแท็บย่อย (บัญชี / DF) - แก้ปัญหาสีตัวหนังสือหาย
   function switchUserSubTab(tab) {
-    document.getElementById('btn-subtab-acc').classList.remove('active', 'text-primary');
+    // 1. ลบคลาสสีขาวและสถานะ active ออกจากทั้งสองปุ่มก่อน
+    document.getElementById('btn-subtab-acc').classList.remove('active', 'text-white');
+    document.getElementById('btn-subtab-df').classList.remove('active', 'text-white');
+    
+    // 2. เติมคลาสสีเทาให้ทั้งสองปุ่มเป็นสถานะเริ่มต้น (ไม่ได้เลือก)
     document.getElementById('btn-subtab-acc').classList.add('text-secondary');
-    document.getElementById('btn-subtab-df').classList.remove('active', 'text-primary');
     document.getElementById('btn-subtab-df').classList.add('text-secondary');
     
+    // 3. ปุ่มที่ถูกกด ให้เอาสีเทาออก แล้วใส่สีขาวและคลาส active
     const activeBtn = document.getElementById('btn-subtab-' + tab);
     activeBtn.classList.remove('text-secondary');
     activeBtn.classList.add('active', 'text-white');
 
+    // 4. สลับการแสดงผลเนื้อหา
     document.getElementById('subtab-acc').style.display = 'none';
     document.getElementById('subtab-df').style.display = 'none';
     document.getElementById('subtab-' + tab).style.display = 'flex';
 
     if(tab === 'df') {
-      renderDfUsersList(); // โหลดรายชื่อตอนเปิดแท็บ DF
+      renderDfUsersList(); 
     }
   }
 
