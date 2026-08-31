@@ -333,7 +333,7 @@
   </div>
 </div>
 
-<!-- 🌟 Modal ตั้งค่าค่ามือ (DF) -->
+<!-- 🌟 Modal ตั้งค่าค่ามือ (DF) อัปเดตแยก แพทย์/ผู้ช่วย -->
 <div class="modal fade" id="dfSettingModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -343,27 +343,49 @@
       </div>
       <div class="modal-body p-4 bg-light bg-opacity-50">
         
-        <div class="d-flex align-items-center mb-3">
-          <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;" id="df_modal_icon">M</div>
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+          <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center fw-bold me-3" style="width: 55px; height: 55px; font-size: 1.5rem;" id="df_modal_icon">M</div>
           <div>
-            <h5 class="fw-bold m-0 text-dark" id="df_modal_name">ชื่อพนักงาน</h5>
-            <div class="text-muted small" id="df_modal_role">ตำแหน่ง</div>
+            <h4 class="fw-bold m-0 text-dark" id="df_modal_name">ชื่อพนักงาน</h4>
+            <div class="text-muted" id="df_modal_role">ตำแหน่ง</div>
           </div>
         </div>
 
         <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
           <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-gear text-secondary me-2"></i> 1. เรทค่ามือพื้นฐาน (Default Rate)</h6>
-          <div class="text-muted small mb-3">เรทนี้จะถูกนำไปใช้กับทุกรายการที่ไม่ได้กำหนดข้อยกเว้นไว้</div>
-          <div class="row g-2 align-items-center">
-            <div class="col-md-5">
-              <select id="df_default_type" class="form-select border-primary fw-bold text-primary">
-                <option value="NONE">ไม่ได้รับค่ามือ / ไม่คิด DF</option>
+          <div class="text-muted small mb-3">ระบบจะคำนวณตาม "หน้าที่" ที่พนักงานคนนี้ได้รับมอบหมายในบิลนั้นๆ</div>
+          
+          <!-- เรทเมื่อเป็นแพทย์ -->
+          <div class="row g-3 mb-3 pb-3 border-bottom">
+            <div class="col-md-4 d-flex align-items-center">
+              <span class="fw-bold text-primary"><i class="fa-solid fa-user-doctor me-2"></i> กรณีเป็น "แพทย์"</span>
+            </div>
+            <div class="col-md-4">
+              <select id="df_doc_type" class="form-select border-primary fw-bold text-primary">
+                <option value="NONE">ไม่ได้รับค่ามือ (ไม่มีสิทธิ์)</option>
                 <option value="PERCENT">คิดเป็นเปอร์เซ็นต์ (%)</option>
                 <option value="BAHT">จ่ายคงที่ (บาท/เคส)</option>
               </select>
             </div>
             <div class="col-md-4">
-              <input type="number" id="df_default_val" class="form-control fw-bold" placeholder="ระบุตัวเลข (เช่น 10)" disabled>
+              <input type="number" id="df_doc_val" class="form-control fw-bold" placeholder="ระบุยอด..." disabled>
+            </div>
+          </div>
+
+          <!-- เรทเมื่อเป็นผู้ช่วย -->
+          <div class="row g-3">
+            <div class="col-md-4 d-flex align-items-center">
+              <span class="fw-bold text-success"><i class="fa-solid fa-user-nurse me-2"></i> กรณีเป็น "ผู้ช่วย"</span>
+            </div>
+            <div class="col-md-4">
+              <select id="df_asst_type" class="form-select border-success fw-bold text-success">
+                <option value="NONE">ไม่ได้รับค่ามือ (ไม่มีสิทธิ์)</option>
+                <option value="PERCENT">คิดเป็นเปอร์เซ็นต์ (%)</option>
+                <option value="BAHT">จ่ายคงที่ (บาท/เคส)</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <input type="number" id="df_asst_val" class="form-control fw-bold" placeholder="ระบุยอด..." disabled>
             </div>
           </div>
         </div>
@@ -371,19 +393,19 @@
         <div class="bg-white p-4 rounded-4 shadow-sm border">
           <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
             <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-star text-warning me-2"></i> 2. ข้อยกเว้นเฉพาะคอร์ส (Custom Rules)</h6>
-            <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" onclick="addDfRuleRow()"><i class="fa-solid fa-plus"></i> เพิ่มข้อยกเว้น</button>
+            <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" onclick="addDfRuleRow()"><i class="fa-solid fa-plus me-1"></i> เพิ่มข้อยกเว้น</button>
           </div>
-          <div class="text-muted small mb-3">หากระบุตรงนี้ ระบบจะยึดเรทนี้แทนเรทพื้นฐานด้านบน</div>
+          <div class="text-muted small mb-3">ยึดเรทตามรายการนี้แทนเรทพื้นฐาน <i>(เช่น ปกติเป็นผู้ช่วยได้ 50฿ แต่ถ้าทำ Hifu ได้ 100฿)</i></div>
           
           <div id="df_rules_container" class="d-flex flex-column gap-2">
-            <!-- แถวสำหรับเพิ่มกฎข้อยกเว้น จะแสดงตรงนี้ -->
+            <!-- แถวข้อยกเว้นจะมาแสดงตรงนี้ -->
           </div>
         </div>
 
       </div>
       <div class="modal-footer border-top-0 bg-white rounded-bottom-4 p-3 border-top">
         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" onclick="closeDfModal()">ยกเลิก</button>
-        <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า DF</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า DF</button>
       </div>
     </div>
   </div>
@@ -720,30 +742,38 @@
     });
   }
 
-  // 🌟 ฟังก์ชันเปิด/ปิด ป๊อปอัปตั้งค่า DF
+// 🌟 ฟังก์ชันเปิด/ปิด ป๊อปอัปตั้งค่า DF (อัปเดตระบบแยก แพทย์-ผู้ช่วย)
   var dfModal = null;
   function openDfModal(userId, name, role) {
     document.getElementById('df_modal_name').innerText = name;
     document.getElementById('df_modal_icon').innerText = name.substring(0, 1);
-    document.getElementById('df_modal_role').innerText = `ตำแหน่ง: ${role}`;
+    document.getElementById('df_modal_role').innerText = `ตำแหน่งในระบบ: ${role}`;
     
-    // ตั้งค่าสีไอคอนตามตำแหน่ง
     let roleColor = role === 'DOCTOR' ? 'info' : (role === 'ADMIN' ? 'danger' : 'success');
     document.getElementById('df_modal_icon').className = `bg-${roleColor} bg-opacity-10 text-${roleColor} rounded-circle d-flex justify-content-center align-items-center fw-bold me-3`;
 
-    // จัดการ Event ช่องกรอก
-    document.getElementById('df_default_type').onchange = function() {
-      let valInput = document.getElementById('df_default_val');
-      if(this.value === 'NONE') {
-        valInput.disabled = true; valInput.value = '';
-      } else {
-        valInput.disabled = false;
-        valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)';
-      }
+    // ⚡ Event จัดการเปิด/ปิด ช่องกรอกเรทแพทย์
+    document.getElementById('df_doc_type').onchange = function() {
+      let valInput = document.getElementById('df_doc_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
     };
 
-    // ล้างข้อมูลเก่า
+    // ⚡ Event จัดการเปิด/ปิด ช่องกรอกเรทผู้ช่วย
+    document.getElementById('df_asst_type').onchange = function() {
+      let valInput = document.getElementById('df_asst_val');
+      if(this.value === 'NONE') { valInput.disabled = true; valInput.value = ''; valInput.placeholder = 'ระบุยอด...'; } 
+      else { valInput.disabled = false; valInput.placeholder = this.value === 'PERCENT' ? 'ระบุเปอร์เซ็นต์ (%)' : 'ระบุยอดเงิน (บาท)'; }
+    };
+
+    // ล้างข้อมูลเก่าก่อนเปิด
     document.getElementById('df_rules_container').innerHTML = '';
+    
+    // ตั้งค่า Default เริ่มต้นให้ (สมมติว่าเป็นพนักงาน ให้ค่าหมอถูกล็อคไว้ก่อน)
+    document.getElementById('df_doc_type').value = 'NONE';
+    document.getElementById('df_doc_type').dispatchEvent(new Event('change'));
+    document.getElementById('df_asst_type').value = 'NONE';
+    document.getElementById('df_asst_type').dispatchEvent(new Event('change'));
 
     const modalEl = document.getElementById('dfSettingModal');
     if (modalEl && modalEl.parentNode !== document.body) { document.body.appendChild(modalEl); }
@@ -758,25 +788,29 @@
     }
   }
 
-  // 🌟 ฟังก์ชันเพิ่มแถวข้อยกเว้นคอร์ส
+  // 🌟 ฟังก์ชันเพิ่มแถวข้อยกเว้นคอร์ส (อัปเดตให้เลือกว่ายกเว้นในฐานะหมอ หรือผู้ช่วย)
   function addDfRuleRow() {
     const container = document.getElementById('df_rules_container');
     const row = document.createElement('div');
-    row.className = 'input-group input-group-sm mb-2 shadow-sm rounded-3 overflow-hidden border';
+    row.className = 'input-group input-group-sm mb-2 shadow-sm rounded-3 overflow-hidden border bg-light';
     
-    // โค้ดจำลองเลือกคอร์ส (ของจริงดึงจาก Inventory)
+    // ดึงรายชื่อหัตถการมาจากตัวแปรในระบบ (หรือจำลองข้อมูลไปก่อนเพื่อดู UI)
     row.innerHTML = `
-      <select class="form-select border-0 bg-light fw-bold text-dark" style="max-width: 45%;">
+      <select class="form-select border-0 bg-white fw-bold text-dark" style="max-width: 35%;">
         <option value="">-- เลือกคอร์ส / หัตถการ --</option>
-        <option value="C1">โบท็อกซ์ 100u</option>
-        <option value="C2">เลเซอร์หน้าใส</option>
+        <option value="C1">โบท็อกซ์ เหมาขวด</option>
+        <option value="C2">เลเซอร์หน้าใส (Pico)</option>
         <option value="C3">ดริปวิตามินผิว</option>
       </select>
-      <select class="form-select border-0 border-start text-primary fw-bold" style="max-width: 25%;">
-        <option value="PERCENT">%</option>
-        <option value="BAHT">บาท</option>
+      <select class="form-select border-0 border-start text-secondary fw-bold" style="max-width: 25%; background-color: #f8fafc;">
+        <option value="ASST">ในฐานะ ผู้ช่วย</option>
+        <option value="DOCTOR">ในฐานะ แพทย์</option>
       </select>
-      <input type="number" class="form-control border-0 text-center fw-bold" placeholder="ระบุตัวเลข">
+      <select class="form-select border-0 border-start text-primary fw-bold" style="max-width: 15%;">
+        <option value="BAHT">บาท</option>
+        <option value="PERCENT">%</option>
+      </select>
+      <input type="number" class="form-control border-0 text-center fw-bold" placeholder="ระบุยอด">
       <button class="btn btn-danger px-3" onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(row);
