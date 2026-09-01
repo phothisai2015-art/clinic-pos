@@ -1,4 +1,37 @@
-<style>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ลงทะเบียน & คัดกรองคนไข้</title>
+
+  <!-- Libraries พื้นฐานที่จำเป็นต้องมี เพื่อให้หน้าเว็บไม่พัง -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- โค้ดดักจับ Token ไว้สื่อสารกับ API -->
+  <script>
+    const originalFetch = window.fetch;
+    window.fetch = async function() {
+        let [resource, config] = arguments;
+        if (!config) { config = {}; }
+        if (!config.headers) { config.headers = {}; }
+        const userId = sessionStorage.getItem('currentUserId');
+        if (userId) { config.headers['X-User-Id'] = userId; }
+        return originalFetch(resource, config);
+    };
+    
+    // ตั้งฟังก์ชันปิดหน้าเว็บ สำหรับลิงก์กลับหน้าแรก
+    window.closeModule = function() {
+        window.location.href = '/';
+    };
+  </script>
+
+  <style>
   /* 🌟 Compact Reception UI Styles (ย่อขนาดลง) */
   .nav-pills-custom .nav-link { color: #64748b; font-weight: bold; border-radius: 10px; padding: 8px 16px; font-size: 0.9rem; transition: 0.2s; margin-right: 8px; }
   .nav-pills-custom .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
@@ -203,7 +236,9 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   }
   
-</style>
+  </style>
+</head>
+<body class="bg-light">
 
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column;">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -1915,4 +1950,3 @@
   loadAssistants();
   
 </script>
-

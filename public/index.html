@@ -108,10 +108,6 @@
 
     .version-text { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; }
 
-    /* 🌟 Module Container */
-    #module-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8fafc; z-index: 1050; overflow-y: auto; }
-    body.dark-theme #module-container { background: #0f172a; }
-
     @media (max-height: 800px) {
       .menu-card-btn { padding: 25px 15px; border-radius: 20px; }
       .menu-icon-wrap { width: 55px; height: 55px; font-size: 22px; margin-bottom: 15px; }
@@ -385,45 +381,45 @@ body.dark-theme #paymentHistoryList .bg-white {
       </div>
     </div>
 
-    <!-- 🌟 เมนูต่างๆ (Cards) -> แก้ปัญหากล่องเหลื่อมกันด้วย d-flex ให้เต็มความสูง -->
+    <!-- 🌟 เมนูต่างๆ (Cards) -> แก้เป็นลิงก์ไปยังหน้าต่างๆ -->
     <div class="row g-4 justify-content-center align-items-stretch">
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-booking" onclick="openModule('booking.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-booking" onclick="window.location.href='booking.html'" disabled>
           <div class="menu-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-calendar-check"></i></div>
           <h5>นัดหมาย & คิว</h5>
           <small>จัดการตารางนัดหมาย</small>
         </button>
       </div>
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-reception" onclick="openModule('reception.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-reception" onclick="window.location.href='reception.html'" disabled>
           <div class="menu-icon-wrap bg-info bg-opacity-10 text-info"><i class="fa-solid fa-clipboard-user"></i></div>
           <h5>ลงทะเบียน & คัดกรอง</h5>
           <small>สร้างประวัติและซักถามอาการ</small>
         </button>
       </div>
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-pos" onclick="openModule('pos.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-pos" onclick="window.location.href='pos.html'" disabled>
           <div class="menu-icon-wrap bg-success bg-opacity-10 text-success"><i class="fa-solid fa-cash-register"></i></div>
           <h5>ขาย & ชำระเงิน</h5>
           <small>เปิดหน้าร้านและรับชำระเงิน</small>
         </button>
       </div>
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-stock" onclick="openModule('inventory.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-stock" onclick="window.location.href='inventory.html'" disabled>
           <div class="menu-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-box-open"></i></div>
           <h5>คลังสินค้า</h5>
           <small>จัดการสต็อกและรายการสินค้า</small>
         </button>
       </div>
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-dash" onclick="openModule('reports.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-dash" onclick="window.location.href='reports.html'" disabled>
           <div class="menu-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-chart-pie"></i></div>
           <h5>สถิติยอดขาย</h5>
           <small>ดูสรุปรายได้และบิลย้อนหลัง</small>
         </button>
       </div>
       <div class="col-12 col-md-4 d-flex">
-        <button class="menu-card-btn w-100 h-100" id="btn-menu-patients" onclick="openModule('patients_list.html')" disabled>
+        <button class="menu-card-btn w-100 h-100" id="btn-menu-patients" onclick="window.location.href='patients_list.html'" disabled>
           <div class="menu-icon-wrap bg-dark bg-opacity-10 text-dark"><i class="fa-solid fa-users"></i></div>
           <h5>ฐานข้อมูลคนไข้</h5>
           <small>ค้นหาและจัดการประวัติคนไข้</small>
@@ -437,7 +433,7 @@ body.dark-theme #paymentHistoryList .bg-white {
     <span class="text-muted version-text">Version 2.0.0</span>
     <span class="mx-3 text-muted opacity-25">•</span>
     
-    <button id="btn-setting" class="btn btn-link text-secondary fw-semibold p-0 text-decoration-none me-4" onclick="openModule('setting.html')">
+    <button id="btn-setting" class="btn btn-link text-secondary fw-semibold p-0 text-decoration-none me-4" onclick="window.location.href='setting.html'">
       <i class="fa-solid fa-gear me-1"></i> ตั้งค่าระบบ
     </button>
 
@@ -492,9 +488,6 @@ body.dark-theme #paymentHistoryList .bg-white {
       </div>
     </div>
   </div>
-
-  <!-- Container สำหรับโหลดหน้าต่างๆ (Module) -->
-  <div id="module-container"></div>
 
   <script>
     let currentPin = "";
@@ -614,8 +607,6 @@ body.dark-theme #paymentHistoryList .bg-white {
             // นำตำแหน่งมาโชว์ก่อนชื่อ
             document.getElementById('display-staff-name').innerText = `${roleThai} | ${data.user.name}`;
             
-            // (เราลบโค้ดบรรทัด display-staff-initial ออก เพื่อไม่ให้เกิด Error เพราะลบ HTML ไปแล้ว)
-            
             document.body.classList.remove('system-locked');
             // เฟดหน้าจอล็อกสกรีนออก เพื่อให้เห็นเมนูหลัก
             document.getElementById('lock-screen').style.opacity = '0';
@@ -695,9 +686,6 @@ body.dark-theme #paymentHistoryList .bg-white {
       numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
       
       document.getElementById('lock-screen').style.display = 'flex';
-      
-      // ปิดโมดูลทุกหน้า กลับมาที่เมนูหลัก
-      closeModule();
     }
 
     function toggleTheme() {
@@ -715,41 +703,7 @@ body.dark-theme #paymentHistoryList .bg-white {
       }
     }
 
-   async function openModule(pageUrl) {
-      if(window.bookingInterval) { clearInterval(window.bookingInterval); window.bookingInterval = null; }
-      if(window.emrQueueInterval) { clearInterval(window.emrQueueInterval); window.emrQueueInterval = null; }
-      if(window.posQueueInterval) { clearInterval(window.posQueueInterval); window.posQueueInterval = null; }
-
-      Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      try {
-        const response = await fetch('/' + pageUrl);
-        const html = await response.text();
-        const container = document.getElementById('module-container');
-        container.innerHTML = html;
-        container.style.display = 'block';
-        
-        const scripts = container.querySelectorAll('script');
-        scripts.forEach(script => {
-          const newScript = document.createElement('script');
-          newScript.innerHTML = script.innerHTML;
-          document.body.appendChild(newScript);
-        });
-        Swal.close();
-      } catch (e) {
-        Swal.fire('Error', 'ไม่สามารถโหลดหน้าจอได้', 'error');
-      }
-    }
-
-    function closeModule() {
-      if(window.bookingInterval) clearInterval(window.bookingInterval);
-      if(window.emrQueueInterval) clearInterval(window.emrQueueInterval);
-      if(window.posQueueInterval) clearInterval(window.posQueueInterval);
-      
-      document.getElementById('module-container').innerHTML = '';
-      document.getElementById('module-container').style.display = 'none';
-      loadGlobalClinicInfo(); 
-    }
-	
+    // ฟังก์ชันนี้ป้องกัน API Header Error เมื่อทำงานอยู่หน้าหลัก
     const originalFetch = window.fetch;
     window.fetch = async function() {
         let [resource, config] = arguments;

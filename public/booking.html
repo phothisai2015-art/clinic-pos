@@ -1,4 +1,37 @@
-<style>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบนัดหมายและคิว</title>
+
+  <!-- Libraries พื้นฐานที่จำเป็นต้องมี เพื่อให้หน้าเว็บไม่พัง -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- โค้ดดักจับ Token ไว้สื่อสารกับ API -->
+  <script>
+    const originalFetch = window.fetch;
+    window.fetch = async function() {
+        let [resource, config] = arguments;
+        if (!config) { config = {}; }
+        if (!config.headers) { config.headers = {}; }
+        const userId = sessionStorage.getItem('currentUserId');
+        if (userId) { config.headers['X-User-Id'] = userId; }
+        return originalFetch(resource, config);
+    };
+    
+    // ตั้งฟังก์ชันปิดหน้าเว็บ สำหรับลิงก์กลับหน้าแรก
+    window.closeModule = function() {
+        window.location.href = '/';
+    };
+  </script>
+
+  <style>
   /* การตกแต่ง UI Tabs */
   .booking-nav .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 12px 24px; transition: 0.2s; margin-right: 10px; border: 1px solid transparent; cursor: pointer; }
   .booking-nav .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
@@ -178,7 +211,7 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     }
 	
 	/* 7. ปุ่ม "ปิดหน้านี้" (มุมขวาบน) ให้เหลือแต่ไอคอน X */
-    button[onclick="closeModule()"] {
+    button[onclick="window.location.href='/'"] {
       width: 38px !important;
       height: 38px !important;
       padding: 0 !important;
@@ -187,7 +220,7 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
       justify-content: center;
       align-items: center;
     }
-    button[onclick="closeModule()"] i {
+    button[onclick="window.location.href='/'"] i {
       font-size: 1.2rem !important;
       margin: 0 !important;
     }
@@ -327,6 +360,8 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
       background-color: rgba(30, 41, 59, 0.85) !important;
   }
 </style>
+</head>
+<body class="bg-light">
 
 <!-- 🌟 Ambient Orbs Background -->
 <div class="ambient-orb orb-1"></div>
@@ -336,7 +371,7 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
 <div class="container-fluid py-4" style="max-width: 1400px; height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold text-primary m-0"><i class="fa-solid fa-calendar-days me-2"></i> ตารางนัดหมาย & คิว</h3>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="closeModule()"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="window.location.href='/'"><i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้</button>
   </div>
 
   <ul class="nav nav-pills booking-nav mb-4">
@@ -470,7 +505,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
 
 <script>
   // 🌟 เปิดต่อ Database จริง 100%
-
 
   function switchBookingTab(tab) {
     document.querySelectorAll('.booking-nav .nav-link').forEach(btn => btn.classList.remove('active'));
@@ -842,7 +876,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     grid.innerHTML = html;
   }
 
- // 🌟 บันทึกลงฐานข้อมูลเซิร์ฟเวอร์จริง (พร้อมเก็บ Log)
   function confirmAppointment(courseId, courseName) {
     Swal.fire({
       title: 'ยืนยันลงนัดหมาย?',
@@ -879,7 +912,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
 
             if (!res.ok) throw new Error("API บันทึกล้มเหลว");
 
-            // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
             fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ลงนัดหมายให้ ${currentBookingPatientName} (${courseName}) วันที่ ${currentBookingDateStr} เวลา ${currentBookingTime} น.` }) });
 
@@ -898,7 +930,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     });
   }
 
-  // 🌟 ยกเลิกนัดหมาย (พร้อมเก็บ Log)
   function cancelAppointment(appId) {
     Swal.fire({
       title: 'ยกเลิกนัดหมายนี้?',
@@ -915,7 +946,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
             const res = await fetch(`/api/appointments/${appId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error("ลบจาก Database ไม่สำเร็จ");
 
-            // 🌟 ส่งประวัติเข้า System Logs
             let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
             fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `ยกเลิกและลบคิวนัดหมาย (รหัสคิว #${appId})` }) });
 
@@ -959,7 +989,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
 
     let html = '';
     tomorrowList.sort((a,b) => a.time.localeCompare(b.time)).forEach(app => {
-      // 🌟 เช็คว่าคอนเฟิร์มหรือยัง
       let isConfirmed = app.status === 'CONFIRMED';
       let statusBadge = isConfirmed
         ? `<span class="badge bg-success shadow-sm"><i class="fa-solid fa-phone-volume me-1"></i> โทรแล้ว</span>`
@@ -1021,7 +1050,6 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
 
   initCalendar();
   
-  // 🌟 ฟังก์ชันสำหรับกดปุ่ม "โทรคอนเฟิร์มแล้ว" (พร้อมเก็บประวัติ Log)
   function markAsContacted(appId, patientName) {
     Swal.fire({
       title: 'โทรคอนเฟิร์มแล้วใช่ไหม?',
@@ -1039,11 +1067,9 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
           const res = await fetch(`/api/appointments/${appId}/confirm`, { method: 'PUT' });
           if (!res.ok) throw new Error("อัปเดตไม่สำเร็จ");
 
-          // 🌟 ส่งประวัติเข้า System Logs
           let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
           fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'BOOKING', details: `โทรคอนเฟิร์มนัดหมายของคนไข้: ${patientName} (คิว #${appId})` }) });
 
-          // โหลดข้อมูลใหม่และวาดหน้าจอใหม่ทันที
           await loadAppointmentsFromDB();
           renderTomorrowAppointments();
           
@@ -1055,3 +1081,5 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
     });
   }
 </script>
+</body>
+</html>
