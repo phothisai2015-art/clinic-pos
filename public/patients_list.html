@@ -14,6 +14,7 @@
 
   <!-- โค้ดดักจับ Token ไว้สื่อสารกับ API -->
   <script>
+  if (!sessionStorage.getItem('currentUserId')) { window.location.replace('/'); }
     const originalFetch = window.fetch;
     window.fetch = async function() {
         let [resource, config] = arguments;

@@ -490,18 +490,36 @@ body.dark-theme #paymentHistoryList .bg-white {
   </div>
 
   <script>
+  
     let currentPin = "";
     let isCheckingPin = false; 
     
-    // ตั้งค่าให้โชว์เมนูหลักไว้ด้านหลังกระจกฝ้าตลอดเวลา
-    document.addEventListener("DOMContentLoaded", () => {
-      document.body.classList.add('system-locked');
-      document.getElementById('main-menu').style.display = 'block';
-      document.getElementById('footer-menu').style.display = 'none';
-      checkFirstSetup();
-      loadGlobalClinicInfo(); 
-      initCats(); 
-    });
+   document.addEventListener("DOMContentLoaded", () => {
+  checkFirstSetup();
+  loadGlobalClinicInfo(); 
+  initCats(); 
+
+  // 🌟 ตรวจสอบว่าเคยล็อกอินไว้แล้วหรือยัง (แก้บั๊กกด Back)
+  const savedUserId = sessionStorage.getItem('currentUserId');
+  const savedUserName = sessionStorage.getItem('currentUserName');
+  const savedUserRole = sessionStorage.getItem('currentUserRole');
+  const savedUserPerms = sessionStorage.getItem('currentUserPerms');
+
+  if (savedUserId && savedUserName) {
+    // ถ้ามีประวัติล็อกอิน ให้เปิดเมนูหลักเลย
+    document.getElementById('display-staff-name').innerText = `${savedUserRole} | ${savedUserName}`;
+    document.body.classList.remove('system-locked');
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'block';
+    document.getElementById('footer-menu').style.display = 'flex';
+    if (savedUserPerms) applyPermissions(savedUserPerms);
+  } else {
+    // ถ้ายังไม่ล็อกอิน ค่อยโชว์หน้าใส่ PIN
+    document.body.classList.add('system-locked');
+    document.getElementById('main-menu').style.display = 'block';
+    document.getElementById('footer-menu').style.display = 'none';
+  }
+});
 
     async function loadGlobalClinicInfo() {
       try {
@@ -603,6 +621,11 @@ body.dark-theme #paymentHistoryList .bg-white {
             sessionStorage.setItem('currentUserId', data.user.id); 
             // แปลง Role จากภาษาอังกฤษเป็นภาษาไทย
             let roleThai = data.user.role === 'ADMIN' ? 'ผู้บริหาร' : (data.user.role === 'DOCTOR' ? 'แพทย์' : 'พนักงาน');
+			
+			sessionStorage.setItem('currentUserId', data.user.id); 
+            sessionStorage.setItem('currentUserName', data.user.name);
+			sessionStorage.setItem('currentUserRole', roleThai);
+			sessionStorage.setItem('currentUserPerms', data.user.permissions);
             
             // นำตำแหน่งมาโชว์ก่อนชื่อ
             document.getElementById('display-staff-name').innerText = `${roleThai} | ${data.user.name}`;
@@ -677,16 +700,22 @@ body.dark-theme #paymentHistoryList .bg-white {
     }
 
     function lockSystem() {
-      document.body.classList.add('system-locked');
-      document.getElementById('footer-menu').style.display = 'none'; 
-      
-      let numpad = document.getElementById('numpad-box'); 
-      numpad.style.animation = 'none'; 
-      void numpad.offsetWidth; 
-      numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-      
-      document.getElementById('lock-screen').style.display = 'flex';
-    }
+  // 🌟 เคลียร์ Session ทิ้งเมื่อสั่งล็อกจอ
+  sessionStorage.removeItem('currentUserId');
+  sessionStorage.removeItem('currentUserName');
+  sessionStorage.removeItem('currentUserRole');
+  sessionStorage.removeItem('currentUserPerms');
+
+  document.body.classList.add('system-locked');
+  document.getElementById('footer-menu').style.display = 'none'; 
+  
+  let numpad = document.getElementById('numpad-box'); 
+  numpad.style.animation = 'none'; 
+  void numpad.offsetWidth; 
+  numpad.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+  
+  document.getElementById('lock-screen').style.display = 'flex';
+}
 
     function toggleTheme() {
       document.body.classList.toggle('dark-theme');
@@ -702,6 +731,7 @@ body.dark-theme #paymentHistoryList .bg-white {
         }
       }
     }
+
 
     // ฟังก์ชันนี้ป้องกัน API Header Error เมื่อทำงานอยู่หน้าหลัก
     const originalFetch = window.fetch;
