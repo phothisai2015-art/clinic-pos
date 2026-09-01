@@ -908,8 +908,7 @@
     }).then((result) => {
       if (result.isConfirmed) {
         sessionStorage.setItem('targetHN', hn);
-        closeModule();
-        openModule('pos.html');
+        window.location.href = 'pos.html';
       }
     });
   }
