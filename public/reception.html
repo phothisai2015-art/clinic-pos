@@ -315,6 +315,77 @@
       padding-top: 8px !important;
       padding-bottom: 8px !important;
     }
+	
+	/* 🌟 ย่อหน้าป๊อปอัป "เลือกแพคเกจ / รายการใหม่" ในมือถือ (ยกเว้นแท็บเมนู) */
+    
+    /* 1. ย่อส่วนหัวป๊อปอัปและลดขอบพื้นที่ทั้งหมด */
+    #packageModal .modal-header {
+      padding: 10px 15px !important;
+    }
+    #packageModal .modal-title {
+      font-size: 1.05rem !important;
+    }
+    #packageModal .p-4 {
+      padding: 12px !important; /* ลดขอบด้านในของพื้นที่ซ้าย-ขวา ให้บางลง */
+    }
+
+    /* 2. ย่อขนาดการ์ดรายการแพคเกจ (Course Cards) */
+    #packageModal .course-card {
+      padding: 8px 10px !important; /* ลดขอบในของการ์ด */
+    }
+    #packageModal .course-card h6 {
+      font-size: 0.8rem !important; /* ย่อชื่อแพคเกจ */
+      margin-bottom: 0 !important;
+    }
+    #packageModal .course-card .badge {
+      font-size: 0.65rem !important;
+      padding: 3px 6px !important;
+    }
+    #packageModal .course-card .text-success {
+      font-size: 0.8rem !important; /* ย่อราคาสีเขียว */
+    }
+
+    /* 3. ปรับความสูงของกล่องรายการ ไม่ให้ยาวทะลุจอในมือถือ */
+    #packageModal .col-lg-8 .custom-scrollbar {
+      height: 250px !important; /* ลดความสูงลงเพื่อไม่ให้ต้องไถจอนาน */
+    }
+
+    /* 4. ย่อส่วน "รายการที่เลือกวันนี้" (ตะกร้าที่อยู่ด้านล่างในมือถือ) */
+    #packageModal .col-lg-4 h6.text-primary {
+      font-size: 0.9rem !important;
+      margin-bottom: 8px !important;
+    }
+    #selectedItemsCart {
+      padding: 8px !important;
+      margin-bottom: 8px !important;
+    }
+    #selectedItemsCart .p-2 {
+      padding: 6px 8px !important; /* ลดขอบของแต่ละรายการในตะกร้า */
+      margin-bottom: 6px !important;
+    }
+    #selectedItemsCart .fw-bold.text-dark {
+      font-size: 0.75rem !important; /* ย่อชื่อรายการที่ถูกเลือกลงตะกร้า */
+    }
+    #selectedItemsCart .text-success {
+      font-size: 0.7rem !important; /* ย่อราคาในตะกร้า */
+    }
+    #selectedItemsCart .btn-outline-danger {
+      padding: 2px 6px !important;
+      font-size: 0.65rem !important; /* ย่อปุ่มกากบาทลบรายการ */
+    }
+
+    /* 5. ยอดยอดรวมและปุ่มยืนยัน */
+    #packageModal .col-lg-4 .bg-white.p-3 {
+      padding: 8px 12px !important;
+      margin-bottom: 10px !important;
+    }
+    #cartTotalDisplay {
+      font-size: 1.1rem !important; /* ย่อตัวเลขยอดรวม */
+    }
+    #packageModal .btn-primary.w-100 {
+      font-size: 0.9rem !important;
+      padding: 8px !important; /* บีบปุ่มยืนยันรายการให้บางลง */
+    }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
