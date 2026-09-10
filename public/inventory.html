@@ -154,6 +154,8 @@
 
   /* 4. ปรับปุ่มปิดให้แสดงเฉพาะไอคอน X ในจอมือถือ */
   @media (max-width: 768px) {
+  
+  
     button[onclick="window.location.href='/'"] {
       width: 38px !important;
       height: 38px !important;
@@ -179,17 +181,30 @@
     h3.fw-bold.text-dark {
       font-size: 1.15rem !important;
     }
+    /* 🌟 ปรับแท็บ 3 ปุ่มให้แบ่งเท่ากัน */
     .clinic-nav-pills {
-      padding: 3px !important;
-      border-radius: 12px !important;
+      display: flex !important;
+      width: 100% !important;
+      gap: 4px !important;
+    }
+    .clinic-nav-pills .nav-item {
+      flex: 1 !important;
     }
     .clinic-nav-pills .nav-link {
-      padding: 6px 10px !important;
+      width: 100% !important;
+      padding: 6px 2px !important;
       font-size: 0.75rem !important;
-      border-radius: 8px !important;
+      justify-content: center !important;
     }
-    .d-flex.gap-2 .btn {
-      padding: 5px 10px !important;
+
+    /* 🌟 ปรับปุ่มรับเข้าด่วน / รายการต้องซื้อ ให้แบ่ง 50/50 */
+    .inv-action-btns {
+      width: 100% !important;
+    }
+    .inv-action-btns .btn {
+      flex: 1 !important;
+      width: 50% !important;
+      padding: 6px 4px !important;
       font-size: 0.75rem !important;
     }
 
@@ -380,40 +395,45 @@
 <div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
   
   <!-- 🌟 Header & Actions -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-      <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing me-2 text-warning"></i> ระบบคลังสินค้า</h3>
-      
-      <ul class="nav nav-pills clinic-nav-pills m-0">
-        <li class="nav-item">
-          <button class="nav-link active" id="btn-tab-general" onclick="switchInvTab('general')">
-            <i class="fa-solid fa-box-open me-1"></i> สินค้ายิบย่อย (กำลังขาย)
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link tab-promo" id="btn-tab-promo" onclick="switchInvTab('promo')">
-            <i class="fa-solid fa-gift me-1"></i> โปรโมชั่น / จัดเซ็ต
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link tab-archived" id="btn-tab-archived" onclick="switchInvTab('archived')">
-            <i class="fa-solid fa-ban me-1"></i> ระงับ / เลิกขาย
-          </button>
-        </li>
-      </ul>
-    </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-boxes-packing me-2 text-warning"></i> ระบบคลังสินค้า</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-3 shadow-sm btn-close-inv" onclick="window.location.href='/'">
+      <i class="fa-solid fa-xmark"></i><span class="d-none d-md-inline ms-2">ปิดหน้านี้</span>
+    </button>
+  </div>
 
-    <!-- ปุ่มลัดรับเข้าด่วน & รายการต้องซื้อ -->
-    <div class="d-flex gap-2">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-2 mb-3">
+    <ul class="nav nav-pills clinic-nav-pills m-0">
+      <li class="nav-item">
+        <button class="nav-link active" id="btn-tab-general" onclick="switchInvTab('general')">
+          <i class="fa-solid fa-box-open me-1"></i>
+          <span class="d-none d-md-inline">สินค้ายิบย่อย (กำลังขาย)</span>
+          <span class="d-inline d-md-none">สินค้า</span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-promo" id="btn-tab-promo" onclick="switchInvTab('promo')">
+          <i class="fa-solid fa-gift me-1"></i>
+          <span class="d-none d-md-inline">โปรโมชั่น / จัดเซ็ต</span>
+          <span class="d-inline d-md-none">จัดเซ็ต</span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-archived" id="btn-tab-archived" onclick="switchInvTab('archived')">
+          <i class="fa-solid fa-ban me-1"></i>
+          <span class="d-none d-md-inline">ระงับ / เลิกขาย</span>
+          <span class="d-inline d-md-none">เลิกขาย</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="inv-action-btns d-flex gap-2">
       <button class="btn btn-success fw-bold rounded-pill px-3 shadow-sm" onclick="openBulkModal()">
         <i class="fa-solid fa-boxes-stacked me-1"></i> รับเข้าด่วน
       </button>
       <button class="btn btn-warning text-dark fw-bold rounded-pill px-3 shadow-sm" onclick="openShoppingListModal()">
         <i class="fa-solid fa-cart-shopping me-1"></i> รายการต้องซื้อ
       </button>
-      <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm" onclick="window.location.href='/'">
-      <i class="fa-solid fa-xmark me-2"></i><span>ปิดหน้านี้</span>
-    </button>
     </div>
   </div>
 
