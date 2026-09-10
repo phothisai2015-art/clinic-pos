@@ -173,6 +173,62 @@
     ul.nav-pills-custom .nav-link i {
       margin-right: 4px !important; /* ปรับระยะห่างไอคอนในปุ่มนิดนึง */
     }
+	
+	/* 🌟 ย่อขนาดกล่อง "ค้นหาคนไข้" และ "คอร์ส/โปรโมชั่น" ให้กระชับขึ้น */
+    #tab-search > .bg-white.p-4 {
+      padding: 12px !important; /* ลดขอบด้านในของกล่องหลักทั้ง 2 กล่อง */
+    }
+    #tab-search > .bg-white.mb-4 {
+      margin-bottom: 10px !important; /* ลดระยะห่างระหว่างกล่องค้นหา กับ กล่องคอร์ส */
+    }
+    
+    /* ย่อหัวข้อในกล่องค้นหาและกล่องคอร์ส */
+    #tab-search h6.text-primary.mb-3 {
+      font-size: 1rem !important;
+      margin-bottom: 10px !important;
+    }
+    #courseMainArea h5.text-secondary.mb-4 {
+      font-size: 1rem !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* 🌟 ย่อรายละเอียดของการ์ดคอร์ส (Course Card) ให้กะทัดรัด */
+    .course-card .card-body {
+      padding: 10px !important; /* ลดขอบในของการ์ดคอร์ส */
+    }
+    .course-card h5.fw-bold {
+      font-size: 0.85rem !important; /* ย่อชื่อคอร์ส */
+      margin-bottom: 4px !important;
+    }
+    .course-card .text-muted[style*="font-size: 0.75rem"] {
+      font-size: 0.65rem !important; /* ย่อวันที่ซื้อ */
+      margin-bottom: 8px !important;
+    }
+    .course-card .bg-light.p-3, 
+    .course-card .bg-light.p-2 {
+      padding: 8px !important; /* ลดขอบกล่องรายการย่อยสีเทา */
+    }
+    .course-card .bg-light .small {
+      font-size: 0.75rem !important; /* ย่อตัวหนังสือในกล่องรายการย่อย */
+    }
+    .course-card .badge {
+      font-size: 0.65rem !important;
+      padding: 4px 6px !important;
+      margin-bottom: 0 !important;
+    }
+    .course-card .btn {
+      font-size: 0.75rem !important;
+      padding: 6px !important;
+      margin-top: 8px !important; /* ลดระยะห่างปุ่มด้านล่าง */
+    }
+    
+    /* ย่อริบบิ้นโปรโมชั่นมุมขวาบนให้เล็กลง */
+    .ribbon-promo {
+      padding: 3px 25px !important;
+      font-size: 0.65rem !important;
+      top: 12px !important;
+      right: -30px !important;
+    }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
