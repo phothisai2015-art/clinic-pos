@@ -345,9 +345,39 @@
       font-size: 0.8rem !important; /* ย่อราคาสีเขียว */
     }
 
-    /* 3. ปรับความสูงของกล่องรายการ ไม่ให้ยาวทะลุจอในมือถือ */
+    /* 3. ยืดป๊อปอัปให้เต็มจอขึ้น แต่เหลือขอบบน-ล่างไว้นิดหน่อย */
+    #packageModal .modal-dialog {
+      height: 94vh !important; /* ความสูง 94% ของหน้าจอมือถือ */
+      margin: 3vh auto !important; /* เหลือขอบบนและล่างไว้ 3% */
+    }
+    #packageModal .modal-content {
+      height: 100% !important;
+      display: flex;
+      flex-direction: column;
+    }
+    #packageModal .modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden !important; /* ล็อคไม่ให้หลุดกรอบ */
+    }
+    #packageModal .row.g-0 {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #packageModal .col-lg-8 {
+      flex-grow: 1; /* ให้ส่วนรายการแพคเกจขยายกินพื้นที่ที่เหลือทั้งหมด */
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
     #packageModal .col-lg-8 .custom-scrollbar {
-      height: 250px !important; /* ลดความสูงลงเพื่อไม่ให้ต้องไถจอนาน */
+      height: auto !important; /* ยกเลิกการล็อคความสูง 250px */
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    #packageModal .col-lg-4 {
+      flex-shrink: 0; /* ล็อคส่วนตะกร้าสินค้าไว้ด้านล่างเสมอ */
     }
 
     /* 4. ย่อส่วน "รายการที่เลือกวันนี้" (ตะกร้าที่อยู่ด้านล่างในมือถือ) */
