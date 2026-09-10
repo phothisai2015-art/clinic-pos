@@ -213,6 +213,75 @@
       padding: 3px 5px !important;
       font-size: 0.6rem !important; /* ย่อป้ายสถานะ (ค้างชำระ/จ่ายครบ) */
     }
+	/* 🌟 4. ย่อป๊อปอัป "ประวัติการชำระเงิน" ให้กระชับในโหมดมือถือ */
+    
+    /* ย่อส่วนหัวและกรอบด้านใน */
+    #paymentHistoryModal .modal-header {
+      padding: 10px 15px !important;
+    }
+    #paymentHistoryModal .modal-title {
+      font-size: 1rem !important; /* ย่อหัวข้อป๊อปอัป */
+    }
+    #paymentHistoryModal .modal-body {
+      padding: 12px !important;
+    }
+
+    /* ย่อกล่องตัวกรองโปรโมชั่น */
+    #paymentHistoryModal .mb-4.bg-white {
+      padding: 10px !important;
+      margin-bottom: 10px !important;
+    }
+    #paymentHistoryModal .form-label.small {
+      font-size: 0.75rem !important;
+      margin-bottom: 4px !important;
+    }
+    #paymentHistoryFilter {
+      font-size: 0.8rem !important;
+      padding: 4px 8px !important;
+      height: 32px !important; /* บีบความสูงของช่อง Dropdown */
+    }
+
+    /* ย่อกล่องรายการประวัติชำระเงิน (รายการแต่ละใบ) */
+    #paymentHistoryList {
+      padding: 8px !important;
+    }
+    #paymentHistoryList .border-start {
+      padding: 8px 10px !important; /* ลดขอบด้านในของการ์ด */
+      margin-bottom: 8px !important;
+    }
+    
+    /* ย่อขนาดตัวหนังสือในรายการ (วันที่, ชื่อ, ป้ายสถานะ) */
+    #paymentHistoryList .d-flex.mb-1 > span.fw-bold {
+      font-size: 0.75rem !important; /* ย่อวันที่และเวลา */
+    }
+    #paymentHistoryList .badge {
+      font-size: 0.65rem !important;
+      padding: 3px 6px !important;
+    }
+    #paymentHistoryList .fw-bold.text-primary.mt-1 {
+      font-size: 0.8rem !important; /* ย่อชื่อคอร์ส */
+      margin-top: 4px !important;
+      line-height: 1.4 !important;
+    }
+    #paymentHistoryList .text-muted.small.fw-normal {
+      font-size: 0.65rem !important; /* ย่อคำว่า (รายการที่ #X) */
+    }
+
+    /* ย่อส่วนท้ายของการ์ด (ปุ่มพิมพ์ และยอดเงิน) */
+    #paymentHistoryList .mt-2.pt-2.border-top {
+      margin-top: 6px !important;
+      padding-top: 6px !important;
+    }
+    #paymentHistoryList .btn {
+      font-size: 0.7rem !important; /* ย่อปุ่มใบเสร็จ/ใบรับรองแพทย์ */
+      padding: 4px 8px !important;
+    }
+    #paymentHistoryList .text-end .text-muted.small {
+      font-size: 0.7rem !important; /* ย่อคำว่า ยอดโอน/ชำระ: */
+    }
+    #paymentHistoryList .text-end .fs-5 {
+      font-size: 1.1rem !important; /* ย่อยอดเงินสีเขียว */
+    }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
