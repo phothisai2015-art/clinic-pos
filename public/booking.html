@@ -286,7 +286,51 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
       font-size: 0.9rem !important; /* แสดงไอคอนถังขยะ */
       margin: 0 !important;
     }
-  }
+
+    /* 13. ปรับกล่องนัดหมายพรุ่งนี้ ย่อขนาดและจัดระยะห่าง (2 แถว) */
+    #tomorrowAppointmentsList {
+      --bs-gutter-x: 0.5rem; /* ลดช่องว่างซ้ายขวาระหว่างกล่อง */
+      --bs-gutter-y: 0.5rem; /* ลดช่องว่างบนล่าง */
+    }
+    .appointment-card {
+      padding: 10px !important; /* ลดขอบด้านในกล่อง */
+    }
+    .appointment-card .d-flex.justify-content-between.mb-2 {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 6px;
+    }
+    .appointment-card .badge.fs-6 {
+      font-size: 0.75rem !important; 
+    }
+    .appointment-card .badge {
+      font-size: 0.65rem !important;
+      padding: 4px 6px !important;
+    }
+    .appointment-card h5 {
+      font-size: 0.85rem !important;
+      margin-bottom: 2px !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; 
+    }
+    .appointment-card .text-muted.small {
+      font-size: 0.7rem !important;
+      margin-bottom: 5px !important;
+    }
+    .appointment-card .bg-light.small {
+      font-size: 0.7rem !important;
+      padding: 5px !important;
+    }
+    .appointment-card .btn {
+      font-size: 0.75rem !important;
+      padding: 4px !important;
+    }
+
+  }   
+
+  /* ========================================================= */
+  /* 🌙 ปรับป๊อปอัป SweetAlert2 และช่องพิมพ์ค้นหาในโหมดมืด */
   
   /* ========================================================= */
     /* 🌙 ปรับป๊อปอัป SweetAlert2 และช่องพิมพ์ค้นหาในโหมดมืด */
@@ -995,12 +1039,13 @@ body.dark-theme .text-primary { color: #60a5fa !important; }
         ? `<span class="badge bg-success shadow-sm"><i class="fa-solid fa-phone-volume me-1"></i> โทรแล้ว</span>`
         : `<span class="badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-phone-slash me-1"></i> ยังไม่ได้โทร</span>`;
 
+      // ย่อข้อความปุ่มในมือถือ เพื่อไม่ให้ปุ่มล้นตอนแบ่ง 2 แถว
       let actionBtn = isConfirmed
-        ? `<button class="btn btn-sm btn-outline-success rounded-pill px-3 mt-2 w-100 fw-bold" disabled><i class="fa-solid fa-check me-1"></i> คอนเฟิร์มเรียบร้อย</button>`
-        : `<button class="btn btn-sm btn-primary rounded-pill px-3 mt-2 w-100 shadow-sm fw-bold" onclick="markAsContacted('${app.id}', '${app.patientName}')"><i class="fa-solid fa-phone me-1"></i> กดเมื่อโทรคอนเฟิร์มแล้ว</button>`;
+        ? `<button class="btn btn-sm btn-outline-success rounded-pill px-2 mt-2 w-100 fw-bold" disabled><i class="fa-solid fa-check me-1"></i><span class="d-none d-md-inline"> คอนเฟิร์มเรียบร้อย</span><span class="d-inline d-md-none">โทรแล้ว</span></button>`
+        : `<button class="btn btn-sm btn-primary rounded-pill px-2 mt-2 w-100 shadow-sm fw-bold" onclick="markAsContacted('${app.id}', '${app.patientName}')"><i class="fa-solid fa-phone me-1"></i><span class="d-none d-md-inline"> กดเมื่อโทรคอนเฟิร์มแล้ว</span><span class="d-inline d-md-none">กดโทรแล้ว</span></button>`;
 
       html += `
-        <div class="col-md-6 col-xl-4">
+        <div class="col-6 col-md-6 col-xl-4">
           <div class="appointment-card d-flex flex-column h-100">
             <div class="d-flex justify-content-between mb-2 align-items-start">
               <span class="badge bg-primary fs-6"><i class="fa-regular fa-clock me-1"></i> ${app.time} น.</span>
