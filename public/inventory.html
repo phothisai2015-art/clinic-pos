@@ -237,6 +237,105 @@
   body.dark-theme .modern-card {
       background-color: rgba(30, 41, 59, 0.85) !important;
   }
+  /* 🌟 ย่อขนาดและบีบความกระชับหน้าคลังสินค้า (Inventory) ทั้งหมดในโหมดมือถือ */
+    
+    /* 1. ส่วนหัว ปุ่มแท็บ และปุ่มแอคชัน */
+    .container-fluid.py-4 {
+      padding-top: 10px !important;
+    }
+    h3.fw-bold.text-dark {
+      font-size: 1.15rem !important;
+    }
+    .clinic-nav-pills {
+      padding: 3px !important;
+      border-radius: 12px !important;
+    }
+    .clinic-nav-pills .nav-link {
+      padding: 6px 10px !important;
+      font-size: 0.75rem !important;
+      border-radius: 8px !important;
+    }
+    .d-flex.gap-2 .btn {
+      padding: 5px 10px !important;
+      font-size: 0.75rem !important;
+    }
+
+    /* 2. ฟอร์มเพิ่ม/แก้ไขสินค้า (ฝั่งซ้าย) */
+    .modern-card {
+      padding: 12px !important;
+      border-radius: 14px !important;
+    }
+    #form-title {
+      font-size: 0.95rem !important;
+      margin-bottom: 12px !important;
+    }
+    #form-title div {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 0.8rem !important;
+    }
+    .form-section-title {
+      font-size: 0.7rem !important;
+      margin-bottom: 8px !important;
+      padding-bottom: 4px !important;
+    }
+    #productForm .mb-3,
+    #productForm .mb-4 {
+      margin-bottom: 8px !important;
+    }
+    #productForm .form-label {
+      font-size: 0.72rem !important;
+      margin-bottom: 2px !important;
+    }
+    #productForm .form-control,
+    #productForm .form-select {
+      font-size: 0.78rem !important;
+      padding: 5px 8px !important;
+      height: 32px !important;
+    }
+    
+    /* กล่องสีเทารวบสต็อก/Lot/วันหมดอายุ */
+    #normal_fields .p-3.bg-light {
+      padding: 8px !important;
+      margin-bottom: 8px !important;
+      border-radius: 10px !important;
+    }
+    #normal_fields .row.g-3 {
+      --bs-gutter-x: 8px !important;
+      --bs-gutter-y: 6px !important;
+    }
+
+    /* ปุ่มล้างข้อมูล & บันทึก */
+    #productForm .btn {
+      font-size: 0.8rem !important;
+      padding: 6px !important;
+    }
+
+    /* 3. ตารางรายการสินค้า (ฝั่งขวา) */
+    #table-title {
+      font-size: 0.9rem !important;
+    }
+    #searchInventory {
+      font-size: 0.75rem !important;
+      height: 30px !important;
+    }
+    .inventory-table th {
+      font-size: 0.7rem !important;
+      padding: 8px 6px !important;
+    }
+    .inventory-table td {
+      font-size: 0.75rem !important;
+      padding: 6px !important;
+    }
+    .inventory-table .badge {
+      font-size: 0.6rem !important;
+      padding: 3px 5px !important;
+    }
+    .inventory-table .btn-sm {
+      font-size: 0.68rem !important;
+      padding: 3px 8px !important;
+    }
+  
   </style>
 </head>
 <body class="bg-light">
