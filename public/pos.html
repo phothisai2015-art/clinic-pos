@@ -142,6 +142,77 @@
       font-size: 1.2rem !important;
       margin: 0 !important;
     }
+	/* 🌟 1. ย่อกล่องค้นหาคนไข้ (Search Hero) ให้กระชับสุดๆ */
+    .search-hero {
+      padding: 10px 12px !important;
+      margin-bottom: 10px !important;
+      border-radius: 12px !important;
+    }
+    .search-hero .fs-6 {
+      font-size: 0.8rem !important; /* ย่อคำว่า 'ค้นหาคนไข้เพื่อชำระเงิน' */
+      margin-bottom: 6px !important;
+    }
+    .search-hero .input-group {
+      height: 32px !important; /* บีบความสูงช่องค้นหา */
+    }
+    #posSearchInput, .search-hero .btn-primary {
+      padding: 4px 10px !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* 🌟 2. ย่อส่วนแสดงชื่อคนไข้และปุ่มประวัติ (Patient Summary) */
+    #posPatientSummary {
+      margin-top: 10px !important;
+      padding-top: 8px !important;
+      border-top: 1px dashed rgba(255,255,255,0.2) !important;
+      border-left: none !important;
+    }
+    #p_summary_name {
+      font-size: 1rem !important; /* ย่อชื่อคนไข้ */
+      margin-bottom: 2px !important;
+    }
+    #posPatientSummary .small {
+      font-size: 0.7rem !important; /* ย่อเบอร์โทรและ HN */
+    }
+    #posPatientSummary .btn {
+      padding: 4px 8px !important;
+      font-size: 0.7rem !important; /* ย่อปุ่ม 'ประวัติจ่ายเงิน' และ 'ล้างข้อมูล' */
+      height: 26px !important;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* 🌟 3. ย่อกล่องรายการบิล / คอร์ส (Bill Cards) */
+    .col-lg-7 .bg-white.p-3 {
+      padding: 10px !important; /* ลดขอบกล่องขาวใหญ่ */
+    }
+    .bill-card-header {
+      padding: 6px 10px !important;
+      font-size: 0.75rem !important;
+    }
+    .bill-card-body {
+      padding: 8px 10px !important;
+    }
+    .bill-card-body h6 {
+      font-size: 0.8rem !important; /* ย่อชื่อคอร์ส */
+      margin-bottom: 2px !important;
+    }
+    .bill-card-body .text-muted[style*="font-size: 0.75rem"] {
+      font-size: 0.65rem !important; /* ย่อวันที่ซื้อ */
+      margin-top: 0 !important;
+    }
+    .bill-card .px-3.pb-2 {
+      padding: 0 10px 6px 10px !important; /* ย่อระยะห่างราคาเต็ม/ชำระแล้ว */
+      font-size: 0.7rem !important;
+    }
+    .bill-card-footer {
+      padding: 6px 10px !important;
+      font-size: 0.75rem !important;
+    }
+    .bill-card .badge {
+      padding: 3px 5px !important;
+      font-size: 0.6rem !important; /* ย่อป้ายสถานะ (ค้างชำระ/จ่ายครบ) */
+    }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
