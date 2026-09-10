@@ -229,6 +229,92 @@
       top: 12px !important;
       right: -30px !important;
     }
+	/* 🌟 ย่อหน้า "บันทึกประวัติการรักษา (EMR)" ให้กะทัดรัดขึ้น */
+    
+    /* 1. ส่วนหัวและปุ่มย้อนกลับ */
+    #emrRecordingArea .d-flex.border-bottom {
+      padding-bottom: 8px !important;
+      margin-bottom: 10px !important;
+    }
+    #emr_package_title {
+      font-size: 1.1rem !important; /* ย่อชื่อแพคเกจ/คอร์ส */
+    }
+    #emrRecordingArea .btn-outline-secondary.btn-sm {
+      padding: 4px 8px !important;
+      font-size: 0.75rem !important;
+    }
+
+    /* 2. กล่องรายการหัตถการย่อย (Pico, IV, ฯลฯ) และปุ่ม +/- */
+    #emr_sub_items_section h6 {
+      font-size: 0.85rem !important;
+      margin-bottom: 6px !important;
+    }
+    #emr_sub_items_list .p-3 {
+      padding: 8px 10px !important; /* ลดขอบในกล่องรายการย่อย */
+    }
+    #emr_sub_items_list .fs-6 {
+      font-size: 0.85rem !important; /* ย่อชื่อรายการย่อย */
+      margin-bottom: 4px !important;
+    }
+    #emr_sub_items_list .badge {
+      font-size: 0.65rem !important; 
+      padding: 3px 6px !important;
+    }
+    #emr_sub_items_list .input-group-sm {
+      width: 90px !important; /* บีบความกว้างปุ่ม +/- ให้เล็กลง */
+    }
+    #emr_sub_items_list .input-group-sm .btn,
+    #emr_sub_items_list .input-group-sm .form-control {
+      padding: 2px 6px !important;
+      font-size: 0.8rem !important;
+      height: 28px !important; /* ลดความสูงของปุ่ม +/- */
+    }
+
+    /* 3. ช่องกรอกข้อความ CC, Dx, Tx */
+    #emr_input_section {
+      --bs-gutter-y: 8px !important; /* ลดช่องว่างระหว่างบรรทัดลงอีก */
+    }
+    #emr_input_section .form-label {
+      font-size: 0.75rem !important;
+      margin-bottom: 2px !important;
+    }
+    #emr_input_section .form-control {
+      font-size: 0.8rem !important;
+      padding: 6px 10px !important;
+    }
+    #emr_input_section textarea.form-control {
+      min-height: 38px !important; /* ลดความสูงขั้นต่ำของกล่องข้อความ */
+    }
+
+    /* 4. กล่องสั่งจ่ายยา / สกินแคร์ */
+    #emr_input_section .border-primary.p-3 {
+      padding: 10px !important; /* ลด padding กล่องจ่ายยา */
+      margin-top: 5px !important;
+    }
+    #emr_input_section .input-group-sm .form-select,
+    #emr_input_section .input-group-sm .form-control,
+    #emr_input_section .input-group-sm .btn {
+      font-size: 0.75rem !important; /* ย่อตัวหนังสือในช่องกรอกยา */
+      padding: 4px 8px !important;
+      height: 32px !important;
+    }
+
+    /* 5. ปุ่มเลือกวันนัดหมาย และปุ่มบันทึกด้านล่างสุด */
+    #emr_input_section .btn-outline-primary,
+    #emr_appt_reason {
+      height: 36px !important; /* บีบปุ่มนัดหมายให้บางลง */
+      font-size: 0.85rem !important;
+      padding: 4px 10px !important;
+    }
+    #emr_selected_appt_box {
+      padding: 6px 10px !important;
+      font-size: 0.8rem !important;
+    }
+    #emr_input_section .btn-success {
+      font-size: 0.95rem !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
