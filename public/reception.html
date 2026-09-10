@@ -345,39 +345,47 @@
       font-size: 0.8rem !important; /* ย่อราคาสีเขียว */
     }
 
-    /* 3. ยืดป๊อปอัปให้เต็มจอขึ้น แต่เหลือขอบบน-ล่างไว้นิดหน่อย */
+    /* 3. ยืดป๊อปอัปให้เต็มจอ และล็อคไม่ให้หน้าเว็บรอบนอกเลื่อน (แก้แถบเลื่อนซ้อนกัน) */
+    #packageModal {
+      overflow: hidden !important; /* ล็อค! ปิดแถบเลื่อนด้านนอกสุดทิ้งถาวร */
+    }
     #packageModal .modal-dialog {
-      height: 94vh !important; /* ความสูง 94% ของหน้าจอมือถือ */
-      margin: 3vh auto !important; /* เหลือขอบบนและล่างไว้ 3% */
+      height: 96vh !important; /* ความสูง 96% ของจอ */
+      max-height: 96vh !important;
+      margin: 2vh auto !important; /* เหลือขอบบนล่าง 2% ให้ดูเป็นป๊อปอัป */
     }
     #packageModal .modal-content {
       height: 100% !important;
+      max-height: 100% !important;
       display: flex;
       flex-direction: column;
+      overflow: hidden !important; /* ล็อคกล่องสีขาวไม่ให้ทะลุกรอบ */
     }
     #packageModal .modal-body {
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden !important; /* ล็อคไม่ให้หลุดกรอบ */
+      overflow: hidden !important; /* ล็อคเนื้อหาด้านใน */
     }
     #packageModal .row.g-0 {
-      height: 100%;
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
+      overflow: hidden !important;
     }
     #packageModal .col-lg-8 {
-      flex-grow: 1; /* ให้ส่วนรายการแพคเกจขยายกินพื้นที่ที่เหลือทั้งหมด */
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 0; /* กุญแจสำคัญ! บังคับให้ระบบรู้ว่าจุดนี้คือจุดที่ให้เลื่อนได้ */
     }
     #packageModal .col-lg-8 .custom-scrollbar {
-      height: auto !important; /* ยกเลิกการล็อคความสูง 250px */
+      height: 100% !important; 
       flex-grow: 1;
-      overflow-y: auto;
+      overflow-y: auto !important; /* อนุญาตให้มีแถบเลื่อนแค่ตรงรายการสินค้าเท่านั้น */
     }
     #packageModal .col-lg-4 {
-      flex-shrink: 0; /* ล็อคส่วนตะกร้าสินค้าไว้ด้านล่างเสมอ */
+      flex-shrink: 0; /* ล็อคกล่องตะกร้ากับปุ่มยืนยันไว้ด้านล่าง ห้ามหดหนี */
     }
 
     /* 4. ย่อส่วน "รายการที่เลือกวันนี้" (ตะกร้าที่อยู่ด้านล่างในมือถือ) */
