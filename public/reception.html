@@ -109,6 +109,41 @@
 	/* 🌟 ปลดล็อคให้หน้าค้นหา (Tab ค้นหา) สามารถไถเลื่อนขึ้นลงได้ในมือถือ */
     #tab-search { overflow-y: auto !important; padding-bottom: 20px !important; }
     #tab-search .flex-grow-1 { overflow-y: visible !important; height: auto !important; }
+	
+	/* 🌟 ย่อขนาดกล่อง "สร้างประวัติคนไข้ใหม่" ให้กระชับสุดๆ ในโหมดมือถือ */
+    #tab-new .bg-white.p-5 {
+      padding: 15px !important; /* ลดขอบกล่องด้านในให้บางลง (จากเดิม p-5 ที่หนามาก) */
+    }
+    #tab-new .border-bottom.pb-3.mb-4 {
+      padding-bottom: 10px !important; /* ลดช่องว่างใต้เส้นคั่นหัวข้อ */
+      margin-bottom: 15px !important;
+    }
+    .title-create-mobile {
+      font-size: 1rem !important; /* ลดขนาดตัวหนังสือหัวข้อให้เล็กลงอีก */
+    }
+    #patientForm .row.g-4 {
+      --bs-gutter-y: 10px !important; /* ลดช่องว่างระหว่างช่องกรอกแต่ละบรรทัดให้ชิดกัน */
+    }
+    #patientForm .form-label {
+      font-size: 0.75rem !important; /* ลดขนาดหัวข้อเล็กๆ บนช่องกรอก */
+      margin-bottom: 2px !important;
+    }
+    #patientForm .form-control {
+      font-size: 0.8rem !important; /* ลดขนาดตัวหนังสือในช่องกรอก */
+      padding: 6px 10px !important; /* ทำให้ความสูงของช่องกรอกบางลง */
+    }
+    #patientForm textarea.form-control {
+      font-size: 0.8rem !important; /* ย่อขนาดอักษรในช่องประวัติแพ้ยา */
+    }
+    /* ปรับปุ่มด้านล่างสุดของฟอร์มให้บางลง */
+    #patientForm .action-btn-row {
+      margin-top: 15px !important;
+    }
+    #patientForm .action-btn-row .btn {
+      font-size: 0.8rem !important;
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+    }
 	/* 🌟 ขยับหัวข้อให้ชิดขอบบนมากขึ้น เพื่อเพิ่มพื้นที่ด้านล่าง */
     .container-fluid.py-4 { padding-top: 12px !important; }
     .container-fluid > .d-flex.justify-content-between.mb-4 { margin-bottom: 10px !important; }
