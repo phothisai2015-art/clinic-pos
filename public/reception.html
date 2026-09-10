@@ -109,6 +109,35 @@
 	/* 🌟 ปลดล็อคให้หน้าค้นหา (Tab ค้นหา) สามารถไถเลื่อนขึ้นลงได้ในมือถือ */
     #tab-search { overflow-y: auto !important; padding-bottom: 20px !important; }
     #tab-search .flex-grow-1 { overflow-y: visible !important; height: auto !important; }
+	/* 🌟 ขยับหัวข้อให้ชิดขอบบนมากขึ้น เพื่อเพิ่มพื้นที่ด้านล่าง */
+    .container-fluid.py-4 { padding-top: 12px !important; }
+    .container-fluid > .d-flex.justify-content-between.mb-4 { margin-bottom: 10px !important; }
+    h3.header-title-mobile { font-size: 1.25rem !important; }
+
+    /* 🌟 ปรับปุ่มแท็บเมนู (ลงทะเบียน/ค้นหา) ให้แบ่ง 50/50 และบางลง */
+    ul.nav-pills-custom {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      margin-bottom: 12px !important;
+    }
+    ul.nav-pills-custom .nav-item {
+      flex: 1 !important;
+      width: 50% !important;
+    }
+    ul.nav-pills-custom .nav-link {
+      width: 100% !important;
+      padding: 8px 4px !important;
+      font-size: 0.85rem !important;
+      margin: 0 !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      border-radius: 10px !important;
+    }
+    ul.nav-pills-custom .nav-link i {
+      margin-right: 4px !important; /* ปรับระยะห่างไอคอนในปุ่มนิดนึง */
+    }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
