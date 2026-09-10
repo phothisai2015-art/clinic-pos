@@ -268,6 +268,34 @@
       font-size: 0.68rem !important;
       padding: 3px 8px !important;
     }
+	/* 🌟 1. ย่อขนาดชื่อรายการสินค้าในตารางมือถือ */
+    .inventory-table td a {
+      font-size: 0.75rem !important;
+      line-height: 1.2 !important;
+      display: inline-block;
+    }
+
+    /* 🌟 2. ปุ่ม "เลิกขาย" -> เหลือเฉพาะไอคอน 🚫 */
+    .inventory-table .btn-outline-danger {
+      font-size: 0 !important; /* ซ่อนข้อความ เลิกขาย */
+      padding: 4px 8px !important;
+      border-radius: 50px !important;
+    }
+    .inventory-table .btn-outline-danger i {
+      font-size: 0.8rem !important; /* แสดงเฉพาะไอคอน */
+      margin: 0 !important;
+    }
+
+    /* 🌟 3. ป้าย "หมดอายุแล้ว!" -> เหลือเฉพาะไอคอนนาฬิกา ⏰ */
+    .inventory-table td div.text-danger.bg-danger {
+      font-size: 0 !important; /* ซ่อนคำว่า หมดอายุแล้ว! */
+      padding: 3px 6px !important;
+      display: inline-block;
+    }
+    .inventory-table td div.text-danger.bg-danger i {
+      font-size: 0.85rem !important; /* แสดงเฉพาะไอคอนนาฬิกา */
+      margin: 0 !important;
+    }
   }
   
   /* ========================================================= */
