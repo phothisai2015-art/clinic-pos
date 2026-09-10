@@ -345,47 +345,57 @@
       font-size: 0.8rem !important; /* ย่อราคาสีเขียว */
     }
 
-    /* 3. ยืดป๊อปอัปให้เต็มจอ และล็อคไม่ให้หน้าเว็บรอบนอกเลื่อน (แก้แถบเลื่อนซ้อนกัน) */
+    /* 3. ยืดป๊อปอัปเต็มจอ ล็อคปุ่มยืนยันไว้ด้านล่าง และให้รายการเลื่อนได้ */
     #packageModal {
-      overflow: hidden !important; /* ล็อค! ปิดแถบเลื่อนด้านนอกสุดทิ้งถาวร */
+      overflow: hidden !important;
     }
     #packageModal .modal-dialog {
-      height: 96vh !important; /* ความสูง 96% ของจอ */
-      max-height: 96vh !important;
-      margin: 2vh auto !important; /* เหลือขอบบนล่าง 2% ให้ดูเป็นป๊อปอัป */
+      height: 96vh !important;
+      margin: 2vh auto !important;
     }
     #packageModal .modal-content {
       height: 100% !important;
-      max-height: 100% !important;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden !important; /* ล็อคกล่องสีขาวไม่ให้ทะลุกรอบ */
-    }
-    #packageModal .modal-body {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden !important; /* ล็อคเนื้อหาด้านใน */
-    }
-    #packageModal .row.g-0 {
-      flex-grow: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden !important;
     }
-    #packageModal .col-lg-8 {
-      flex-grow: 1;
+    #packageModal .modal-body {
+      flex: 1 1 auto !important;
       display: flex;
       flex-direction: column;
-      min-height: 0; /* กุญแจสำคัญ! บังคับให้ระบบรู้ว่าจุดนี้คือจุดที่ให้เลื่อนได้ */
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+    #packageModal .row.g-0 {
+      flex: 1 1 auto !important;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: nowrap !important;
+      overflow: hidden !important;
+      height: 100% !important;
+    }
+    
+    /* โซนบน: กล่องรายการแพคเกจ (ต้องเลื่อนได้) */
+    #packageModal .col-lg-8 {
+      flex: 1 1 auto !important; /* อนุญาตให้ขยายและหดได้ */
+      display: flex;
+      flex-direction: column;
+      min-height: 0 !important; /* กุญแจสำคัญ! ป้องกันไม่ให้กล่องทะลุจอ */
     }
     #packageModal .col-lg-8 .custom-scrollbar {
-      height: 100% !important; 
-      flex-grow: 1;
-      overflow-y: auto !important; /* อนุญาตให้มีแถบเลื่อนแค่ตรงรายการสินค้าเท่านั้น */
+      flex: 1 1 auto !important;
+      height: 0 !important; /* บังคับให้ความสูงคำนวณจากพื้นที่ที่เหลืออยู่เท่านั้น */
+      overflow-y: auto !important;
     }
+
+    /* โซนล่าง: กล่องตะกร้าและปุ่มยืนยัน (ล็อคตายตัว) */
     #packageModal .col-lg-4 {
-      flex-shrink: 0; /* ล็อคกล่องตะกร้ากับปุ่มยืนยันไว้ด้านล่าง ห้ามหดหนี */
+      flex: 0 0 auto !important; /* ห้ามขยาย ห้ามหด ล็อคขนาดตายตัวตามเนื้อหา */
+      padding: 12px !important;
+      background-color: #f8fafc !important;
+      border-top: 1px solid #e2e8f0 !important;
+      z-index: 10;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.05); /* เพิ่มเงาด้านบนนิดๆ ให้ดูมีมิติ */
     }
 
     /* 4. ย่อส่วน "รายการที่เลือกวันนี้" (ตะกร้าที่อยู่ด้านล่างในมือถือ) */
