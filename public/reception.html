@@ -586,10 +586,10 @@
                 <div class="bg-white p-4 rounded-4 border shadow-sm h-100 text-center">
                   <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-camera me-2"></i> มาร์กจุดตำแหน่งรักษา</h5>
                   <div class="d-flex justify-content-center gap-2 mb-3">
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('front')">หน้าตรง</button>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('side')">ด้านข้าง</button>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('body')">ลำตัว</button>
-                  </div>
+  <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('left')">ซ้าย</button>
+  <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="loadTemplate('front')">หน้าตรง</button>
+  <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="loadTemplate('right')">ขวา</button>
+</div>
 
                   <div class="canvas-container mb-3 mx-auto" style="width: 400px; max-width: 100%; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; overflow: hidden;">
                     <canvas id="faceCanvas" width="400" height="350" style="cursor: crosshair; touch-action: none;"></canvas>
@@ -1589,6 +1589,12 @@
         canvas.ontouchmove = (e) => { if (!isDrawing) return; const rect = canvas.getBoundingClientRect(); ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); ctx.strokeStyle = document.getElementById('drawColor').value; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); e.preventDefault(); };
         canvas.ontouchend = () => isDrawing = false;
       }
+      
+      // ดึงรูปหน้าตรงมาแสดงเป็นค่าเริ่มต้นทันที (ถ้ายังไม่มีรูปพื้นหลังถูกโหลดไว้)
+      if (!currentCanvasBg) {
+        loadTemplate('front');
+      }
+      
       loadPatientPhotos(currentHN);
     } else {
       // 🌟 ใช้คลาสสลับการมองเห็นของคอลัมน์บนมือถือ
@@ -1617,15 +1623,19 @@
 
   function loadTemplate(type) {
     let url = '';
-    if(type === 'front') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Front';
-    if(type === 'side') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Face+Side';
-    if(type === 'body') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Body+Structure';
+    
+    if(type === 'left') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Left+Face'; // รูปซ้ายชั่วคราว (เปลี่ยน path ทีหลังได้)
+    if(type === 'front') url = '/demo/1.png'; // รูปหน้าตรงของจริง
+    if(type === 'right') url = 'https://via.placeholder.com/400x350/f1f5f9/94a3b8?text=Right+Face'; // รูปขวาชั่วคราว (เปลี่ยน path ทีหลังได้)
     
     const img = new Image(); 
     img.crossOrigin = "Anonymous";
     img.onload = () => { 
       currentCanvasBg = img; 
       clearCanvas(); 
+    };
+    img.onerror = () => {
+        Swal.fire('ข้อผิดพลาด', 'ไม่พบไฟล์รูปภาพ Demo: ' + url, 'error');
     };
     img.src = url;
   }
