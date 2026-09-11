@@ -467,7 +467,7 @@
         html += '</div>';
         Swal.fire({ title: 'พบหลายรายการ', html: html, showConfirmButton: false, showCloseButton: true });
       }
-    } catch(e) {}
+    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
   }
 
   async function selectPatientForPos(hn) {
@@ -559,7 +559,10 @@
         }
 
       }
-    } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
+    } catch(e) { 
+        Swal.fire('Error', 'การเชื่อมต่อผิดพลาด: ' + e.message, 'error'); 
+        console.error(e); 
+    }
   }
 
   function renderBillBoxes() {
@@ -649,8 +652,7 @@
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
 
-    // 🌟 เปลี่ยนเงื่อนไขล็อกช่องราคา: ถ้าราคา > 0 หรือเคยให้ส่วนลดไปแล้ว ให้ล็อกถาวร
-    let isLocked = boxTotalPrice > 0 || selectedBill.discount > 0 || boxPaidAmount > 0;
+    let isLocked = boxTotalPrice > 0 || (selectedBill.discount > 0) || boxPaidAmount > 0;
     
     document.getElementById('input_full_price').disabled = isLocked;
     document.getElementById('input_discount').disabled = isLocked;
@@ -866,8 +868,6 @@
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
-          // ❌ ลบ API ต้นเหตุที่ทำให้เชื่อมต่อผิดพลาดออกไปแล้ว 100% ❌
-
           let remainingPay = payAmount; 
           let paymentsPayload = [];
           
@@ -875,7 +875,6 @@
           let mainBalance = netPrice - mainPaid;
           let payForMain = Math.min(mainBalance, remainingPay);
           
-          // ส่งอัปเดตราคาเข้าไปพร้อมกับ Payload รับชำระเงินเลย
           paymentsPayload.push({ 
               bill_id: selectedBill.id, 
               pay_amount: payForMain > 0 ? payForMain : 0, 
