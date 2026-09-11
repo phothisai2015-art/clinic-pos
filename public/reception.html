@@ -720,18 +720,18 @@
     </button>
   </div>
 
-  <ul class="nav nav-pills nav-pills-custom mb-4">
-    <li class="nav-item">
-      <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
-        <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="tabbtn-search" onclick="switchMainTab('search')">
-        <i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหา & สิทธิ์การรักษา
-      </button>
-    </li>
-  </ul>
+  <ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
+  <li class="nav-item">
+    <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
+      <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" id="tabbtn-search" onclick="switchMainTab('search')">
+      <i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหา & สิทธิ์การรักษา
+    </button>
+  </li>
+</ul>
 
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
@@ -799,36 +799,40 @@
           
           <div class="col-md-7 ps-4" id="patientInfoArea">
            <div id="patientInfoDisplay" style="display: none;">
-              <!-- 🌟 จัดรูปแบบเป็น Flex Row เสมอ เพื่อแบ่ง 50/50 ในมือถือ -->
-              <div class="d-flex flex-row align-items-start align-items-md-center w-100 mb-2 pt-2">
-                
-                <!-- ข้อมูลคนไข้ (ซ้าย 50%) -->
-                <div class="overflow-hidden patient-info-half">
-                  <h5 class="fw-bold text-dark m-0 text-truncate patient-name-mobile" id="disp_name">-</h5>
-                  <div class="text-muted patient-details-row m-0 mt-1">
-                    <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
-                    <span class="divider d-none d-md-inline">|</span> 
-                    <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
-                    <span class="divider d-none d-md-inline">|</span> 
-                    <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
-                  </div>
-                </div>
+  <div class="d-flex flex-row align-items-start align-items-md-center w-100 mb-2 pt-2">
+    
+    <!-- ข้อมูลคนไข้ (ซ้าย) -->
+    <div class="overflow-hidden patient-info-half">
+      <!-- 🌟 นำ HN มาต่อท้ายชื่อในบรรทัดเดียวกัน -->
+      <div class="d-flex align-items-baseline flex-wrap gap-1">
+        <h5 class="fw-bold text-dark m-0 text-truncate patient-name-mobile" id="disp_name">-</h5>
+        <span class="text-primary fw-bold ms-1 patient-hn-inline" style="font-size: 0.8rem;">
+          <i class="fa-solid fa-address-card me-1"></i><span id="disp_hn">-</span>
+        </span>
+      </div>
 
-                <!-- ข้อมูลแพ้ยา (ขวา 50%) -->
-                <div id="allergyAlert" class="allergy-alert align-items-start align-items-md-center m-0 shadow-sm allergy-half" style="display: none; border-radius: 8px;">
-                  <div class="d-flex align-items-center gap-1 gap-md-2 w-100">
-                    <i class="fa-solid fa-triangle-exclamation text-danger flex-shrink-0 d-md-none" style="font-size: 0.9rem;"></i>
-                    <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0 d-none d-md-block"></i>
-                    <div class="overflow-hidden w-100">
-                      <div class="fw-bold text-danger allergy-title-mobile text-truncate">⚠️ แพ้ยา/โรคประจำตัว</div>
-                      <div class="fw-semibold text-danger allergy-desc-mobile" id="allergyDetails"></div>
-                    </div>
-                  </div>
-                </div>
+      <!-- 🌟 เลขบัตร และ อายุ ขยับมาชิดซ้ายแทนที่ตำแหน่ง HN เดิม -->
+      <div class="text-muted patient-details-row m-0 mt-1">
+        <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
+        <span class="divider d-none d-md-inline">|</span> 
+        <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
+      </div>
+    </div>
 
-                
-              </div>
-            </div>
+    <!-- ข้อมูลแพ้ยา (ขวา) -->
+    <div id="allergyAlert" class="allergy-alert align-items-start align-items-md-center m-0 shadow-sm allergy-half" style="display: none; border-radius: 8px;">
+      <div class="d-flex align-items-center gap-1 gap-md-2 w-100">
+        <i class="fa-solid fa-triangle-exclamation text-danger flex-shrink-0 d-md-none" style="font-size: 0.9rem;"></i>
+        <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0 d-none d-md-block"></i>
+        <div class="overflow-hidden w-100">
+          <div class="fw-bold text-danger allergy-title-mobile text-truncate">⚠️ แพ้ยา/โรคประจำตัว</div>
+          <div class="fw-semibold text-danger allergy-desc-mobile" id="allergyDetails"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
             
             <div id="emptyPatientState" class="text-center text-muted py-3">
               <i class="fa-solid fa-user-check fa-2x mb-2 opacity-50"></i><br>ค้นหาคนไข้เพื่อดูสิทธิ์การรักษา
@@ -1517,6 +1521,9 @@
     isCurrentEmrViewOnly = isViewOnly; 
     
     document.getElementById('searchBoxArea').style.display = 'none';
+    const mainNav = document.getElementById('mainNavTabs');
+    if (mainNav) mainNav.style.display = 'none';
+
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg) btnPkg.style.display = 'none';
     
@@ -1611,6 +1618,9 @@
   function closeEmrMode() {
     document.getElementById('searchBoxArea').style.display = 'block';
     
+    const mainNav = document.getElementById('mainNavTabs');
+    if (mainNav) mainNav.style.display = '';
+
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg && currentHN) btnPkg.style.display = 'inline-flex';
     
