@@ -498,35 +498,34 @@
                     <div id="emr_sub_items_list" class="row g-2 mb-2"></div>
                   </div>
 
-                  <div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control bg-light" rows="1"></textarea></div>
-				  <div class="col-12"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="e_dx" class="form-control border-primary" rows="1" placeholder="เช่น สิวอักเสบ, ผิวหมองคล้ำ..."></textarea></div>
+<div class="col-12"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="e_cc" class="form-control" rows="1"></textarea></div>
+<div class="col-12"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><textarea id="e_dx" class="form-control" rows="1" placeholder="เช่น สิวอักเสบ, ผิวหมองคล้ำ..."></textarea></div>
                   <div class="col-12"><label class="form-label fw-bold small text-muted">หัตถการที่ทำ / การรักษา (Tx)</label><textarea id="e_tx" class="form-control" rows="3" placeholder="รายละเอียดการรักษา..."></textarea></div>
 
-                  <div class="col-12 border border-primary p-3 rounded-3 bg-white mt-3">
-                    <label class="form-label fw-bold small text-primary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
-                    <div class="input-group input-group-sm mb-2">
-                      <select id="e_med_select" class="form-select border-primary"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
-                      <input type="number" id="e_med_qty" class="form-control border-primary" placeholder="จำนวน" style="max-width: 80px;" min="1">
-                      <input type="text" id="e_med_sig" class="form-control border-primary" placeholder="วิธีใช้ (SIG)">
-                      <button type="button" class="btn btn-primary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                    <textarea id="e_med_list_display" class="form-control bg-light text-primary fw-bold custom-scrollbar" rows="2" readonly></textarea>
-                  </div>
+                  <div class="col-12 border p-3 rounded-3 bg-white mt-3">
+  <label class="form-label fw-bold small text-secondary mb-2"><i class="fa-solid fa-pills"></i> สั่งจ่ายยา / สกินแคร์</label>
+  <div class="input-group input-group-sm mb-2">
+    <select id="e_med_select" class="form-select"><option value="">-- เลือกยา / สกินแคร์ --</option></select>
+    <input type="number" id="e_med_qty" class="form-control" placeholder="จำนวน" style="max-width: 80px;" min="1">
+    <input type="text" id="e_med_sig" class="form-control" placeholder="วิธีใช้ (SIG)">
+    <button type="button" class="btn btn-secondary fw-bold" onclick="addMedInline()"><i class="fa-solid fa-plus"></i></button>
+  </div>
+  <textarea id="e_med_list_display" class="form-control bg-light text-secondary fw-bold custom-scrollbar" rows="2" readonly></textarea>
+</div>
 				  
 				  <div class="col-12 mt-3">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-6">
-                            <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" style="height: 42px;" onclick="openEmrAppointmentModal()">
-                              <i class="fa-solid fa-calendar-check me-2"></i> เลือกวันนัดหมายครั้งถัดไป
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="input-group input-group-sm">
-                               <span class="input-group-text bg-light fw-bold text-muted border-secondary">เหตุผลการนัด</span>
-                               <input type="text" id="emr_appt_reason" class="form-control border-secondary" style="height: 42px;" placeholder="เช่น ติดตามผล, ทำเลเซอร์ต่อ (ถ้าไม่ใส่จะใช้ค่าเริ่มต้น)">
-                            </div>
-                        </div>
-                    </div>
+  <div class="input-group flex-nowrap shadow-sm" style="height: 42px;">
+    <!-- ปุ่มเลือกวันนัด -->
+    <button type="button" class="btn btn-outline-secondary fw-bold d-flex align-items-center justify-content-center px-3" onclick="openEmrAppointmentModal()">
+      <i class="fa-solid fa-calendar-check me-1"></i>
+      <span class="d-none d-md-inline ms-1">เลือกวันนัดหมายครั้งถัดไป</span> <!-- แสดงใน PC -->
+      <span class="d-inline d-md-none ms-1">วันนัด</span> <!-- แสดงในมือถือ -->
+    </button>
+    <!-- Label เหตุผล (ซ่อนในมือถือเพื่อให้มีพื้นที่พิมพ์) -->
+    <span class="input-group-text bg-light fw-bold text-muted d-none d-md-flex">เหตุผลการนัด</span>
+    <!-- ช่องกรอกเหตุผล -->
+    <input type="text" id="emr_appt_reason" class="form-control" placeholder="เหตุผลการนัด... (ถ้ามี)">
+  </div>
                     
                     <div id="emr_selected_appt_box" class="alert alert-primary mt-2 mb-0 d-none justify-content-between align-items-center rounded-3 border-primary shadow-sm py-2 px-3">
                       <div>
