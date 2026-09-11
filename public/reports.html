@@ -245,6 +245,64 @@
       color: #fff !important;
       box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3) !important;
     }
+
+    /* 🌟 ปรับแต่งแท็บ DF ในมือถือ: ย่อฟอนต์ Dropdown, KPI 3 กล่อง และตาราง */
+    #tab-df .d-flex.align-items-center.mb-4.gap-3 {
+      margin-bottom: 10px !important;
+      gap: 6px !important;
+    }
+    #tab-df h6.fw-bold {
+      font-size: 0.75rem !important;
+    }
+    #dfUserFilter {
+      font-size: 0.72rem !important;
+      padding: 4px 8px !important;
+      height: 32px !important;
+    }
+
+    /* KPI 3 กล่องเรียงแถวเดียวพอดีจอ */
+    .rep-df-kpis .report-kpi-card {
+      padding: 8px 3px !important;
+      border-radius: 10px !important;
+      text-align: center !important;
+    }
+    .rep-df-kpis .report-kpi-card h6 {
+      font-size: 0.62rem !important;
+      margin-bottom: 2px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    .rep-df-kpis .report-kpi-card h3,
+    .rep-df-kpis .report-kpi-card h2 {
+      font-size: 0.85rem !important;
+      white-space: nowrap !important;
+    }
+    .rep-df-kpis .report-kpi-card .fs-6 {
+      font-size: 0.65rem !important;
+    }
+
+    /* ย่อขนาดตัวหนังสือตารางรายละเอียด DF */
+    #tab-df .table-container {
+      padding: 10px 8px !important;
+      border-radius: 12px !important;
+    }
+    #tab-df .table th {
+      font-size: 0.65rem !important;
+      padding: 6px 2px !important;
+    }
+    #tab-df .table td {
+      font-size: 0.68rem !important;
+      padding: 6px 2px !important;
+    }
+    #tab-df .table td .badge {
+      font-size: 0.58rem !important;
+      padding: 2px 4px !important;
+    }
+    #tab-df .table td i {
+      font-size: 0.65rem !important;
+    }
+  }
 	/* 🌟 ปรับแต่งกล่อง 5 อันดับขายดีในมือถือ (ย่อฟอนต์ + ขยายกล่องลงล่าง + ล็อกซ้ายขวา) */
     #box-dash-top .top-sellers-box {
       height: auto !important;
@@ -448,26 +506,26 @@
         </select>
       </div>
 
-      <!-- KPI Cards สำหรับ DF -->
-      <div class="row g-4 mb-4">
-        <div class="col-xl-6 col-md-6">
-          <div class="report-kpi-card border-success glass-panel" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent);">
+      <!-- KPI Cards สำหรับ DF (แบ่ง 3 กล่องเท่ากันในมือถือ) -->
+      <div class="row g-1 g-md-4 mb-3 mb-md-4 rep-df-kpis">
+        <div class="col-4 col-md-6">
+          <div class="report-kpi-card border-success glass-panel">
             <i class="fa-solid fa-hand-holding-dollar kpi-icon" style="color: #10b981;"></i>
-            <h6 class="text-muted fw-bold mb-1">ยอดรวมค่ามือ (DF) ที่ต้องจ่าย</h6>
-            <h2 class="text-success fw-bold m-0" id="df_kpi_total">฿ 0</h2>
+            <h6 class="text-muted fw-bold mb-1">ยอดรวมค่ามือ (DF)</h6>
+            <h3 class="text-success fw-bold m-0" id="df_kpi_total">฿ 0</h3>
           </div>
         </div>
-        <div class="col-xl-3 col-md-3">
+        <div class="col-4 col-md-3">
           <div class="report-kpi-card border-secondary glass-panel">
             <i class="fa-solid fa-syringe kpi-icon"></i>
-            <h6 class="text-muted fw-bold mb-1">จำนวนเคส / หัตถการ</h6>
+            <h6 class="text-muted fw-bold mb-1">จำนวนเคส</h6>
             <h3 class="text-secondary fw-bold m-0" id="df_kpi_cases">0 <span class="fs-6">ครั้ง</span></h3>
           </div>
         </div>
-        <div class="col-xl-3 col-md-3">
+        <div class="col-4 col-md-3">
           <div class="report-kpi-card border-info glass-panel">
             <i class="fa-solid fa-users kpi-icon"></i>
-            <h6 class="text-muted fw-bold mb-1">ให้บริการคนไข้ไป</h6>
+            <h6 class="text-muted fw-bold mb-1">คนไข้ทั้งหมด</h6>
             <h3 class="text-info fw-bold m-0" id="df_kpi_patients">0 <span class="fs-6">คน</span></h3>
           </div>
         </div>
