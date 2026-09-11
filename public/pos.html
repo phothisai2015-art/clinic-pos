@@ -182,9 +182,9 @@
     #paymentHistoryList .text-end .fs-5 { font-size: 1.1rem !important; }
 
     /* 5. บังคับแผงชำระเงิน (ขวามือ) ให้เป็นป๊อปอัปในมือถือ */
-    #paymentRightPanel { display: none !important; }
-    #paymentRightPanel.show-popup { display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 1060 !important; padding: 15px !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(3px); }
-    #paymentRightPanel.show-popup .payment-panel { width: 100% !important; max-height: 95vh !important; overflow-y: auto !important; border-radius: 16px !important; padding: 12px !important; }
+    #paymentRightPanel:not(.show-popup) { display: none !important; }
+    #paymentRightPanel.show-popup { display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 999999 !important; padding: 15px !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(3px); }
+    #paymentRightPanel.show-popup .payment-panel { width: 100% !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 16px !important; padding: 12px !important; }
     
     .payment-panel h6 { font-size: 0.8rem !important; }
     .payment-panel .small { font-size: 0.65rem !important; }
@@ -197,10 +197,10 @@
     #pay_already_paid { font-size: 0.75rem !important; }
 
     /* 🛑 ล็อคพื้นหลังเฉพาะในมือถือ (ตัดปัญหาแถบเลื่อนซ้อน 100%) */
-    html, body { position: fixed !important; width: 100%; height: 100%; overflow: hidden !important; }
-    .container-fluid { height: 100dvh !important; overflow: hidden !important; padding-bottom: 0 !important; }
-    .row.flex-grow-1 { min-height: 0 !important; overflow: hidden !important; }
-    .col-lg-7 { min-height: 0 !important; overflow-y: auto; }
+    html, body { position: fixed !important; width: 100%; height: 100%; overflow: hidden !important; touch-action: none; }
+    .container-fluid { height: 100dvh !important; overflow: hidden !important; padding-bottom: 0 !important; display: flex; flex-direction: column; }
+    .row.flex-grow-1 { flex: 1 1 auto !important; min-height: 0 !important; overflow: hidden !important; margin-bottom: 0 !important; }
+    .col-lg-7 { height: 100% !important; min-height: 0 !important; padding-bottom: 10px !important; overflow: hidden !important; }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
