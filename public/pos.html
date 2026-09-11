@@ -646,18 +646,20 @@
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
     
-    document.getElementById('input_full_price').disabled = false;
-    document.getElementById('input_discount').disabled = false;
-    document.getElementById('select_discount_type').disabled = false;
-    document.getElementById('pay_input_amount').disabled = false;
-
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
-    document.getElementById('input_full_price').value = boxTotalPrice;
+    let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+
+    // 🌟 เงื่อนไขใหม่: ถ้าคอร์สราคาเป็น 0 บาท ให้แก้ไขได้ แต่ถ้าตั้งราคาไปแล้วให้ล็อกถาวร
+    let isLocked = boxTotalPrice > 0;
     
+    document.getElementById('input_full_price').disabled = isLocked;
+    document.getElementById('input_discount').disabled = isLocked;
+    document.getElementById('select_discount_type').disabled = isLocked;
+    document.getElementById('pay_input_amount').disabled = false; // ช่องจ่ายเงินต้องกรอกได้เสมอ
+
+    document.getElementById('input_full_price').value = boxTotalPrice;
     document.getElementById('input_discount').value = selectedBill.discount || 0;
     document.getElementById('select_discount_type').value = selectedBill.discount_type || 'THB';
-
-    let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
 
     let initialBalance = boxTotalPrice - boxPaidAmount;
@@ -714,7 +716,6 @@
     }
 
     document.getElementById('pay_item_details').innerHTML = detailsHtml;
-    
     calculatePreview();
   }
 
@@ -864,57 +865,51 @@
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
-          await fetch(`/api/pos/bill/${selectedBill.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  total_price: netPrice,
-                  discount: discount,
-                  discount_type: discountType
-              })
-          });
+          let remainingPay = payAmount; 
+          let paymentsPayload = [];
+          
+          let mainPaid = selectedBill.paid_amount;
+          let mainBalance = netPrice - mainPaid;
+          let payForMain = Math.min(mainBalance, remainingPay);
+          
+          // 🌟 ส่งอัปเดตราคาเข้าไปพร้อมกับ Payload รับชำระเงินเลย (แม้จะจ่าย 0 บาท) เพื่อป้องกัน API Error
+          paymentsPayload.push({ 
+              bill_id: selectedBill.id, 
+              pay_amount: payForMain > 0 ? payForMain : 0, 
+              payment_method: selectedMethod,
+              updated_total_price: netPrice, 
+              discount: discount,
+              discount_type: discountType
+          }); 
+          remainingPay -= payForMain > 0 ? payForMain : 0; 
 
-          if (payAmount > 0) {
-              let remainingPay = payAmount; 
-              let paymentsPayload = [];
-              
-              let mainPaid = selectedBill.paid_amount;
-              let mainBalance = netPrice - mainPaid;
-              let payForMain = Math.min(mainBalance, remainingPay);
-              
-              if (payForMain > 0) { 
-                paymentsPayload.push({ 
-                    bill_id: selectedBill.id, 
-                    pay_amount: payForMain, 
-                    payment_method: selectedMethod
-                }); 
-                remainingPay -= payForMain; 
-              }
-
-              if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
-                  for (let m of selectedBill.attached_meds) {
-                      if (remainingPay <= 0) break;
-                      let mBalance = m.total_price - m.paid_amount;
-                      let payForMed = Math.min(mBalance, remainingPay);
-                      if (payForMed > 0) { 
-                          paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod }); 
-                          remainingPay -= payForMed; 
-                      }
+          if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0 && remainingPay > 0) {
+              for (let m of selectedBill.attached_meds) {
+                  if (remainingPay <= 0) break;
+                  let mBalance = m.total_price - m.paid_amount;
+                  let payForMed = Math.min(mBalance, remainingPay);
+                  if (payForMed > 0) { 
+                      paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod }); 
+                      remainingPay -= payForMed; 
                   }
               }
+          }
 
-              const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { 
-                  method: 'PUT', 
-                  headers: { 'Content-Type': 'application/json' }, 
-                  body: JSON.stringify({ 
-                      sales_rep: '-', 
-                      payment_method: selectedMethod, 
-                      payments: paymentsPayload, 
-                      new_items: [] 
-                  }) 
-              });
-              const data = await res.json();
-              if (data.status !== 'success') throw new Error(data.message);
+          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { 
+              method: 'PUT', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ 
+                  sales_rep: '-', 
+                  payment_method: selectedMethod, 
+                  payments: paymentsPayload, 
+                  new_items: [] 
+              }) 
+          });
+          const data = await res.json();
+          
+          if (data.status !== 'success') {
+              Swal.fire('ข้อผิดพลาด', data.message || 'บันทึกไม่สำเร็จ', 'error');
+              return;
           }
 
           let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
