@@ -120,9 +120,9 @@
   }
   /* 5. ป้ายแสดงจำนวนกล่องบิล/คอร์ส (#billCountBadge) */
   body.dark-theme #billCountBadge {
-    background-color: #0f172a !important;
-    color: #f8fafc !important;
-    border-color: #334155 !important;
+    background-color: #0f172a !important; /* เปลี่ยนพื้นหลังเป็นสีเข้ม */
+    color: #f8fafc !important; /* เปลี่ยนตัวหนังสือเป็นสีสว่าง */
+    border-color: #334155 !important; /* เปลี่ยนสีกรอบ */
   }
 
   /* ========================================================= */
@@ -200,7 +200,7 @@
     html, body { position: fixed !important; width: 100%; height: 100%; overflow: hidden !important; }
     .container-fluid { height: 100dvh !important; overflow: hidden !important; padding-bottom: 0 !important; }
     .row.flex-grow-1 { min-height: 0 !important; overflow: hidden !important; }
-    .col-lg-7 { min-height: 0 !important; }
+    .col-lg-7 { min-height: 0 !important; overflow-y: auto; }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
@@ -324,7 +324,7 @@
               <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
             </div>
             
-            <!-- 🌟 ส่วนกรอกราคาและส่วนลด (เพิ่มใหม่) -->
+            <!-- 🌟 ส่วนกรอกราคาและส่วนลด -->
             <div class="mb-2 mt-1">
               <label class="fw-bold text-dark mb-1 small">1. กำหนดราคาขาย (฿)</label>
               <input type="number" id="input_full_price" class="form-control form-control-sm text-end fw-bold border-primary text-primary" value="0" min="0" oninput="calculatePreview()" disabled>
