@@ -29,6 +29,17 @@
 
   <style>
   
+  /* 🌟 ปรับขนาดรายการสินค้าขายดีให้สูงเท่าเดิมเสมอ แม้จะมีแค่ 1 รายการ */
+  #topSellersContainer {
+    justify-content: flex-start !important; /* จัดเรียงจากบนลงล่าง ไม่ยืดระยะห่าง */
+    gap: 6px !important;
+  }
+  .top-seller-item {
+    flex: 0 0 auto !important; /* ยกเลิกการขยายความสูงแนวตั้ง */
+    height: auto !important;
+    padding: 10px 8px !important;
+  }
+  
   /* 🌟 ล็อคขอบจอไม่ให้เลื่อนซ้าย-ขวาในมือถือ (100% Fixed) */
   html, body {
     width: 100% !important;
@@ -632,7 +643,7 @@
         let typeIcon = item.type === 'PROMOTION' ? 'fa-gift' : (item.type === 'COURSE' ? 'fa-wand-magic-sparkles' : 'fa-syringe');
         let typeColor = item.type === 'PROMOTION' ? 'text-pink' : (item.type === 'COURSE' ? 'text-info' : 'text-danger');
         html += `
-        <div class="top-seller-item" style="flex: 1;">
+        <div class="top-seller-item">
             <div class="rank-badge ${rankClass}">${index + 1}</div>
             <div class="flex-grow-1 overflow-hidden pe-2">
                 <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">${item.name}</div>
