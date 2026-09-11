@@ -28,20 +28,50 @@
   </script>
 
   <style>
-  /* 🌟 ล็อกไม่ให้หน้าจอเลื่อนซ้าย-ขวาในมือถือ 100% */
+  
+  /* 🌟 ล็อคขอบจอไม่ให้เลื่อนซ้าย-ขวาในมือถือ (100% Fixed) */
   html, body {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
     position: relative;
   }
-  .container-fluid {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+
+  @media (max-width: 768px) {
+    /* 1. บังคับล็อก Container หลัก */
+    .container-fluid {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      overflow-x: hidden !important;
+    }
+
+    /* 2. ลบ Margin ติดลบของ Bootstrap .row ที่ดันจอทะลุขอบขวา */
+    .row {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .row > [class*="col-"] {
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+    }
+
+    /* 3. ย่อขนาดปุ่มเมนู 4 ปุ่มให้พอดีขอบจอมือถือทุกรุ่น */
+    .rep-sub-tabs {
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .rep-sub-tabs .btn {
+      font-size: 0.68rem !important;
+      padding: 6px 1px !important;
+    }
+    .rep-sub-tabs .btn i {
+      font-size: 0.65rem !important;
+    }
   }
+  
   /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
