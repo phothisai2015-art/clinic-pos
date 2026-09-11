@@ -649,8 +649,8 @@
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
 
-    // 🌟 เงื่อนไขล็อกช่องราคา: ถ้าราคา > 0 คือตั้งราคาแล้วให้ล็อกถาวร
-    let isLocked = boxTotalPrice > 0;
+    // 🌟 เปลี่ยนเงื่อนไขล็อกช่องราคา: ถ้าราคา > 0 หรือเคยให้ส่วนลดไปแล้ว ให้ล็อกถาวร
+    let isLocked = boxTotalPrice > 0 || selectedBill.discount > 0 || boxPaidAmount > 0;
     
     document.getElementById('input_full_price').disabled = isLocked;
     document.getElementById('input_discount').disabled = isLocked;
