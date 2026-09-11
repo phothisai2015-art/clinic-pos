@@ -372,6 +372,25 @@ app.get('/api/pos/bill/:hn', async (req, res) => {
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
+app.get('/api/pos/bill/:hn', async (req, res) => {
+  try {
+    const rows = await dbAll(`SELECT * FROM patient_bills WHERE patient_id = ?`, [req.params.hn]);
+    res.json({ status: 'success', data: rows || [] });
+  } catch(err) { res.status(500).json({ status: 'error' }); }
+});
+
+// 🌟 เพิ่มโค้ด API นี้ เพื่อรับบันทึกราคาและส่วนลดจากหน้า POS
+app.put('/api/pos/bill/:id', async (req, res) => {
+  try {
+    const { total_price, discount, discount_type } = req.body;
+    await dbRun(`UPDATE patient_bills SET total_price = ?, discount = ?, discount_type = ? WHERE id = ?`, 
+      [total_price, discount, discount_type, req.params.id]);
+    res.json({ status: 'success' });
+  } catch(err) { 
+    res.status(500).json({ status: 'error', message: err.message }); 
+  }
+});
+
 app.put('/api/pos/send/:hn', async (req, res) => {
   try {
     const row = await dbGet(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn]);

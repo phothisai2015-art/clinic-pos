@@ -150,6 +150,10 @@ db.serialize(() => {
     payment_history TEXT DEFAULT '[]'
   )`);
   
+  // อัปเดตตารางเดิมให้มีคอลัมน์เก็บส่วนลด
+  db.run(`ALTER TABLE patient_bills ADD COLUMN discount REAL DEFAULT 0`, (err) => {});
+  db.run(`ALTER TABLE patient_bills ADD COLUMN discount_type TEXT DEFAULT 'THB'`, (err) => {});
+  
   // สร้างข้อมูลคลินิกเริ่มต้น หากยังไม่มี
   db.get("SELECT count(*) as count FROM clinics", (err, row) => {
     if (row && row.count === 0) {
