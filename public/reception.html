@@ -425,9 +425,9 @@
                 </div>
 
                 <!-- 📱 ปุ่มเลือกแพคเกจ (วงกลม) ลอยมุมขวาบน เฉพาะในมือถือ -->
-                <button id="btnBuyPackageMobile" class="btn btn-info text-white rounded-circle shadow-sm btn-pkg-main position-absolute d-md-none" style="top: 5px; right: 0; display: none !important;" onclick="openPackageModal()">
-                  <i class="fa-solid fa-hand-holding-medical m-0"></i>
-                </button>
+				<button id="btnBuyPackageMobile" class="btn btn-info text-white rounded-circle shadow-sm btn-pkg-main position-absolute d-md-none" style="top: 5px; right: 0; display: none !important;" onclick="openPackageModal()">
+				<i class="fa-solid fa-hand-holding-medical m-0"></i>
+				</button>
 
               </div>
             </div>
@@ -445,9 +445,9 @@
             <h5 class="fw-bold text-secondary m-0" style="font-size: 0.95rem;"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
             
             <!-- ปุ่มแพคเกจ (จอคอมโชว์เต็ม / จอมือถือย่อเป็นไอคอนวงกลมชิดขวาอัตโนมัติ) -->
-            <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm d-none d-md-inline-block px-4" onclick="openPackageModal()" style="display: none !important;">
-              <i class="fa-solid fa-hand-holding-medical me-md-1"></i> <span>เลือกแพคเกจ / บริการใหม่</span>
-            </button>
+			<button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-main px-md-4" onclick="openPackageModal()" style="display: none !important;">
+			<i class="fa-solid fa-hand-holding-medical me-md-1"></i> <span>เลือกแพคเกจ / บริการใหม่</span>
+			</button>
           </div>
           
           <div id="patientCoursesGrid" class="row g-4">
@@ -828,8 +828,7 @@
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg) btnPkg.style.setProperty('display', 'inline-block', 'important');
 
-    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
-    if (btnPkgMobile) btnPkgMobile.style.setProperty('display', 'flex', 'important');
+    
 
     let ageText = '-';
     if (p.dob) {
@@ -1104,8 +1103,7 @@
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg) btnPkg.classList.add('d-none');
 
-    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
-    if (btnPkgMobile) btnPkgMobile.style.display = 'none';
+    
     
     document.getElementById('patientInfoArea').classList.replace('col-md-7', 'col-md-12');
     document.getElementById('patientInfoArea').classList.remove('ps-4');
@@ -1196,8 +1194,7 @@
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg && currentHN) btnPkg.classList.remove('d-none');
 
-    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
-    if (btnPkgMobile && currentHN) btnPkgMobile.style.setProperty('display', 'flex', 'important');
+    
     
     document.getElementById('patientInfoArea').classList.replace('col-md-12', 'col-md-7');
     document.getElementById('patientInfoArea').classList.add('ps-4');
