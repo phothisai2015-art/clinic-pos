@@ -754,8 +754,6 @@
     if (payVal > balance) { payVal = balance; inputEl.value = balance; }
     if (payVal < 0) { payVal = 0; inputEl.value = 0; }
 
-    document.getElementById('pay_btn_amount').innerText = `฿${payVal.toLocaleString()}`;
-
     if (selectedBill) {
         let idx = currentPatientBills.indexOf(selectedBill);
         let netEl = document.getElementById(`card_net_${idx}`);
@@ -767,18 +765,19 @@
         }
     }
 
+    // 🌟 นำแท็ก span กลับมาใส่ในปุ่มเสมอ เพื่อไม่ให้เกิด Error หา Element ไม่เจอ
     let submitBtn = document.getElementById('pay_submit_btn');
     if (balance === 0 && alreadyPaid > 0 && netPrice > 0) {
       submitBtn.disabled = true; 
       submitBtn.classList.replace('btn-success', 'btn-secondary');
-      submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> ชำระครบแล้ว`;
+      submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> ชำระครบแล้ว <span id="pay_btn_amount" class="d-none"></span>`;
     } else {
       submitBtn.disabled = false;
       submitBtn.classList.replace('btn-secondary', 'btn-success');
       if (payVal > 0) {
-          submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> รับชำระเงิน ฿${payVal.toLocaleString()}`;
+          submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> รับชำระเงิน <span id="pay_btn_amount">฿${payVal.toLocaleString()}</span>`;
       } else {
-          submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกราคาคอร์ส (ยังไม่ชำระ)`;
+          submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกราคาคอร์ส (ยังไม่ชำระ) <span id="pay_btn_amount" class="d-none"></span>`;
       }
     }
   }
@@ -819,10 +818,12 @@
     
     let inputEl = document.getElementById('pay_input_amount');
     inputEl.value = 0; inputEl.setAttribute('max', 0); inputEl.disabled = true; 
-    document.getElementById('pay_btn_amount').innerText = `฿0.00`;
     
     let submitBtn = document.getElementById('pay_submit_btn');
     submitBtn.disabled = true; submitBtn.classList.remove('btn-success'); submitBtn.classList.add('btn-secondary');
+    
+    // 🌟 คืนค่าปุ่มให้กลับมาเป็นแบบเดิมพร้อม span ตัวเลข
+    submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> รับชำระเงิน <span id="pay_btn_amount">฿0.00</span>`;
 	
     document.getElementById('pay_input_amount').parentElement.parentElement.style.display = 'block';
     document.getElementById('pay_submit_btn').parentElement.style.display = 'block';
