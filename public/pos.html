@@ -649,13 +649,13 @@
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
 
-    // 🌟 เงื่อนไขใหม่: ถ้าคอร์สราคาเป็น 0 บาท ให้แก้ไขได้ แต่ถ้าตั้งราคาไปแล้วให้ล็อกถาวร
+    // 🌟 เงื่อนไขใหม่: ถ้าคอร์สราคามากกว่า 0 (เคยตั้งราคาไปแล้ว) ให้ล็อกช่องกรอกราคาและส่วนลด
     let isLocked = boxTotalPrice > 0;
     
     document.getElementById('input_full_price').disabled = isLocked;
     document.getElementById('input_discount').disabled = isLocked;
     document.getElementById('select_discount_type').disabled = isLocked;
-    document.getElementById('pay_input_amount').disabled = false; // ช่องจ่ายเงินต้องกรอกได้เสมอ
+    document.getElementById('pay_input_amount').disabled = false;
 
     document.getElementById('input_full_price').value = boxTotalPrice;
     document.getElementById('input_discount').value = selectedBill.discount || 0;
