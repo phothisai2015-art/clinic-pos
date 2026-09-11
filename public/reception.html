@@ -708,6 +708,11 @@
     }
     .btn-pkg-main span { display: none !important; }
     .btn-pkg-main i { margin: 0 !important; font-size: 1.1rem; }
+	
+	/* 🌟 บังคับซ่อนแท็บเมนูเฉพาะจอมือถือ */
+  .hide-emr-mobile {
+    display: none !important;
+  }
   }
   
   </style>
@@ -725,17 +730,17 @@
   </div>
 
   <ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
-  <li class="nav-item">
-    <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
-      <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" id="tabbtn-search" onclick="switchMainTab('search')">
-      <i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหา & สิทธิ์การรักษา
-    </button>
-  </li>
-</ul>
+    <li class="nav-item">
+      <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
+        <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tabbtn-search" onclick="switchMainTab('search')">
+        <i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหา & สิทธิ์การรักษา
+      </button>
+    </li>
+  </ul>
 
   <div class="tab-content flex-grow-1" style="min-height: 0;">
     
