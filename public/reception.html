@@ -85,10 +85,10 @@
     }
 
     .btn-pkg-mobile { width: 42px; height: 42px; padding: 0 !important; display: flex; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
-    .btn-pkg-mobile span { display: none !important; }
+    
     .btn-pkg-mobile i { margin: 0 !important; font-size: 1.1rem; }
 
-    .patient-details-row { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.78rem !important; margin-top: 6px; }
+    .patient-details-row { display: flex; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.78rem !important; margin-top: 6px; }
     .patient-details-row .divider { display: inline-block !important; opacity: 0.4; }
 	/* 🌟 ซ่อนข้อความหัวข้อและปุ่มปิดในมือถือ ให้เหลือแต่ไอคอน */
     
@@ -705,34 +705,31 @@
           
           <div class="col-md-7 ps-4" id="patientInfoArea">
             <div id="patientInfoDisplay" style="display: none;">
-              <!-- กล่องคลุมทั้งหมด -->
-              <div class="d-flex justify-content-between align-items-start mb-2 pt-2 w-100 flex-wrap gap-2">
+              <!-- 🌟 จัดเรียงข้อมูลคนไข้และแพ้ยา ให้อยู่แถวเดียวกันในจอคอม และซ้อนกันในจอมือถือ -->
+              <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3 mb-2 pt-2 w-100">
                 
-                <!-- ฝั่งซ้าย: ข้อมูล + แพ้ยา ให้อยู่แถวเดียวกัน -->
-                <div class="d-flex flex-wrap align-items-center gap-3 pe-3 overflow-hidden flex-grow-1">
-                  
-                  <!-- ข้อมูลคนไข้ -->
-                  <div>
-                    <h5 class="fw-bold text-dark m-0 text-truncate" id="disp_name">-</h5>
-                    <div class="text-muted patient-details-row m-0 mt-1">
-                      <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
-                      <span class="divider">|</span> 
-                      <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
-                      <span class="divider">|</span> 
-                      <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
-                    </div>
+                <!-- ข้อมูลคนไข้ -->
+                <div class="overflow-hidden flex-shrink-0">
+                  <h5 class="fw-bold text-dark m-0 text-truncate" id="disp_name">-</h5>
+                  <div class="text-muted patient-details-row m-0 mt-1">
+                    <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
+                    <span class="divider">|</span> 
+                    <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
+                    <span class="divider">|</span> 
+                    <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
                   </div>
+                </div>
 
-                  <!-- ข้อมูลแพ้ยา (ย้ายมาไว้ข้างข้อมูลคนไข้) -->
-                  <div id="allergyAlert" class="allergy-alert align-items-center m-0 shadow-sm py-2 px-3" style="display: none;">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fa-solid fa-triangle-exclamation fs-5 text-danger"></i>
-                      <div>
-                        <div class="fw-bold" style="font-size: 0.8rem;">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
-                        <div class="fw-semibold" style="font-size: 0.75rem;" id="allergyDetails"></div>
-                      </div>
+                <!-- ข้อมูลแพ้ยา (กล่องจะยืดเต็มพื้นที่ที่เหลือในจอคอม และกะทัดรัด) -->
+                <div id="allergyAlert" class="allergy-alert align-items-center m-0 shadow-sm py-2 px-3 flex-grow-1" style="display: none;">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0"></i>
+                    <div>
+                      <div class="fw-bold text-danger" style="font-size: 0.8rem;">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
+                      <div class="fw-semibold text-danger" style="font-size: 0.75rem;" id="allergyDetails"></div>
                     </div>
                   </div>
+                </div>
 
                 </div>
                 
@@ -752,7 +749,16 @@
 
       <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
         <div id="courseMainArea" style="display: block;">
-          <h5 class="fw-bold text-secondary mb-4"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
+          <!-- 🌟 ย้ายปุ่มมาอยู่แถวเดียวกับหัวข้อคอร์ส -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold text-secondary m-0"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
+            
+            <!-- ปุ่มเลือกแพคเกจ (แบบยาวในคอม และแบบไอคอนวงกลมในมือถือ) -->
+            <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-mobile" onclick="openPackageModal()">
+              <i class="fa-solid fa-hand-holding-medical me-1"></i> <span class="d-none d-md-inline">เลือกแพคเกจ / บริการใหม่</span>
+            </button>
+          </div>
+          
           <div id="patientCoursesGrid" class="row g-4">
              <div class="col-12 text-center text-muted py-5">กรุณาเลือกคนไข้ก่อน...</div>
           </div>
@@ -1137,6 +1143,7 @@
     
     document.getElementById('emptyPatientState').style.display = 'none';
     document.getElementById('patientInfoDisplay').style.display = 'block';
+	document.getElementById('btnBuyPackage').style.display = 'block';
     
     let ageText = '-';
     if (p.dob) {
