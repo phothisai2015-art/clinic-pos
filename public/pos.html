@@ -282,6 +282,43 @@
     #paymentHistoryList .text-end .fs-5 {
       font-size: 1.1rem !important; /* ย่อยอดเงินสีเขียว */
     }
+
+    /* ====================================================== */
+    /* 🌟 5. บังคับแผงชำระเงิน (ขวามือ) ให้เป็นป๊อปอัปในมือถือ */
+    /* ====================================================== */
+    #paymentRightPanel {
+      display: none !important; /* ซ่อนไว้ก่อน */
+    }
+    #paymentRightPanel.show-popup {
+      display: flex !important;
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+      background: rgba(0, 0, 0, 0.6) !important;
+      z-index: 1060 !important;
+      padding: 15px !important;
+      align-items: center !important;
+      justify-content: center !important;
+      backdrop-filter: blur(3px);
+    }
+    #paymentRightPanel.show-popup .payment-panel {
+      width: 100% !important;
+      max-height: 95vh !important;
+      overflow-y: auto !important;
+      border-radius: 16px !important;
+      padding: 12px !important;
+    }
+    
+    /* ย่อตัวหนังสือในแผงชำระเงิน (ป๊อปอัปมือถือ) */
+    .payment-panel h6 { font-size: 0.8rem !important; }
+    .payment-panel .small { font-size: 0.65rem !important; }
+    .payment-panel .fs-6 { font-size: 0.75rem !important; }
+    .payment-panel input, .payment-panel select { font-size: 0.75rem !important; padding: 4px 6px !important; height: 26px !important; }
+    .pay-method-btn { font-size: 0.7rem !important; padding: 4px !important; border-radius: 8px !important; }
+    .pay-method-btn i { font-size: 0.8rem !important; }
+    #pay_submit_btn { font-size: 0.8rem !important; padding: 6px !important; }
+    #pay_balance { font-size: 0.9rem !important; }
+    #pay_already_paid { font-size: 0.75rem !important; }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
@@ -383,48 +420,53 @@
     </div>
 
     <!-- 💳 3. ฝั่งขวา: แผงรับชำระเงิน -->
-    <div class="col-lg-5 col-md-6 h-100">
+    <div class="col-lg-5 col-md-6 h-100" id="paymentRightPanel">
       <div class="payment-panel position-relative">
         
+        <!-- 🌟 ปุ่มปิดป๊อปอัป (แสดงเฉพาะโหมดมือถือ) -->
+        <button class="btn btn-light text-danger rounded-circle d-md-none position-absolute shadow-sm border" style="top: 8px; right: 8px; z-index: 100; width: 30px; height: 30px; padding: 0; display: flex; justify-content: center; align-items: center;" onclick="closeMobilePayment()">
+          <i class="fa-solid fa-xmark m-0"></i>
+        </button>
+
         <div id="paymentActiveState" style="display: flex; flex-direction: column; height: 100%;">
           
-          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 pe-4">
             <h6 class="fw-bold text-primary m-0"><i class="fa-solid fa-file-invoice-dollar me-2"></i> สรุปยอดชำระ</h6>
             <span class="badge bg-light text-dark border" id="pay_bill_id">-</span>
           </div>
 
           <!-- 🌟 รายละเอียดคอร์ส/โปร -->
-<div class="bg-light p-2 rounded-3 border mb-3 d-flex flex-column flex-grow-1" style="min-height: 0;">
-  <div class="fw-bold text-dark fs-6 mb-1" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
-  <div class="d-flex justify-content-between text-muted small mb-1 border-bottom pb-2" style="font-size: 0.8rem;">
-    <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
-  </div>
-  
-  <!-- 🌟 ส่วนกรอกราคาและส่วนลด (เพิ่มใหม่) -->
-  <div class="mb-2 mt-1">
-    <label class="fw-bold text-dark mb-1 small">1. กำหนดราคาขาย (฿)</label>
-    <input type="number" id="input_full_price" class="form-control form-control-sm text-end fw-bold border-primary text-primary" value="0" min="0" oninput="calculatePreview()" disabled>
-  </div>
-  <div class="row g-2 mb-2 pb-2 border-bottom">
-    <div class="col-7">
-      <label class="fw-bold text-dark mb-1 small">2. ส่วนลด</label>
-      <input type="number" id="input_discount" class="form-control form-control-sm text-end fw-bold text-danger border-danger" value="0" min="0" oninput="calculatePreview()" disabled>
-    </div>
-    <div class="col-5">
-      <label class="fw-bold text-dark mb-1 small">ประเภท</label>
-      <select id="select_discount_type" class="form-select form-select-sm border-danger text-danger fw-bold" onchange="calculatePreview()" disabled>
-        <option value="THB">บาท (฿)</option>
-        <option value="PERCENT">%</option>
-      </select>
-    </div>
-  </div>
-  <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
-    <span class="fw-bold text-primary">ราคาสุทธิ (Net Price):</span>
-    <span id="pay_item_net_price" class="fw-bold text-primary fs-6">฿0.00</span>
-  </div>
+          <div class="bg-light p-2 rounded-3 border mb-3 d-flex flex-column flex-grow-1" style="min-height: 0;">
+            <div class="fw-bold text-dark fs-6 mb-1" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
+            <div class="d-flex justify-content-between text-muted small mb-1 border-bottom pb-2" style="font-size: 0.8rem;">
+              <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
+            </div>
+            
+            <!-- 🌟 ส่วนกรอกราคาและส่วนลด (เพิ่มใหม่) -->
+            <div class="mb-2 mt-1">
+              <label class="fw-bold text-dark mb-1 small">1. กำหนดราคาขาย (฿)</label>
+              <input type="number" id="input_full_price" class="form-control form-control-sm text-end fw-bold border-primary text-primary" value="0" min="0" oninput="calculatePreview()" disabled>
+            </div>
+            <div class="row g-2 mb-2 pb-2 border-bottom">
+              <div class="col-7">
+                <label class="fw-bold text-dark mb-1 small">2. ส่วนลด</label>
+                <input type="number" id="input_discount" class="form-control form-control-sm text-end fw-bold text-danger border-danger" value="0" min="0" oninput="calculatePreview()" disabled>
+              </div>
+              <div class="col-5">
+                <label class="fw-bold text-dark mb-1 small">ประเภท</label>
+                <select id="select_discount_type" class="form-select form-select-sm border-danger text-danger fw-bold" onchange="calculatePreview()" disabled>
+                  <option value="THB">บาท (฿)</option>
+                  <option value="PERCENT">%</option>
+                </select>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+              <span class="fw-bold text-primary">ราคาสุทธิ (Net Price):</span>
+              <span id="pay_item_net_price" class="fw-bold text-primary fs-6">฿0.00</span>
+            </div>
 
-  <div id="pay_item_details" class="text-secondary mt-1 custom-scrollbar flex-grow-1" style="font-size: 0.8rem; overflow-y: auto;"></div>
-</div>
+            <div id="pay_item_details" class="text-secondary mt-1 custom-scrollbar flex-grow-1" style="font-size: 0.8rem; overflow-y: auto;"></div>
+          </div>
 
           <!-- 4. ส่วนคำนวณและแบ่งจ่าย -->
           <div>
@@ -491,8 +533,6 @@
 </div>
 
 <script>
-
-
   var currentPosPatient = null;
   var currentPatientBills = [];
   var currentPatientEmr = []; // 🌟 เพิ่มตัวแปรเก็บประวัติ EMR
@@ -640,9 +680,9 @@
           });
           
           if(firstPayable !== -1) {
-            selectBillToPay(firstPayable);
+            selectBillToPay(firstPayable, true); // ส่ง true แปลว่าเด้งอัตโนมัติ (ไม่ให้โชว์ป๊อปอัป)
           } else {
-            selectBillToPay(0);
+            selectBillToPay(0, true);
           }
         } else {
           resetPaymentPanel();
@@ -708,12 +748,12 @@
               ${medsHtml}
             </div>
             <div class="px-3 pb-2" style="font-size: 0.75rem;">
-              <div class="d-flex justify-content-between text-muted"><span>ราคาเต็ม:</span> <span>฿${boxTotalPrice.toLocaleString()}</span></div>
+              <div class="d-flex justify-content-between text-muted"><span>ราคาสุทธิ:</span> <span id="card_net_${index}">฿${boxTotalPrice.toLocaleString()}</span></div>
               <div class="d-flex justify-content-between text-success fw-bold"><span>ชำระแล้ว:</span> <span>฿${boxPaidAmount.toLocaleString()}</span></div>
             </div>
             <div class="bill-card-footer d-flex justify-content-between align-items-center">
               <span class="fw-bold text-secondary" style="font-size: 0.8rem;">ต้องจ่าย:</span>
-              <span class="fw-bold ${balance > 0 ? 'text-danger' : 'text-muted'}">฿${balance > 0 ? balance.toLocaleString() : '0'}</span>
+              <span class="fw-bold ${balance > 0 ? 'text-danger' : 'text-muted'}" id="card_bal_${index}">฿${balance > 0 ? balance.toLocaleString() : '0'}</span>
             </div>
           </div>
         </div>`;
@@ -722,7 +762,7 @@
 
   function showPaidAlert() { Swal.fire({ icon: 'info', title: 'รายการนี้ชำระครบแล้ว', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); }
 
-  function selectBillToPay(index) {
+  function selectBillToPay(index, isAutoSelect = false) {
     document.querySelectorAll('.bill-card').forEach(card => card.classList.remove('selected'));
     document.getElementById(`bill_box_${index}`).classList.add('selected');
 
@@ -815,6 +855,12 @@
     
     // 🌟 3. สั่งคำนวณราคาสุทธิและอัปเดตยอดปุ่มต่างๆ ทันที
     calculatePreview();
+
+    // 🌟 โค้ดใหม่: ให้เด้งป๊อปอัปชำระเงินเมื่ออยู่ในมือถือ (และต้องมาจากการคลิกเอง ไม่ใช่ระบบคลิกให้)
+    if (window.innerWidth <= 768 && !isAutoSelect) {
+      document.getElementById('paymentRightPanel').classList.add('show-popup');
+      document.body.style.overflow = 'hidden'; // ล็อคไม่ให้พื้นหลังเลื่อน
+    }
   }
 
   function calculatePreview() {
@@ -854,18 +900,32 @@
 
     document.getElementById('pay_btn_amount').innerText = `฿${payVal.toLocaleString()}`;
 
+    // 🌟 อัปเดต UI หน้าการ์ดด้านซ้ายแบบเรียลไทม์
+    if (selectedBill) {
+        let idx = currentPatientBills.indexOf(selectedBill);
+        let netEl = document.getElementById(`card_net_${idx}`);
+        let balEl = document.getElementById(`card_bal_${idx}`);
+        if (netEl) netEl.innerText = `฿${netPrice.toLocaleString()}`;
+        if (balEl) {
+            balEl.innerText = `฿${balance.toLocaleString()}`;
+            balEl.className = `fw-bold ${balance > 0 ? 'text-danger' : 'text-muted'}`;
+        }
+    }
+
     // จัดการปุ่มรับชำระเงิน
     let submitBtn = document.getElementById('pay_submit_btn');
     if (balance === 0 && alreadyPaid > 0 && netPrice > 0) {
-      submitBtn.disabled = true; // จ่ายครบแล้ว
+      submitBtn.disabled = true; 
       submitBtn.classList.replace('btn-success', 'btn-secondary');
-    } else if (payVal > 0 || (netPrice === 0 && fullPrice > 0)) { 
-      // กดรับเงินได้ ถ้ายอดจ่าย > 0 หรือในกรณีที่ให้ส่วนลด 100% จนเหลือ 0 บาท
+      submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> ชำระครบแล้ว`;
+    } else {
       submitBtn.disabled = false;
       submitBtn.classList.replace('btn-secondary', 'btn-success');
-    } else {
-      submitBtn.disabled = true;
-      submitBtn.classList.replace('btn-success', 'btn-secondary');
+      if (payVal > 0) {
+          submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> รับชำระเงิน ฿${payVal.toLocaleString()}`;
+      } else {
+          submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกราคาคอร์ส (ยังไม่ชำระ)`;
+      }
     }
   }
 
@@ -875,6 +935,13 @@
     if(method === 'CASH') document.getElementById('pay_cash').classList.add('selected');
     if(method === 'QR') document.getElementById('pay_qr').classList.add('selected');
     if(method === 'CREDIT') document.getElementById('pay_credit').classList.add('selected');
+  }
+
+  // ฟังก์ชันใหม่: ใช้ปิดป๊อปอัปชำระเงินบนมือถือ
+  function closeMobilePayment() {
+    let rightPanel = document.getElementById('paymentRightPanel');
+    if (rightPanel) rightPanel.classList.remove('show-popup');
+    document.body.style.overflow = '';
   }
 
   function resetPaymentPanel() {
@@ -909,9 +976,14 @@
 	// 🌟 รีเซ็ตให้แผงรับเงินกลับมาแสดงปกติ
     document.getElementById('pay_input_amount').parentElement.parentElement.style.display = 'block';
     document.getElementById('pay_submit_btn').parentElement.style.display = 'block';
+
+    // 🌟 ซ่อนป๊อปอัปเมื่อรีเซ็ต
+    if (window.innerWidth <= 768) {
+      closeMobilePayment();
+    }
   }
 
- async function submitSinglePayment() {
+  async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
@@ -924,8 +996,7 @@
     else netPrice = fullPrice - discount;
     if (netPrice < 0) netPrice = 0;
 
-    // ยอมรับ payAmount เป็น 0 ได้ในกรณีที่ให้ส่วนลด 100% (แจกฟรี)
-    if (payAmount <= 0 && netPrice > 0) return Swal.fire('ไม่ถูกต้อง', 'กรุณาระบุยอดชำระ', 'warning');
+    if (payAmount < 0) return Swal.fire('ไม่ถูกต้อง', 'ยอดชำระติดลบไม่ได้', 'warning');
 
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     
@@ -933,88 +1004,109 @@
     let swalHtml = `<b>${cleanMainName}</b><br>`;
     if(fullPrice > 0) swalHtml += `ราคาเต็ม: ฿${fullPrice.toLocaleString()}<br>`;
     if(discount > 0) swalHtml += `ส่วนลด: <span class="text-danger">-${discount.toLocaleString()}${discountType==='PERCENT'?'%':'฿'}</span><br>`;
-    swalHtml += `ยอดชำระรอบนี้: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`;
+    swalHtml += `ราคาสุทธิ: <b>฿${netPrice.toLocaleString()}</b><br><br>`;
+    
+    if(payAmount > 0) {
+        swalHtml += `ยอดชำระรอบนี้: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`;
+    } else {
+        swalHtml += `<b class="text-warning">บันทึกราคาคอร์ส (ยังไม่ชำระเงิน)</b>`;
+    }
 
     Swal.fire({
-      title: 'ยืนยันรับชำระ?', html: swalHtml,
+      title: payAmount > 0 ? 'ยืนยันรับชำระ?' : 'ยืนยันบันทึกราคา?', html: swalHtml,
       showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#3b82f6'
     }).then(async (result) => {
       if (result.isConfirmed) {
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        let remainingPay = payAmount; 
-        let paymentsPayload = [];
-        
-        // 🌟 คำนวณยอดชำระใหม่เทียบกับราคาสุทธิที่เพิ่งกำหนด
-        let mainPaid = selectedBill.paid_amount;
-        let mainBalance = netPrice - mainPaid;
-        let payForMain = Math.min(mainBalance, remainingPay);
-        
-        if (payForMain >= 0) { 
-          paymentsPayload.push({ 
-              bill_id: selectedBill.id, 
-              pay_amount: payForMain, 
-              payment_method: selectedMethod,
-              updated_total_price: netPrice, // 🌟 บอกให้ระบบหลังบ้านอัปเดตราคาบิล
-              discount: discount,
-              discount_type: discountType
-          }); 
-          remainingPay -= payForMain; 
-        }
-
         try {
-          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { 
-              method: 'PUT', 
-              headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ 
-                  sales_rep: '-', 
-                  payment_method: selectedMethod, 
-                  payments: paymentsPayload, 
-                  new_items: [] 
-              }) 
+          // 🌟 1. อัปเดตราคาบิลก่อนเสมอ
+          await fetch(`/api/pos/bill/${selectedBill.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  total_price: netPrice,
+                  discount: discount,
+                  discount_type: discountType
+              })
           });
-          const data = await res.json();
-          
-          if (data.status === 'success') {
-            // ส่งประวัติเข้า System Logs
-            let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
-            fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'POS', details: `รับชำระเงินจาก ${currentPosPatient.full_name} (${currentPosPatient.id}) จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod}` }) });
 
-            // เด้งป๊อปอัปถามหลังจ่ายเงินเสร็จ ว่าจะพิมพ์อะไรไหม
-            Swal.fire({
-              icon: 'success',
-              title: 'รับชำระเงินสำเร็จ!',
-              html: 'คุณต้องการพิมพ์เอกสารหรือไม่?',
-              showCancelButton: true,
-              showDenyButton: true,
-              confirmButtonText: '<i class="fa-solid fa-print me-1"></i> ใบเสร็จ',
-              cancelButtonText: '<i class="fa-solid fa-file-medical me-1"></i> ใบรับรองแพทย์',
-              denyButtonText: 'ปิดหน้าต่าง',
-              confirmButtonColor: '#3b82f6',
-              cancelButtonColor: '#10b981',
-              denyButtonColor: '#64748b',
-            }).then((resAlert) => {
-              // 🌟 ดึงชื่อพนักงานและคนไข้เพื่อส่งไปพิมพ์
-              let staffName = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText.split('|').pop().trim() : 'พนักงาน';
-              let pName = currentPosPatient.full_name;
-
-              if (resAlert.isConfirmed) {
-                // พิมพ์ใบเสร็จ
-                window.open(`/print.html?type=receipt&hn=${currentPosPatient.id}&pname=${encodeURIComponent(pName)}&course=${encodeURIComponent(cleanMainName)}&amount=${payAmount}&method=${selectedMethod}&date=${encodeURIComponent(new Date().toISOString())}&staff=${encodeURIComponent(staffName)}`, '_blank');
-              } else if (resAlert.dismiss === Swal.DismissReason.cancel) {
-                // หน่วงเวลาให้ป๊อปอัปแรกปิดสนิทก่อน เพื่อไม่ให้ช่องพิมพ์โดนล็อค
-                setTimeout(() => {
-                  promptMedicalCertificate(currentPosPatient.id, cleanMainName);
-                }, 300);
+          // 🌟 2. ถ้ายอดชำระ > 0 ให้เรียก API รับชำระเงิน
+          if (payAmount > 0) {
+              let remainingPay = payAmount; 
+              let paymentsPayload = [];
+              
+              let mainPaid = selectedBill.paid_amount;
+              let mainBalance = netPrice - mainPaid;
+              let payForMain = Math.min(mainBalance, remainingPay);
+              
+              if (payForMain > 0) { 
+                paymentsPayload.push({ 
+                    bill_id: selectedBill.id, 
+                    pay_amount: payForMain, 
+                    payment_method: selectedMethod
+                }); 
+                remainingPay -= payForMain; 
               }
-              // โหลดหน้าจอ POS ใหม่เพื่ออัปเดตยอดเงิน
-              selectPatientForPos(currentPosPatient.id); 
-            });
-            
-          } else { 
-            Swal.fire('Error', data.message, 'error'); 
+
+              if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
+                  for (let m of selectedBill.attached_meds) {
+                      if (remainingPay <= 0) break;
+                      let mBalance = m.total_price - m.paid_amount;
+                      let payForMed = Math.min(mBalance, remainingPay);
+                      if (payForMed > 0) { 
+                          paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod }); 
+                          remainingPay -= payForMed; 
+                      }
+                  }
+              }
+
+              const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { 
+                  method: 'PUT', 
+                  headers: { 'Content-Type': 'application/json' }, 
+                  body: JSON.stringify({ 
+                      sales_rep: '-', 
+                      payment_method: selectedMethod, 
+                      payments: paymentsPayload, 
+                      new_items: [] 
+                  }) 
+              });
+              const data = await res.json();
+              if (data.status !== 'success') throw new Error(data.message);
           }
-        } catch(e) {}
+
+          // 🌟 บันทึก Log
+          let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
+          let logMsg = payAmount > 0 
+              ? `รับชำระเงินจาก ${currentPosPatient.full_name} จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod} (ราคาคอร์ส: ฿${netPrice.toLocaleString()})`
+              : `อัปเดตราคาคอร์สให้ ${currentPosPatient.full_name} เป็น ฿${netPrice.toLocaleString()} (ยังไม่ชำระ)`;
+          
+          fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'POS', details: logMsg }) });
+
+          if (payAmount > 0) {
+              Swal.fire({
+                icon: 'success', title: 'รับชำระเงินสำเร็จ!', html: 'คุณต้องการพิมพ์เอกสารหรือไม่?',
+                showCancelButton: true, showDenyButton: true,
+                confirmButtonText: '<i class="fa-solid fa-print me-1"></i> ใบเสร็จ',
+                cancelButtonText: '<i class="fa-solid fa-file-medical me-1"></i> ใบรับรองแพทย์',
+                denyButtonText: 'ปิดหน้าต่าง', confirmButtonColor: '#3b82f6', cancelButtonColor: '#10b981', denyButtonColor: '#64748b'
+              }).then((resAlert) => {
+                let staffName = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText.split('|').pop().trim() : 'พนักงาน';
+                let pName = currentPosPatient.full_name;
+                if (resAlert.isConfirmed) {
+                  window.open(`/print.html?type=receipt&hn=${currentPosPatient.id}&pname=${encodeURIComponent(pName)}&course=${encodeURIComponent(cleanMainName)}&amount=${payAmount}&method=${selectedMethod}&date=${encodeURIComponent(new Date().toISOString())}&staff=${encodeURIComponent(staffName)}`, '_blank');
+                } else if (resAlert.dismiss === Swal.DismissReason.cancel) {
+                  setTimeout(() => { promptMedicalCertificate(currentPosPatient.id, cleanMainName); }, 300);
+                }
+                selectPatientForPos(currentPosPatient.id); 
+              });
+          } else {
+              Swal.fire({ icon: 'success', title: 'บันทึกราคาสำเร็จ!', timer: 1500, showConfirmButton: false });
+              selectPatientForPos(currentPosPatient.id); 
+          }
+        } catch(e) { 
+            Swal.fire('Error', e.message || 'เกิดข้อผิดพลาดในการบันทึก', 'error'); 
+        }
       }
     });
   }
@@ -1111,10 +1203,11 @@
 
             let isFullyPaid = (parseFloat(bill.paid_amount) || 0) >= (parseFloat(bill.total_price) || 0);
             let displayId = displayIdMap[bill.id] || '-';
+            let netPrice = parseFloat(bill.total_price) || 0;
 
             history.forEach(h => {
               allPayments.push({
-                date: h.date, amount: h.amount, method: h.method || 'CASH', courseName: courseName, displayId: displayId, isFullyPaid: isFullyPaid
+                date: h.date, amount: h.amount, method: h.method || 'CASH', courseName: courseName, displayId: displayId, isFullyPaid: isFullyPaid, netPrice: netPrice
               });
             });
           });
@@ -1128,7 +1221,7 @@
           
           let key = p.courseName + '_' + timeKey + '_' + p.method + '_' + p.displayId; 
           if (!groupedPayments[key]) {
-              groupedPayments[key] = { date: safeDate, courseName: p.courseName, method: p.method, amount: 0, displayId: p.displayId, isFullyPaid: p.isFullyPaid };
+              groupedPayments[key] = { date: safeDate, courseName: p.courseName, method: p.method, amount: 0, displayId: p.displayId, isFullyPaid: p.isFullyPaid, netPrice: p.netPrice };
           }
           groupedPayments[key].amount += (parseFloat(p.amount) || 0);
       });
@@ -1165,6 +1258,7 @@
             </div>
             <div class="fw-bold text-primary mt-1" style="font-size: 0.9rem;">
                ${p.courseName} <span class="text-muted small fw-normal ms-1">(รายการที่ #${p.displayId})</span> ${statusBadge}
+               <div class="text-muted small mt-1 fw-normal">ราคาคอร์สสุทธิ: ฿${(p.netPrice).toLocaleString()}</div>
             </div>
             
             <div class="d-flex justify-content-between align-items-end mt-2 pt-2 border-top">
@@ -1267,3 +1361,5 @@
     window.open(`/print.html?type=certificate&hn=${hn}&course=${encodeURIComponent(courseName)}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(doctor)}&dx=${encodeURIComponent(dx)}&tx=${encodeURIComponent(tx)}&reason=${encodeURIComponent(reason)}&days=${days}`, '_blank');
   }
 </script>
+</body>
+</html>
