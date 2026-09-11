@@ -582,7 +582,8 @@
       
       let statusClass = '', statusBadge = '', isPayable = true;
 
-      if (balance <= 0) {
+      // 🌟 เพิ่มเงื่อนไข && boxTotalPrice > 0 เพื่อบังคับว่าถ้ายังไม่กำหนดราคา (0 บาท) ให้มองว่าค้างชำระ
+      if (balance <= 0 && boxTotalPrice > 0) {
         statusClass = 'status-paid bg-light opacity-75'; statusBadge = '<span class="badge bg-success" style="font-size:0.7rem;">จ่ายครบ</span>'; isPayable = false;
       } else if (boxPaidAmount > 0) {
         statusClass = 'status-partial'; statusBadge = '<span class="badge bg-warning text-dark" style="font-size:0.7rem;">จ่ายบางส่วน</span>';

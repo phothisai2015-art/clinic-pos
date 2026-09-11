@@ -1197,7 +1197,8 @@
        }
 
        let payBadge = '';
-       if (relatedBills.length === 0 || totalPaid >= totalBilled) {
+       // 🌟 เพิ่มเงื่อนไข && totalBilled > 0 เพื่อให้รายการที่มาใหม่โชว์สถานะค้างชำระสีแดง
+       if (relatedBills.length === 0 || (totalPaid >= totalBilled && totalBilled > 0)) {
          payBadge = `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
        } else if (totalPaid > 0 && totalPaid < totalBilled) {
          payBadge = `<button class="btn btn-sm btn-warning text-dark ms-2 shadow-sm rounded-pill fw-bold" onclick="goToPOS('${currentHN}')"><i class="fa-solid fa-clock-rotate-left me-1"></i> จ่ายบางส่วน</button>`;
