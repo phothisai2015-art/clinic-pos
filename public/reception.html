@@ -26,7 +26,6 @@
         return originalFetch(resource, config);
     };
     
-    // ตั้งฟังก์ชันปิดหน้าเว็บ สำหรับลิงก์กลับหน้าแรก
     window.closeModule = function() {
         window.location.href = '/';
     };
@@ -38,7 +37,7 @@
   .nav-pills-custom .nav-link.active { background-color: #3b82f6; color: #fff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
   .nav-pills-custom .nav-link:hover:not(.active) { background-color: #f1f5f9; border-color: #cbd5e1; }
 
-  .course-card { transition: 0.2s ease-in-out; border: 2px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; height: 100%; display: flex; flex-direction: column; }
+  .course-card { transition: 0.2s ease-in-out; border: 2px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
   .course-card:hover { border-color: #93c5fd; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
   .course-card .card-body { flex-grow: 1; display: flex; flex-direction: column; padding: 12px !important; }
   .course-card h5 { font-size: 0.95rem !important; }
@@ -66,588 +65,12 @@
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: 0.2s; }
   ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-  /* 🌙 สีของแถบเลื่อนในโหมดกลางคืน (Dark Mode) */
-  body.dark-theme ::-webkit-scrollbar-thumb { background: #475569; }
-  body.dark-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-  /* 📱 ปรับแต่ง UI สำหรับจอมือถือ */
-  @media (max-width: 768px) {
-    .search-divider { border-right: none !important; border-bottom: 1px dashed #cbd5e1; padding-right: 0 !important; padding-bottom: 15px; margin-bottom: 15px !important; }
-    
-    .info-padding { padding-left: 0 !important; margin-top: 15px !important; }
-    
-    /* 🌟 เพิ่มโค้ดส่วนนี้: ย่อขนาดช่องค้นหาและปุ่มให้เล็กลง */
-    .input-group-lg > .form-control,
-    .input-group-lg > .btn {
-      padding: 6px 12px !important;
-      font-size: 0.85rem !important;
-      height: 38px !important;
-    }
-
-    .btn-pkg-mobile { width: 42px; height: 42px; padding: 0 !important; display: flex; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
-    
-    .btn-pkg-mobile i { margin: 0 !important; font-size: 1.1rem; }
-
-    .patient-details-row { display: flex; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.78rem !important; margin-top: 6px; }
-    .patient-details-row .divider { display: inline-block !important; opacity: 0.4; }
-	/* 🌟 ซ่อนข้อความหัวข้อและปุ่มปิดในมือถือ ให้เหลือแต่ไอคอน */
-    
-    
-    .btn-close-mobile { width: 38px !important; height: 38px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; }
-    .btn-close-mobile span { display: none !important; }
-    .btn-close-mobile i { margin: 0 !important; font-size: 1.2rem; }
-	/* 🌟 ย่อขนาดหัวข้อ "สร้างประวัติคนไข้ใหม่" */
-    .title-create-mobile { font-size: 1.15rem !important; }
-
-    /* 🌟 เปลี่ยนปุ่มดึงข้อมูลบัตร ปชช. เป็นไอคอนวงกลม */
-    .btn-smartcard-mobile { width: 40px !important; height: 40px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
-    .btn-smartcard-mobile span { display: none !important; }
-    .btn-smartcard-mobile i { margin: 0 !important; font-size: 1.1rem; }
-	/* 🌟 จัดปุ่ม ล้างฟอร์ม และ บันทึก ให้อยู่บรรทัดเดียวกันแบบ 50/50 */
-    .action-btn-row { justify-content: space-between !important; }
-    .action-btn-row .btn { width: 50% !important; padding-left: 0 !important; padding-right: 0 !important; }
-	/* 🌟 ปลดล็อคให้หน้าค้นหา (Tab ค้นหา) สามารถไถเลื่อนขึ้นลงได้ในมือถือ */
-    #tab-search { overflow-y: auto !important; padding-bottom: 20px !important; }
-    #tab-search .flex-grow-1 { overflow-y: visible !important; height: auto !important; }
-	
-	/* 🌟 ย่อขนาดกล่อง "สร้างประวัติคนไข้ใหม่" ให้กระชับสุดๆ ในโหมดมือถือ */
-    #tab-new .bg-white.p-5 {
-      padding: 15px !important; /* ลดขอบกล่องด้านในให้บางลง (จากเดิม p-5 ที่หนามาก) */
-    }
-    #tab-new .border-bottom.pb-3.mb-4 {
-      padding-bottom: 10px !important; /* ลดช่องว่างใต้เส้นคั่นหัวข้อ */
-      margin-bottom: 15px !important;
-    }
-    .title-create-mobile {
-      font-size: 1rem !important; /* ลดขนาดตัวหนังสือหัวข้อให้เล็กลงอีก */
-    }
-    #patientForm .row.g-4 {
-      --bs-gutter-y: 10px !important; /* ลดช่องว่างระหว่างช่องกรอกแต่ละบรรทัดให้ชิดกัน */
-    }
-    #patientForm .form-label {
-      font-size: 0.75rem !important; /* ลดขนาดหัวข้อเล็กๆ บนช่องกรอก */
-      margin-bottom: 2px !important;
-    }
-    #patientForm .form-control {
-      font-size: 0.8rem !important; /* ลดขนาดตัวหนังสือในช่องกรอก */
-      padding: 6px 10px !important; /* ทำให้ความสูงของช่องกรอกบางลง */
-    }
-    #patientForm textarea.form-control {
-      font-size: 0.8rem !important; /* ย่อขนาดอักษรในช่องประวัติแพ้ยา */
-    }
-    /* ปรับปุ่มด้านล่างสุดของฟอร์มให้บางลง */
-    #patientForm .action-btn-row {
-      margin-top: 15px !important;
-    }
-    #patientForm .action-btn-row .btn {
-      font-size: 0.8rem !important;
-      padding-top: 6px !important;
-      padding-bottom: 6px !important;
-    }
-	/* 🌟 ขยับหัวข้อให้ชิดขอบบนมากขึ้น เพื่อเพิ่มพื้นที่ด้านล่าง */
-    .container-fluid.py-4 { padding-top: 12px !important; }
-    .container-fluid > .d-flex.justify-content-between.mb-4 { margin-bottom: 10px !important; }
-    h3.header-title-mobile { font-size: 1.25rem !important; }
-
-    /* 🌟 ปรับปุ่มแท็บเมนู (ลงทะเบียน/ค้นหา) ให้แบ่ง 50/50 และบางลง */
-    ul.nav-pills-custom {
-      display: flex !important;
-      flex-wrap: nowrap !important;
-      gap: 8px !important;
-      margin-bottom: 12px !important;
-    }
-    ul.nav-pills-custom .nav-item {
-      flex: 1 !important;
-      width: 50% !important;
-    }
-    ul.nav-pills-custom .nav-link {
-      width: 100% !important;
-      padding: 8px 4px !important;
-      font-size: 0.85rem !important;
-      margin: 0 !important;
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      border-radius: 10px !important;
-    }
-    ul.nav-pills-custom .nav-link i {
-      margin-right: 4px !important; /* ปรับระยะห่างไอคอนในปุ่มนิดนึง */
-    }
-	
-	/* 🌟 ย่อขนาดกล่อง "ค้นหาคนไข้" และ "คอร์ส/โปรโมชั่น" ให้กระชับขึ้น */
-    #tab-search > .bg-white.p-4 {
-      padding: 12px !important; /* ลดขอบด้านในของกล่องหลักทั้ง 2 กล่อง */
-    }
-    #tab-search > .bg-white.mb-4 {
-      margin-bottom: 10px !important; /* ลดระยะห่างระหว่างกล่องค้นหา กับ กล่องคอร์ส */
-    }
-    
-    /* ย่อหัวข้อในกล่องค้นหาและกล่องคอร์ส */
-    #tab-search h6.text-primary.mb-3 {
-      font-size: 1rem !important;
-      margin-bottom: 10px !important;
-    }
-    #courseMainArea h5.text-secondary.mb-4 {
-      font-size: 1rem !important;
-      margin-bottom: 10px !important;
-    }
-
-    /* 🌟 ย่อรายละเอียดของการ์ดคอร์ส (Course Card) ให้กะทัดรัด */
-    .course-card .card-body {
-      padding: 10px !important; /* ลดขอบในของการ์ดคอร์ส */
-    }
-    .course-card h5.fw-bold {
-      font-size: 0.85rem !important; /* ย่อชื่อคอร์ส */
-      margin-bottom: 4px !important;
-    }
-    .course-card .text-muted[style*="font-size: 0.75rem"] {
-      font-size: 0.65rem !important; /* ย่อวันที่ซื้อ */
-      margin-bottom: 8px !important;
-    }
-    .course-card .bg-light.p-3, 
-    .course-card .bg-light.p-2 {
-      padding: 8px !important; /* ลดขอบกล่องรายการย่อยสีเทา */
-    }
-    .course-card .bg-light .small {
-      font-size: 0.75rem !important; /* ย่อตัวหนังสือในกล่องรายการย่อย */
-    }
-    .course-card .badge {
-      font-size: 0.65rem !important;
-      padding: 4px 6px !important;
-      margin-bottom: 0 !important;
-    }
-    .course-card .btn {
-      font-size: 0.75rem !important;
-      padding: 6px !important;
-      margin-top: 8px !important; /* ลดระยะห่างปุ่มด้านล่าง */
-    }
-    
-    /* ย่อริบบิ้นโปรโมชั่นมุมขวาบนให้เล็กลง */
-    .ribbon-promo {
-      padding: 3px 25px !important;
-      font-size: 0.65rem !important;
-      top: 12px !important;
-      right: -30px !important;
-    }
-	/* 🌟 ย่อหน้า "บันทึกประวัติการรักษา (EMR)" ให้กะทัดรัดขึ้น */
-    
-    /* 1. ส่วนหัวและปุ่มย้อนกลับ */
-    #emrRecordingArea .d-flex.border-bottom {
-      padding-bottom: 8px !important;
-      margin-bottom: 10px !important;
-    }
-    #emr_package_title {
-      font-size: 1.1rem !important; /* ย่อชื่อแพคเกจ/คอร์ส */
-    }
-    #emrRecordingArea .btn-outline-secondary.btn-sm {
-      padding: 4px 8px !important;
-      font-size: 0.75rem !important;
-    }
-
-    /* 2. กล่องรายการหัตถการย่อย (Pico, IV, ฯลฯ) และปุ่ม +/- */
-    #emr_sub_items_section h6 {
-      font-size: 0.85rem !important;
-      margin-bottom: 6px !important;
-    }
-    #emr_sub_items_list .p-3 {
-      padding: 8px 10px !important; /* ลดขอบในกล่องรายการย่อย */
-    }
-    #emr_sub_items_list .fs-6 {
-      font-size: 0.85rem !important; /* ย่อชื่อรายการย่อย */
-      margin-bottom: 4px !important;
-    }
-    #emr_sub_items_list .badge {
-      font-size: 0.65rem !important; 
-      padding: 3px 6px !important;
-    }
-    #emr_sub_items_list .input-group-sm {
-      width: 90px !important; /* บีบความกว้างปุ่ม +/- ให้เล็กลง */
-    }
-    #emr_sub_items_list .input-group-sm .btn,
-    #emr_sub_items_list .input-group-sm .form-control {
-      padding: 2px 6px !important;
-      font-size: 0.8rem !important;
-      height: 28px !important; /* ลดความสูงของปุ่ม +/- */
-    }
-
-    /* 3. ช่องกรอกข้อความ CC, Dx, Tx */
-    #emr_input_section {
-      --bs-gutter-y: 8px !important; /* ลดช่องว่างระหว่างบรรทัดลงอีก */
-    }
-    #emr_input_section .form-label {
-      font-size: 0.75rem !important;
-      margin-bottom: 2px !important;
-    }
-    #emr_input_section .form-control {
-      font-size: 0.8rem !important;
-      padding: 6px 10px !important;
-    }
-    #emr_input_section textarea.form-control {
-      min-height: 38px !important; /* ลดความสูงขั้นต่ำของกล่องข้อความ */
-    }
-
-    /* 4. กล่องสั่งจ่ายยา / สกินแคร์ */
-    #emr_input_section .border-primary.p-3 {
-      padding: 10px !important; /* ลด padding กล่องจ่ายยา */
-      margin-top: 5px !important;
-    }
-    #emr_input_section .input-group-sm .form-select,
-    #emr_input_section .input-group-sm .form-control,
-    #emr_input_section .input-group-sm .btn {
-      font-size: 0.75rem !important; /* ย่อตัวหนังสือในช่องกรอกยา */
-      padding: 4px 8px !important;
-      height: 32px !important;
-    }
-
-    /* 5. ปุ่มเลือกวันนัดหมาย และปุ่มบันทึกด้านล่างสุด */
-    #emr_input_section .btn-outline-primary,
-    #emr_appt_reason {
-      height: 36px !important; /* บีบปุ่มนัดหมายให้บางลง */
-      font-size: 0.85rem !important;
-      padding: 4px 10px !important;
-    }
-    #emr_selected_appt_box {
-      padding: 6px 10px !important;
-      font-size: 0.8rem !important;
-    }
-    #emr_input_section .btn-success {
-      font-size: 0.95rem !important;
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
-    }
-	
-	/* 🌟 ย่อหน้าป๊อปอัป "เลือกแพคเกจ / รายการใหม่" ในมือถือ (ยกเว้นแท็บเมนู) */
-    
-    /* 1. ย่อส่วนหัวป๊อปอัปและลดขอบพื้นที่ทั้งหมด */
-    #packageModal .modal-header {
-      padding: 10px 15px !important;
-    }
-    #packageModal .modal-title {
-      font-size: 1.05rem !important;
-    }
-    #packageModal .p-4 {
-      padding: 12px !important; /* ลดขอบด้านในของพื้นที่ซ้าย-ขวา ให้บางลง */
-    }
-
-    /* 2. ย่อขนาดการ์ดรายการแพคเกจ (Course Cards) */
-    #packageModal .course-card {
-      padding: 8px 10px !important; /* ลดขอบในของการ์ด */
-    }
-    #packageModal .course-card h6 {
-      font-size: 0.8rem !important; /* ย่อชื่อแพคเกจ */
-      margin-bottom: 0 !important;
-    }
-    #packageModal .course-card .badge {
-      font-size: 0.65rem !important;
-      padding: 3px 6px !important;
-    }
-    #packageModal .course-card .text-success {
-      font-size: 0.8rem !important; /* ย่อราคาสีเขียว */
-    }
-
-    /* 3. ยืดป๊อปอัปเต็มจอ ล็อคปุ่มยืนยันไว้ด้านล่าง และให้รายการเลื่อนได้ */
-    #packageModal {
-      overflow: hidden !important;
-    }
-    #packageModal .modal-dialog {
-      height: 96vh !important;
-      margin: 2vh auto !important;
-    }
-    #packageModal .modal-content {
-      height: 100% !important;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden !important;
-    }
-    #packageModal .modal-body {
-      flex: 1 1 auto !important;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden !important;
-      padding: 0 !important;
-    }
-    #packageModal .row.g-0 {
-      flex: 1 1 auto !important;
-      display: flex;
-      flex-direction: column;
-      flex-wrap: nowrap !important;
-      overflow: hidden !important;
-      height: 100% !important;
-    }
-    
-    /* โซนบน: กล่องรายการแพคเกจ (ต้องเลื่อนได้) */
-    #packageModal .col-lg-8 {
-      flex: 1 1 auto !important; /* อนุญาตให้ขยายและหดได้ */
-      display: flex;
-      flex-direction: column;
-      min-height: 0 !important; /* กุญแจสำคัญ! ป้องกันไม่ให้กล่องทะลุจอ */
-    }
-    #packageModal .col-lg-8 .custom-scrollbar {
-      flex: 1 1 auto !important;
-      height: 0 !important; /* บังคับให้ความสูงคำนวณจากพื้นที่ที่เหลืออยู่เท่านั้น */
-      overflow-y: auto !important;
-    }
-
-    /* โซนล่าง: กล่องตะกร้าและปุ่มยืนยัน (ล็อคตายตัว) */
-    #packageModal .col-lg-4 {
-      flex: 0 0 auto !important; /* ห้ามขยาย ห้ามหด ล็อคขนาดตายตัวตามเนื้อหา */
-      padding: 12px !important;
-      background-color: #f8fafc !important;
-      border-top: 1px solid #e2e8f0 !important;
-      z-index: 10;
-      box-shadow: 0 -4px 10px rgba(0,0,0,0.05); /* เพิ่มเงาด้านบนนิดๆ ให้ดูมีมิติ */
-    }
-
-    /* 4. ย่อส่วน "รายการที่เลือกวันนี้" (ตะกร้าที่อยู่ด้านล่างในมือถือ) */
-    #packageModal .col-lg-4 h6.text-primary {
-      font-size: 0.9rem !important;
-      margin-bottom: 8px !important;
-    }
-    #selectedItemsCart {
-      padding: 8px !important;
-      margin-bottom: 8px !important;
-    }
-    #selectedItemsCart .p-2 {
-      padding: 6px 8px !important; /* ลดขอบของแต่ละรายการในตะกร้า */
-      margin-bottom: 6px !important;
-    }
-    #selectedItemsCart .fw-bold.text-dark {
-      font-size: 0.75rem !important; /* ย่อชื่อรายการที่ถูกเลือกลงตะกร้า */
-    }
-    #selectedItemsCart .text-success {
-      font-size: 0.7rem !important; /* ย่อราคาในตะกร้า */
-    }
-    #selectedItemsCart .btn-outline-danger {
-      padding: 2px 6px !important;
-      font-size: 0.65rem !important; /* ย่อปุ่มกากบาทลบรายการ */
-    }
-
-    /* 5. ยอดยอดรวมและปุ่มยืนยัน */
-    #packageModal .col-lg-4 .bg-white.p-3 {
-      padding: 8px 12px !important;
-      margin-bottom: 10px !important;
-    }
-    #cartTotalDisplay {
-      font-size: 1.1rem !important; /* ย่อตัวเลขยอดรวม */
-    }
-    #packageModal .btn-primary.w-100 {
-      font-size: 0.9rem !important;
-      padding: 8px !important; /* บีบปุ่มยืนยันรายการให้บางลง */
-    }
-	
-	/* 🌟 ย่อหน้าต่าง "ดูรายละเอียดการรักษา" (EMR View) ให้กระชับและตัวหนังสือเล็กลง */
-    #emr_detail_view_section {
-      padding: 12px !important; /* ลดขอบรอบนอกสุดของกล่องขาว */
-      margin-top: 10px !important;
-    }
-    
-    /* บีบระยะห่างระหว่างกล่อง CC, Dx, Tx ให้ชิดกัน */
-    #emr_detail_view_section > .mb-3,
-    #emr_detail_view_section > .mt-3,
-    #emr_detail_view_section .bg-light.mb-3 {
-      margin-bottom: 8px !important; 
-      margin-top: 8px !important;
-    }
-
-    /* ลดขอบด้านในของกล่องสีเทาแต่ละกล่อง */
-    #emr_detail_view_section .bg-light.p-3 {
-      padding: 8px 10px !important; 
-    }
-
-    /* ย่อขนาดตัวหนังสือหัวข้อ (CC, Dx, Tx) */
-    #emr_detail_view_section .fw-bold {
-      font-size: 0.8rem !important; 
-      margin-bottom: 4px !important;
-    }
-
-    /* ย่อขนาดตัวหนังสือเนื้อหาด้านในกล่อง */
-    #emr_detail_view_section .bg-light {
-      font-size: 0.75rem !important; 
-      line-height: 1.4 !important; /* บีบช่องว่างระหว่างบรรทัดข้อความให้แคบลงนิดนึง */
-    }
-
-    /* ย่อป้ายวันที่และหัวข้อหลัก */
-    #emr_detail_view_section h5 {
-      font-size: 0.95rem !important;
-      margin-bottom: 10px !important;
-    }
-    #emr_detail_view_section .badge.fs-6 {
-      font-size: 0.75rem !important;
-      padding: 4px 8px !important;
-    }
-
-    /* ย่อปุ่มด้านล่าง (แก้ไขประวัติ, ปิดรายละเอียด) */
-    #emr_detail_view_section .text-center.mt-4 {
-      margin-top: 12px !important;
-    }
-    #emr_detail_view_section .btn {
-      font-size: 0.75rem !important;
-      padding: 6px 12px !important;
-    }
-	/* 🌟 1. ปรับช่องค้นหาให้บางลง และตัวหนังสือเล็กลง */
-    #searchBoxArea .input-group-lg > .form-control,
-    #searchBoxArea .input-group-lg > .btn {
-      padding: 4px 10px !important;
-      font-size: 0.78rem !important;
-      height: 32px !important; /* ปรับความสูงช่องค้นหาลงเหลือ 32px */
-    }
-    #searchBoxArea h6 {
-      font-size: 0.85rem !important;
-      margin-bottom: 6px !important;
-    }
-
-    /* 🌟 2. ย่อตัวหนังสือทั้งหมดในกล่องคอร์สและโปรโมชั่น */
-    #courseMainArea h5.text-secondary {
-      font-size: 0.85rem !important; /* หัวข้อคำว่า "คอร์สและโปรโมชั่น" */
-    }
-    .course-card .card-body {
-      padding: 8px !important; /* ลดขอบด้านในของการ์ด */
-    }
-    .course-card h5.fw-bold {
-      font-size: 0.78rem !important; /* ย่อชื่อคอร์ส / โปรโมชั่น */
-      margin-bottom: 2px !important;
-    }
-    .course-card .badge {
-      font-size: 0.58rem !important; /* ย่อป้ายสถานะ/ป้ายค้างชำระ */
-      padding: 2px 6px !important;
-    }
-    .course-card .text-muted {
-      font-size: 0.6rem !important; /* ย่อวันที่ซื้อ */
-    }
-    .course-card .bg-light {
-      padding: 6px 8px !important; /* บีบกล่องรายการย่อยสีเทา */
-    }
-    .course-card .bg-light span,
-    .course-card .bg-light .small {
-      font-size: 0.68rem !important; /* ย่อชื่อรายการย่อยและสิทธิ์คงเหลือ */
-    }
-    .course-card .btn {
-      font-size: 0.7rem !important; /* ย่อขนาดปุ่มบันทึกประวัติ/ดูประวัติ */
-      padding: 4px 8px !important;
-      margin-top: 6px !important;
-    }
-    .ribbon-promo {
-      font-size: 0.55rem !important; /* ย่อริบบิ้นสีชมพูโปรโมชั่น */
-      padding: 2px 20px !important;
-      top: 10px !important;
-      right: -28px !important;
-    }
-	
-	/* 🌟 ซ่อนแท็บเมนูหลักเฉพาะในมือถือเมื่อเข้าหน้า EMR */
-  .hide-emr-mobile {
-    display: none !important;
-  }
-  }
-  
-  .icon-fixed-w { width: 20px; text-align: center; }
-  
-  /* 🌙 โหมดกลางคืน (Dark Mode Sync) */
-  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-  body.dark-theme .bg-light { background-color: #0f172a !important; border-color: #334155 !important; }
-  body.dark-theme .text-dark { color: #f8fafc !important; }
-  body.dark-theme .text-muted { color: #94a3b8 !important; }
-  body.dark-theme .border { border-color: #334155 !important; }
-  body.dark-theme .border-bottom { border-bottom-color: #334155 !important; }
-  body.dark-theme .border-end { border-right-color: #334155 !important; }
-
-  /* Input & Forms ในโหมดมืด (ปรับให้สว่างขึ้น มองเห็นชัดเจน) */
-  body.dark-theme .form-control, 
-  body.dark-theme .form-select,
-  body.dark-theme .form-control.bg-light { /* บังคับช่องค้นหาให้สว่างขึ้น */
-    background-color: #334155 !important; 
-    color: #f8fafc !important; 
-    border-color: #475569 !important; 
-  }
-  body.dark-theme .form-control:focus, 
-  body.dark-theme .form-select:focus { 
-    background-color: #1e293b !important; 
-    border-color: #60a5fa !important; 
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
-  }
-  body.dark-theme .form-control[readonly] { 
-    background-color: #1e293b !important; 
-    color: #94a3b8 !important;
-    opacity: 0.8; 
-  }
-  body.dark-theme .form-control.border-primary { border-color: #3b82f6 !important; }
-  
-  /* สีของ Placeholder (ข้อความแนะนำจางๆ ในช่องกรอก) */
-  body.dark-theme .form-control::placeholder { 
-    color: #cbd5e1 !important; 
-    opacity: 0.8 !important; 
-  }
-
-  /* การ์ดคอร์สและรายการประวัติ */
-  body.dark-theme .course-card { background-color: #1e293b !important; border-color: #334155 !important; }
-  body.dark-theme .course-card:hover { border-color: #3b82f6 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important; }
-  body.dark-theme .course-card.opacity-50 { background-color: #0f172a !important; opacity: 0.6 !important; border-color: #334155 !important; }
-  
-  body.dark-theme .history-card { background-color: #1e293b !important; }
-  body.dark-theme .history-card:hover { background-color: #334155 !important; border-color: #60a5fa !important; }
-  body.dark-theme .history-card.bg-light { background-color: #334155 !important; } 
-
-  body.dark-theme .list-group-item { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
-  body.dark-theme .list-group-item:hover { background-color: #334155 !important; }
-
-  /* Modal และแจ้งเตือน */
-  body.dark-theme .modal-content { background-color: #1e293b !important; }
-  body.dark-theme .modal-header.bg-light { background-color: #0f172a !important; border-bottom-color: #334155 !important; }
-  body.dark-theme .allergy-alert { background-color: rgba(225, 29, 72, 0.15) !important; border-color: #e11d48 !important; }
-
-  /* ปฏิทินและคิว EMR */
-  body.dark-theme .emr-cal-cell { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
-  body.dark-theme .emr-cal-cell:hover:not(.other-month) { background-color: #334155 !important; }
-  body.dark-theme .emr-cal-cell.today { background-color: #3b82f6 !important; border-color: #3b82f6 !important; }
-  
-  body.dark-theme .emr-slot-row { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
-  body.dark-theme .emr-slot-row:hover:not(.booked) { background-color: #334155 !important; border-color: #60a5fa !important; }
-  body.dark-theme .emr-slot-row.booked { background-color: rgba(225, 29, 72, 0.1) !important; border-color: #9f1239 !important; }
-  
-  /* 🌙 SweetAlert2 โหมดกลางคืน (Dark Mode Sync) */
-  body.dark-theme .swal2-popup {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border: 1px solid #334155 !important;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important;
-  }
-  body.dark-theme .swal2-title {
-    color: #f8fafc !important;
-  }
-  body.dark-theme .swal2-html-container {
-    color: #cbd5e1 !important;
-  }
-  body.dark-theme .swal2-close {
-    color: #94a3b8 !important;
-  }
-  body.dark-theme .swal2-close:hover {
-    color: #ef4444 !important;
-  }
-  
-  /* ปรับสีไอคอนแจ้งเตือนในโหมดมืดให้เนียนขึ้น */
-  body.dark-theme .swal2-icon.swal2-warning { border-color: #f59e0b !important; color: #f59e0b !important; }
-  body.dark-theme .swal2-icon.swal2-info { border-color: #3b82f6 !important; color: #3b82f6 !important; }
-  body.dark-theme .swal2-icon.swal2-error { border-color: #ef4444 !important; color: #ef4444 !important; }
-  body.dark-theme .swal2-icon.swal2-success { border-color: #10b981 !important; color: #10b981 !important; }
-  
-  /* 🛑 ล็อคพื้นหลังเฉพาะในมือถือ (โหมด PC จะได้เลื่อนได้ปกติ) */
-  @media (max-width: 768px) {
-    html, body { overflow: hidden !important; height: 100% !important; }
-  }
-  /* 🌟 ดัก Layout หน้าค้นหาไม่ให้พังบน PC เวลาสลับแท็บ */
-  #tab-search[style*="display: block"] { display: flex !important; }
-  
-  /* 🌟 เพิ่มคุณสมบัติให้การ์ดรองรับการคาดมุม */
-  .course-card { 
-    position: relative; 
-    overflow: hidden; 
-  }
-
   /* 🎀 สายสะพายโปรโมชั่นมุมขวาบน */
   .ribbon-promo {
     position: absolute;
     top: 20px;
     right: -35px;
-    background: linear-gradient(135deg, #f472b6, #db2777); /* สีชมพูไล่ระดับ */
+    background: linear-gradient(135deg, #f472b6, #db2777);
     color: white;
     padding: 5px 40px;
     font-weight: 800;
@@ -659,12 +82,6 @@
     pointer-events: none;
   }
 
-  /* 🌙 โหมดกลางคืนสำหรับริบบิ้น */
-  body.dark-theme .ribbon-promo {
-    background: linear-gradient(135deg, #ec4899, #be185d);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  }
-  
   /* 🌟 จัดการ Layout ข้อมูลคนไข้ และแพ้ยา (ป้องกันกล่องทะลุในจอใหญ่) */
   .patient-info-half { width: auto; max-width: 100%; flex-shrink: 0; padding-right: 15px; }
   .patient-info-half.has-allergy { max-width: 50%; }
@@ -672,15 +89,23 @@
   .allergy-title-mobile { font-size: 0.8rem; }
   .allergy-desc-mobile { font-size: 0.75rem; }
 
+  /* 📱 ปรับแต่ง UI สำหรับจอมือถือรวมศูนย์ที่เดียว */
   @media (max-width: 768px) {
+    html, body { overflow: hidden !important; height: 100% !important; }
+    #tab-search[style*="display: block"] { display: flex !important; }
+
+    /* 🌟 บังคับซ่อนแท็บเมนูเฉพาะจอมือถือเมื่อเข้า EMR */
+    .hide-emr-mobile { display: none !important; }
+
     /* แบ่ง 50/50 เฉพาะกรณีที่มีประวัติแพ้ยา */
     .patient-info-half.has-allergy { width: 50% !important; padding-right: 5px; }
     .allergy-half { width: 50% !important; padding: 6px 8px !important; flex-grow: 0 !important; }
     
-    /* 🌟 ปรับชื่อคนไข้ให้กระชับ */
+    /* ปรับชื่อคนไข้ให้กระชับ */
     .patient-name-mobile { font-size: 0.85rem !important; }
+    .patient-hn-inline { font-size: 0.75rem !important; }
     
-    /* 🌟 จัดให้ HN, เลขบัตร, อายุ เรียงแนวนอนชิดกัน (ไม่ต่อแนวตั้ง) เพื่อลดความสูง */
+    /* จัดให้ HN, เลขบัตร, อายุ เรียงแนวนอนชิดกัน (ไม่ต่อแนวตั้ง) เพื่อลดความสูง */
     .patient-details-row { 
       flex-direction: row !important; 
       flex-wrap: wrap !important; 
@@ -688,7 +113,7 @@
       gap: 2px 4px !important; 
       font-size: 0.65rem !important; 
     }
-    .patient-details-row .divider { display: none !important; } /* ซ่อนเส้นคั่น | เพื่อประหยัดพื้นที่ */
+    .patient-details-row .divider { display: none !important; }
     .patient-details-row span { white-space: nowrap; }
     
     /* ย่อตัวหนังสือแพ้ยา */
@@ -708,13 +133,175 @@
     }
     .btn-pkg-main span { display: none !important; }
     .btn-pkg-main i { margin: 0 !important; font-size: 1.1rem; }
-	
-	/* 🌟 บังคับซ่อนแท็บเมนูเฉพาะจอมือถือ */
-  .hide-emr-mobile {
-    display: none !important;
-  }
+
+    /* ย่อขนาดช่องค้นหาให้บางลง */
+    #searchBoxArea .input-group-lg > .form-control,
+    #searchBoxArea .input-group-lg > .btn {
+      padding: 4px 10px !important;
+      font-size: 0.78rem !important;
+      height: 32px !important;
+    }
+    #searchBoxArea h6 { font-size: 0.85rem !important; margin-bottom: 6px !important; }
+
+    /* ย่อตัวหนังสือทั้งหมดในกล่องคอร์สและโปรโมชั่น */
+    #courseMainArea h5.text-secondary { font-size: 0.85rem !important; }
+    .course-card .card-body { padding: 8px !important; }
+    .course-card h5.fw-bold { font-size: 0.78rem !important; margin-bottom: 2px !important; }
+    .course-card .badge { font-size: 0.58rem !important; padding: 2px 6px !important; }
+    .course-card .text-muted { font-size: 0.6rem !important; margin-bottom: 8px !important; }
+    .course-card .bg-light { padding: 6px 8px !important; }
+    .course-card .bg-light span, .course-card .bg-light .small { font-size: 0.68rem !important; }
+    .course-card .btn { font-size: 0.7rem !important; padding: 4px 8px !important; margin-top: 6px !important; }
+    .ribbon-promo { font-size: 0.55rem !important; padding: 2px 20px !important; top: 10px !important; right: -28px !important; }
+
+    /* ปุ่มปิดหน้านี้ มือถือเหลือแค่ Icon */
+    .btn-close-mobile { width: 38px !important; height: 38px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; }
+    .btn-close-mobile span { display: none !important; }
+    .btn-close-mobile i { margin: 0 !important; font-size: 1.2rem; }
+
+    /* กล่องประวัติคนไข้ใหม่ ย่อกะทัดรัด */
+    .title-create-mobile { font-size: 1.15rem !important; }
+    .btn-smartcard-mobile { width: 40px !important; height: 40px !important; padding: 0 !important; display: flex !important; justify-content: center; align-items: center; border-radius: 50% !important; flex-shrink: 0; }
+    .btn-smartcard-mobile span { display: none !important; }
+    .btn-smartcard-mobile i { margin: 0 !important; font-size: 1.1rem; }
+    .action-btn-row { justify-content: space-between !important; }
+    .action-btn-row .btn { width: 50% !important; padding-left: 0 !important; padding-right: 0 !important; }
+    
+    #tab-search { overflow-y: auto !important; padding-bottom: 20px !important; }
+    #tab-search .flex-grow-1 { overflow-y: visible !important; height: auto !important; }
+    #tab-search > .bg-white.p-4 { padding: 12px !important; }
+    #tab-search > .bg-white.mb-4 { margin-bottom: 10px !important; }
+
+    #tab-new .bg-white.p-5 { padding: 15px !important; }
+    #tab-new .border-bottom.pb-3.mb-4 { padding-bottom: 10px !important; margin-bottom: 15px !important; }
+    #patientForm .row.g-4 { --bs-gutter-y: 10px !important; }
+    #patientForm .form-label { font-size: 0.75rem !important; margin-bottom: 2px !important; }
+    #patientForm .form-control, #patientForm textarea.form-control { font-size: 0.8rem !important; padding: 6px 10px !important; }
+    #patientForm .action-btn-row { margin-top: 15px !important; }
+    #patientForm .action-btn-row .btn { font-size: 0.8rem !important; padding-top: 6px !important; padding-bottom: 6px !important; }
+
+    .container-fluid.py-4 { padding-top: 12px !important; }
+    .container-fluid > .d-flex.justify-content-between.mb-4 { margin-bottom: 10px !important; }
+    h3.header-title-mobile { font-size: 1.25rem !important; }
+
+    ul.nav-pills-custom { display: flex !important; flex-wrap: nowrap !important; gap: 8px !important; margin-bottom: 12px !important; }
+    ul.nav-pills-custom .nav-item { flex: 1 !important; width: 50% !important; }
+    ul.nav-pills-custom .nav-link { width: 100% !important; padding: 8px 4px !important; font-size: 0.85rem !important; margin: 0 !important; display: flex !important; justify-content: center !important; align-items: center !important; border-radius: 10px !important; }
+    ul.nav-pills-custom .nav-link i { margin-right: 4px !important; }
+
+    /* EMR ย่อให้กะทัดรัดขึ้น */
+    #emrRecordingArea .d-flex.border-bottom { padding-bottom: 8px !important; margin-bottom: 10px !important; }
+    #emr_package_title { font-size: 1.1rem !important; }
+    #emrRecordingArea .btn-outline-secondary.btn-sm { padding: 4px 8px !important; font-size: 0.75rem !important; }
+    #emr_sub_items_section h6 { font-size: 0.85rem !important; margin-bottom: 6px !important; }
+    #emr_sub_items_list .p-3 { padding: 8px 10px !important; }
+    #emr_sub_items_list .fs-6 { font-size: 0.85rem !important; margin-bottom: 4px !important; }
+    #emr_sub_items_list .badge { font-size: 0.65rem !important; padding: 3px 6px !important; }
+    #emr_sub_items_list .input-group-sm { width: 90px !important; }
+    #emr_sub_items_list .input-group-sm .btn, #emr_sub_items_list .input-group-sm .form-control { padding: 2px 6px !important; font-size: 0.8rem !important; height: 28px !important; }
+    #emr_input_section { --bs-gutter-y: 8px !important; }
+    #emr_input_section .form-label { font-size: 0.75rem !important; margin-bottom: 2px !important; }
+    #emr_input_section .form-control { font-size: 0.8rem !important; padding: 6px 10px !important; }
+    #emr_input_section textarea.form-control { min-height: 38px !important; }
+    #emr_input_section .border-primary.p-3 { padding: 10px !important; margin-top: 5px !important; }
+    #emr_input_section .input-group-sm .form-select, #emr_input_section .input-group-sm .form-control, #emr_input_section .input-group-sm .btn { font-size: 0.75rem !important; padding: 4px 8px !important; height: 32px !important; }
+    #emr_input_section .btn-outline-primary, #emr_appt_reason { height: 36px !important; font-size: 0.85rem !important; padding: 4px 10px !important; }
+    #emr_selected_appt_box { padding: 6px 10px !important; font-size: 0.8rem !important; }
+    #emr_input_section .btn-success { font-size: 0.95rem !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+
+    /* ย่อหน้าป๊อปอัปเลือกแพคเกจ */
+    #packageModal .modal-header { padding: 10px 15px !important; }
+    #packageModal .modal-title { font-size: 1.05rem !important; }
+    #packageModal .p-4 { padding: 12px !important; }
+    #packageModal .course-card { padding: 8px 10px !important; }
+    #packageModal .course-card h6 { font-size: 0.8rem !important; margin-bottom: 0 !important; }
+    #packageModal .course-card .badge { font-size: 0.65rem !important; padding: 3px 6px !important; }
+    #packageModal .course-card .text-success { font-size: 0.8rem !important; }
+    #packageModal { overflow: hidden !important; }
+    #packageModal .modal-dialog { height: 96vh !important; margin: 2vh auto !important; }
+    #packageModal .modal-content { height: 100% !important; display: flex; flex-direction: column; overflow: hidden !important; }
+    #packageModal .modal-body { flex: 1 1 auto !important; display: flex; flex-direction: column; overflow: hidden !important; padding: 0 !important; }
+    #packageModal .row.g-0 { flex: 1 1 auto !important; display: flex; flex-direction: column; flex-wrap: nowrap !important; overflow: hidden !important; height: 100% !important; }
+    #packageModal .col-lg-8 { flex: 1 1 auto !important; display: flex; flex-direction: column; min-height: 0 !important; }
+    #packageModal .col-lg-8 .custom-scrollbar { flex: 1 1 auto !important; height: 0 !important; overflow-y: auto !important; }
+    #packageModal .col-lg-4 { flex: 0 0 auto !important; padding: 12px !important; background-color: #f8fafc !important; border-top: 1px solid #e2e8f0 !important; z-index: 10; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
+    #packageModal .col-lg-4 h6.text-primary { font-size: 0.9rem !important; margin-bottom: 8px !important; }
+    #selectedItemsCart { padding: 8px !important; margin-bottom: 8px !important; }
+    #selectedItemsCart .p-2 { padding: 6px 8px !important; margin-bottom: 6px !important; }
+    #selectedItemsCart .fw-bold.text-dark { font-size: 0.75rem !important; }
+    #selectedItemsCart .text-success { font-size: 0.7rem !important; }
+    #selectedItemsCart .btn-outline-danger { padding: 2px 6px !important; font-size: 0.65rem !important; }
+    #packageModal .col-lg-4 .bg-white.p-3 { padding: 8px 12px !important; margin-bottom: 10px !important; }
+    #cartTotalDisplay { font-size: 1.1rem !important; }
+    #packageModal .btn-primary.w-100 { font-size: 0.9rem !important; padding: 8px !important; }
+
+    /* ดูรายละเอียด EMR View */
+    #emr_detail_view_section { padding: 12px !important; margin-top: 10px !important; }
+    #emr_detail_view_section > .mb-3, #emr_detail_view_section > .mt-3, #emr_detail_view_section .bg-light.mb-3 { margin-bottom: 8px !important; margin-top: 8px !important; }
+    #emr_detail_view_section .bg-light.p-3 { padding: 8px 10px !important; }
+    #emr_detail_view_section .fw-bold { font-size: 0.8rem !important; margin-bottom: 4px !important; }
+    #emr_detail_view_section .bg-light { font-size: 0.75rem !important; line-height: 1.4 !important; }
+    #emr_detail_view_section h5 { font-size: 0.95rem !important; margin-bottom: 10px !important; }
+    #emr_detail_view_section .badge.fs-6 { font-size: 0.75rem !important; padding: 4px 8px !important; }
+    #emr_detail_view_section .text-center.mt-4 { margin-top: 12px !important; }
+    #emr_detail_view_section .btn { font-size: 0.75rem !important; padding: 6px 12px !important; }
   }
   
+  .icon-fixed-w { width: 20px; text-align: center; }
+  
+  /* 🌙 โหมดกลางคืน (Dark Mode Sync) */
+  body.dark-theme .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .bg-light { background-color: #0f172a !important; border-color: #334155 !important; }
+  body.dark-theme .text-dark { color: #f8fafc !important; }
+  body.dark-theme .text-muted { color: #94a3b8 !important; }
+  body.dark-theme .border { border-color: #334155 !important; }
+  body.dark-theme .border-bottom { border-bottom-color: #334155 !important; }
+  body.dark-theme .border-end { border-right-color: #334155 !important; }
+
+  body.dark-theme .form-control, 
+  body.dark-theme .form-select,
+  body.dark-theme .form-control.bg-light { background-color: #334155 !important; color: #f8fafc !important; border-color: #475569 !important; }
+  body.dark-theme .form-control:focus, 
+  body.dark-theme .form-select:focus { background-color: #1e293b !important; border-color: #60a5fa !important; box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important; }
+  body.dark-theme .form-control[readonly] { background-color: #1e293b !important; color: #94a3b8 !important; opacity: 0.8; }
+  body.dark-theme .form-control.border-primary { border-color: #3b82f6 !important; }
+  body.dark-theme .form-control::placeholder { color: #cbd5e1 !important; opacity: 0.8 !important; }
+
+  body.dark-theme .course-card { background-color: #1e293b !important; border-color: #334155 !important; }
+  body.dark-theme .course-card:hover { border-color: #3b82f6 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important; }
+  body.dark-theme .course-card.opacity-50 { background-color: #0f172a !important; opacity: 0.6 !important; border-color: #334155 !important; }
+  
+  body.dark-theme .history-card { background-color: #1e293b !important; }
+  body.dark-theme .history-card:hover { background-color: #334155 !important; border-color: #60a5fa !important; }
+  body.dark-theme .history-card.bg-light { background-color: #334155 !important; } 
+  body.dark-theme .list-group-item { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .list-group-item:hover { background-color: #334155 !important; }
+
+  body.dark-theme .modal-content { background-color: #1e293b !important; }
+  body.dark-theme .modal-header.bg-light { background-color: #0f172a !important; border-bottom-color: #334155 !important; }
+  body.dark-theme .allergy-alert { background-color: rgba(225, 29, 72, 0.15) !important; border-color: #e11d48 !important; }
+
+  body.dark-theme .emr-cal-cell { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .emr-cal-cell:hover:not(.other-month) { background-color: #334155 !important; }
+  body.dark-theme .emr-cal-cell.today { background-color: #3b82f6 !important; border-color: #3b82f6 !important; }
+  
+  body.dark-theme .emr-slot-row { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+  body.dark-theme .emr-slot-row:hover:not(.booked) { background-color: #334155 !important; border-color: #60a5fa !important; }
+  body.dark-theme .emr-slot-row.booked { background-color: rgba(225, 29, 72, 0.1) !important; border-color: #9f1239 !important; }
+  
+  body.dark-theme .swal2-popup { background-color: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155 !important; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important; }
+  body.dark-theme .swal2-title { color: #f8fafc !important; }
+  body.dark-theme .swal2-html-container { color: #cbd5e1 !important; }
+  body.dark-theme .swal2-close { color: #94a3b8 !important; }
+  body.dark-theme .swal2-close:hover { color: #ef4444 !important; }
+  
+  body.dark-theme .swal2-icon.swal2-warning { border-color: #f59e0b !important; color: #f59e0b !important; }
+  body.dark-theme .swal2-icon.swal2-info { border-color: #3b82f6 !important; color: #3b82f6 !important; }
+  body.dark-theme .swal2-icon.swal2-error { border-color: #ef4444 !important; color: #ef4444 !important; }
+  body.dark-theme .swal2-icon.swal2-success { border-color: #10b981 !important; color: #10b981 !important; }
+  
+  /* 🌙 โหมดกลางคืนสำหรับริบบิ้น */
+  body.dark-theme .ribbon-promo { background: linear-gradient(135deg, #ec4899, #be185d); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
   </style>
 </head>
 <body class="bg-light">
@@ -785,7 +372,6 @@
               <label class="form-label fw-bold small text-danger">ประวัติการแพ้ยา / สารเคมี (ระบุให้ชัดเจน)</label>
               <textarea id="p_allergies" class="form-control border-danger" rows="2" placeholder="เช่น อาหารทะเล, ยาชา, Penicillin"></textarea>
             </div>
-            <!-- เปลี่ยนการจัดเรียงเป็น d-flex และเพิ่มคลาส action-btn-row -->
             <div class="col-12 d-flex justify-content-end gap-2 mt-4 action-btn-row">
               <button type="button" class="btn btn-light rounded-pill px-5 fw-bold shadow-sm py-2" onclick="clearForm()">ล้างฟอร์ม</button>
               <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึกข้อมูล</button>
@@ -796,8 +382,8 @@
     </div>
 
     <div id="tab-search" style="display: none; height: 100%; flex-direction: column;">
-  <div id="searchTopPanel" class="bg-white p-4 rounded-4 shadow-sm border mb-4">
-    <div class="row align-items-center">
+      <div id="searchTopPanel" class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+        <div class="row align-items-center">
           <div class="col-md-5 border-end pe-4" id="searchBoxArea">
             <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหาคนไข้ในระบบ</h6>
             <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden">
@@ -807,41 +393,44 @@
           </div>
           
           <div class="col-md-7 ps-4" id="patientInfoArea">
-           <div id="patientInfoDisplay" style="display: none;">
-  <div class="d-flex flex-row align-items-start align-items-md-center w-100 mb-2 pt-2">
-    
-    <!-- ข้อมูลคนไข้ (ซ้าย) -->
-    <div class="overflow-hidden patient-info-half">
-      <!-- 🌟 นำ HN มาต่อท้ายชื่อในบรรทัดเดียวกัน -->
-      <div class="d-flex align-items-baseline flex-wrap gap-1">
-        <h5 class="fw-bold text-dark m-0 text-truncate patient-name-mobile" id="disp_name">-</h5>
-        <span class="text-primary fw-bold ms-1 patient-hn-inline" style="font-size: 0.8rem;">
-          <i class="fa-solid fa-address-card me-1"></i><span id="disp_hn">-</span>
-        </span>
-      </div>
+            <div id="patientInfoDisplay" style="display: none;">
+              <div class="d-flex flex-row align-items-start align-items-md-center w-100 mb-2 pt-2 position-relative">
+                
+                <!-- ข้อมูลคนไข้ (ซ้าย 50%) -->
+                <div class="overflow-hidden patient-info-half">
+                  <div class="d-flex align-items-baseline flex-wrap gap-1">
+                    <h5 class="fw-bold text-dark m-0 text-truncate patient-name-mobile" id="disp_name">-</h5>
+                    <span class="text-primary fw-bold ms-1 patient-hn-inline" style="font-size: 0.8rem;">
+                      <i class="fa-solid fa-address-card me-1"></i><span id="disp_hn">-</span>
+                    </span>
+                  </div>
 
-      <!-- 🌟 เลขบัตร และ อายุ ขยับมาชิดซ้ายแทนที่ตำแหน่ง HN เดิม -->
-      <div class="text-muted patient-details-row m-0 mt-1">
-        <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
-        <span class="divider d-none d-md-inline">|</span> 
-        <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
-      </div>
-    </div>
+                  <div class="text-muted patient-details-row m-0 mt-1">
+                    <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
+                    <span class="divider d-none d-md-inline">|</span> 
+                    <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
+                  </div>
+                </div>
 
-    <!-- ข้อมูลแพ้ยา (ขวา) -->
-    <div id="allergyAlert" class="allergy-alert align-items-start align-items-md-center m-0 shadow-sm allergy-half" style="display: none; border-radius: 8px;">
-      <div class="d-flex align-items-center gap-1 gap-md-2 w-100">
-        <i class="fa-solid fa-triangle-exclamation text-danger flex-shrink-0 d-md-none" style="font-size: 0.9rem;"></i>
-        <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0 d-none d-md-block"></i>
-        <div class="overflow-hidden w-100">
-          <div class="fw-bold text-danger allergy-title-mobile text-truncate">⚠️ แพ้ยา/โรคประจำตัว</div>
-          <div class="fw-semibold text-danger allergy-desc-mobile" id="allergyDetails"></div>
-        </div>
-      </div>
-    </div>
+                <!-- ข้อมูลแพ้ยา (ขวา 50%) -->
+                <div id="allergyAlert" class="allergy-alert align-items-start align-items-md-center m-0 shadow-sm allergy-half" style="display: none; border-radius: 8px;">
+                  <div class="d-flex align-items-center gap-1 gap-md-2 w-100">
+                    <i class="fa-solid fa-triangle-exclamation text-danger flex-shrink-0 d-md-none" style="font-size: 0.9rem;"></i>
+                    <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0 d-none d-md-block"></i>
+                    <div class="overflow-hidden w-100">
+                      <div class="fw-bold text-danger allergy-title-mobile text-truncate">⚠️ แพ้ยา/โรคประจำตัว</div>
+                      <div class="fw-semibold text-danger allergy-desc-mobile" id="allergyDetails"></div>
+                    </div>
+                  </div>
+                </div>
 
-  </div>
-</div>
+                <!-- 📱 ปุ่มเลือกแพคเกจ (วงกลม) ลอยมุมขวาบน เฉพาะในมือถือ -->
+                <button id="btnBuyPackageMobile" class="btn btn-info text-white rounded-circle shadow-sm btn-pkg-main position-absolute d-md-none" style="top: 5px; right: 0; display: none !important;" onclick="openPackageModal()">
+                  <i class="fa-solid fa-hand-holding-medical m-0"></i>
+                </button>
+
+              </div>
+            </div>
             
             <div id="emptyPatientState" class="text-center text-muted py-3">
               <i class="fa-solid fa-user-check fa-2x mb-2 opacity-50"></i><br>ค้นหาคนไข้เพื่อดูสิทธิ์การรักษา
@@ -852,12 +441,11 @@
 
       <div class="bg-white p-4 rounded-4 shadow-sm border flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
         <div id="courseMainArea" style="display: block;">
-          <!-- หัวข้อ และ ปุ่มเลือกแพคเกจชิดขวา -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-secondary m-0" style="font-size: 0.95rem;"><i class="fa-solid fa-box-open me-2"></i> คอร์สและโปรโมชั่นของคนไข้</h5>
             
             <!-- ปุ่มแพคเกจ (จอคอมโชว์เต็ม / จอมือถือย่อเป็นไอคอนวงกลมชิดขวาอัตโนมัติ) -->
-            <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-main" onclick="openPackageModal()" style="display: none;">
+            <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm d-none d-md-inline-block px-4" onclick="openPackageModal()" style="display: none !important;">
               <i class="fa-solid fa-hand-holding-medical me-md-1"></i> <span>เลือกแพคเกจ / บริการใหม่</span>
             </button>
           </div>
@@ -871,8 +459,8 @@
           <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
             <h5 class="fw-bold text-primary m-0" id="emr_package_title"><i class="fa-solid fa-notes-medical me-2"></i>ชื่อแพคเกจ</h5>
             <button class="btn btn-outline-secondary btn-sm rounded-pill fw-bold shadow-sm" onclick="closeEmrMode()">
-  <i class="fa-solid fa-arrow-left me-1"></i> <span class="d-none d-md-inline">กลับไป</span>หน้ารายการ
-</button>
+              <i class="fa-solid fa-arrow-left me-1"></i> <span class="d-none d-md-inline">กลับไป</span>หน้ารายการ
+            </button>
           </div>
 
           <ul class="nav nav-pills nav-pills-custom mb-3">
@@ -913,30 +501,30 @@
                   </div>
 				  
 				  <div class="col-12 mt-3">
-    <div class="row g-2 align-items-end">
-        <div class="col-md-6">
-            <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" style="height: 42px;" onclick="openEmrAppointmentModal()">
-              <i class="fa-solid fa-calendar-check me-2"></i> เลือกวันนัดหมายครั้งถัดไป
-            </button>
-        </div>
-        <div class="col-md-6">
-            <div class="input-group input-group-sm">
-               <span class="input-group-text bg-light fw-bold text-muted border-secondary">เหตุผลการนัด</span>
-               <input type="text" id="emr_appt_reason" class="form-control border-secondary" style="height: 42px;" placeholder="เช่น ติดตามผล, ทำเลเซอร์ต่อ (ถ้าไม่ใส่จะใช้ค่าเริ่มต้น)">
-            </div>
-        </div>
-    </div>
-    
-    <div id="emr_selected_appt_box" class="alert alert-primary mt-2 mb-0 d-none justify-content-between align-items-center rounded-3 border-primary shadow-sm py-2 px-3">
-      <div>
-        <i class="fa-solid fa-clock-check me-2 text-primary fs-5"></i>
-        <strong>นัดหมาย:</strong> <span id="emr_selected_appt_text" class="fw-bold text-dark ms-1"></span>
-      </div>
-      <button type="button" class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center p-0 shadow-sm" style="width: 28px; height: 28px;" onclick="clearEmrSelectedAppt()" title="ยกเลิกมาร์ก">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-</div>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-outline-primary w-100 fw-bold rounded-pill py-2 border-2 shadow-sm" style="height: 42px;" onclick="openEmrAppointmentModal()">
+                              <i class="fa-solid fa-calendar-check me-2"></i> เลือกวันนัดหมายครั้งถัดไป
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                               <span class="input-group-text bg-light fw-bold text-muted border-secondary">เหตุผลการนัด</span>
+                               <input type="text" id="emr_appt_reason" class="form-control border-secondary" style="height: 42px;" placeholder="เช่น ติดตามผล, ทำเลเซอร์ต่อ (ถ้าไม่ใส่จะใช้ค่าเริ่มต้น)">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="emr_selected_appt_box" class="alert alert-primary mt-2 mb-0 d-none justify-content-between align-items-center rounded-3 border-primary shadow-sm py-2 px-3">
+                      <div>
+                        <i class="fa-solid fa-clock-check me-2 text-primary fs-5"></i>
+                        <strong>นัดหมาย:</strong> <span id="emr_selected_appt_text" class="fw-bold text-dark ms-1"></span>
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center p-0 shadow-sm" style="width: 28px; height: 28px;" onclick="clearEmrSelectedAppt()" title="ยกเลิกมาร์ก">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </div>
 				  
                   <div class="col-12 mt-3">
                     <label class="form-label fw-bold small text-muted"><i class="fa-solid fa-user-nurse me-1"></i> ผู้ช่วยแพทย์ / ผู้ให้บริการ (Therapist)</label>
@@ -1057,8 +645,6 @@
               <div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>
             </div>
             
-            
-
             <button class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5" onclick="confirmPackageSelection()">
               <i class="fa-solid fa-check-circle me-1"></i> ยืนยันรายการ & สร้างบิล
             </button>
@@ -1105,9 +691,6 @@
 </div>
 
 <script>
-  // 🌟 เปิดต่อ Database จริงแบบเดียวกับ booking.html
-
-
   var currentHN = '';
   var currentPhone = ''; 
   var allInventoryList = [];
@@ -1141,7 +724,6 @@
     document.getElementById('tab-' + tab).style.display = 'block';
   }
 
-  // 🌟 บันทึกประวัติคนไข้ใหม่ (พร้อมเก็บ Log)
   async function savePatient(e) {
     e.preventDefault();
     const id_card_val = document.getElementById('p_idcard').value.trim();
@@ -1165,8 +747,6 @@
       const data = await res.json();
       
       if (data.status === 'success') {
-        
-        // 🌟 ส่งประวัติเข้า System Logs
         let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
         fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'ADD_PATIENT', details: `ลงทะเบียน/อัปเดต ข้อมูลคนไข้: ${payload.full_name}` }) });
 
@@ -1183,8 +763,6 @@
       }
     } catch(e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
   }
-
- 
 
   function readSmartCard() {
     Swal.fire({ title: 'เชื่อมต่อเครื่องอ่านบัตร...', didOpen: () => Swal.showLoading() });
@@ -1244,14 +822,15 @@
     currentHN = p.id;
     currentPhone = p.phone || '-'; 
     
-    // 1. ซ่อนข้อความว่าง แล้วเปิดกล่องข้อมูลคนไข้ + แสดงปุ่มซื้อแพคเกจ
     document.getElementById('emptyPatientState').style.display = 'none';
     document.getElementById('patientInfoDisplay').style.display = 'block';
     
     const btnPkg = document.getElementById('btnBuyPackage');
-    if (btnPkg) btnPkg.style.display = 'inline-flex';
+    if (btnPkg) btnPkg.style.setProperty('display', 'inline-block', 'important');
 
-    // 2. คำนวณอายุ
+    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
+    if (btnPkgMobile) btnPkgMobile.style.setProperty('display', 'flex', 'important');
+
     let ageText = '-';
     if (p.dob) {
       const dob = new Date(p.dob);
@@ -1261,13 +840,11 @@
       ageText = age + ' ปี';
     }
 
-    // 3. แสดงข้อมูลส่วนตัวคนไข้
     document.getElementById('disp_name').innerText = p.full_name;
     document.getElementById('disp_hn').innerText = p.id;
     document.getElementById('disp_idcard').innerText = p.id_card || 'ไม่ได้ระบุเลข ปชช.';
     document.getElementById('disp_age').innerText = ageText;
 
-    // 4. ตรวจสอบการแพ้ยา (ถ้ามีแพ้ยา จะสั่งแสดงกล่องเตือน และใส่คลาส 'has-allergy' เพื่อแบ่งหน้าจอ 50/50 ในมือถือ)
     const alertBox = document.getElementById('allergyAlert');
     const infoHalf = document.querySelector('.patient-info-half');
 
@@ -1280,7 +857,6 @@
       if (infoHalf) infoHalf.classList.remove('has-allergy');
     }
 
-    // 5. ล้างหน้า EMR และดึงข้อมูลคอร์ส/บิลของคนไข้
     closeEmrMode();
     document.getElementById('patientCoursesGrid').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
     
@@ -1295,7 +871,6 @@
     renderPatientCourses(rawPatientCourses);
   }
 
-  // 🌟 ส่วนที่แก้ไขให้ดึงสถานะ จ่ายบางส่วน / ค้างชำระ โดยบวกค่ายาเพิ่มเข้าไปด้วย
   function renderPatientCourses(courses) {
     const grid = document.getElementById('patientCoursesGrid');
     if(courses.length === 0) {
@@ -1309,7 +884,6 @@
        let displayName = c.product_name || c.product_id;
        let isPromo = prodDef && prodDef.type === 'PROMOTION';
        
-       // 🌟 คำนวณยอดรวมของบิลคอร์สนี้ + ยาที่พ่วงด้วยชื่อเดียวกัน
        let relatedBills = allBillsList.filter(bill => 
            bill.product_id === c.product_id || 
            (bill.item_name && bill.item_name.includes(`(ในคอร์ส: ${displayName})`))
@@ -1322,14 +896,12 @@
            totalPaid += b.paid_amount; 
        });
 
-       // 🌟 ดึงวันที่ซื้อคอร์สจากประวัติบิล
        let purchaseDateStr = '-';
        if (relatedBills.length > 0 && relatedBills[0].bill_date) {
            purchaseDateStr = new Date(relatedBills[0].bill_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
        }
 
        let payBadge = '';
-       // 🌟 เพิ่มเงื่อนไข && totalBilled > 0 เพื่อให้รายการที่มาใหม่โชว์สถานะค้างชำระสีแดง
        if (relatedBills.length === 0 || (totalPaid >= totalBilled && totalBilled > 0)) {
          payBadge = `<span class="badge bg-success ms-2">ชำระครบแล้ว</span>`;
        } else if (totalPaid > 0 && totalPaid < totalBilled) {
@@ -1454,7 +1026,6 @@
     filteredList.forEach(p => {
       let isPromo = p.type === 'PROMOTION';
       
-      // 🌟 เอาการส่งค่า p.price ออกจากปุ่ม onclick และเอา priceStr ออก
       let html = `
         <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
           <div class="course-card p-3 shadow-sm" style="cursor:pointer;" onclick="addToCart('${p.id}', \`${p.name}\`, '${p.type}')">
@@ -1475,7 +1046,6 @@
 
   function addToCart(id, name, type) {
     let existing = currentCart.find(item => item.id === id);
-    // 🌟 เอา price ออก
     if (existing) { existing.qty += 1; } else { currentCart.push({ id, name, type, qty: 1 }); }
     renderCart();
   }
@@ -1484,7 +1054,6 @@
 
   function renderCart() {
     const cartContainer = document.getElementById('selectedItemsCart');
-    // เอา totalDisplay ออกเพราะเราลบ HTML มันไปแล้ว
     
     if (currentCart.length === 0) {
       cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>';
@@ -1493,7 +1062,6 @@
 
     let html = ''; 
     currentCart.forEach((item, index) => {
-      // 🌟 นำการคูณราคาออก และแสดงแค่จำนวนอย่างเดียว
       html += `
         <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
           <div>
@@ -1534,14 +1102,15 @@
     if (mainNav) mainNav.classList.add('hide-emr-mobile');
 
     const btnPkg = document.getElementById('btnBuyPackage');
-    if (btnPkg) btnPkg.style.display = 'none';
+    if (btnPkg) btnPkg.classList.add('d-none');
+
+    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
+    if (btnPkgMobile) btnPkgMobile.style.display = 'none';
     
     document.getElementById('patientInfoArea').classList.replace('col-md-7', 'col-md-12');
     document.getElementById('patientInfoArea').classList.remove('ps-4');
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
     if(!activeEmrCourse) return;
-	
-	
 
     document.getElementById('courseMainArea').style.display = 'none';
     document.getElementById('emrRecordingArea').style.display = 'block';
@@ -1558,10 +1127,9 @@
     if (canvasFile) canvasFile.value = '';
     
     if (isViewOnly) {
-      // 🌟 เปลี่ยนจากซ่อนฟอร์ม เป็นเปิดโหมดติดตามผลแทน
       document.getElementById('emr_input_section').style.display = 'flex';
       document.getElementById('emr_view_only_msg').style.display = 'none';
-      document.getElementById('emr_sub_items_section').style.display = 'none'; // ซ่อนกล่องหักคอร์ส
+      document.getElementById('emr_sub_items_section').style.display = 'none';
       
       document.getElementById('e_cc').value = `ติดตามผลการรักษา: ${courseName}`;
       document.getElementById('e_dx').value = ''; 
@@ -1571,9 +1139,8 @@
       resetAssistantDropdowns();
       document.getElementById('e_med_list_display').value = '';
       pendingMeds = [];
-      currentSubItems = []; // ไม่โหลด sub items เพราะใช้ครบแล้ว
+      currentSubItems = [];
       
-      // อัปเดตปุ่มบันทึกให้ระบุชัดเจนว่าแค่บันทึกประวัติ
       document.querySelector('button[onclick="submitEMRAndDeduct()"]').innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประวัติติดตามผล';
     } else {
       document.getElementById('emr_input_section').style.display = 'flex';
@@ -1581,9 +1148,9 @@
 	  document.getElementById('emr_sub_items_section').style.display = 'block';
       
       document.getElementById('e_cc').value = `เข้ารับบริการ: ${courseName}`;
-      document.getElementById('e_dx').value = ''; // 🌟 ล้างค่า Dx ให้ว่าง
+      document.getElementById('e_dx').value = '';
       document.getElementById('e_tx').value = '';
-	  document.getElementById('emr_appt_reason').value = ''; // 🌟 ล้างค่าเมื่อเปิดฟอร์มใหม่
+	  document.getElementById('emr_appt_reason').value = '';
       
       resetAssistantDropdowns();
       
@@ -1598,22 +1165,18 @@
         }
       });
       document.getElementById('e_med_select').innerHTML = medOptions;
-	  
 
-      // 🌟 บังคับโชว์กล่องปรับจำนวนเสมอ (ทั้งแบบเซ็ต และ แบบคอร์สเดี่ยว)
       document.getElementById('emr_sub_items_section').style.display = 'block';
 
       if (isPromo) {
         let state = JSON.parse(activeEmrCourse.bundle_state || '[]');
         currentSubItems = state.map(s => {
-          // ค้นหาว่าเป็นยาหรือหัตถการ
           let prod = allInventoryList.find(p => p.id === s.id);
           let pType = prod ? prod.type : 'COURSE';
           return { id: s.id, name: s.name, total: s.total, used: s.used, remain_qty: s.total - s.used, used_today: (s.total - s.used) > 0 ? 1 : 0, type: pType, sig: '' };
         });
         renderSubItemsList();
       } else {
-        // กรณีคอร์สเดี่ยว (เช่น ซื้อครีม 10 ปุก) ให้โชว์กล่องให้ปรับจำนวนได้
         let prod = allInventoryList.find(p => p.id === activeEmrCourse.product_id);
         let pType = prod ? prod.type : 'COURSE';
         currentSubItems = [{ id: activeEmrCourse.product_id, name: courseName, total: activeEmrCourse.total_qty, used: activeEmrCourse.used_qty, remain_qty: activeEmrCourse.total_qty - activeEmrCourse.used_qty, used_today: 1, type: pType, sig: '' }];
@@ -1631,7 +1194,10 @@
     if (mainNav) mainNav.classList.remove('hide-emr-mobile');
 
     const btnPkg = document.getElementById('btnBuyPackage');
-    if (btnPkg && currentHN) btnPkg.style.display = 'inline-flex';
+    if (btnPkg && currentHN) btnPkg.classList.remove('d-none');
+
+    const btnPkgMobile = document.getElementById('btnBuyPackageMobile');
+    if (btnPkgMobile && currentHN) btnPkgMobile.style.setProperty('display', 'flex', 'important');
     
     document.getElementById('patientInfoArea').classList.replace('col-md-12', 'col-md-7');
     document.getElementById('patientInfoArea').classList.add('ps-4');
@@ -1719,7 +1285,6 @@
       }
     } catch (e) {}
 
-    // 🌟 เช็คสิทธิ์: ไอดีหมอที่บันทึก ตรงกับไอดีที่ล็อกอินอยู่หรือไม่
     let currentUserId = parseInt(sessionStorage.getItem('currentUserId')) || 0;
     let isOwner = (log.doctor_id === currentUserId);
     
@@ -1743,7 +1308,6 @@
         </div>
       </div>
 
-      <!-- 🌟 โหมดแก้ไข (ซ่อนไว้ก่อน) -->
       <div id="emr_edit_mode_${log.id}" style="display: none;">
         <div class="mb-3"><label class="form-label fw-bold small text-muted">ผลการวินิจฉัย (Dx)</label><input type="text" id="edit_dx_${log.id}" class="form-control border-primary" value="${log.diagnosis || ''}"></div>
         <div class="mb-3"><label class="form-label fw-bold small text-muted">อาการแรกรับ / ประวัติ (CC)</label><textarea id="edit_cc_${log.id}" class="form-control bg-light" rows="2">${log.symptoms || ''}</textarea></div>
@@ -1756,7 +1320,6 @@
     `;
   }
 
-  // 🌟 ฟังก์ชันสลับโหมดและบันทึกการแก้ไข
   function enableEditEmr(logId) {
     document.getElementById(`emr_display_mode_${logId}`).style.display = 'none';
     document.getElementById(`emr_edit_mode_${logId}`).style.display = 'block';
@@ -1768,7 +1331,6 @@
   }
 
   async function saveEditedEmr(logId, index) {
-    // 1. ดึงข้อมูลเดิมมาเปรียบเทียบ
     const log = currentFilteredEmr[index];
     const newDx = document.getElementById(`edit_dx_${logId}`).value.trim();
     const newCc = document.getElementById(`edit_cc_${logId}`).value.trim();
@@ -1778,7 +1340,6 @@
     const oldCc = (log.symptoms || '').trim();
     const oldTx = (log.treatment_details || '').trim();
 
-    // 2. เช็คว่ามีการแก้ไขข้อมูลหรือไม่
     if (newDx === oldDx && newCc === oldCc && newTx === oldTx) {
       Swal.fire({
         icon: 'info',
@@ -1786,10 +1347,9 @@
         text: 'ข้อมูลเหมือนเดิม ไม่จำเป็นต้องบันทึก',
         confirmButtonColor: '#3b82f6'
       });
-      return; // หยุดการทำงาน ไม่ต้องส่งไปเซิร์ฟเวอร์
+      return;
     }
 
-    // 3. เตรียมส่งข้อมูลไปอัปเดต
     let payload = {
       diagnosis: newDx,
       symptoms: newCc,
@@ -1810,11 +1370,9 @@
       if (res.ok && data.status === 'success') {
         Swal.fire({ icon: 'success', title: 'แก้ไขประวัติเรียบร้อย', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         
-        // โหลดประวัติฝั่งขวาใหม่ เพื่อให้อัปเดต
         let tempCourseName = activeEmrCourse ? document.getElementById('emr_package_title').innerText.replace('ชื่อแพคเกจ', '').trim() : '';
         await loadSideEmrHistory(tempCourseName);
         
-        // โหลดหน้ารายละเอียดฝั่งซ้ายใหม่
         viewEmrDetail(index); 
       } else {
         Swal.fire('ข้อผิดพลาด', data.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
@@ -1831,12 +1389,10 @@
       let isNotDone = sub.used_today === 0;
       let cardClass = isNotDone ? 'bg-light border-secondary opacity-50' : 'bg-white border-primary';
       
-      // 🌟 เช็คว่าเป็น ยา/สกินแคร์ หรือไม่
       let isMed = (sub.type === 'MEDICINE' || sub.type === 'SKINCARE');
       let actionLabel = isMed ? (isNotDone ? 'จ่าย' : 'ไม่จ่าย') : (isNotDone ? 'ทำ' : 'ไม่ทำ');
       let qtyLabel = isMed ? 'จำนวนจ่ายวันนี้:' : 'จำนวนทำวันนี้:';
       
-      // 🌟 เพิ่มช่องกรอกวิธีใช้ (SIG) เฉพาะกรณีที่เป็นยาและถูกเลือกจ่าย
       let sigHtml = '';
       if (isMed && !isNotDone) {
         sigHtml = `<div class="mt-2 pt-2 border-top">
@@ -1867,7 +1423,6 @@
     });
   }
 
-  // ฟังก์ชันเล็กๆ เอาไว้จำค่าที่พนักงานพิมพ์ในช่องวิธีใช้
   function updateSubItemSig(index, val) {
     currentSubItems[index].sig = val;
   }
@@ -1892,13 +1447,11 @@
     sel.value = ''; qty.value = ''; sig.value = '';
   }
 
- // 🌟 บันทึกการรักษา EMR (หักคอร์ส + ลงตารางนัดอัตโนมัติ)
   async function submitEMRAndDeduct() {
     Swal.fire({ title: 'กำลังบันทึกข้อมูล...', didOpen: () => Swal.showLoading() });
     
     let finalTxArray = [];
     
-    // 🌟 แยกประเภท "หัตถการ" กับ "ยาที่อยู่ในคอร์ส"
     let doneProcedures = currentSubItems.filter(x => x.used_today > 0 && x.type !== 'MEDICINE' && x.type !== 'SKINCARE');
     let doneMeds = currentSubItems.filter(x => x.used_today > 0 && (x.type === 'MEDICINE' || x.type === 'SKINCARE'));
 
@@ -1906,7 +1459,6 @@
       finalTxArray.push(`[หัตถการในคอร์สวันนี้]\n` + doneProcedures.map(d => `- ${d.name}: ทำ ${d.used_today} ครั้ง`).join('\n'));
     }
 
-    // 🌟 จัดรูปแบบยาฟรีที่เบิกจากคอร์ส
     if (doneMeds.length > 0) {
       finalTxArray.push(`[ยา/สกินแคร์ ที่ได้รับจากคอร์ส]\n` + doneMeds.map(d => `- ${d.name}: จำนวน ${d.used_today} ชิ้น (วิธีใช้: ${d.sig || 'ตามสั่ง'})`).join('\n'));
     }
@@ -1914,7 +1466,6 @@
     let manualTx = document.getElementById('e_tx').value;
     if (manualTx) finalTxArray.push(`[บันทึกเพิ่มเติม]\n${manualTx}`);
 
-    // 🌟 เพิ่มโค้ดส่วนนี้: ถัามีการเลือกวันนัดหมาย ให้เอาข้อความมาต่อท้าย
     if (selectedNextApptText) {
       finalTxArray.push(`[นัดหมายครั้งถัดไป]\n- ${selectedNextApptText}`);
     }
@@ -1941,7 +1492,6 @@
         name: `${m.name} (ในคอร์ส: ${cleanCourseName})`
     }));
 	
-	// 🌟 นำชื่อคอร์สมาตั้งต้น แล้วตามด้วยหมายเหตุที่พิมพ์ (ถ้ามี)
     let customReason = document.getElementById('emr_appt_reason').value.trim();
     let finalNote = customReason ? `${cleanCourseName} (${customReason})` : `ติดตามผล: ${cleanCourseName}`;
 
@@ -1949,19 +1499,17 @@
       patient_id: currentHN,
       doctor_id: sessionStorage.getItem('currentUserId') || 1, 
       symptoms: document.getElementById('e_cc').value, 
-      diagnosis: document.getElementById('e_dx').value || 'บริการความงาม', // 🌟 ดึงค่า Dx ที่กรอกส่งไป
+      diagnosis: document.getElementById('e_dx').value || 'บริการความงาม',
       treatment_details: finalTxArray.join('\n\n'),
       next_appointment_date: selectedNextApptDate, 
       next_appointment_time: selectedNextApptTime, 
-      next_appointment_note: finalNote, // 🌟 ใช้เหตุผลที่กำหนดไว้
+      next_appointment_note: finalNote,
       prescribed_meds: linkedMeds  
     };
 
     try {
-      // API นี้จะบันทึก EMR และสร้างคิวนัดหมายลง Database ให้อัตโนมัติ
       await fetch('/api/emr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(emrPayload) });
       
-      // 🌟 นำเงื่อนไข if (!isCurrentEmrViewOnly) มาครอบส่วนหักคอร์สตรงนี้ครับ
       if (!isCurrentEmrViewOnly) {
         let deductPayload = {};
         if (activeEmrCourse.bundle_state) {
@@ -1977,7 +1525,6 @@
         await fetch(`/api/courses/${activeEmrCourse.id}/deduct`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(deductPayload) });
       }
 
-      // ส่งประวัติเข้า System Logs
       let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
       fetch('/api/logs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_name: staff, action: 'EMR', details: `บันทึกการรักษาให้ HN:${currentHN} ในรายการ: ${cleanCourseName}` }) });
 
@@ -1989,9 +1536,6 @@
     } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   }
   
-  // ==========================================
-  // 📸 ระบบมาร์กหน้าและแกลเลอรี่รูปภาพ
-  // ==========================================
   var canvas, ctx, isDrawing = false;
   var currentCanvasBg = null; 
 
@@ -2182,9 +1726,6 @@
     document.getElementById('imgAfter').selectedIndex = 0;
   }
   
-  // ==========================================
-  // 👩‍⚕️ ดึงรายชื่อพนักงาน/ผู้ช่วย
-  // ==========================================
   async function loadAssistants() {
     try {
       const res = await fetch('/api/users');
@@ -2258,9 +1799,6 @@
     `;
   }
 
-  // ==========================================
-  // 🗓️ ระบบ Pop-up ปฏิทินเลือกวันนัดหมายครั้งถัดไปในหน้า EMR
-  // ==========================================
   var emrCalMonthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   var emrCalDayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   
@@ -2270,11 +1808,8 @@
   var tempSelectedEmrDateStr = '';
   var tempSelectedEmrDayTitle = '';
 
-  // 🌟 ดึงข้อมูลเฉพาะจากแหล่งที่ตั้งค่าตามสวิตช์ USE_REAL_DATABASE
   async function loadEmrAppointmentsList() {
     emrAppointmentsList = [];
-
-    
 
     try {
       const res = await fetch('/api/appointments');
@@ -2379,7 +1914,6 @@
     renderEmrTimeSlots();
   }
 
-  // สร้างตัวแปรรองรับเวลาและฟังก์ชันโหลดข้อมูล
   var clinicOpenTime = '10:00';
   var clinicCloseTime = '20:00';
   
@@ -2399,7 +1933,6 @@
     const container = document.getElementById('emrTimeSlotsContainer');
     container.innerHTML = '';
 
-    // ใช้ตัวแปรที่โหลดมาจาก Database แทน localStorage
     let [startH, startM] = clinicOpenTime.split(':').map(Number);
     let [endH, endM] = clinicCloseTime.split(':').map(Number);
 
@@ -2461,7 +1994,7 @@
     selectedNextApptDate = '';
     selectedNextApptTime = '';
     selectedNextApptText = '';
-    document.getElementById('emr_appt_reason').value = ''; // 🌟 ล้างค่าเหตุผล
+    document.getElementById('emr_appt_reason').value = '';
 
     let box = document.getElementById('emr_selected_appt_box');
     if (box) {
@@ -2473,3 +2006,5 @@
   loadAssistants();
   
 </script>
+</body>
+</html>
