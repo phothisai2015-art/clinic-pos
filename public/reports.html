@@ -28,6 +28,15 @@
   </script>
 
   <style>
+  /* 🌟 ล็อกไม่ให้หน้าจอเลื่อนซ้าย-ขวาในมือถือ */
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container-fluid {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
   /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
   * { font-family: 'Sarabun', sans-serif; }
   
@@ -107,6 +116,23 @@
   
   /* 🌟 ตกแต่งหน้า Dashboard และสถิติสำหรับจอมือถือโดยเฉพาะ */
   @media (max-width: 768px) {
+  /* 🌟 บีบกล่องตัวกรองช่วงเวลาให้กระชับ ย่อตัวหนังสือในมือถือ */
+    .rep-filter-box {
+      padding: 6px 10px !important;
+      margin-bottom: 8px !important;
+      gap: 4px !important;
+    }
+    .rep-filter-label {
+      font-size: 0.72rem !important;
+      white-space: nowrap;
+    }
+    .date-input-modern {
+      font-size: 0.72rem !important;
+      width: 105px !important;
+      padding: 2px 2px !important;
+      height: 28px !important;
+      text-align: center;
+    }
     /* 1. ปุ่มปิดมุมขวาบนเหลือแค่ไอคอนวงกลม */
     .btn-close-rep {
       width: 36px !important;
@@ -209,18 +235,18 @@
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
     <!-- ตัวกรองวันที่ (ใช้ร่วมกันทั้ง 2 แท็บ) -->
-    <div class="p-3 rounded-4 border shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 glass-panel">
-      <div class="d-flex align-items-center gap-2">
-        <h6 class="fw-bold m-0 text-muted me-2"><i class="fa-solid fa-filter"></i> ช่วงเวลา:</h6>
-        <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
-        <span class="text-muted fw-bold">-</span>
-        <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
-        <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData(); loadDfReportData();">ดูรายงาน</button>
+    <!-- ตัวกรองวันที่ (ปรับกระชับพื้นที่) -->
+    <div class="p-2 p-md-3 rounded-4 border shadow-sm mb-2 mb-md-4 d-flex flex-wrap align-items-center justify-content-between gap-2 glass-panel rep-filter-box">
+      <div class="d-flex align-items-center gap-1 gap-md-2 flex-nowrap w-100 justify-content-between justify-content-md-start">
+        <span class="fw-bold text-muted rep-filter-label"><i class="fa-solid fa-filter me-1"></i>ช่วงเวลา:</span>
+        <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" onchange="loadDashboardData(); loadDfReportData();">
+        <span class="text-muted fw-bold small">-</span>
+        <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" onchange="loadDashboardData(); loadDfReportData();">
       </div>
-      <div class="d-flex gap-1 rep-filter-group w-100 mt-2 mt-md-0">
+      <div class="d-flex gap-1 rep-filter-group w-100 mt-1 mt-md-0">
         <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
         <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
-        <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
+        <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
       </div>
     </div>
 
