@@ -262,14 +262,22 @@
     }
 
     /* 🌟 ปรับปุ่มรับเข้าด่วน / รายการต้องซื้อ ให้แบ่ง 50/50 */
+    /* 🌟 ปรับขนาด ปุ่มแอคชันทั้ง 3 ปุ่มในมือถือ ให้กล่องและตัวหนังสือเท่ากันเป๊ะ */
     .inv-action-btns {
       width: 100% !important;
+      display: flex !important;
+      gap: 6px !important;
     }
     .inv-action-btns .btn {
-      flex: 1 !important;
-      width: 50% !important;
-      padding: 6px 4px !important;
-      font-size: 0.75rem !important;
+      flex: 1 1 0px !important; /* แบ่งความกว้าง 33.33% เท่ากันทั้ง 3 ปุ่ม */
+      width: 0 !important;
+      padding: 7px 2px !important; /* ปรับขนาดกล่องและระยะขอบให้เท่ากัน */
+      font-size: 0.72rem !important; /* ปรับขนาดตัวอักษรให้เท่ากัน */
+      margin: 0 !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
 
     /* 2. ฟอร์มเพิ่ม/แก้ไขสินค้า (ฝั่งซ้าย) */
@@ -491,16 +499,17 @@
       </li>
     </ul>
 
-    <div class="inv-action-btns d-flex gap-2">
-	<!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
-  <!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
-  <button class="btn btn-primary fw-bold rounded-pill shadow-sm d-md-none mb-2 w-100" onclick="openLeftPanelModal()">
-    <i class="fa-solid fa-plus me-1"></i> เพิ่มรายการใหม่
-  </button>
-      <button class="btn btn-success fw-bold rounded-pill px-3 shadow-sm" onclick="openBulkModal()">
+    <div class="inv-action-btns d-flex gap-1 gap-md-2">
+      <!-- ปุ่มที่ 1: เพิ่มรายการใหม่ (มือถือ) -->
+      <button class="btn btn-primary fw-bold rounded-pill shadow-sm d-md-none" onclick="openLeftPanelModal()">
+        <i class="fa-solid fa-plus me-1"></i> เพิ่มรายการใหม่
+      </button>
+      <!-- ปุ่มที่ 2: รับเข้าด่วน -->
+      <button class="btn btn-success fw-bold rounded-pill shadow-sm" onclick="openBulkModal()">
         <i class="fa-solid fa-boxes-stacked me-1"></i> รับเข้าด่วน
       </button>
-      <button class="btn btn-warning text-dark fw-bold rounded-pill px-3 shadow-sm" onclick="openShoppingListModal()">
+      <!-- ปุ่มที่ 3: รายการต้องซื้อ -->
+      <button class="btn btn-warning text-dark fw-bold rounded-pill shadow-sm" onclick="openShoppingListModal()">
         <i class="fa-solid fa-cart-shopping me-1"></i> รายการต้องซื้อ
       </button>
     </div>
