@@ -1403,7 +1403,7 @@
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
     if(!activeEmrCourse) return;
 	
-	document.getElementById('searchTopPanel').style.display = 'none';
+	
 
     document.getElementById('courseMainArea').style.display = 'none';
     document.getElementById('emrRecordingArea').style.display = 'block';
@@ -1493,8 +1493,7 @@
     document.getElementById('patientInfoArea').classList.add('ps-4');
 
     document.getElementById('emrRecordingArea').style.display = 'none';
-  document.getElementById('searchTopPanel').style.display = 'block';
-    document.getElementById('emrRecordingArea').style.display = 'none';
+  
     document.getElementById('courseMainArea').style.display = 'block';
     document.getElementById('patientPhotoGrid').innerHTML = '<div class="text-center py-4 text-muted">รอเลือกคนไข้...</div>';
   }
