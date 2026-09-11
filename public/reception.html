@@ -91,15 +91,16 @@
 
   /* 📱 ปรับแต่ง UI สำหรับจอมือถือรวมศูนย์ที่เดียว */
   @media (max-width: 768px) {
-    html, body { overflow: hidden !important; height: 100% !important; }
-    #tab-search[style*="display: block"] { display: flex !important; }
 
-    /* 🌟 บังคับซ่อนแท็บเมนูเฉพาะจอมือถือเมื่อเข้า EMR */
-    .hide-emr-mobile { display: none !important; }
+  html, body { overflow: hidden !important; height: 100% !important; }
+  #tab-search[style*="display: block"] { display: flex !important; }
 
-    /* แบ่ง 50/50 เฉพาะกรณีที่มีประวัติแพ้ยา */
-    .patient-info-half.has-allergy { width: 50% !important; padding-right: 5px; }
-    .allergy-half { width: 50% !important; padding: 6px 8px !important; flex-grow: 0 !important; }
+  /* 🌟 บังคับซ่อนแท็บเมนูเฉพาะจอมือถือเมื่อเข้า EMR */
+  .hide-emr-mobile { display: none !important; }
+
+  /* แบ่ง 50/50 เฉพาะกรณีที่มีประวัติแพ้ยา */
+  .patient-info-half.has-allergy { width: 50% !important; padding-right: 5px; }
+  .allergy-half { width: 50% !important; padding: 6px 8px !important; flex-grow: 0 !important; }
     
     /* ปรับชื่อคนไข้ให้กระชับ */
     .patient-name-mobile { font-size: 0.85rem !important; }
@@ -321,7 +322,7 @@
     </button>
   </div>
 
-  <ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
+  <<ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
     <li class="nav-item">
       <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
         <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
