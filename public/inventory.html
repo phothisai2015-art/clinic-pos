@@ -28,6 +28,44 @@
   </script>
 
   <style>
+  /* 🌟 PC Mode (หน้าจอ > 768px): บังคับให้ฟอร์มฝั่งซ้ายแสดงเป็นกล่องปกติ */
+  @media (min-width: 769px) {
+    #invLeftPanel.modal {
+      position: static !important;
+      display: block !important;
+      opacity: 1 !important;
+      z-index: auto !important;
+    }
+    #invLeftPanel .modal-dialog {
+      max-width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+    }
+    #invLeftPanel .modal-content {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      height: 100% !important;
+    }
+  }
+
+  /* 🌟 Mobile Mode (หน้าจอ <= 768px): สลับฟอร์มฝั่งซ้ายเป็น ป๊อปอัป (Modal) */
+  @media (max-width: 768px) {
+    #invLeftPanel:not(.show) {
+      display: none !important; /* ซ่อนจากหน้าปกติ */
+    }
+    #invLeftPanel.modal .modal-dialog {
+      margin: 12px !important;
+      height: calc(100% - 24px) !important;
+    }
+    #invLeftPanel.modal .modal-content {
+      background-color: #ffffff !important;
+      border-radius: 16px !important;
+    }
+    body.dark-theme #invLeftPanel.modal .modal-content {
+      background-color: #1e293b !important;
+    }
+  }
   /* 🌟 Modern UI สำหรับหน้า Inventory */
   .clinic-nav-pills { background: #ffffff; padding: 6px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: inline-flex; border: 1px solid #e2e8f0; }
   .clinic-nav-pills .nav-link { color: #64748b; font-weight: bold; border-radius: 12px; padding: 10px 20px; transition: all 0.3s ease; border: 1px solid transparent; margin-right: 4px; cursor: pointer; }
@@ -428,6 +466,11 @@
     </ul>
 
     <div class="inv-action-btns d-flex gap-2">
+	<!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
+  <!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
+  <button class="btn btn-primary fw-bold rounded-pill shadow-sm d-md-none mb-2 w-100" data-bs-toggle="modal" data-bs-target="#invLeftPanel">
+    <i class="fa-solid fa-plus me-1"></i> เพิ่มรายการใหม่
+  </button>
       <button class="btn btn-success fw-bold rounded-pill px-3 shadow-sm" onclick="openBulkModal()">
         <i class="fa-solid fa-boxes-stacked me-1"></i> รับเข้าด่วน
       </button>
@@ -439,90 +482,102 @@
 
   <div class="row g-4 flex-grow-1" style="min-height: 0;">
     
-    <!-- 📦 ฝั่งซ้าย: ฟอร์มเพิ่ม/แก้ไขสินค้า -->
-<div class="col-lg-4 col-md-5 h-100" id="invLeftPanel">
-      <div class="modern-card p-4 h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
-        <h5 class="fw-bold m-0 mb-4 text-primary d-flex align-items-center" id="form-title">
-          <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>
-          เพิ่มรายการใหม่
-        </h5>
-        
-        <form id="productForm" onsubmit="saveProduct(event)">
+    <!-- 📦 ฝั่งซ้าย: ฟอร์มเพิ่ม/แก้ไขสินค้า (แปลงเป็น Modal ป๊อปอัปในมือถือ / กล่องปกติใน PC) -->
+    <div class="col-lg-4 col-md-5 h-100 modal fade p-0" id="invLeftPanel" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg h-100 my-0 mx-auto" style="max-width: 100%;">
+        <div class="modal-content h-100 border-0 bg-transparent shadow-none">
           
-          <div class="form-section-title">1. ข้อมูลพื้นฐาน</div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">รหัสรายการ (ID / บาร์โค้ด) *</label>
-            <input type="text" id="pd_id" class="form-control" required placeholder="เช่น MD-001 หรือสแกนบาร์โค้ด">
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">ชื่อรายการ *</label>
-            <input type="text" id="pd_name" class="form-control fw-bold border-primary" required placeholder="ระบุชื่อยา/หัตถการ/สกินแคร์">
-          </div>
-          <div class="mb-4" id="type_container">
-            <label class="form-label fw-bold small text-muted">หมวดหมู่</label>
-            <select id="pd_type" class="form-select" onchange="handleTypeChange()">
-              <option value="MEDICINE">ยาและเวชภัณฑ์</option>
-              <option value="INJECTABLE">กลุ่มฉีด (Botox, Filler, Meso)</option>
-              <option value="COURSE">คอร์ส / หัตถการเลเซอร์</option>
-              <option value="SKINCARE">สกินแคร์ / ครีม</option>
-              <option value="PROMOTION" style="display: none;">โปรโมชั่น (จัดเซ็ต)</option>
-            </select>
-          </div>
-          
-          <div class="form-section-title">2. ข้อมูลการขาย & จุดเตือนสต็อก</div>
-          <div class="row mb-3">
-            <div class="col-6">
-              <label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label>
-              <input type="number" id="pd_price" class="form-control text-success fw-bold" value="0" placeholder="0.00">
-            </div>
-            <div class="col-6">
-              <label class="form-label fw-bold small text-muted">หน่วยนับ</label>
-              <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น ขวด, ไซริงค์, กล่อง">
-            </div>
-          </div>
-          
-          <div id="normal_fields">
-            <div class="p-3 bg-light rounded-4 border mb-3">
-              <div class="row g-3">
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">สต็อกปัจจุบัน</label>
-                  <input type="number" id="pd_stock" class="form-control text-primary fw-bold" value="0" step="0.1">
-                </div>
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">จุดเตือนสต็อกต่ำ (Min)</label>
-                  <input type="number" id="pd_min_stock" class="form-control text-warning fw-bold" value="5" placeholder="เช่น 5">
-                </div>
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">เลข Lot</label>
-                  <input type="text" id="pd_lot" class="form-control" placeholder="-">
-                </div>
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">วันหมดอายุ</label>
-                  <input type="date" id="pd_expiry" class="form-control text-danger">
-                </div>
-              </div>
-            </div>
+          <!-- Header ป๊อปอัป + ปุ่มปิด (แสดงเฉพาะในมือถือ) -->
+          <div class="modal-header d-md-none py-2 px-3 bg-white border-bottom">
+            <h6 class="modal-title fw-bold text-primary m-0"><i class="fa-solid fa-pen-to-square me-2"></i>จัดการรายการสินค้า</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
 
-          <div id="promo_fields" style="display:none;">
-            <div class="form-section-title">3. รายการของแถม / เซ็ตโปรโมชั่น</div>
-            <div class="p-3 bg-pink-light border border-pink rounded-4 mb-3">
-              <div id="promo_items_list" class="mb-3 d-flex flex-wrap gap-1"></div>
-              <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
-                <select id="promo_product_select" class="form-select border-0"></select>
-                <input type="number" id="promo_product_qty" class="form-control border-0 text-center" placeholder="จำนวน" style="max-width: 80px;">
-                <button type="button" class="btn btn-pink fw-bold px-3" onclick="addPromoItem()">เพิ่ม</button>
+          <div class="modern-card p-4 h-100 d-flex flex-column custom-scrollbar" style="overflow-y: auto;">
+            <h5 class="fw-bold m-0 mb-4 text-primary d-flex align-items-center" id="form-title">
+              <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;"><i class="fa-solid fa-plus"></i></div>
+              เพิ่มรายการใหม่
+            </h5>
+            
+            <form id="productForm" onsubmit="saveProduct(event)">
+              
+              <div class="form-section-title">1. ข้อมูลพื้นฐาน</div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">รหัสรายการ (ID / บาร์โค้ด) *</label>
+                <input type="text" id="pd_id" class="form-control" required placeholder="เช่น MD-001 หรือสแกนบาร์โค้ด">
               </div>
-            </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">ชื่อรายการ *</label>
+                <input type="text" id="pd_name" class="form-control fw-bold border-primary" required placeholder="ระบุชื่อยา/หัตถการ/สกินแคร์">
+              </div>
+              <div class="mb-4" id="type_container">
+                <label class="form-label fw-bold small text-muted">หมวดหมู่</label>
+                <select id="pd_type" class="form-select" onchange="handleTypeChange()">
+                  <option value="MEDICINE">ยาและเวชภัณฑ์</option>
+                  <option value="INJECTABLE">กลุ่มฉีด (Botox, Filler, Meso)</option>
+                  <option value="COURSE">คอร์ส / หัตถการเลเซอร์</option>
+                  <option value="SKINCARE">สกินแคร์ / ครีม</option>
+                  <option value="PROMOTION" style="display: none;">โปรโมชั่น (จัดเซ็ต)</option>
+                </select>
+              </div>
+              
+              <div class="form-section-title">2. ข้อมูลการขาย & จุดเตือนสต็อก</div>
+              <div class="row mb-3">
+                <div class="col-6">
+                  <label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label>
+                  <input type="number" id="pd_price" class="form-control text-success fw-bold" value="0" placeholder="0.00">
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-bold small text-muted">หน่วยนับ</label>
+                  <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น ขวด, ไซริงค์, กล่อง">
+                </div>
+              </div>
+              
+              <div id="normal_fields">
+                <div class="p-3 bg-light rounded-4 border mb-3">
+                  <div class="row g-3">
+                    <div class="col-6">
+                      <label class="form-label fw-bold small text-muted">สต็อกปัจจุบัน</label>
+                      <input type="number" id="pd_stock" class="form-control text-primary fw-bold" value="0" step="0.1">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-bold small text-muted">จุดเตือนสต็อกต่ำ (Min)</label>
+                      <input type="number" id="pd_min_stock" class="form-control text-warning fw-bold" value="5" placeholder="เช่น 5">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-bold small text-muted">เลข Lot</label>
+                      <input type="text" id="pd_lot" class="form-control" placeholder="-">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label fw-bold small text-muted">วันหมดอายุ</label>
+                      <input type="date" id="pd_expiry" class="form-control text-danger">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="promo_fields" style="display:none;">
+                <div class="form-section-title">3. รายการของแถม / เซ็ตโปรโมชั่น</div>
+                <div class="p-3 bg-pink-light border border-pink rounded-4 mb-3">
+                  <div id="promo_items_list" class="mb-3 d-flex flex-wrap gap-1"></div>
+                  <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
+                    <select id="promo_product_select" class="form-select border-0"></select>
+                    <input type="number" id="promo_product_qty" class="form-control border-0 text-center" placeholder="จำนวน" style="max-width: 80px;">
+                    <button type="button" class="btn btn-pink fw-bold px-3" onclick="addPromoItem()">เพิ่ม</button>
+                  </div>
+                </div>
+              </div>
+              
+              <input type="hidden" id="pd_status" value="ACTIVE">
+              
+              <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                <button type="button" class="btn btn-light border rounded-pill fw-bold shadow-sm w-50 py-2" onclick="clearProductForm()">ล้างข้อมูล</button>
+                <button type="submit" id="btn_save_product" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึก</button>
+              </div>
+            </form>
           </div>
-          
-          <input type="hidden" id="pd_status" value="ACTIVE">
-          
-          <div class="d-flex gap-2 mt-4 pt-3 border-top">
-            <button type="button" class="btn btn-light border rounded-pill fw-bold shadow-sm w-50 py-2" onclick="clearProductForm()">ล้างข้อมูล</button>
-            <button type="submit" id="btn_save_product" class="btn btn-primary rounded-pill fw-bold shadow-sm w-50 py-2"><i class="fa-solid fa-floppy-disk me-1"></i> บันทึก</button>
-          </div>
-        </form>
+
+        </div>
       </div>
     </div>
 
@@ -869,6 +924,12 @@
       Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
       clearProductForm(); 
       loadInventory();
+
+      if (window.innerWidth <= 768) {
+        let modalEl = document.getElementById('invLeftPanel');
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      }
     } catch(e) {}
   }
 
@@ -884,20 +945,27 @@
       document.getElementById('pd_id').value = item.id; 
       document.getElementById('pd_name').value = item.name; 
       document.getElementById('pd_type').value = item.type;
-	  
+      
       document.getElementById('pd_price').value = item.price; 
       document.getElementById('pd_stock').value = item.stock; 
-	  document.getElementById('pd_min_stock').value = item.min_stock || 5; /* 🌟 เพิ่มบรรทัดนี้ */
+      document.getElementById('pd_min_stock').value = item.min_stock || 5;
       document.getElementById('pd_unit').value = item.unit;
       document.getElementById('pd_lot').value = item.lot_number || ''; 
       document.getElementById('pd_expiry').value = item.expiry_date || '';
       document.getElementById('pd_status').value = item.status || 'ACTIVE';
-	  
-	  handleTypeChange();
+      
+      handleTypeChange();
       
       if (item.type === 'PROMOTION') {
         bundleItems = JSON.parse(item.bundle_items || '[]'); 
         renderPromoItems();
+      }
+
+      /* 🌟 เด้งป๊อปอัปอัตโนมัติเมื่อกดเลือกรายการในจอมือถือ */
+      if (window.innerWidth <= 768) {
+        let modalEl = document.getElementById('invLeftPanel');
+        let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
       }
     }
   }
