@@ -1113,7 +1113,7 @@
     const mainNav = document.getElementById('mainNavTabs');
     if (mainNav) {
         mainNav.classList.add('hide-emr-mobile');
-        mainNav.style.display = 'none'; // ซ่อนแท็บเมื่อเข้าหน้าคอร์ส
+        mainNav.style.setProperty('display', 'none', 'important'); // บังคับซ่อนทับ CSS มือถือ
     }
 
     const btnPkg = document.getElementById('btnBuyPackage');
@@ -1207,7 +1207,7 @@
     const mainNav = document.getElementById('mainNavTabs');
     if (mainNav) {
         mainNav.classList.remove('hide-emr-mobile');
-        mainNav.style.display = ''; // แสดงแท็บกลับมาเหมือนเดิม
+        mainNav.style.removeProperty('display'); // ล้างค่าที่บังคับซ่อนไว้ออก
     }
 
     const btnPkg = document.getElementById('btnBuyPackage');
