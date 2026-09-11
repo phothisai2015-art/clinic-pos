@@ -695,7 +695,7 @@
     <div id="tab-search" style="display: none; height: 100%; flex-direction: column;">
   <div id="searchTopPanel" class="bg-white p-4 rounded-4 shadow-sm border mb-4">
     <div class="row align-items-center">
-          <div class="col-md-5 border-end pe-4">
+          <div class="col-md-5 border-end pe-4" id="searchBoxArea">
             <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-magnifying-glass me-2"></i> ค้นหาคนไข้ในระบบ</h6>
             <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden">
               <input type="text" id="searchInput" class="form-control border-0 bg-light" placeholder="ระบุ HN, เบอร์โทร, ชื่อ..." onkeypress="if(event.key === 'Enter') searchPatient()">
@@ -703,7 +703,7 @@
             </div>
           </div>
           
-          <div class="col-md-7 ps-4">
+          <div class="col-md-7 ps-4" id="patientInfoArea">
             <div id="patientInfoDisplay" style="display: none;">
               <!-- สั่ง justify-content-between และ w-100 เพื่อดันชื่อไปซ้ายสุด และดันปุ่มไปขวาสุด -->
               <div class="d-flex justify-content-between align-items-center mb-2 pt-2 w-100">
@@ -718,7 +718,7 @@
                   </div>
                 </div>
                 
-                <button class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-mobile" onclick="openPackageModal()">
+                <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-mobile" onclick="openPackageModal()">
                   <i class="fa-solid fa-hand-holding-medical me-1"></i> <span>เลือกแพคเกจ / บริการใหม่</span>
                 </button>
               </div>
@@ -1396,6 +1396,10 @@
 
   function openEmrMode(courseId, courseName, isPromo, isViewOnly = false) {
     isCurrentEmrViewOnly = isViewOnly; 
+	document.getElementById('searchBoxArea').style.display = 'none';
+    document.getElementById('btnBuyPackage').style.display = 'none';
+    document.getElementById('patientInfoArea').classList.replace('col-md-7', 'col-md-12');
+    document.getElementById('patientInfoArea').classList.remove('ps-4');
     activeEmrCourse = rawPatientCourses.find(c => c.id === courseId);
     if(!activeEmrCourse) return;
 	
@@ -1483,7 +1487,12 @@
   }
 
   function closeEmrMode() {
-  
+  document.getElementById('searchBoxArea').style.display = 'block';
+    document.getElementById('btnBuyPackage').style.display = '';
+    document.getElementById('patientInfoArea').classList.replace('col-md-12', 'col-md-7');
+    document.getElementById('patientInfoArea').classList.add('ps-4');
+
+    document.getElementById('emrRecordingArea').style.display = 'none';
   document.getElementById('searchTopPanel').style.display = 'block';
     document.getElementById('emrRecordingArea').style.display = 'none';
     document.getElementById('courseMainArea').style.display = 'block';
