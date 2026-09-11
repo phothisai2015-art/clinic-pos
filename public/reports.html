@@ -346,8 +346,11 @@
     </button>
   </div>
 
-  <div class="mb-3">
-    <ul class="nav nav-pills clinic-nav-pills rep-nav-pills m-0 w-100">
+  <!-- 🌟 แท็บเมนู และ ตัวกรองวันที่ (รวมไว้บรรทัดเดียวกันในโหมด PC) -->
+  <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-2 gap-xl-3 mb-3 mb-md-4">
+    
+    <!-- 1. แท็บเมนู -->
+    <ul class="nav nav-pills clinic-nav-pills rep-nav-pills m-0">
       <li class="nav-item">
         <button class="nav-link active" id="btn-tab-dash" onclick="switchReportTab('dash')">
           <i class="fa-solid fa-chart-line me-1"></i> ภาพรวมรายได้
@@ -359,23 +362,25 @@
         </button>
       </li>
     </ul>
-  </div>
 
-  <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
-    <!-- ตัวกรองวันที่ (ปรับกระชับพื้นที่) -->
-    <div class="p-2 p-md-3 rounded-4 border shadow-sm mb-2 mb-md-4 d-flex flex-wrap align-items-center justify-content-between gap-2 glass-panel rep-filter-box">
-      <div class="d-flex align-items-center gap-1 gap-md-2 flex-nowrap w-100 justify-content-between justify-content-md-start">
+    <!-- 2. ตัวกรองวันที่ (ดึงขึ้นมาอยู่แถวเดียวกัน) -->
+    <div class="p-2 p-md-2 rounded-4 border shadow-sm d-flex flex-column flex-md-row align-items-md-center gap-2 glass-panel rep-filter-box m-0">
+      <div class="d-flex align-items-center gap-1 gap-md-2 flex-nowrap justify-content-between w-100" style="max-width: fit-content;">
         <span class="fw-bold text-muted rep-filter-label"><i class="fa-solid fa-filter me-1"></i>ช่วงเวลา:</span>
         <input type="date" id="rep_start" class="form-control form-control-sm text-primary fw-bold date-input-modern" onchange="loadDashboardData(); loadDfReportData();">
         <span class="text-muted fw-bold small">-</span>
         <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" onchange="loadDashboardData(); loadDfReportData();">
       </div>
-      <div class="d-flex gap-1 rep-filter-group w-100 mt-1 mt-md-0">
-        <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
-        <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
-        <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
+      <div class="d-flex gap-1 rep-filter-group mt-1 mt-md-0 w-100 justify-content-between">
+        <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill flex-fill" onclick="setDateFilter('today')">วันนี้</button>
+        <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill flex-fill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
+        <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill flex-fill" onclick="setDateFilter('month')">เดือนนี้</button>
       </div>
     </div>
+    
+  </div>
+
+  <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
 
     <!-- ============================================== -->
     <!-- 📊 TAB 1: ภาพรวมรายได้ (Dashboard เดิม) -->
