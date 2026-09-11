@@ -234,7 +234,46 @@
       color: #fff !important;
       box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3) !important;
     }
-	
+	/* 🌟 ปรับแต่งกล่อง 5 อันดับขายดีในมือถือ (ย่อฟอนต์ + ขยายกล่องลงล่าง + ล็อกซ้ายขวา) */
+    #box-dash-top .top-sellers-box {
+      height: auto !important;
+      min-height: 420px !important; /* ขยายกล่องยาวลงมาใช้พื้นที่ว่างด้านล่าง */
+      padding: 12px 10px !important;
+      overflow-x: hidden !important; /* ล็อกไม่ให้กล่องเลื่อนซ้าย-ขวา */
+    }
+
+    #topSellersContainer {
+      overflow-x: hidden !important;
+    }
+
+    #topSellersContainer .top-seller-item {
+      padding: 8px 2px !important;
+      overflow: hidden !important;
+    }
+
+    /* ย่อขนาดตัวเลขลำดับ (Badge) */
+    #topSellersContainer .rank-badge {
+      width: 24px !important;
+      height: 24px !important;
+      font-size: 0.75rem !important;
+      margin-right: 8px !important;
+      border-radius: 6px !important;
+    }
+
+    /* ย่อขนาดชื่อรายการสินค้า */
+    #topSellersContainer .fw-bold.text-dark {
+      font-size: 0.78rem !important;
+    }
+
+    /* ย่อขนาดป้ายหมวดหมู่และจำนวนชิ้น */
+    #topSellersContainer .text-muted.small {
+      font-size: 0.68rem !important;
+    }
+
+    /* ย่อขนาดยอดเงินตัวหนังสือสีเขียว */
+    #topSellersContainer .fw-bold.text-success {
+      font-size: 0.85rem !important;
+    }
   }
   </style>
 </head>
