@@ -533,6 +533,10 @@
       right: -28px !important;
     }
 	
+	/* 🌟 ซ่อนแท็บเมนูหลักเฉพาะในมือถือเมื่อเข้าหน้า EMR */
+  .hide-emr-mobile {
+    display: none !important;
+  }
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
@@ -1522,7 +1526,7 @@
     
     document.getElementById('searchBoxArea').style.display = 'none';
     const mainNav = document.getElementById('mainNavTabs');
-    if (mainNav) mainNav.style.display = 'none';
+    if (mainNav) mainNav.classList.add('hide-emr-mobile');
 
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg) btnPkg.style.display = 'none';
@@ -1619,7 +1623,7 @@
     document.getElementById('searchBoxArea').style.display = 'block';
     
     const mainNav = document.getElementById('mainNavTabs');
-    if (mainNav) mainNav.style.display = '';
+    if (mainNav) mainNav.classList.remove('hide-emr-mobile');
 
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg && currentHN) btnPkg.style.display = 'inline-flex';
