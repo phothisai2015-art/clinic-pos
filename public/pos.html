@@ -866,6 +866,8 @@
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
+          // ❌ ลบ API ต้นเหตุที่ทำให้เชื่อมต่อผิดพลาดออกไปแล้ว 100% ❌
+
           let remainingPay = payAmount; 
           let paymentsPayload = [];
           
@@ -873,7 +875,7 @@
           let mainBalance = netPrice - mainPaid;
           let payForMain = Math.min(mainBalance, remainingPay);
           
-          // 🌟 ส่งอัปเดตราคาเข้าไปพร้อมกับ Payload รับชำระเงินเลย (แม้จะจ่าย 0 บาท) เพื่อป้องกัน API Error
+          // ส่งอัปเดตราคาเข้าไปพร้อมกับ Payload รับชำระเงินเลย
           paymentsPayload.push({ 
               bill_id: selectedBill.id, 
               pay_amount: payForMain > 0 ? payForMain : 0, 
