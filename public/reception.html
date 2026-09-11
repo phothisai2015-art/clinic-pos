@@ -184,10 +184,15 @@
     .container-fluid > .d-flex.justify-content-between.mb-4 { margin-bottom: 10px !important; }
     h3.header-title-mobile { font-size: 1.25rem !important; }
 
-    ul.nav-pills-custom { display: flex !important; flex-wrap: nowrap !important; gap: 8px !important; margin-bottom: 12px !important; }
-    ul.nav-pills-custom .nav-item { flex: 1 !important; width: 50% !important; }
-    ul.nav-pills-custom .nav-link { width: 100% !important; padding: 8px 4px !important; font-size: 0.85rem !important; margin: 0 !important; display: flex !important; justify-content: center !important; align-items: center !important; border-radius: 10px !important; }
-    ul.nav-pills-custom .nav-link i { margin-right: 4px !important; }
+    /* 🌟 ย่อและจัดแท็บให้แบ่งกัน 3 ส่วน (33.33%) เฉพาะในมือถือ */
+    ul.nav-pills-custom { display: flex !important; flex-wrap: nowrap !important; gap: 4px !important; margin-bottom: 12px !important; }
+    ul.nav-pills-custom .nav-item { flex: 1 !important; width: auto !important; }
+    ul.nav-pills-custom .nav-link { width: 100% !important; padding: 6px 2px !important; font-size: 0.75rem !important; margin: 0 !important; display: flex !important; justify-content: center !important; align-items: center !important; border-radius: 8px !important; letter-spacing: -0.3px; }
+    ul.nav-pills-custom .nav-link i { margin-right: 3px !important; font-size: 0.8rem !important; }
+
+    /* 🌟 คลาสสำหรับสลับหน้า (ฟอร์มการรักษา <-> ประวัติการรักษา) */
+    .mobile-tab-detail #emr_history_col { display: none !important; }
+    .mobile-tab-history #emr_form_col { display: none !important; }
 
     /* EMR ย่อให้กะทัดรัดขึ้น */
     #emrRecordingArea .d-flex.border-bottom { padding-bottom: 8px !important; margin-bottom: 10px !important; }
@@ -466,19 +471,26 @@
           <ul class="nav nav-pills nav-pills-custom mb-3">
             <li class="nav-item">
               <button class="nav-link active py-2" id="emr-subtabbtn-detail" onclick="switchEmrSubTab('detail')">
-                <i class="fa-solid fa-file-signature me-1"></i> รายละเอียดการรักษา
+                <i class="fa-solid fa-file-signature me-1"></i> <span class="d-none d-md-inline">รายละเอียดการรักษา</span><span class="d-inline d-md-none">รายละเอียด</span>
               </button>
             </li>
             <li class="nav-item">
               <button class="nav-link py-2" id="emr-subtabbtn-gallery" onclick="switchEmrSubTab('gallery')">
-                <i class="fa-solid fa-images me-1"></i> รูปภาพ / มาร์กหน้า
+                <i class="fa-solid fa-images me-1"></i> <span class="d-none d-md-inline">รูปภาพ / มาร์กหน้า</span><span class="d-inline d-md-none">รูปภาพ</span>
+              </button>
+            </li>
+            <!-- 🌟 แท็บประวัติ จะโผล่มาเฉพาะในจอมือถือเท่านั้น -->
+            <li class="nav-item d-block d-md-none">
+              <button class="nav-link py-2" id="emr-subtabbtn-history" onclick="switchEmrSubTab('history')">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> <span>ประวัติ</span>
               </button>
             </li>
           </ul>
 
-          <div id="emr-subtab-detail" style="display: block;">
+          
+		  <div id="emr-subtab-detail" style="display: block;" class="mobile-tab-detail">
             <div class="row g-4">
-              <div class="col-lg-7">
+              <div class="col-lg-7" id="emr_form_col">
                 <div class="row g-3" id="emr_input_section">
                   <div class="col-12" id="emr_sub_items_section" style="display: none;">
                     <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-list-check me-1"></i> รายการหัตถการในเซ็ตที่จะทำวันนี้</h6>
@@ -554,9 +566,9 @@
                 </div>
               </div>
 
-              <div class="col-lg-5">
-                 <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
-                   <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
+              <div class="col-lg-5" id="emr_history_col">
+			  <div class="bg-light p-3 rounded-4 border h-100 d-flex flex-column">
+			  <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติการรักษาที่ผ่านมา</h6>
                    <div id="emr_history_side" class="custom-scrollbar flex-grow-1" style="height: 480px; overflow-y: auto; padding-right: 5px;">
                       <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
                    </div>
@@ -1250,6 +1262,7 @@
   }
 
   async function viewEmrDetail(index) {
+  if (window.innerWidth <= 768) { switchEmrSubTab('detail'); }
     const log = currentFilteredEmr[index];
     const dateObj = new Date(log.visit_date);
     const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1539,14 +1552,16 @@
   function switchEmrSubTab(tabName) {
     document.getElementById('emr-subtabbtn-detail').classList.remove('active');
     document.getElementById('emr-subtabbtn-gallery').classList.remove('active');
+    let histBtn = document.getElementById('emr-subtabbtn-history');
+    if (histBtn) histBtn.classList.remove('active');
+
     document.getElementById(`emr-subtabbtn-${tabName}`).classList.add('active');
 
     document.getElementById('emr-subtab-detail').style.display = 'none';
     document.getElementById('emr-subtab-gallery').style.display = 'none';
     
-    document.getElementById(`emr-subtab-${tabName}`).style.display = 'block';
-
     if (tabName === 'gallery') {
+      document.getElementById('emr-subtab-gallery').style.display = 'block';
       if (!canvas) {
         canvas = document.getElementById('faceCanvas');
         ctx = canvas.getContext('2d');
@@ -1557,28 +1572,27 @@
           if (isDrawing) { 
             ctx.lineTo(e.offsetX, e.offsetY); 
             ctx.strokeStyle = document.getElementById('drawColor').value; 
-            ctx.lineWidth = 3; 
-            ctx.lineCap = 'round';
-            ctx.stroke(); 
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); 
           }
         };
         canvas.onmouseup = () => isDrawing = false;
-        
-        canvas.ontouchstart = (e) => { 
-           const rect = canvas.getBoundingClientRect();
-           isDrawing = true; ctx.beginPath(); ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); 
-        };
-        canvas.ontouchmove = (e) => { 
-           if (!isDrawing) return;
-           const rect = canvas.getBoundingClientRect();
-           ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); 
-           ctx.strokeStyle = document.getElementById('drawColor').value; 
-           ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); 
-           e.preventDefault(); 
-        };
+        canvas.ontouchstart = (e) => { const rect = canvas.getBoundingClientRect(); isDrawing = true; ctx.beginPath(); ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); };
+        canvas.ontouchmove = (e) => { if (!isDrawing) return; const rect = canvas.getBoundingClientRect(); ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); ctx.strokeStyle = document.getElementById('drawColor').value; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); e.preventDefault(); };
         canvas.ontouchend = () => isDrawing = false;
       }
       loadPatientPhotos(currentHN);
+    } else {
+      // 🌟 ใช้คลาสสลับการมองเห็นของคอลัมน์บนมือถือ
+      const detailSection = document.getElementById('emr-subtab-detail');
+      detailSection.style.display = 'block';
+      
+      if (tabName === 'detail') {
+          detailSection.classList.remove('mobile-tab-history');
+          detailSection.classList.add('mobile-tab-detail');
+      } else if (tabName === 'history') {
+          detailSection.classList.remove('mobile-tab-detail');
+          detailSection.classList.add('mobile-tab-history');
+      }
     }
   }
 
