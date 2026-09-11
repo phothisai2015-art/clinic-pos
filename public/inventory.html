@@ -32,13 +32,15 @@
   /* 🛠️ แก้ไขโครงสร้าง ฟอร์มฝั่งซ้าย (PC แสดงคู่ตาราง / มือถือเป็นป๊อปอัป) */
   /* ========================================================= */
 
-  /* 🖥️ 1. โหมด PC (หน้าจอใหญ่กว่า 768px): บังคับกลับเป็นกล่องคอลัมน์ปกติ */
+  /* 🖥️ 1. โหมด PC (หน้าจอใหญ่กว่า 768px): บังคับแบ่ง 2 คอลัมน์คู่กันสมบูรณ์ */
   @media (min-width: 769px) {
     #invLeftPanel.modal {
       position: relative !important;
-      top: auto !important;
-      left: auto !important;
-      width: auto !important; /* 🌟 ปลดล็อคความกว้างเพื่อให้ col-lg-4 ของ PC ทำงานได้ตามปกติ */
+      top: 0 !important;
+      left: 0 !important;
+      flex: 0 0 33.333333% !important;
+      width: 33.333333% !important; /* ล็อกความกว้าง col-lg-4 ไม่ให้ดันตารางตก */
+      max-width: 33.333333% !important;
       height: 100% !important;
       display: block !important;
       opacity: 1 !important;
@@ -47,6 +49,7 @@
     }
     #invLeftPanel .modal-dialog {
       max-width: 100% !important;
+      width: 100% !important;
       height: 100% !important;
       margin: 0 !important;
       transform: none !important;
@@ -57,19 +60,24 @@
       box-shadow: none !important;
       height: 100% !important;
     }
-    /* ซ่อนปุ่มปิด Modal ใน PC */
     #invLeftPanel .modal-header {
       display: none !important;
     }
+    #invRightPanel {
+      flex: 0 0 66.666667% !important;
+      width: 66.666667% !important;
+      max-width: 66.666667% !important;
+    }
   }
 
-  /* 📱 2. โหมดมือถือ (หน้าจอ <= 768px): ปรับเป็น ป๊อปอัป (Modal) อยู่เหนือฉากหลัง */
+  /* 📱 2. โหมดมือถือ (หน้าจอ <= 768px): ปรับเป็น ป๊อปอัป (Modal) */
   @media (max-width: 768px) {
     #invLeftPanel.modal {
-      z-index: 1060 !important; /* 🌟 ดันป๊อปอัปให้อยู่เหนือฉากหลังสีเทา (1050) แก้จอมืดกดไม่ได้ */
+      position: fixed !important;
+      z-index: 1060 !important;
     }
     #invLeftPanel:not(.show) {
-      display: none !important; /* ซ่อนจากหน้าปกติในมือถือ */
+      display: none !important;
     }
     #invLeftPanel.modal .modal-dialog {
       margin: 12px !important;
@@ -448,7 +456,7 @@
 <div class="ambient-orb orb-2"></div>
 <div class="ambient-orb orb-3"></div>
 
-<div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
+<div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column;">
   
   <!-- 🌟 Header & Actions -->
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -486,7 +494,7 @@
     <div class="inv-action-btns d-flex gap-2">
 	<!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
   <!-- ปุ่มกดเปิดป๊อปอัป (แสดงเฉพาะในมือถือ) -->
-  <button class="btn btn-primary fw-bold rounded-pill shadow-sm d-md-none mb-2 w-100" data-bs-toggle="modal" data-bs-target="#invLeftPanel">
+  <button class="btn btn-primary fw-bold rounded-pill shadow-sm d-md-none mb-2 w-100" onclick="openLeftPanelModal()">
     <i class="fa-solid fa-plus me-1"></i> เพิ่มรายการใหม่
   </button>
       <button class="btn btn-success fw-bold rounded-pill px-3 shadow-sm" onclick="openBulkModal()">
@@ -498,7 +506,7 @@
     </div>
   </div>
 
-  <div class="row g-4 flex-grow-1" style="min-height: 0;">
+  <div class="row g-4 flex-grow-1" id="invRow" style="min-height: 0;">
     
     <!-- 📦 ฝั่งซ้าย: ฟอร์มเพิ่ม/แก้ไขสินค้า (แปลงเป็น Modal ป๊อปอัปในมือถือ / กล่องปกติใน PC) -->
     <div class="col-lg-4 col-md-5 h-100 modal fade p-0" id="invLeftPanel" tabindex="-1" aria-hidden="true">
@@ -759,7 +767,7 @@
 
     } else {
       // 🌟 เอากล่องซ้ายกลับมาโชว์ และหดกล่องขวากลับไปขนาดเดิม
-      if(leftPanel) leftPanel.style.display = 'block';
+      ensureLeftPanelInRow(); if(leftPanel) leftPanel.style.display = '';
       if(rightPanel) rightPanel.className = 'col-lg-8 col-md-7 h-100';
 
       if (tab === 'promo') {
@@ -980,11 +988,7 @@
       }
 
       /* 🌟 เด้งป๊อปอัปอัตโนมัติเมื่อกดเลือกรายการในจอมือถือ */
-      if (window.innerWidth <= 768) {
-        let modalEl = document.getElementById('invLeftPanel');
-        let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.show();
-      }
+      if (window.innerWidth <= 768) { openLeftPanelModal(); }
     }
   }
 
@@ -1213,6 +1217,30 @@
     minStockInput.readOnly = false;
   }
 }
+/* 🌟 ฟังก์ชันจัดการป๊อปอัปสำหรับมือถือเพื่อป้องกันจอมืดค้าง */
+  function openLeftPanelModal() {
+    let modalEl = document.getElementById('invLeftPanel');
+    if (window.innerWidth <= 768) {
+      if (modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl); // ย้าย Modal ไปไว้ที่ body root เพื่อแก้จอมืดค้าง
+      }
+      let modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  }
+
+  function ensureLeftPanelInRow() {
+    let leftPanel = document.getElementById('invLeftPanel');
+    let rowContainer = document.getElementById('invRow');
+    let rightPanel = document.getElementById('invRightPanel');
+    if (window.innerWidth > 768 && leftPanel && rowContainer && rightPanel) {
+      if (leftPanel.parentNode !== rowContainer) {
+        rowContainer.insertBefore(leftPanel, rightPanel);
+      }
+    }
+  }
+
+  window.addEventListener('resize', ensureLeftPanelInRow);
 </script>
 </body>
 </html>
