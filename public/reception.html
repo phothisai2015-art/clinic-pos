@@ -612,6 +612,35 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   }
   
+  /* 🌟 จัดการ Layout เฉพาะส่วนข้อมูลคนไข้ (ซ้าย-ขวา) */
+  .patient-info-half { flex-shrink: 0; padding-right: 15px; }
+  .allergy-half { flex-grow: 1; }
+  .allergy-title-mobile { font-size: 0.8rem; }
+  .allergy-desc-mobile { font-size: 0.75rem; }
+
+  @media (max-width: 768px) {
+    /* บังคับแบ่ง 50/50 */
+    .patient-info-half { width: 50% !important; padding-right: 5px; }
+    .allergy-half { width: 50% !important; padding: 6px 8px !important; flex-grow: 0 !important; }
+    
+    /* ย่อชื่อและจัดเรียงข้อมูลใต้ชื่อเป็นแนวตั้ง */
+    .patient-name-mobile { font-size: 0.85rem !important; }
+    .patient-details-row { flex-direction: column !important; align-items: flex-start !important; gap: 0 !important; font-size: 0.65rem !important; }
+    
+    /* ย่อตัวหนังสือแพ้ยา */
+    .allergy-title-mobile { font-size: 0.6rem !important; margin-bottom: 2px; }
+    .allergy-desc-mobile { font-size: 0.55rem !important; line-height: 1.2 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+
+    /* ปุ่มเลือกแพคเกจล่าง ให้เป็นวงกลม */
+    .btn-pkg-main {
+      width: 36px !important; height: 36px !important; padding: 0 !important; 
+      display: flex !important; justify-content: center; align-items: center; 
+      border-radius: 50% !important; flex-shrink: 0;
+    }
+    .btn-pkg-main span { display: none !important; }
+    .btn-pkg-main i { margin: 0 !important; font-size: 1.1rem; }
+  }
+  
   </style>
 </head>
 <body class="bg-light">
@@ -704,38 +733,34 @@
           </div>
           
           <div class="col-md-7 ps-4" id="patientInfoArea">
-            <div id="patientInfoDisplay" style="display: none;">
-              <!-- 🌟 จัดเรียงข้อมูลคนไข้และแพ้ยา ให้อยู่แถวเดียวกันในจอคอม และซ้อนกันในจอมือถือ -->
-              <!-- เพิ่ม position-relative เพื่อให้ยึดปุ่มในจอมือถือได้ง่าย -->
-              <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3 mb-2 pt-2 w-100 position-relative">
+           <div id="patientInfoDisplay" style="display: none;">
+              <!-- 🌟 จัดรูปแบบเป็น Flex Row เสมอ เพื่อแบ่ง 50/50 ในมือถือ -->
+              <div class="d-flex flex-row align-items-start align-items-md-center w-100 mb-2 pt-2">
                 
-                <!-- ข้อมูลคนไข้ -->
-                <div class="overflow-hidden flex-shrink-0">
-                  <h5 class="fw-bold text-dark m-0 text-truncate pe-5 pe-md-0" id="disp_name">-</h5>
+                <!-- ข้อมูลคนไข้ (ซ้าย 50%) -->
+                <div class="overflow-hidden patient-info-half">
+                  <h5 class="fw-bold text-dark m-0 text-truncate patient-name-mobile" id="disp_name">-</h5>
                   <div class="text-muted patient-details-row m-0 mt-1">
                     <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
-                    <span class="divider">|</span> 
+                    <span class="divider d-none d-md-inline">|</span> 
                     <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
-                    <span class="divider">|</span> 
+                    <span class="divider d-none d-md-inline">|</span> 
                     <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
                   </div>
                 </div>
 
-                <!-- ข้อมูลแพ้ยา (กล่องจะยืดเต็มพื้นที่ที่เหลือในจอคอม และกะทัดรัด) -->
-                <div id="allergyAlert" class="allergy-alert align-items-center m-0 shadow-sm py-2 px-3 flex-grow-1" style="display: none; border-radius: 8px;">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0"></i>
-                    <div>
-                      <div class="fw-bold text-danger" style="font-size: 0.8rem;">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
-                      <div class="fw-semibold text-danger" style="font-size: 0.75rem;" id="allergyDetails"></div>
+                <!-- ข้อมูลแพ้ยา (ขวา 50%) -->
+                <div id="allergyAlert" class="allergy-alert align-items-start align-items-md-center m-0 shadow-sm allergy-half" style="display: none; border-radius: 8px;">
+                  <div class="d-flex align-items-center gap-1 gap-md-2 w-100">
+                    <i class="fa-solid fa-triangle-exclamation text-danger flex-shrink-0 d-md-none" style="font-size: 0.9rem;"></i>
+                    <i class="fa-solid fa-triangle-exclamation fs-5 text-danger flex-shrink-0 d-none d-md-block"></i>
+                    <div class="overflow-hidden w-100">
+                      <div class="fw-bold text-danger allergy-title-mobile text-truncate">⚠️ แพ้ยา/โรคประจำตัว</div>
+                      <div class="fw-semibold text-danger allergy-desc-mobile" id="allergyDetails"></div>
                     </div>
                   </div>
                 </div>
 
-                <!-- 📱 ปุ่มสำหรับมือถือโดยเฉพาะ (ลอยอยู่มุมขวาบนของกล่องข้อมูล) -->
-                <button id="btnBuyPackageMobile" class="btn btn-info text-white rounded-circle shadow-sm btn-pkg-mobile position-absolute d-md-none" style="top: 5px; right: 0; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;" onclick="openPackageModal()">
-                  <i class="fa-solid fa-hand-holding-medical m-0"></i>
-                </button>
                 
               </div>
             </div>
