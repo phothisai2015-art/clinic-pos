@@ -120,11 +120,14 @@
   }
   /* 5. ป้ายแสดงจำนวนกล่องบิล/คอร์ส (#billCountBadge) */
   body.dark-theme #billCountBadge {
-    background-color: #0f172a !important; /* เปลี่ยนพื้นหลังเป็นสีเข้ม */
-    color: #f8fafc !important; /* เปลี่ยนตัวหนังสือเป็นสีสว่าง */
-    border-color: #334155 !important; /* เปลี่ยนสีกรอบ */
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
   }
-  /* 📱 ปรับปุ่มปิดหน้า POS ให้แสดงเฉพาะไอคอน X ในจอมือถือ */
+
+  /* ========================================================= */
+  /* 📱 ปรับ UI โหมดมือถือแบบสมบูรณ์และแก้แถบเลื่อนซ้อน */
+  /* ========================================================= */
   @media (max-width: 768px) {
     button[onclick="window.location.href='/'"] {
       width: 38px !important;
@@ -135,181 +138,54 @@
       justify-content: center;
       align-items: center;
     }
-    button[onclick="window.location.href='/'"] span {
-      display: none !important; /* ซ่อนข้อความ ปิดหน้านี้ ในมือถือ */
-    }
-    button[onclick="window.location.href='/'"] i {
-      font-size: 1.2rem !important;
-      margin: 0 !important;
-    }
-	/* 🌟 1. ย่อกล่องค้นหาคนไข้ (Search Hero) ให้กระชับสุดๆ */
-    .search-hero {
-      padding: 10px 12px !important;
-      margin-bottom: 10px !important;
-      border-radius: 12px !important;
-    }
-    .search-hero .fs-6 {
-      font-size: 0.8rem !important; /* ย่อคำว่า 'ค้นหาคนไข้เพื่อชำระเงิน' */
-      margin-bottom: 6px !important;
-    }
-    .search-hero .input-group {
-      height: 32px !important; /* บีบความสูงช่องค้นหา */
-    }
-    #posSearchInput, .search-hero .btn-primary {
-      padding: 4px 10px !important;
-      font-size: 0.8rem !important;
-    }
+    button[onclick="window.location.href='/'"] span { display: none !important; }
+    button[onclick="window.location.href='/'"] i { font-size: 1.2rem !important; margin: 0 !important; }
 
-    /* 🌟 2. ย่อส่วนแสดงชื่อคนไข้และปุ่มประวัติ (Patient Summary) */
-    #posPatientSummary {
-      margin-top: 10px !important;
-      padding-top: 8px !important;
-      border-top: 1px dashed rgba(255,255,255,0.2) !important;
-      border-left: none !important;
-    }
-    #p_summary_name {
-      font-size: 1rem !important; /* ย่อชื่อคนไข้ */
-      margin-bottom: 2px !important;
-    }
-    #posPatientSummary .small {
-      font-size: 0.7rem !important; /* ย่อเบอร์โทรและ HN */
-    }
-    #posPatientSummary .btn {
-      padding: 4px 8px !important;
-      font-size: 0.7rem !important; /* ย่อปุ่ม 'ประวัติจ่ายเงิน' และ 'ล้างข้อมูล' */
-      height: 26px !important;
-      display: inline-flex;
-      align-items: center;
-    }
+    /* 1. ย่อกล่องค้นหาคนไข้ */
+    .search-hero { padding: 10px 12px !important; margin-bottom: 10px !important; border-radius: 12px !important; }
+    .search-hero .fs-6 { font-size: 0.8rem !important; margin-bottom: 6px !important; }
+    .search-hero .input-group { height: 32px !important; }
+    #posSearchInput, .search-hero .btn-primary { padding: 4px 10px !important; font-size: 0.8rem !important; }
 
-    /* 🌟 3. ย่อกล่องรายการบิล / คอร์ส (Bill Cards) */
-    .col-lg-7 .bg-white.p-3 {
-      padding: 10px !important; /* ลดขอบกล่องขาวใหญ่ */
-    }
-    .bill-card-header {
-      padding: 6px 10px !important;
-      font-size: 0.75rem !important;
-    }
-    .bill-card-body {
-      padding: 8px 10px !important;
-    }
-    .bill-card-body h6 {
-      font-size: 0.8rem !important; /* ย่อชื่อคอร์ส */
-      margin-bottom: 2px !important;
-    }
-    .bill-card-body .text-muted[style*="font-size: 0.75rem"] {
-      font-size: 0.65rem !important; /* ย่อวันที่ซื้อ */
-      margin-top: 0 !important;
-    }
-    .bill-card .px-3.pb-2 {
-      padding: 0 10px 6px 10px !important; /* ย่อระยะห่างราคาเต็ม/ชำระแล้ว */
-      font-size: 0.7rem !important;
-    }
-    .bill-card-footer {
-      padding: 6px 10px !important;
-      font-size: 0.75rem !important;
-    }
-    .bill-card .badge {
-      padding: 3px 5px !important;
-      font-size: 0.6rem !important; /* ย่อป้ายสถานะ (ค้างชำระ/จ่ายครบ) */
-    }
-	/* 🌟 4. ย่อป๊อปอัป "ประวัติการชำระเงิน" ให้กระชับในโหมดมือถือ */
+    /* 2. ย่อส่วนแสดงชื่อคนไข้และปุ่มประวัติ */
+    #posPatientSummary { margin-top: 10px !important; padding-top: 8px !important; border-top: 1px dashed rgba(255,255,255,0.2) !important; border-left: none !important; }
+    #p_summary_name { font-size: 1rem !important; margin-bottom: 2px !important; }
+    #posPatientSummary .small { font-size: 0.7rem !important; }
+    #posPatientSummary .btn { padding: 4px 8px !important; font-size: 0.7rem !important; height: 26px !important; display: inline-flex; align-items: center; }
+
+    /* 3. ย่อกล่องรายการบิล / คอร์ส */
+    .col-lg-7 .bg-white.p-3 { padding: 10px !important; }
+    .bill-card-header { padding: 6px 10px !important; font-size: 0.75rem !important; }
+    .bill-card-body { padding: 8px 10px !important; }
+    .bill-card-body h6 { font-size: 0.8rem !important; margin-bottom: 2px !important; }
+    .bill-card-body .text-muted[style*="font-size: 0.75rem"] { font-size: 0.65rem !important; margin-top: 0 !important; }
+    .bill-card .px-3.pb-2 { padding: 0 10px 6px 10px !important; font-size: 0.7rem !important; }
+    .bill-card-footer { padding: 6px 10px !important; font-size: 0.75rem !important; }
+    .bill-card .badge { padding: 3px 5px !important; font-size: 0.6rem !important; }
+
+    /* 4. ย่อป๊อปอัปประวัติการชำระเงิน */
+    #paymentHistoryModal .modal-header { padding: 10px 15px !important; }
+    #paymentHistoryModal .modal-title { font-size: 1rem !important; }
+    #paymentHistoryModal .modal-body { padding: 12px !important; }
+    #paymentHistoryModal .mb-4.bg-white { padding: 10px !important; margin-bottom: 10px !important; }
+    #paymentHistoryModal .form-label.small { font-size: 0.75rem !important; margin-bottom: 4px !important; }
+    #paymentHistoryFilter { font-size: 0.8rem !important; padding: 4px 8px !important; height: 32px !important; }
+    #paymentHistoryList { padding: 8px !important; }
+    #paymentHistoryList .border-start { padding: 8px 10px !important; margin-bottom: 8px !important; }
+    #paymentHistoryList .d-flex.mb-1 > span.fw-bold { font-size: 0.75rem !important; }
+    #paymentHistoryList .badge { font-size: 0.65rem !important; padding: 3px 6px !important; }
+    #paymentHistoryList .fw-bold.text-primary.mt-1 { font-size: 0.8rem !important; margin-top: 4px !important; line-height: 1.4 !important; }
+    #paymentHistoryList .text-muted.small.fw-normal { font-size: 0.65rem !important; }
+    #paymentHistoryList .mt-2.pt-2.border-top { margin-top: 6px !important; padding-top: 6px !important; }
+    #paymentHistoryList .btn { font-size: 0.7rem !important; padding: 4px 8px !important; }
+    #paymentHistoryList .text-end .text-muted.small { font-size: 0.7rem !important; }
+    #paymentHistoryList .text-end .fs-5 { font-size: 1.1rem !important; }
+
+    /* 5. บังคับแผงชำระเงิน (ขวามือ) ให้เป็นป๊อปอัปในมือถือ */
+    #paymentRightPanel { display: none !important; }
+    #paymentRightPanel.show-popup { display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 1060 !important; padding: 15px !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(3px); }
+    #paymentRightPanel.show-popup .payment-panel { width: 100% !important; max-height: 95vh !important; overflow-y: auto !important; border-radius: 16px !important; padding: 12px !important; }
     
-    /* ย่อส่วนหัวและกรอบด้านใน */
-    #paymentHistoryModal .modal-header {
-      padding: 10px 15px !important;
-    }
-    #paymentHistoryModal .modal-title {
-      font-size: 1rem !important; /* ย่อหัวข้อป๊อปอัป */
-    }
-    #paymentHistoryModal .modal-body {
-      padding: 12px !important;
-    }
-
-    /* ย่อกล่องตัวกรองโปรโมชั่น */
-    #paymentHistoryModal .mb-4.bg-white {
-      padding: 10px !important;
-      margin-bottom: 10px !important;
-    }
-    #paymentHistoryModal .form-label.small {
-      font-size: 0.75rem !important;
-      margin-bottom: 4px !important;
-    }
-    #paymentHistoryFilter {
-      font-size: 0.8rem !important;
-      padding: 4px 8px !important;
-      height: 32px !important; /* บีบความสูงของช่อง Dropdown */
-    }
-
-    /* ย่อกล่องรายการประวัติชำระเงิน (รายการแต่ละใบ) */
-    #paymentHistoryList {
-      padding: 8px !important;
-    }
-    #paymentHistoryList .border-start {
-      padding: 8px 10px !important; /* ลดขอบด้านในของการ์ด */
-      margin-bottom: 8px !important;
-    }
-    
-    /* ย่อขนาดตัวหนังสือในรายการ (วันที่, ชื่อ, ป้ายสถานะ) */
-    #paymentHistoryList .d-flex.mb-1 > span.fw-bold {
-      font-size: 0.75rem !important; /* ย่อวันที่และเวลา */
-    }
-    #paymentHistoryList .badge {
-      font-size: 0.65rem !important;
-      padding: 3px 6px !important;
-    }
-    #paymentHistoryList .fw-bold.text-primary.mt-1 {
-      font-size: 0.8rem !important; /* ย่อชื่อคอร์ส */
-      margin-top: 4px !important;
-      line-height: 1.4 !important;
-    }
-    #paymentHistoryList .text-muted.small.fw-normal {
-      font-size: 0.65rem !important; /* ย่อคำว่า (รายการที่ #X) */
-    }
-
-    /* ย่อส่วนท้ายของการ์ด (ปุ่มพิมพ์ และยอดเงิน) */
-    #paymentHistoryList .mt-2.pt-2.border-top {
-      margin-top: 6px !important;
-      padding-top: 6px !important;
-    }
-    #paymentHistoryList .btn {
-      font-size: 0.7rem !important; /* ย่อปุ่มใบเสร็จ/ใบรับรองแพทย์ */
-      padding: 4px 8px !important;
-    }
-    #paymentHistoryList .text-end .text-muted.small {
-      font-size: 0.7rem !important; /* ย่อคำว่า ยอดโอน/ชำระ: */
-    }
-    #paymentHistoryList .text-end .fs-5 {
-      font-size: 1.1rem !important; /* ย่อยอดเงินสีเขียว */
-    }
-
-    /* ====================================================== */
-    /* 🌟 5. บังคับแผงชำระเงิน (ขวามือ) ให้เป็นป๊อปอัปในมือถือ */
-    /* ====================================================== */
-    #paymentRightPanel {
-      display: none !important; /* ซ่อนไว้ก่อน */
-    }
-    #paymentRightPanel.show-popup {
-      display: flex !important;
-      position: fixed !important;
-      top: 0 !important; left: 0 !important;
-      width: 100vw !important; height: 100vh !important;
-      background: rgba(0, 0, 0, 0.6) !important;
-      z-index: 1060 !important;
-      padding: 15px !important;
-      align-items: center !important;
-      justify-content: center !important;
-      backdrop-filter: blur(3px);
-    }
-    #paymentRightPanel.show-popup .payment-panel {
-      width: 100% !important;
-      max-height: 95vh !important;
-      overflow-y: auto !important;
-      border-radius: 16px !important;
-      padding: 12px !important;
-    }
-    
-    /* ย่อตัวหนังสือในแผงชำระเงิน (ป๊อปอัปมือถือ) */
     .payment-panel h6 { font-size: 0.8rem !important; }
     .payment-panel .small { font-size: 0.65rem !important; }
     .payment-panel .fs-6 { font-size: 0.75rem !important; }
@@ -319,6 +195,12 @@
     #pay_submit_btn { font-size: 0.8rem !important; padding: 6px !important; }
     #pay_balance { font-size: 0.9rem !important; }
     #pay_already_paid { font-size: 0.75rem !important; }
+
+    /* 🛑 ล็อคพื้นหลังเฉพาะในมือถือ (ตัดปัญหาแถบเลื่อนซ้อน 100%) */
+    html, body { position: fixed !important; width: 100%; height: 100%; overflow: hidden !important; }
+    .container-fluid { height: 100dvh !important; overflow: hidden !important; padding-bottom: 0 !important; }
+    .row.flex-grow-1 { min-height: 0 !important; overflow: hidden !important; }
+    .col-lg-7 { min-height: 0 !important; }
   }
 
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
@@ -507,7 +389,6 @@
 </div>
 
 <!-- 🌟 Modal ดูประวัติการชำระเงิน -->
-<!-- โค้ดใหม่ -->
 <div class="modal fade" id="paymentHistoryModal" aria-hidden="true" style="z-index: 1060;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -516,14 +397,12 @@
         <button type="button" class="btn-close btn-close-white" onclick="closePaymentHistoryModal()"></button>
       </div>
       <div class="modal-body p-4 bg-light">
-        <!-- ตัวกรอง -->
         <div class="mb-4 bg-white p-3 rounded-3 shadow-sm border border-info">
           <label class="fw-bold text-info small mb-2"><i class="fa-solid fa-filter me-1"></i> ตัวกรองโปรโมชั่น / คอร์ส</label>
           <select id="paymentHistoryFilter" class="form-select border-info bg-light fw-bold text-dark" onchange="renderPaymentHistory()">
             <option value="ALL">-- ดูประวัติการชำระเงินทั้งหมด --</option>
           </select>
         </div>
-        <!-- รายการชำระเงิน -->
         <div class="custom-scrollbar bg-white p-3 border rounded-4 shadow-sm" id="paymentHistoryList" style="height: 50vh; overflow-y: auto;">
           <div class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</div>
         </div>
@@ -535,13 +414,12 @@
 <script>
   var currentPosPatient = null;
   var currentPatientBills = [];
-  var currentPatientEmr = []; // 🌟 เพิ่มตัวแปรเก็บประวัติ EMR
+  var currentPatientEmr = []; 
   var currentInventory = [];
   var selectedBill = null;
   var selectedMethod = 'CASH';
-  var allPatientBillsHistory = []; // 🌟 เพิ่มตัวแปรใหม่เก็บประวัติทั้งหมด
+  var allPatientBillsHistory = []; 
 
-  // โหลดคลังสินค้า
   async function loadInventoryForPos() {
     try {
       const res = await fetch('/api/inventory');
@@ -591,11 +469,9 @@
     } catch(e) {}
   }
 
-// 🌟 ฟังก์ชันดึงประวัติบิลและจับกลุ่ม (อัปเดตให้ดึงบิลทุกวันและเช็คแท็กชื่อเป๊ะๆ 100%)
   async function selectPatientForPos(hn) {
     Swal.fire({ title: 'กำลังดึงบิล...', didOpen: () => Swal.showLoading() });
     try {
-      // 🌟 อัปเดต: ดึงประวัติ EMR มาด้วยเพื่อดูว่าทำอะไรไปบ้างในแต่ละครั้ง
       const [pRes, bRes, emrRes] = await Promise.all([
           fetch(`/api/patients/${hn}`),
           fetch(`/api/pos/bill/${hn}`),
@@ -605,22 +481,20 @@
       const bData = await bRes.json();
       const emrData = await emrRes.json();
       
-      currentPatientEmr = emrData.status === 'success' ? emrData.data : []; // 🌟 เก็บประวัติลงตัวแปร
+      currentPatientEmr = emrData.status === 'success' ? emrData.data : []; 
       Swal.close();
 
       if (pData.status === 'success' && pData.data) {
         currentPosPatient = pData.data;
-        let rawBills = bData.data || []; // บิลทั้งหมดทุกวัน
-		allPatientBillsHistory = rawBills; // 🌟 เก็บประวัติบิลลงตัวแปรสำหรับป๊อปอัป
+        let rawBills = bData.data || []; 
+		allPatientBillsHistory = rawBills; 
 
-        // --- 🌟 ระบบจับกลุ่มบิลแบบเจาะจงคอร์ส (แม่นยำ 100%) ---
         let groupedBoxes = [];
         let medBills = rawBills.filter(b => b.type === 'MEDICINE' || b.type === 'SKINCARE');
         let mainBills = rawBills.filter(b => b.type !== 'MEDICINE' && b.type !== 'SKINCARE');
 
         mainBills.forEach(main => {
            main.attached_meds = [];
-           // ค้นหายาที่มีคำว่า (ในคอร์ส: ชื่อโปรเป๊ะๆ) เท่านั้น ไม่เอาวันที่มาเกี่ยวแล้ว
            let medsForThisMain = medBills.filter(m => {
              if (m.attached) return false;
              let tagMatch = m.item_name.match(/\(ในคอร์ส:\s*(.*?)\)/);
@@ -635,20 +509,16 @@
            groupedBoxes.push(main);
         });
 
-        // ถ้ายามีหลงเหลือ (ไม่ได้สั่งในคอร์ส หรือซื้อแยก) ให้แยกกล่องต่างหาก
         medBills.filter(m => !m.attached).forEach(m => {
            m.attached_meds = [];
            groupedBoxes.push(m);
         });
 
-        // 🌟 เรียงลำดับตามเวลาสร้างบิล (id เก่าไปใหม่) และรันเลข 1, 2, 3... ให้คนไข้คนนี้
         groupedBoxes.sort((a, b) => a.id - b.id);
         groupedBoxes.forEach((box, i) => box.display_id = i + 1);
 
-        // 🌟 เอาตัวกรองที่ซ่อนบิลจ่ายแล้วออก เพื่อให้โชว์บิลทั้งหมด
         currentPatientBills = groupedBoxes;
         
-        // 🌟 เรียงลำดับ: ให้กล่องที่ "ค้างชำระ" อยู่ด้านบนสุด และ "จ่ายครบแล้ว" ไปอยู่ล่างสุด
         currentPatientBills.sort((a, b) => {
            let aTotal = a.total_price + a.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
            let aPaid = a.paid_amount + a.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
@@ -671,7 +541,6 @@
         
         renderBillBoxes();
         
-        // 🌟 Auto-Select: เลือกลายการแรกที่ "ค้างชำระ" ให้ทันที
         if (currentPatientBills.length > 0) {
           let firstPayable = currentPatientBills.findIndex(b => {
             let boxTotal = b.total_price + b.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
@@ -680,7 +549,7 @@
           });
           
           if(firstPayable !== -1) {
-            selectBillToPay(firstPayable, true); // ส่ง true แปลว่าเด้งอัตโนมัติ (ไม่ให้โชว์ป๊อปอัป)
+            selectBillToPay(firstPayable, true); 
           } else {
             selectBillToPay(0, true);
           }
@@ -719,7 +588,6 @@
 
       let typeIcon = bill.type === 'PROMOTION' ? 'fa-gift text-primary' : (bill.type === 'MEDICINE' || bill.type === 'SKINCARE' ? 'fa-pills text-danger' : 'fa-wand-magic-sparkles text-info');
       
-      // 🌟 เพิ่มโค้ดแปลงวันที่ซื้อคอร์ส
       let dateStr = '-';
       if (bill.bill_date) {
         dateStr = new Date(bill.bill_date).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
@@ -743,7 +611,6 @@
             </div>
             <div class="bill-card-body pb-1">
               <h6 class="fw-bold text-dark mb-0" style="font-size: 0.9rem;"><i class="fa-solid ${typeIcon} me-1"></i> ${bill.item_name}</h6>
-              <!-- 🌟 แสดงวันที่ซื้อคอร์ส -->
               <div class="text-muted mb-1" style="font-size: 0.75rem; margin-top: 3px;"><i class="fa-solid fa-calendar-plus me-1 opacity-75"></i> ซื้อเมื่อ: ${dateStr}</div>
               ${medsHtml}
             </div>
@@ -773,38 +640,29 @@
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
     
-    // 🌟 1. ปลดล็อคช่องกรอกราคาและส่วนลด
     document.getElementById('input_full_price').disabled = false;
     document.getElementById('input_discount').disabled = false;
     document.getElementById('select_discount_type').disabled = false;
     document.getElementById('pay_input_amount').disabled = false;
 
-    // 🌟 2. ดึงราคาเดิม (ถ้ามี) หรือตั้งต้นราคาที่ 0
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     document.getElementById('input_full_price').value = boxTotalPrice;
     
-    // ดึงส่วนลดเดิม (ถ้ามีเก็บไว้ใน DB) แต่ถ้าไม่มีให้เป็น 0
     document.getElementById('input_discount').value = selectedBill.discount || 0;
     document.getElementById('select_discount_type').value = selectedBill.discount_type || 'THB';
 
-    // ดึงยอดที่จ่ายไปแล้ว
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
 
-    // ตั้งค่ายอดชำระเริ่มต้นให้เท่ากับยอดคงเหลือของราคาปัจจุบัน
     let initialBalance = boxTotalPrice - boxPaidAmount;
     if(initialBalance < 0) initialBalance = 0;
     document.getElementById('pay_input_amount').value = initialBalance;
 
-    // 🌟 เปิดกล่องชำระเงินเสมอ เพื่อให้แก้ไขราคาและรับชำระได้ตลอด
     let paymentSection1 = document.getElementById('pay_input_amount').parentElement.parentElement;
     let paymentSection2 = document.getElementById('pay_submit_btn').parentElement;
     paymentSection1.style.display = 'block';
     paymentSection2.style.display = 'block';
 
-    // ==========================================
-    // 🌟 ส่วนดึงรายละเอียดหัตถการ ยาพ่วง และประวัติ EMR (คงเดิม)
-    // ==========================================
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
     if (prodDef && prodDef.type === 'PROMOTION' && prodDef.bundle_items) {
@@ -825,13 +683,11 @@
       });
     }
     
-    // ดึงประวัติการใช้บริการจาก EMR ที่ตรงกับชื่อคอร์สนี้
     let relatedEmr = currentPatientEmr.filter(log => {
       let cc = log.symptoms || '';
       return cc.includes(cleanMainName);
     });
     
-    // เรียงวันที่จากเก่าไปใหม่ (ครั้งที่ 1, 2, 3...)
     relatedEmr.sort((a,b) => new Date(a.visit_date) - new Date(b.visit_date));
 
     if (relatedEmr.length > 0) {
@@ -853,13 +709,12 @@
 
     document.getElementById('pay_item_details').innerHTML = detailsHtml;
     
-    // 🌟 3. สั่งคำนวณราคาสุทธิและอัปเดตยอดปุ่มต่างๆ ทันที
     calculatePreview();
 
-    // 🌟 โค้ดใหม่: ให้เด้งป๊อปอัปชำระเงินเมื่ออยู่ในมือถือ (และต้องมาจากการคลิกเอง ไม่ใช่ระบบคลิกให้)
-    if (window.innerWidth <= 768 && !isAutoSelect) {
-      document.getElementById('paymentRightPanel').classList.add('show-popup');
-      document.body.style.overflow = 'hidden'; // ล็อคไม่ให้พื้นหลังเลื่อน
+    // 🌟 โค้ดใหม่: ให้เด้งป๊อปอัปชำระเงินเมื่อคลิกเลือกคอร์ส
+    if (!isAutoSelect) {
+      let rightPanel = document.getElementById('paymentRightPanel');
+      if (rightPanel) rightPanel.classList.add('show-popup');
     }
   }
 
@@ -868,7 +723,6 @@
     let discount = parseFloat(document.getElementById('input_discount').value) || 0;
     let discountType = document.getElementById('select_discount_type').value;
 
-    // 🌟 คำนวณส่วนลด
     let netPrice = fullPrice;
     if (discountType === 'PERCENT') {
       netPrice = fullPrice - (fullPrice * (discount / 100));
@@ -879,20 +733,18 @@
 
     document.getElementById('pay_item_net_price').innerText = `฿${netPrice.toLocaleString()}`;
 
-    // ยอดชำระแล้ว
     let alreadyPaid = 0;
     if (selectedBill) {
       alreadyPaid = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     }
 
-    // ยอดคงเหลือใหม่
     let balance = netPrice - alreadyPaid;
     if (balance < 0) balance = 0;
 
     document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
 
     let inputEl = document.getElementById('pay_input_amount');
-    inputEl.setAttribute('max', balance); // อัปเดตเพดานเงินที่จ่ายได้สูงสุด
+    inputEl.setAttribute('max', balance); 
 
     let payVal = parseFloat(inputEl.value) || 0;
     if (payVal > balance) { payVal = balance; inputEl.value = balance; }
@@ -900,7 +752,6 @@
 
     document.getElementById('pay_btn_amount').innerText = `฿${payVal.toLocaleString()}`;
 
-    // 🌟 อัปเดต UI หน้าการ์ดด้านซ้ายแบบเรียลไทม์
     if (selectedBill) {
         let idx = currentPatientBills.indexOf(selectedBill);
         let netEl = document.getElementById(`card_net_${idx}`);
@@ -912,7 +763,6 @@
         }
     }
 
-    // จัดการปุ่มรับชำระเงิน
     let submitBtn = document.getElementById('pay_submit_btn');
     if (balance === 0 && alreadyPaid > 0 && netPrice > 0) {
       submitBtn.disabled = true; 
@@ -937,11 +787,9 @@
     if(method === 'CREDIT') document.getElementById('pay_credit').classList.add('selected');
   }
 
-  // ฟังก์ชันใหม่: ใช้ปิดป๊อปอัปชำระเงินบนมือถือ
   function closeMobilePayment() {
     let rightPanel = document.getElementById('paymentRightPanel');
     if (rightPanel) rightPanel.classList.remove('show-popup');
-    document.body.style.overflow = '';
   }
 
   function resetPaymentPanel() {
@@ -951,7 +799,6 @@
     document.getElementById('pay_item_name').innerText = 'ยังไม่ได้เลือกรายการ';
     document.getElementById('pay_item_type').innerText = '-';
 	
-    // 🌟 โค้ดใหม่: รีเซ็ตและล็อคช่องกรอกราคา/ส่วนลด
     document.getElementById('input_full_price').value = 0;
     document.getElementById('input_discount').value = 0;
     document.getElementById('select_discount_type').value = 'THB';
@@ -973,17 +820,15 @@
     let submitBtn = document.getElementById('pay_submit_btn');
     submitBtn.disabled = true; submitBtn.classList.remove('btn-success'); submitBtn.classList.add('btn-secondary');
 	
-	// 🌟 รีเซ็ตให้แผงรับเงินกลับมาแสดงปกติ
     document.getElementById('pay_input_amount').parentElement.parentElement.style.display = 'block';
     document.getElementById('pay_submit_btn').parentElement.style.display = 'block';
 
-    // 🌟 ซ่อนป๊อปอัปเมื่อรีเซ็ต
     if (window.innerWidth <= 768) {
       closeMobilePayment();
     }
   }
 
-  async function submitSinglePayment() {
+ async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
@@ -1000,7 +845,6 @@
 
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     
-    // แจ้งเตือนคอนเฟิร์มแบบมีรายละเอียดส่วนลด
     let swalHtml = `<b>${cleanMainName}</b><br>`;
     if(fullPrice > 0) swalHtml += `ราคาเต็ม: ฿${fullPrice.toLocaleString()}<br>`;
     if(discount > 0) swalHtml += `ส่วนลด: <span class="text-danger">-${discount.toLocaleString()}${discountType==='PERCENT'?'%':'฿'}</span><br>`;
@@ -1020,7 +864,6 @@
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
-          // 🌟 1. อัปเดตราคาบิลก่อนเสมอ
           await fetch(`/api/pos/bill/${selectedBill.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -1031,7 +874,6 @@
               })
           });
 
-          // 🌟 2. ถ้ายอดชำระ > 0 ให้เรียก API รับชำระเงิน
           if (payAmount > 0) {
               let remainingPay = payAmount; 
               let paymentsPayload = [];
@@ -1075,7 +917,6 @@
               if (data.status !== 'success') throw new Error(data.message);
           }
 
-          // 🌟 บันทึก Log
           let staff = document.getElementById('display-staff-name') ? document.getElementById('display-staff-name').innerText : 'พนักงาน';
           let logMsg = payAmount > 0 
               ? `รับชำระเงินจาก ${currentPosPatient.full_name} จำนวน ฿${payAmount.toLocaleString()} ผ่าน ${selectedMethod} (ราคาคอร์ส: ฿${netPrice.toLocaleString()})`
@@ -1111,17 +952,15 @@
     });
   }
 
-  // 🌟 ระบบ Auto-load ข้อมูลจากหน้าห้องตรวจเมื่อเปิดมาที่หน้า POS
   setTimeout(() => {
     let targetHN = sessionStorage.getItem('targetHN');
     if (targetHN) {
       document.getElementById('posSearchInput').value = targetHN;
-      searchPosPatientNew(); // สั่งให้ค้นหาและเปิดกล่องทันที
-      sessionStorage.removeItem('targetHN'); // คืนค่า
+      searchPosPatientNew(); 
+      sessionStorage.removeItem('targetHN'); 
     }
   }, 300);
   
-  // 1. ฟังก์ชันเปิดป๊อปอัปประวัติ
   function openPaymentHistoryModal() {
     if (!currentPosPatient) return;
     const modalEl = document.getElementById('paymentHistoryModal');
@@ -1135,7 +974,6 @@
     document.getElementById('paymentHistoryModalName').innerText = `${currentPosPatient.full_name} (${currentPosPatient.id})`;
     modalInstance.show();
 
-    // ดึงรายชื่อคอร์สทั้งหมดที่มีประวัติชำระเงิน
     let courses = new Set();
     if (Array.isArray(allPatientBillsHistory)) {
       allPatientBillsHistory.forEach(bill => {
@@ -1150,17 +988,15 @@
     courses.forEach(c => { filterHtml += `<option value="${c}">เฉพาะ: ${c}</option>`; });
     document.getElementById('paymentHistoryFilter').innerHTML = filterHtml;
 
-    renderPaymentHistory(); // โหลดข้อมูล
+    renderPaymentHistory(); 
   }
 
-  // 2. ฟังก์ชันปิดป๊อปอัป
   function closePaymentHistoryModal() {
     const modalEl = document.getElementById('paymentHistoryModal');
     if (modalEl) {
       let m = bootstrap.Modal.getInstance(modalEl);
       if (m) m.hide();
     }
-    // ล้างพื้นหลังสีเทาออกทันที
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       document.body.classList.remove('modal-open');
@@ -1169,7 +1005,6 @@
     }, 150);
   }
 
-  // 3. ฟังก์ชันวาดประวัติ
   function renderPaymentHistory() {
     const container = document.getElementById('paymentHistoryList');
     if (!container) return;
@@ -1178,7 +1013,6 @@
       const filter = document.getElementById('paymentHistoryFilter').value;
       let allPayments = [];
 
-      // สร้าง Map จำเลขลำดับรายการ (1, 2, 3...)
       let displayIdMap = {};
       if (Array.isArray(currentPatientBills)) {
           currentPatientBills.forEach(b => {
@@ -1189,7 +1023,6 @@
           });
       }
 
-      // ดึงประวัติทั้งหมด
       if (Array.isArray(allPatientBillsHistory)) {
           allPatientBillsHistory.forEach(bill => {
             let itemName = bill.item_name || '';
@@ -1213,7 +1046,6 @@
           });
       }
 
-      // จัดกลุ่มยอดเงินที่จ่ายพร้อมกัน
       let groupedPayments = {};
       allPayments.forEach(p => {
           let safeDate = p.date ? String(p.date) : new Date().toISOString();
@@ -1281,12 +1113,9 @@
     }
   }
 
-  // 4. ใบรับรองแพทย์แบบ Custom Overlay พิมพ์ได้ 100%
   async function promptMedicalCertificate(hn, courseName = '') {
-    // ปิดป๊อปอัปประวัติการชำระเงินก่อน
     closePaymentHistoryModal();
 
-    // ดึงรายชื่อหมอ
     let doctorOptions = '<option value="">-- เลือกแพทย์ผู้ตรวจ --</option>';
     try {
       const res = await fetch('/api/users');
@@ -1299,7 +1128,6 @@
       }
     } catch (e) { console.error(e); }
 
-    // สร้าง Custom Modal Overlay ขึ้นมาเอง (ตัดปัญหา Focus Trap 100%)
     const modalHtml = `
       <div id="customCertModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 1050; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
         <div class="bg-white rounded-4 shadow-lg p-4" style="width: 100%; max-width: 500px; animation: popup 0.3s ease;">
@@ -1334,13 +1162,11 @@
       <style>@keyframes popup { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }</style>
     `;
 
-    // ลบอันเก่าทิ้งถ้ามีค้างอยู่ แล้วใส่เข้าไปใหม่ใน body
     const existingModal = document.getElementById('customCertModal');
     if (existingModal) existingModal.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 
-  // 5. ฟังก์ชันกดยืนยันพิมพ์จาก Custom Modal
   function submitCustomCert(hn, courseName = '') {
     const doctor = document.getElementById('cert_doctor_custom').value;
     if (!doctor) {
@@ -1354,10 +1180,8 @@
     const days = document.getElementById('cert_rest_days_custom').value;
     let pName = currentPosPatient ? currentPosPatient.full_name : '';
 
-    // ปิดหน้าต่าง Custom Modal
     document.getElementById('customCertModal').remove();
 
-    // เปิดหน้า Print
     window.open(`/print.html?type=certificate&hn=${hn}&course=${encodeURIComponent(courseName)}&pname=${encodeURIComponent(pName)}&doctor=${encodeURIComponent(doctor)}&dx=${encodeURIComponent(dx)}&tx=${encodeURIComponent(tx)}&reason=${encodeURIComponent(reason)}&days=${days}`, '_blank');
   }
 </script>
