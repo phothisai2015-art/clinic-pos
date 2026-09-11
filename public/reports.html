@@ -204,29 +204,7 @@
       color: #fff !important;
       box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3) !important;
     }
-	/* 🌟 ปรับขนาดกล่องรายงานในมือถือให้ยืดความสูงยาวเต็มพื้นที่หน้าจอ */
-    .chart-container, 
-    .top-sellers-box, 
-    .table-container {
-      height: auto !important;
-      min-height: calc(100vh - 260px) !important; /* ยืดกล่องให้ยาวลงมาเกือบถึงขอบล่างของจอ */
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    /* ปล่อยให้พื้นที่รายการข้างในยืดขยายตามกล่องหลัก */
-    #topSellersContainer,
-    .table-container .custom-scrollbar {
-      max-height: none !important;
-      flex-grow: 1 !important;
-    }
-
-    /* บีบระยะขอบนอกไม่ให้เกินขนาดจอ */
-    .row {
-      --bs-gutter-x: 0.5rem !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
+	
   }
   </style>
 </head>
