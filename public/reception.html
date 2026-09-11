@@ -484,6 +484,55 @@
       font-size: 0.75rem !important;
       padding: 6px 12px !important;
     }
+	/* 🌟 1. ปรับช่องค้นหาให้บางลง และตัวหนังสือเล็กลง */
+    #searchBoxArea .input-group-lg > .form-control,
+    #searchBoxArea .input-group-lg > .btn {
+      padding: 4px 10px !important;
+      font-size: 0.78rem !important;
+      height: 32px !important; /* ปรับความสูงช่องค้นหาลงเหลือ 32px */
+    }
+    #searchBoxArea h6 {
+      font-size: 0.85rem !important;
+      margin-bottom: 6px !important;
+    }
+
+    /* 🌟 2. ย่อตัวหนังสือทั้งหมดในกล่องคอร์สและโปรโมชั่น */
+    #courseMainArea h5.text-secondary {
+      font-size: 0.85rem !important; /* หัวข้อคำว่า "คอร์สและโปรโมชั่น" */
+    }
+    .course-card .card-body {
+      padding: 8px !important; /* ลดขอบด้านในของการ์ด */
+    }
+    .course-card h5.fw-bold {
+      font-size: 0.78rem !important; /* ย่อชื่อคอร์ส / โปรโมชั่น */
+      margin-bottom: 2px !important;
+    }
+    .course-card .badge {
+      font-size: 0.58rem !important; /* ย่อป้ายสถานะ/ป้ายค้างชำระ */
+      padding: 2px 6px !important;
+    }
+    .course-card .text-muted {
+      font-size: 0.6rem !important; /* ย่อวันที่ซื้อ */
+    }
+    .course-card .bg-light {
+      padding: 6px 8px !important; /* บีบกล่องรายการย่อยสีเทา */
+    }
+    .course-card .bg-light span,
+    .course-card .bg-light .small {
+      font-size: 0.68rem !important; /* ย่อชื่อรายการย่อยและสิทธิ์คงเหลือ */
+    }
+    .course-card .btn {
+      font-size: 0.7rem !important; /* ย่อขนาดปุ่มบันทึกประวัติ/ดูประวัติ */
+      padding: 4px 8px !important;
+      margin-top: 6px !important;
+    }
+    .ribbon-promo {
+      font-size: 0.55rem !important; /* ย่อริบบิ้นสีชมพูโปรโมชั่น */
+      padding: 2px 20px !important;
+      top: 10px !important;
+      right: -28px !important;
+    }
+	
   }
   
   .icon-fixed-w { width: 20px; text-align: center; }
