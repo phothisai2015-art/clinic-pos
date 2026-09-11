@@ -162,6 +162,17 @@
       right: -5px !important;
       bottom: -10px !important;
     }
+	/* 🌟 ปรับแต่งปุ่มสลับ 4 กล่องในมือถือ ให้แบ่ง 25% เท่ากันและสวยงาม */
+    .rep-sub-tabs .btn {
+      font-size: 0.72rem !important;
+      padding: 6px 2px !important;
+      white-space: nowrap !important;
+    }
+    .rep-sub-tabs .btn.active {
+      background-color: #3b82f6 !important;
+      color: #fff !important;
+      box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3) !important;
+    }
   }
   </style>
 </head>
@@ -250,14 +261,33 @@
         </div>
       </div>
 
-      <div class="row g-4 mb-4">
-        <div class="col-lg-7 col-xl-8">
+      <!-- 📱 ปุ่มเลือกเปิดกล่อง (แสดงเฉพาะมือถือ แบ่ง 4 ปุ่มเท่ากันพอดีจอ) -->
+      <div class="d-flex d-md-none gap-1 mb-3 rep-sub-tabs">
+        <button class="btn btn-sm btn-outline-primary active flex-fill fw-bold rounded-pill px-1" id="btn-sub-chart" onclick="switchDashSubTab('chart')">
+          <i class="fa-solid fa-chart-line me-1"></i> แนวโน้ม
+        </button>
+        <button class="btn btn-sm btn-outline-primary flex-fill fw-bold rounded-pill px-1" id="btn-sub-top" onclick="switchDashSubTab('top')">
+          <i class="fa-solid fa-trophy me-1"></i> อันดับ
+        </button>
+        <button class="btn btn-sm btn-outline-primary flex-fill fw-bold rounded-pill px-1" id="btn-sub-unpaid" onclick="switchDashSubTab('unpaid')">
+          <i class="fa-solid fa-triangle-exclamation me-1"></i> ค้างชำระ
+        </button>
+        <button class="btn btn-sm btn-outline-primary flex-fill fw-bold rounded-pill px-1" id="btn-sub-logs" onclick="switchDashSubTab('logs')">
+          <i class="fa-solid fa-clock-rotate-left me-1"></i> ประวัติ
+        </button>
+      </div>
+
+      <!-- โครงสร้างกล่องรายงานทั้ง 4 กล่อง -->
+      <div class="row g-3 g-md-4 mb-4">
+        <!-- กล่องที่ 1: แนวโน้มรายได้ -->
+        <div class="col-lg-7 col-xl-8 rep-dash-box" id="box-dash-chart">
           <div class="chart-container d-flex flex-column glass-panel">
             <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> แนวโน้มรายได้รายวัน</h6>
             <div class="flex-grow-1 position-relative"><canvas id="revenueChart"></canvas></div>
           </div>
         </div>
-        <div class="col-lg-5 col-xl-4">
+        <!-- กล่องที่ 2: 5 อันดับขายดี -->
+        <div class="col-lg-5 col-xl-4 rep-dash-box" id="box-dash-top">
           <div class="top-sellers-box d-flex flex-column glass-panel">
             <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i> 5 อันดับ สินค้า/คอร์ส ขายดี</h6>
             <div class="custom-scrollbar flex-grow-1 d-flex flex-column justify-content-between" id="topSellersContainer" style="overflow-y: auto;">
@@ -265,10 +295,8 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="row g-4 mb-4">
-        <div class="col-lg-6">
+        <!-- กล่องที่ 3: รายการค้างชำระ -->
+        <div class="col-lg-6 rep-dash-box" id="box-dash-unpaid">
           <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
             <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i> รายการค้างชำระ</h6>
             <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
@@ -279,7 +307,8 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-6">
+        <!-- กล่องที่ 4: ประวัติรับเงินล่าสุด -->
+        <div class="col-lg-6 rep-dash-box" id="box-dash-logs">
           <div class="table-container d-flex flex-column glass-panel" style="max-height: 400px;">
             <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติรับเงินล่าสุด</h6>
             <div class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
@@ -362,7 +391,6 @@
 <script>
   var revenueChartInstance = null;
 
-  // 🌟 ฟังก์ชันสลับแท็บ
   function switchReportTab(tab) {
     document.getElementById('btn-tab-dash').classList.remove('active');
     document.getElementById('btn-tab-df').classList.remove('active');
@@ -372,11 +400,44 @@
     document.getElementById('tab-df').style.display = 'none';
     document.getElementById(`tab-${tab}`).style.display = 'block';
 
-    if (tab === 'df') {
+    if (tab === 'dash') {
+      switchDashSubTab('chart'); // เปิดกล่องแรกเป็นค่าเริ่มต้น
+    } else if (tab === 'df') {
       loadDfUsersList();
       loadDfReportData();
     }
   }
+
+  // 🌟 ฟังก์ชันสลับเปิด/ปิด 4 กล่องย่อยในโหมดมือถือ
+  function switchDashSubTab(sub) {
+    if (window.innerWidth <= 768) {
+      // 1. เคลียร์คลาส active บนปุ่มทั้งหมด
+      ['chart', 'top', 'unpaid', 'logs'].forEach(k => {
+        let btn = document.getElementById(`btn-sub-${k}`);
+        let box = document.getElementById(`box-dash-${k}`);
+        if (btn) btn.classList.remove('active');
+        if (box) box.style.display = 'none';
+      });
+
+      // 2. เปิดเฉพาะกล่องและปุ่มที่เลือก
+      let activeBtn = document.getElementById(`btn-sub-${sub}`);
+      let activeBox = document.getElementById(`box-dash-${sub}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activeBox) activeBox.style.display = 'block';
+    }
+  }
+
+  // 🌟 สลับการแสดงผลกลับเป็นปกติเมื่อขยายจอเป็น PC
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      ['chart', 'top', 'unpaid', 'logs'].forEach(k => {
+        let box = document.getElementById(`box-dash-${k}`);
+        if (box) box.style.display = '';
+      });
+    } else {
+      switchDashSubTab('chart');
+    }
+  });
 
   // 🌟 จำลองการโหลดรายชื่อพนักงานใส่ Dropdown DF
   async function loadDfUsersList() {
