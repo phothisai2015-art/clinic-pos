@@ -104,6 +104,65 @@
   body.dark-theme .top-seller-item { border-bottom-color: rgba(51, 65, 85, 0.5); }
   body.dark-theme .top-seller-item:hover { background-color: rgba(15, 23, 42, 0.5); }
   body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
+  
+  /* 🌟 ตกแต่งหน้า Dashboard และสถิติสำหรับจอมือถือโดยเฉพาะ */
+  @media (max-width: 768px) {
+    /* 1. ปุ่มปิดมุมขวาบนเหลือแค่ไอคอนวงกลม */
+    .btn-close-rep {
+      width: 36px !important;
+      height: 36px !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 2. แท็บ ภาพรวมรายได้ / ค่ามือ แบ่ง 50/50 และบางลง */
+    .rep-nav-pills {
+      display: flex !important;
+      padding: 3px !important;
+      border-radius: 12px !important;
+    }
+    .rep-nav-pills .nav-item {
+      flex: 1 !important;
+    }
+    .rep-nav-pills .nav-link {
+      width: 100% !important;
+      padding: 6px 4px !important;
+      font-size: 0.78rem !important;
+      border-radius: 8px !important;
+      text-align: center !important;
+    }
+
+    /* 3. ปุ่มกรอง วันนี้ / สัปดาห์นี้ / เดือนนี้ แบ่ง 33.33% เท่ากัน */
+    .rep-filter-group {
+      display: flex !important;
+    }
+    .rep-filter-group .filter-btn {
+      flex: 1 !important;
+      padding: 5px 2px !important;
+      font-size: 0.75rem !important;
+    }
+
+    /* 4. ย่อขนาดกล่อง KPI เงิน 4 ช่อง (2x2) ให้กะทัดรัด */
+    .report-kpi-card {
+      padding: 12px 10px !important;
+      border-radius: 12px !important;
+    }
+    .report-kpi-card h6 {
+      font-size: 0.72rem !important;
+      margin-bottom: 2px !important;
+    }
+    .report-kpi-card h3 {
+      font-size: 1.05rem !important;
+    }
+    .kpi-icon {
+      font-size: 3rem !important;
+      right: -5px !important;
+      bottom: -10px !important;
+    }
+  }
   </style>
 </head>
 <body class="bg-light">
@@ -114,26 +173,27 @@
 <div class="rep-ambient-orb rep-orb-3"></div>
 
 <div class="container-fluid py-4 px-lg-4 position-relative" style="max-width: 1600px; height: 100vh; display: flex; flex-direction: column; z-index: 1;">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-      <h3 class="fw-bold text-secondary m-0 me-3"><i class="fa-solid fa-chart-pie me-2"></i> สถิติและรายงาน</h3>
-      
-      <ul class="nav nav-pills clinic-nav-pills m-0">
-        <li class="nav-item">
-          <button class="nav-link active" id="btn-tab-dash" onclick="switchReportTab('dash')">
-            <i class="fa-solid fa-chart-line me-1"></i> ภาพรวมรายได้
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link tab-df" id="btn-tab-df" onclick="switchReportTab('df')">
-            <i class="fa-solid fa-hand-holding-dollar me-1"></i> สรุปค่ามือ (DF)
-          </button>
-        </li>
-      </ul>
-    </div>
-    <button class="btn btn-outline-danger fw-bold rounded-pill px-4 shadow-sm glass-panel" onclick="window.location.href='/'">
-      <i class="fa-solid fa-xmark me-2"></i> ปิดหน้านี้
+  <!-- 🌟 Header, ปุ่มปิด และแท็บเมนู -->
+  <div class="d-flex justify-content-between align-items-center mb-2 mb-md-4">
+    <h3 class="fw-bold text-secondary m-0"><i class="fa-solid fa-chart-pie me-2"></i> สถิติและรายงาน</h3>
+    <button class="btn btn-outline-danger fw-bold rounded-pill px-3 shadow-sm glass-panel btn-close-rep" onclick="window.location.href='/'">
+      <i class="fa-solid fa-xmark"></i><span class="d-none d-md-inline ms-2">ปิดหน้านี้</span>
     </button>
+  </div>
+
+  <div class="mb-3">
+    <ul class="nav nav-pills clinic-nav-pills rep-nav-pills m-0 w-100">
+      <li class="nav-item">
+        <button class="nav-link active" id="btn-tab-dash" onclick="switchReportTab('dash')">
+          <i class="fa-solid fa-chart-line me-1"></i> ภาพรวมรายได้
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-df" id="btn-tab-df" onclick="switchReportTab('df')">
+          <i class="fa-solid fa-hand-holding-dollar me-1"></i> สรุปค่ามือ (DF)
+        </button>
+      </li>
+    </ul>
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
@@ -146,9 +206,9 @@
         <input type="date" id="rep_end" class="form-control form-control-sm text-primary fw-bold date-input-modern" style="width: 140px;">
         <button class="btn btn-sm btn-primary fw-bold px-3 ms-2 rounded-pill shadow-sm" onclick="loadDashboardData(); loadDfReportData();">ดูรายงาน</button>
       </div>
-      <div class="d-flex gap-2">
-        <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
-        <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
+      <div class="d-flex gap-1 rep-filter-group w-100 mt-2 mt-md-0">
+        <button id="btn-today" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('today')">วันนี้</button>
+        <button id="btn-week" class="btn btn-sm btn-outline-secondary filter-btn fw-bold rounded-pill" onclick="setDateFilter('week')">สัปดาห์นี้</button>
         <button id="btn-month" class="btn btn-sm btn-outline-secondary filter-btn fw-bold px-3 rounded-pill" onclick="setDateFilter('month')">เดือนนี้</button>
       </div>
     </div>
@@ -158,29 +218,30 @@
     <!-- ============================================== -->
     <div id="tab-dash" style="display: block;">
       <!-- KPI Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
+      <!-- KPI Cards (แบ่ง 2 กล่องต่อแถวในมือถือ) -->
+      <div class="row g-2 g-md-4 mb-4">
+        <div class="col-6 col-md-6 col-xl-3">
           <div class="report-kpi-card border-primary glass-panel">
             <i class="fa-solid fa-vault kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">รายได้รวมทั้งหมด</h6>
             <h3 class="text-primary fw-bold m-0" id="kpi_total">฿ 0</h3>
           </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
           <div class="report-kpi-card border-success glass-panel">
             <i class="fa-solid fa-money-bill-wave kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">เงินสด (CASH)</h6>
             <h3 class="text-success fw-bold m-0" id="kpi_cash">฿ 0</h3>
           </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
           <div class="report-kpi-card border-info glass-panel">
             <i class="fa-solid fa-qrcode kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">โอนเงิน (QR)</h6>
             <h3 class="text-info fw-bold m-0" id="kpi_qr">฿ 0</h3>
           </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
           <div class="report-kpi-card border-warning glass-panel">
             <i class="fa-solid fa-credit-card kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">บัตรเครดิต (CREDIT)</h6>
