@@ -394,16 +394,37 @@
           </div>
 
           <!-- 🌟 รายละเอียดคอร์ส/โปร -->
-          <div class="bg-light p-2 rounded-3 border mb-3 d-flex flex-column flex-grow-1" style="min-height: 0;">
-            <div class="fw-bold text-dark fs-6 mb-1" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
-            <div class="d-flex justify-content-between text-muted small mb-1" style="font-size: 0.8rem;">
-              <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
-            </div>
-            <div class="d-flex justify-content-between text-muted small border-bottom pb-1 mb-1" style="font-size: 0.8rem;">
-              <span>ราคาเต็มตามแพคเกจ:</span><span id="pay_item_full_price" class="fw-bold text-dark">฿0.00</span>
-            </div>
-            <div id="pay_item_details" class="text-secondary mt-1 custom-scrollbar flex-grow-1" style="font-size: 0.8rem; overflow-y: auto;"></div>
-          </div>
+<div class="bg-light p-2 rounded-3 border mb-3 d-flex flex-column flex-grow-1" style="min-height: 0;">
+  <div class="fw-bold text-dark fs-6 mb-1" id="pay_item_name">ยังไม่ได้เลือกรายการ</div>
+  <div class="d-flex justify-content-between text-muted small mb-1 border-bottom pb-2" style="font-size: 0.8rem;">
+    <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
+  </div>
+  
+  <!-- 🌟 ส่วนกรอกราคาและส่วนลด (เพิ่มใหม่) -->
+  <div class="mb-2 mt-1">
+    <label class="fw-bold text-dark mb-1 small">1. กำหนดราคาขาย (฿)</label>
+    <input type="number" id="input_full_price" class="form-control form-control-sm text-end fw-bold border-primary text-primary" value="0" min="0" oninput="calculatePreview()" disabled>
+  </div>
+  <div class="row g-2 mb-2 pb-2 border-bottom">
+    <div class="col-7">
+      <label class="fw-bold text-dark mb-1 small">2. ส่วนลด</label>
+      <input type="number" id="input_discount" class="form-control form-control-sm text-end fw-bold text-danger border-danger" value="0" min="0" oninput="calculatePreview()" disabled>
+    </div>
+    <div class="col-5">
+      <label class="fw-bold text-dark mb-1 small">ประเภท</label>
+      <select id="select_discount_type" class="form-select form-select-sm border-danger text-danger fw-bold" onchange="calculatePreview()" disabled>
+        <option value="THB">บาท (฿)</option>
+        <option value="PERCENT">%</option>
+      </select>
+    </div>
+  </div>
+  <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+    <span class="fw-bold text-primary">ราคาสุทธิ (Net Price):</span>
+    <span id="pay_item_net_price" class="fw-bold text-primary fs-6">฿0.00</span>
+  </div>
+
+  <div id="pay_item_details" class="text-secondary mt-1 custom-scrollbar flex-grow-1" style="font-size: 0.8rem; overflow-y: auto;"></div>
+</div>
 
           <!-- 4. ส่วนคำนวณและแบ่งจ่าย -->
           <div>
@@ -706,38 +727,44 @@
     document.getElementById(`bill_box_${index}`).classList.add('selected');
 
     selectedBill = currentPatientBills[index];
-    let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
-    let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
-    let balance = boxTotalPrice - boxPaidAmount;
-
+    
     document.getElementById('pay_bill_id').innerText = `รายการที่ #${selectedBill.display_id}`;
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
     document.getElementById('pay_item_name').innerText = cleanMainName;
     document.getElementById('pay_item_type').innerText = selectedBill.type === 'PROMOTION' ? 'โปร / เซ็ต' : 'คอร์ส / บริการ';
     
-    // 🌟 อัปเดต: เปลี่ยนจาก boxTotalPrice เป็น selectedBill.total_price เพื่อให้โชว์เฉพาะราคาคอร์ส
-    document.getElementById('pay_item_full_price').innerText = `฿${selectedBill.total_price.toLocaleString()}`; 
+    // 🌟 1. ปลดล็อคช่องกรอกราคาและส่วนลด
+    document.getElementById('input_full_price').disabled = false;
+    document.getElementById('input_discount').disabled = false;
+    document.getElementById('select_discount_type').disabled = false;
+    document.getElementById('pay_input_amount').disabled = false;
+
+    // 🌟 2. ดึงราคาเดิม (ถ้ามี) หรือตั้งต้นราคาที่ 0
+    let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
+    document.getElementById('input_full_price').value = boxTotalPrice;
     
+    // ดึงส่วนลดเดิม (ถ้ามีเก็บไว้ใน DB) แต่ถ้าไม่มีให้เป็น 0
+    document.getElementById('input_discount').value = selectedBill.discount || 0;
+    document.getElementById('select_discount_type').value = selectedBill.discount_type || 'THB';
+
+    // ดึงยอดที่จ่ายไปแล้ว
+    let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
     document.getElementById('pay_already_paid').innerText = `฿${boxPaidAmount.toLocaleString()}`;
-    document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
-    // 🌟 โค้ดส่วนที่หายไป (ใช้ปลดล็อคช่องกรอกเงินและปุ่ม)
-    let inputEl = document.getElementById('pay_input_amount');
-    inputEl.disabled = false; inputEl.value = balance; inputEl.setAttribute('max', balance);
-    
-    let submitBtn = document.getElementById('pay_submit_btn');
-    submitBtn.disabled = false; submitBtn.classList.remove('btn-secondary'); submitBtn.classList.add('btn-success');
-    // 🌟 ซ่อน/แสดง แผงรับชำระเงินตามสถานะยอดคงเหลือ
+
+    // ตั้งค่ายอดชำระเริ่มต้นให้เท่ากับยอดคงเหลือของราคาปัจจุบัน
+    let initialBalance = boxTotalPrice - boxPaidAmount;
+    if(initialBalance < 0) initialBalance = 0;
+    document.getElementById('pay_input_amount').value = initialBalance;
+
+    // 🌟 เปิดกล่องชำระเงินเสมอ เพื่อให้แก้ไขราคาและรับชำระได้ตลอด
     let paymentSection1 = document.getElementById('pay_input_amount').parentElement.parentElement;
     let paymentSection2 = document.getElementById('pay_submit_btn').parentElement;
-    
-    if (balance <= 0) {
-        paymentSection1.style.display = 'none';
-        paymentSection2.style.display = 'none';
-    } else {
-        paymentSection1.style.display = 'block';
-        paymentSection2.style.display = 'block';
-    }
-    
+    paymentSection1.style.display = 'block';
+    paymentSection2.style.display = 'block';
+
+    // ==========================================
+    // 🌟 ส่วนดึงรายละเอียดหัตถการ ยาพ่วง และประวัติ EMR (คงเดิม)
+    // ==========================================
     let prodDef = currentInventory.find(p => p.id === selectedBill.product_id);
     let detailsHtml = '';
     if (prodDef && prodDef.type === 'PROMOTION' && prodDef.bundle_items) {
@@ -757,11 +784,11 @@
          detailsHtml += `<div class="d-flex justify-content-between pb-1 border-bottom"><span>- ${cleanMedName} <small class="text-success">${mStatus}</small></span> <b>฿${m.total_price.toLocaleString()}</b></div>`;
       });
     }
-	
-	// 🌟 ดึงประวัติการใช้บริการจาก EMR ที่ตรงกับชื่อคอร์สนี้
+    
+    // ดึงประวัติการใช้บริการจาก EMR ที่ตรงกับชื่อคอร์สนี้
     let relatedEmr = currentPatientEmr.filter(log => {
       let cc = log.symptoms || '';
-      return cc.includes(cleanMainName); // ตรวจสอบว่าในประวัติมีชื่อคอร์ส/บิล นี้ไหม
+      return cc.includes(cleanMainName);
     });
     
     // เรียงวันที่จากเก่าไปใหม่ (ครั้งที่ 1, 2, 3...)
@@ -785,15 +812,61 @@
     }
 
     document.getElementById('pay_item_details').innerHTML = detailsHtml;
+    
+    // 🌟 3. สั่งคำนวณราคาสุทธิและอัปเดตยอดปุ่มต่างๆ ทันที
     calculatePreview();
   }
 
   function calculatePreview() {
+    let fullPrice = parseFloat(document.getElementById('input_full_price').value) || 0;
+    let discount = parseFloat(document.getElementById('input_discount').value) || 0;
+    let discountType = document.getElementById('select_discount_type').value;
+
+    // 🌟 คำนวณส่วนลด
+    let netPrice = fullPrice;
+    if (discountType === 'PERCENT') {
+      netPrice = fullPrice - (fullPrice * (discount / 100));
+    } else {
+      netPrice = fullPrice - discount;
+    }
+    if (netPrice < 0) netPrice = 0;
+
+    document.getElementById('pay_item_net_price').innerText = `฿${netPrice.toLocaleString()}`;
+
+    // ยอดชำระแล้ว
+    let alreadyPaid = 0;
+    if (selectedBill) {
+      alreadyPaid = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
+    }
+
+    // ยอดคงเหลือใหม่
+    let balance = netPrice - alreadyPaid;
+    if (balance < 0) balance = 0;
+
+    document.getElementById('pay_balance').innerText = `฿${balance.toLocaleString()}`;
+
     let inputEl = document.getElementById('pay_input_amount');
-    let val = parseFloat(inputEl.value) || 0; let max = parseFloat(inputEl.getAttribute('max')) || 0;
-    if (val > max) { val = max; inputEl.value = max; }
-    if (val < 0) { val = 0; inputEl.value = 0; }
-    document.getElementById('pay_btn_amount').innerText = `฿${val.toLocaleString()}`;
+    inputEl.setAttribute('max', balance); // อัปเดตเพดานเงินที่จ่ายได้สูงสุด
+
+    let payVal = parseFloat(inputEl.value) || 0;
+    if (payVal > balance) { payVal = balance; inputEl.value = balance; }
+    if (payVal < 0) { payVal = 0; inputEl.value = 0; }
+
+    document.getElementById('pay_btn_amount').innerText = `฿${payVal.toLocaleString()}`;
+
+    // จัดการปุ่มรับชำระเงิน
+    let submitBtn = document.getElementById('pay_submit_btn');
+    if (balance === 0 && alreadyPaid > 0 && netPrice > 0) {
+      submitBtn.disabled = true; // จ่ายครบแล้ว
+      submitBtn.classList.replace('btn-success', 'btn-secondary');
+    } else if (payVal > 0 || (netPrice === 0 && fullPrice > 0)) { 
+      // กดรับเงินได้ ถ้ายอดจ่าย > 0 หรือในกรณีที่ให้ส่วนลด 100% จนเหลือ 0 บาท
+      submitBtn.disabled = false;
+      submitBtn.classList.replace('btn-secondary', 'btn-success');
+    } else {
+      submitBtn.disabled = true;
+      submitBtn.classList.replace('btn-success', 'btn-secondary');
+    }
   }
 
   function selectMethodNew(method) {
@@ -810,7 +883,18 @@
     document.getElementById('pay_bill_id').innerText = `-`;
     document.getElementById('pay_item_name').innerText = 'ยังไม่ได้เลือกรายการ';
     document.getElementById('pay_item_type').innerText = '-';
-    document.getElementById('pay_item_full_price').innerText = `฿0.00`;
+	
+    // 🌟 โค้ดใหม่: รีเซ็ตและล็อคช่องกรอกราคา/ส่วนลด
+    document.getElementById('input_full_price').value = 0;
+    document.getElementById('input_discount').value = 0;
+    document.getElementById('select_discount_type').value = 'THB';
+    document.getElementById('pay_item_net_price').innerText = `฿0.00`;
+    
+    document.getElementById('input_full_price').disabled = true;
+    document.getElementById('input_discount').disabled = true;
+    document.getElementById('select_discount_type').disabled = true;
+    document.getElementById('pay_input_amount').disabled = true;
+	
     document.getElementById('pay_already_paid').innerText = `฿0.00`;
     document.getElementById('pay_balance').innerText = `฿0.00`;
     document.getElementById('pay_item_details').innerHTML = '';
@@ -827,35 +911,68 @@
     document.getElementById('pay_submit_btn').parentElement.style.display = 'block';
   }
 
- // 🌟 ยืนยันการรับชำระเงิน (พร้อมเก็บ Log และเด้งถามเรื่องพิมพ์ใบเสร็จแบบใหม่)
-  async function submitSinglePayment() {
+ async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
+    
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
-    if (payAmount <= 0) return Swal.fire('ไม่ถูกต้อง', 'กรุณาระบุยอดชำระ', 'warning');
+    let fullPrice = parseFloat(document.getElementById('input_full_price').value) || 0;
+    let discount = parseFloat(document.getElementById('input_discount').value) || 0;
+    let discountType = document.getElementById('select_discount_type').value;
+
+    let netPrice = fullPrice;
+    if (discountType === 'PERCENT') netPrice = fullPrice - (fullPrice * (discount / 100));
+    else netPrice = fullPrice - discount;
+    if (netPrice < 0) netPrice = 0;
+
+    // ยอมรับ payAmount เป็น 0 ได้ในกรณีที่ให้ส่วนลด 100% (แจกฟรี)
+    if (payAmount <= 0 && netPrice > 0) return Swal.fire('ไม่ถูกต้อง', 'กรุณาระบุยอดชำระ', 'warning');
 
     let cleanMainName = selectedBill.item_name.split(' (ในคอร์ส:')[0];
+    
+    // แจ้งเตือนคอนเฟิร์มแบบมีรายละเอียดส่วนลด
+    let swalHtml = `<b>${cleanMainName}</b><br>`;
+    if(fullPrice > 0) swalHtml += `ราคาเต็ม: ฿${fullPrice.toLocaleString()}<br>`;
+    if(discount > 0) swalHtml += `ส่วนลด: <span class="text-danger">-${discount.toLocaleString()}${discountType==='PERCENT'?'%':'฿'}</span><br>`;
+    swalHtml += `ยอดชำระรอบนี้: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`;
+
     Swal.fire({
-      title: 'ยืนยันรับชำระ?', html: `<b>${cleanMainName}</b><br>ยอดชำระ: <b class="text-success fs-5">฿${payAmount.toLocaleString()}</b><br>ช่องทาง: <b>${selectedMethod}</b>`,
+      title: 'ยืนยันรับชำระ?', html: swalHtml,
       showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#3b82f6'
     }).then(async (result) => {
       if (result.isConfirmed) {
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        let remainingPay = payAmount; let paymentsPayload = [];
-        let mainBalance = selectedBill.total_price - selectedBill.paid_amount;
-        let payForMain = Math.min(mainBalance, remainingPay);
-        if (payForMain > 0) { paymentsPayload.push({ bill_id: selectedBill.id, pay_amount: payForMain, payment_method: selectedMethod }); remainingPay -= payForMain; }
-
-        if (selectedBill.attached_meds && selectedBill.attached_meds.length > 0) {
-            for (let m of selectedBill.attached_meds) {
-                if (remainingPay <= 0) break;
-                let mBalance = m.total_price - m.paid_amount;
-                let payForMed = Math.min(mBalance, remainingPay);
-                if (payForMed > 0) { paymentsPayload.push({ bill_id: m.id, pay_amount: payForMed, payment_method: selectedMethod }); remainingPay -= payForMed; }
-            }
-        }
         
+        let remainingPay = payAmount; 
+        let paymentsPayload = [];
+        
+        // 🌟 คำนวณยอดชำระใหม่เทียบกับราคาสุทธิที่เพิ่งกำหนด
+        let mainPaid = selectedBill.paid_amount;
+        let mainBalance = netPrice - mainPaid;
+        let payForMain = Math.min(mainBalance, remainingPay);
+        
+        if (payForMain >= 0) { 
+          paymentsPayload.push({ 
+              bill_id: selectedBill.id, 
+              pay_amount: payForMain, 
+              payment_method: selectedMethod,
+              updated_total_price: netPrice, // 🌟 บอกให้ระบบหลังบ้านอัปเดตราคาบิล
+              discount: discount,
+              discount_type: discountType
+          }); 
+          remainingPay -= payForMain; 
+        }
+
         try {
-          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sales_rep: '-', payment_method: selectedMethod, payments: paymentsPayload, new_items: [] }) });
+          const res = await fetch('/api/pos/pay/' + currentPosPatient.id, { 
+              method: 'PUT', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ 
+                  sales_rep: '-', 
+                  payment_method: selectedMethod, 
+                  payments: paymentsPayload, 
+                  new_items: [] 
+              }) 
+          });
           const data = await res.json();
           
           if (data.status === 'success') {

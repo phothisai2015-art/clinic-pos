@@ -939,12 +939,7 @@
               <div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>
             </div>
             
-            <div class="bg-white p-3 rounded-3 border mb-3">
-              <div class="d-flex justify-content-between fw-bold text-muted mb-1">
-                <span>ยอดรวมเบื้องต้น:</span>
-                <span id="cartTotalDisplay" class="text-dark fs-5">฿ 0.00</span>
-              </div>
-            </div>
+            
 
             <button class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-3 fs-5" onclick="confirmPackageSelection()">
               <i class="fa-solid fa-check-circle me-1"></i> ยืนยันรายการ & สร้างบิล
@@ -1317,7 +1312,6 @@
     const generalContainer = document.getElementById('pkg-content-general');
     promoContainer.innerHTML = ''; generalContainer.innerHTML = '';
 
-    // 🌟 อัปเดต: ให้กรองเอาเฉพาะสินค้าที่ไม่ใช่ยา และต้องมีสถานะเป็น ACTIVE (หรือของเก่าที่ยังไม่มีสถานะ) เท่านั้น
     const filteredList = allInventoryList.filter(p => 
       p.type !== 'MEDICINE' && 
       p.type !== 'SKINCARE' && 
@@ -1325,15 +1319,14 @@
     );
 
     filteredList.forEach(p => {
-      let priceStr = `฿${p.price.toLocaleString()}`;
       let isPromo = p.type === 'PROMOTION';
       
+      // 🌟 เอาการส่งค่า p.price ออกจากปุ่ม onclick และเอา priceStr ออก
       let html = `
         <div class="${isPromo ? 'col-md-12' : 'col-md-6'}">
-          <div class="course-card p-3 shadow-sm" style="cursor:pointer;" onclick="addToCart('${p.id}', \`${p.name}\`, ${p.price}, '${p.type}')">
+          <div class="course-card p-3 shadow-sm" style="cursor:pointer;" onclick="addToCart('${p.id}', \`${p.name}\`, '${p.type}')">
             <div class="d-flex justify-content-between align-items-center mb-2">
                <span class="badge ${isPromo ? 'bg-primary' : 'bg-info text-dark'}">${p.type}</span>
-               <span class="fw-bold text-success">${priceStr}</span>
             </div>
             <h6 class="fw-bold text-dark m-0"><i class="fa-solid ${isPromo ? 'fa-gift text-primary' : 'fa-syringe text-info'} me-2"></i>${p.name}</h6>
           </div>
@@ -1347,9 +1340,10 @@
     if(generalContainer.innerHTML === '') generalContainer.innerHTML = '<div class="col-12 text-muted text-center py-4">ไม่มีข้อมูลรายการยิบย่อยที่กำลังเปิดขาย</div>';
   }
 
-  function addToCart(id, name, price, type) {
+  function addToCart(id, name, type) {
     let existing = currentCart.find(item => item.id === id);
-    if (existing) { existing.qty += 1; } else { currentCart.push({ id, name, price, type, qty: 1 }); }
+    // 🌟 เอา price ออก
+    if (existing) { existing.qty += 1; } else { currentCart.push({ id, name, type, qty: 1 }); }
     renderCart();
   }
 
@@ -1357,22 +1351,21 @@
 
   function renderCart() {
     const cartContainer = document.getElementById('selectedItemsCart');
-    const totalDisplay = document.getElementById('cartTotalDisplay');
+    // เอา totalDisplay ออกเพราะเราลบ HTML มันไปแล้ว
     
     if (currentCart.length === 0) {
       cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">ยังไม่ได้เลือกรายการ...</div>';
-      totalDisplay.innerText = '฿ 0.00';
       return;
     }
 
-    let html = ''; let total = 0;
+    let html = ''; 
     currentCart.forEach((item, index) => {
-      let lineTotal = item.price * item.qty; total += lineTotal;
+      // 🌟 นำการคูณราคาออก และแสดงแค่จำนวนอย่างเดียว
       html += `
         <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
           <div>
             <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.name}</div>
-            <div class="text-success fw-bold small">฿${item.price.toLocaleString()} x ${item.qty}</div>
+            <div class="text-primary fw-bold small">จำนวน: ${item.qty} รายการ</div>
           </div>
           <button class="btn btn-sm btn-outline-danger rounded-circle" style="padding: 2px 6px;" onclick="removeFromCart(${index})">
             <i class="fa-solid fa-xmark"></i>
@@ -1381,7 +1374,6 @@
     });
     
     cartContainer.innerHTML = html;
-    totalDisplay.innerText = `฿ ${total.toLocaleString()}`;
   }
 
   async function confirmPackageSelection() {

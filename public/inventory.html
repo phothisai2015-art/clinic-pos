@@ -558,15 +558,11 @@
               
               <div class="form-section-title">2. ข้อมูลการขาย & จุดเตือนสต็อก</div>
               <div class="row mb-3">
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">ราคาขาย (฿)</label>
-                  <input type="number" id="pd_price" class="form-control text-success fw-bold" value="0" placeholder="0.00">
-                </div>
-                <div class="col-6">
-                  <label class="form-label fw-bold small text-muted">หน่วยนับ</label>
-                  <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น ขวด, ไซริงค์, กล่อง">
-                </div>
-              </div>
+  <div class="col-12">
+    <label class="form-label fw-bold small text-muted">หน่วยนับ</label>
+    <input type="text" id="pd_unit" class="form-control" required placeholder="เช่น ขวด, ไซริงค์, กล่อง">
+  </div>
+</div>
               
               <div id="normal_fields">
                 <div class="p-3 bg-light rounded-4 border mb-3">
@@ -939,9 +935,9 @@
       id: document.getElementById('pd_id').value, 
       name: document.getElementById('pd_name').value, 
       type: document.getElementById('pd_type').value,
-      price: parseFloat(document.getElementById('pd_price').value), 
+      price: 0, /* 🌟 เปลี่ยนตรงนี้ บังคับส่งค่า 0 ไปที่ฐานข้อมูล */
       stock: parseFloat(document.getElementById('pd_stock').value), 
-      min_stock: parseFloat(document.getElementById('pd_min_stock').value) || 5, /* 🌟 เพิ่มบรรทัดนี้ */
+      min_stock: parseFloat(document.getElementById('pd_min_stock').value) || 5,
       unit: document.getElementById('pd_unit').value,
       lot_number: document.getElementById('pd_lot').value, 
       expiry_date: document.getElementById('pd_expiry').value, 
@@ -980,8 +976,6 @@
       document.getElementById('pd_id').value = item.id; 
       document.getElementById('pd_name').value = item.name; 
       document.getElementById('pd_type').value = item.type;
-      
-      document.getElementById('pd_price').value = item.price; 
       document.getElementById('pd_stock').value = item.stock; 
       document.getElementById('pd_min_stock').value = item.min_stock || 5;
       document.getElementById('pd_unit').value = item.unit;
