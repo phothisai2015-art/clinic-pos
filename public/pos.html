@@ -182,19 +182,19 @@
     #paymentHistoryList .text-end .fs-5 { font-size: 1.1rem !important; }
 
     /* 5. บังคับแผงชำระเงิน (ขวามือ) ให้เป็นป๊อปอัปในมือถือ */
-    #paymentRightPanel { display: none !important; }
-    #paymentRightPanel.show-popup { display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100dvh !important; background: rgba(0, 0, 0, 0.7) !important; z-index: 999999 !important; padding: 15px !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-    #paymentRightPanel.show-popup .payment-panel { width: 100% !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 16px !important; padding: 15px !important; box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important; }
+    #paymentRightPanel:not(.show-popup) { display: none !important; }
+    #paymentRightPanel.show-popup { display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100dvh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 999999 !important; padding: 15px !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+    #paymentRightPanel.show-popup .payment-panel { width: 100% !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 16px !important; padding: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important; }
     
-    .payment-panel h6 { font-size: 0.85rem !important; }
-    .payment-panel .small { font-size: 0.7rem !important; }
-    .payment-panel .fs-6 { font-size: 0.8rem !important; }
-    .payment-panel input, .payment-panel select { font-size: 0.8rem !important; padding: 6px 8px !important; height: 30px !important; }
-    .pay-method-btn { font-size: 0.75rem !important; padding: 6px !important; border-radius: 8px !important; }
-    .pay-method-btn i { font-size: 0.85rem !important; }
-    #pay_submit_btn { font-size: 0.85rem !important; padding: 8px !important; }
-    #pay_balance { font-size: 0.95rem !important; }
-    #pay_already_paid { font-size: 0.8rem !important; }
+    .payment-panel h6 { font-size: 0.8rem !important; }
+    .payment-panel .small { font-size: 0.65rem !important; }
+    .payment-panel .fs-6 { font-size: 0.75rem !important; }
+    .payment-panel input, .payment-panel select { font-size: 0.75rem !important; padding: 4px 6px !important; height: 26px !important; }
+    .pay-method-btn { font-size: 0.7rem !important; padding: 4px !important; border-radius: 8px !important; }
+    .pay-method-btn i { font-size: 0.8rem !important; }
+    #pay_submit_btn { font-size: 0.8rem !important; padding: 6px !important; }
+    #pay_balance { font-size: 0.9rem !important; }
+    #pay_already_paid { font-size: 0.75rem !important; }
 
     /* 🛑 ล็อคพื้นหลังเฉพาะในมือถือ (ตัดปัญหาแถบเลื่อนซ้อน 100%) */
     html, body { overflow: hidden !important; height: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
@@ -325,7 +325,7 @@
               <span>ประเภท:</span><span id="pay_item_type" class="fw-bold">-</span>
             </div>
             
-            <!-- 🌟 ส่วนกรอกราคาและส่วนลด -->
+            <!-- 🌟 ส่วนกรอกราคาและส่วนลด (เพิ่มใหม่) -->
             <div class="mb-2 mt-1">
               <label class="fw-bold text-dark mb-1 small">1. กำหนดราคาขาย (฿)</label>
               <input type="number" id="input_full_price" class="form-control form-control-sm text-end fw-bold border-primary text-primary" value="0" min="0" oninput="calculatePreview()" disabled>
@@ -649,7 +649,7 @@
     let boxTotalPrice = selectedBill.total_price + selectedBill.attached_meds.reduce((sum, m) => sum + m.total_price, 0);
     let boxPaidAmount = selectedBill.paid_amount + selectedBill.attached_meds.reduce((sum, m) => sum + m.paid_amount, 0);
 
-    // 🌟 เงื่อนไขใหม่: ถ้าคอร์สราคามากกว่า 0 (เคยตั้งราคาไปแล้ว) ให้ล็อกช่องกรอกราคาและส่วนลด
+    // 🌟 เงื่อนไขล็อกช่องราคา: ถ้าราคา > 0 คือตั้งราคาแล้วให้ล็อกถาวร
     let isLocked = boxTotalPrice > 0;
     
     document.getElementById('input_full_price').disabled = isLocked;
@@ -716,6 +716,7 @@
     }
 
     document.getElementById('pay_item_details').innerHTML = detailsHtml;
+    
     calculatePreview();
   }
 
@@ -829,7 +830,7 @@
     }
   }
 
- async function submitSinglePayment() {
+  async function submitSinglePayment() {
     if (!selectedBill || !currentPosPatient) return;
     
     let payAmount = parseFloat(document.getElementById('pay_input_amount').value) || 0;
