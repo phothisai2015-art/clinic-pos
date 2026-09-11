@@ -612,9 +612,10 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   }
   
-  /* 🌟 จัดการ Layout ข้อมูลคนไข้ และแพ้ยา */
-  .patient-info-half { width: 100%; flex-shrink: 0; padding-right: 15px; }
-  .allergy-half { flex-grow: 1; }
+  /* 🌟 จัดการ Layout ข้อมูลคนไข้ และแพ้ยา (ป้องกันกล่องทะลุในจอใหญ่) */
+  .patient-info-half { width: auto; max-width: 100%; flex-shrink: 0; padding-right: 15px; }
+  .patient-info-half.has-allergy { max-width: 50%; }
+  .allergy-half { flex: 1 1 auto; max-width: 50%; overflow: hidden; }
   .allergy-title-mobile { font-size: 0.8rem; }
   .allergy-desc-mobile { font-size: 0.75rem; }
 
@@ -623,9 +624,19 @@
     .patient-info-half.has-allergy { width: 50% !important; padding-right: 5px; }
     .allergy-half { width: 50% !important; padding: 6px 8px !important; flex-grow: 0 !important; }
     
-    /* ย่อชื่อและจัดเรียงข้อมูลใต้ชื่อเป็นแนวตั้ง */
+    /* 🌟 ปรับชื่อคนไข้ให้กระชับ */
     .patient-name-mobile { font-size: 0.85rem !important; }
-    .patient-details-row { flex-direction: column !important; align-items: flex-start !important; gap: 0 !important; font-size: 0.65rem !important; }
+    
+    /* 🌟 จัดให้ HN, เลขบัตร, อายุ เรียงแนวนอนชิดกัน (ไม่ต่อแนวตั้ง) เพื่อลดความสูง */
+    .patient-details-row { 
+      flex-direction: row !important; 
+      flex-wrap: wrap !important; 
+      align-items: center !important; 
+      gap: 2px 4px !important; 
+      font-size: 0.65rem !important; 
+    }
+    .patient-details-row .divider { display: none !important; } /* ซ่อนเส้นคั่น | เพื่อประหยัดพื้นที่ */
+    .patient-details-row span { white-space: nowrap; }
     
     /* ย่อตัวหนังสือแพ้ยา */
     .allergy-title-mobile { font-size: 0.6rem !important; margin-bottom: 2px; }
