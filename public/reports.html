@@ -28,63 +28,16 @@
   </script>
 
   <style>
-  
-  /* 🌟 ปรับขนาดรายการสินค้าขายดีให้สูงเท่าเดิมเสมอ แม้จะมีแค่ 1 รายการ */
-  #topSellersContainer {
-    justify-content: flex-start !important; /* จัดเรียงจากบนลงล่าง ไม่ยืดระยะห่าง */
-    gap: 6px !important;
-  }
-  .top-seller-item {
-    flex: 0 0 auto !important; /* ยกเลิกการขยายความสูงแนวตั้ง */
-    height: auto !important;
-    padding: 10px 8px !important;
-  }
-  
-  /* 🌟 ล็อคขอบจอไม่ให้เลื่อนซ้าย-ขวาในมือถือ (100% Fixed) */
+  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
+  * { font-family: 'Sarabun', sans-serif; }
+
+  /* 🌟 ล็อคขอบจอไม่ให้เลื่อนซ้าย-ขวา 100% (Global) */
   html, body {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
     position: relative;
   }
-
-  @media (max-width: 768px) {
-    /* 1. บังคับล็อก Container หลัก */
-    .container-fluid {
-      width: 100% !important;
-      max-width: 100% !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-      overflow-x: hidden !important;
-    }
-
-    /* 2. ลบ Margin ติดลบของ Bootstrap .row ที่ดันจอทะลุขอบขวา */
-    .row {
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-    .row > [class*="col-"] {
-      padding-left: 4px !important;
-      padding-right: 4px !important;
-    }
-
-    /* 3. ย่อขนาดปุ่มเมนู 4 ปุ่มให้พอดีขอบจอมือถือทุกรุ่น */
-    .rep-sub-tabs {
-      width: 100% !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-    .rep-sub-tabs .btn {
-      font-size: 0.68rem !important;
-      padding: 6px 1px !important;
-    }
-    .rep-sub-tabs .btn i {
-      font-size: 0.65rem !important;
-    }
-  }
-  
-  /* 🌟 บังคับฟอนต์ให้ทันสมัย (Sarabun) ทุกจุด */
-  * { font-family: 'Sarabun', sans-serif; }
   
   /* 🌟 แสงออร่าด้านหลัง (Ambient Orbs) */
   .rep-ambient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.6; animation: floatOrb 20s infinite alternate ease-in-out; pointer-events: none; }
@@ -112,6 +65,20 @@
   .chart-container, .top-sellers-box { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; height: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
   .table-container { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; }
   
+  /* 🌟 ปรับขนาดรายการสินค้าขายดีให้สูงเท่าเดิมเสมอ แม้จะมีแค่ 1 รายการ */
+  #topSellersContainer {
+    justify-content: flex-start !important;
+    gap: 8px !important;
+  }
+  .top-seller-item {
+    flex: 0 0 auto !important; 
+    height: auto !important;
+    padding: 10px 10px !important;
+    display: flex; align-items: center; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px;
+  }
+  .top-seller-item:last-child { border-bottom: none; }
+  .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
+  
   .filter-btn { background: rgba(255, 255, 255, 0.5); }
   .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
   
@@ -121,10 +88,6 @@
 
   input[type="date"].date-input-modern { border: none !important; background: transparent !important; font-weight: 700; color: #3b82f6; cursor: pointer; outline: none; box-shadow: none !important; font-family: 'Sarabun', sans-serif; }
 
-  .top-seller-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed rgba(226, 232, 240, 0.8); transition: all 0.2s; border-radius: 12px; }
-  .top-seller-item:last-child { border-bottom: none; }
-  .top-seller-item:hover { background-color: rgba(255, 255, 255, 0.5); transform: translateX(4px); }
-  
   .rank-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1rem; margin-right: 15px; flex-shrink: 0; }
   .rank-1 { background-color: #f59e0b; color: #fff; } .rank-2 { background-color: #94a3b8; color: #fff; } .rank-3 { background-color: #d97706; color: #fff; } .rank-other { background-color: rgba(241, 245, 249, 0.8); color: #64748b; }
 
@@ -159,10 +122,31 @@
   body.dark-theme .top-seller-item { border-bottom-color: rgba(51, 65, 85, 0.5); }
   body.dark-theme .top-seller-item:hover { background-color: rgba(15, 23, 42, 0.5); }
   body.dark-theme .rank-other { background: rgba(51, 65, 85, 0.8); color: #cbd5e1; }
-  
-  /* 🌟 ตกแต่งหน้า Dashboard และสถิติสำหรับจอมือถือโดยเฉพาะ */
+
+  /* ========================================================== */
+  /* 📱 MOBILE SPECIFIC STYLES (Max Width 768px) */
+  /* ========================================================== */
   @media (max-width: 768px) {
-  /* 🌟 บีบกล่องตัวกรองช่วงเวลาให้กระชับ ย่อตัวหนังสือในมือถือ */
+    /* บังคับล็อก Container หลัก */
+    .container-fluid {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      overflow-x: hidden !important;
+    }
+
+    /* ลบ Margin ติดลบของ Bootstrap .row ที่ดันจอทะลุขอบขวา */
+    .row {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .row > [class*="col-"] {
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+    }
+
+    /* บีบกล่องตัวกรองช่วงเวลาให้กระชับ ย่อตัวหนังสือในมือถือ */
     .rep-filter-box {
       padding: 6px 10px !important;
       margin-bottom: 8px !important;
@@ -179,7 +163,8 @@
       height: 28px !important;
       text-align: center;
     }
-    /* 1. ปุ่มปิดมุมขวาบนเหลือแค่ไอคอนวงกลม */
+
+    /* ปุ่มปิดมุมขวาบนเหลือแค่ไอคอนวงกลม */
     .btn-close-rep {
       width: 36px !important;
       height: 36px !important;
@@ -190,7 +175,7 @@
       justify-content: center;
     }
 
-    /* 2. แท็บ ภาพรวมรายได้ / ค่ามือ แบ่ง 50/50 และบางลง */
+    /* แท็บ ภาพรวมรายได้ / ค่ามือ แบ่ง 50/50 และบางลง */
     .rep-nav-pills {
       display: flex !important;
       padding: 3px !important;
@@ -207,7 +192,7 @@
       text-align: center !important;
     }
 
-    /* 3. ปุ่มกรอง วันนี้ / สัปดาห์นี้ / เดือนนี้ แบ่ง 33.33% เท่ากัน */
+    /* ปุ่มกรอง วันนี้ / สัปดาห์นี้ / เดือนนี้ แบ่ง 33.33% เท่ากัน */
     .rep-filter-group {
       display: flex !important;
     }
@@ -217,7 +202,7 @@
       font-size: 0.75rem !important;
     }
 
-    /* 4. ย่อขนาดกล่อง KPI เงิน 4 ช่อง (2x2) ให้กะทัดรัด */
+    /* ย่อขนาดกล่อง KPI เงิน 4 ช่อง (2x2) ให้กะทัดรัด */
     .report-kpi-card {
       padding: 12px 10px !important;
       border-radius: 12px !important;
@@ -234,11 +219,20 @@
       right: -5px !important;
       bottom: -10px !important;
     }
-	/* 🌟 ปรับแต่งปุ่มสลับ 4 กล่องในมือถือ ให้แบ่ง 25% เท่ากันและสวยงาม */
+
+    /* ย่อขนาดปุ่มเมนู 4 ปุ่มให้พอดีขอบจอมือถือทุกรุ่น */
+    .rep-sub-tabs {
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
     .rep-sub-tabs .btn {
-      font-size: 0.72rem !important;
-      padding: 6px 2px !important;
+      font-size: 0.68rem !important;
+      padding: 6px 1px !important;
       white-space: nowrap !important;
+    }
+    .rep-sub-tabs .btn i {
+      font-size: 0.65rem !important;
     }
     .rep-sub-tabs .btn.active {
       background-color: #3b82f6 !important;
@@ -246,7 +240,7 @@
       box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3) !important;
     }
 
-    /* 🌟 ปรับแต่งแท็บ DF ในมือถือ: ย่อฟอนต์ Dropdown, KPI 3 กล่อง และตาราง */
+    /* ปรับแต่งแท็บ DF ในมือถือ: ย่อฟอนต์ Dropdown, KPI 3 กล่อง และตาราง */
     #tab-df .d-flex.align-items-center.mb-4.gap-3 {
       margin-bottom: 10px !important;
       gap: 6px !important;
@@ -302,25 +296,21 @@
     #tab-df .table td i {
       font-size: 0.65rem !important;
     }
-  }
-	/* 🌟 ปรับแต่งกล่อง 5 อันดับขายดีในมือถือ (ย่อฟอนต์ + ขยายกล่องลงล่าง + ล็อกซ้ายขวา) */
+
+    /* ปรับแต่งกล่อง 5 อันดับขายดีในมือถือ (ย่อฟอนต์ + ขยายกล่องลงล่าง + ล็อกซ้ายขวา) */
     #box-dash-top .top-sellers-box {
       height: auto !important;
-      min-height: 420px !important; /* ขยายกล่องยาวลงมาใช้พื้นที่ว่างด้านล่าง */
+      min-height: 420px !important; 
       padding: 12px 10px !important;
-      overflow-x: hidden !important; /* ล็อกไม่ให้กล่องเลื่อนซ้าย-ขวา */
+      overflow-x: hidden !important; 
     }
-
     #topSellersContainer {
       overflow-x: hidden !important;
     }
-
     #topSellersContainer .top-seller-item {
       padding: 8px 2px !important;
       overflow: hidden !important;
     }
-
-    /* ย่อขนาดตัวเลขลำดับ (Badge) */
     #topSellersContainer .rank-badge {
       width: 24px !important;
       height: 24px !important;
@@ -328,18 +318,12 @@
       margin-right: 8px !important;
       border-radius: 6px !important;
     }
-
-    /* ย่อขนาดชื่อรายการสินค้า */
     #topSellersContainer .fw-bold.text-dark {
       font-size: 0.78rem !important;
     }
-
-    /* ย่อขนาดป้ายหมวดหมู่และจำนวนชิ้น */
     #topSellersContainer .text-muted.small {
       font-size: 0.68rem !important;
     }
-
-    /* ย่อขนาดยอดเงินตัวหนังสือสีเขียว */
     #topSellersContainer .fw-bold.text-success {
       font-size: 0.85rem !important;
     }
@@ -378,7 +362,6 @@
   </div>
 
   <div class="flex-grow-1 custom-scrollbar" style="overflow-y: auto; padding-right: 5px;">
-    <!-- ตัวกรองวันที่ (ใช้ร่วมกันทั้ง 2 แท็บ) -->
     <!-- ตัวกรองวันที่ (ปรับกระชับพื้นที่) -->
     <div class="p-2 p-md-3 rounded-4 border shadow-sm mb-2 mb-md-4 d-flex flex-wrap align-items-center justify-content-between gap-2 glass-panel rep-filter-box">
       <div class="d-flex align-items-center gap-1 gap-md-2 flex-nowrap w-100 justify-content-between justify-content-md-start">
@@ -398,7 +381,6 @@
     <!-- 📊 TAB 1: ภาพรวมรายได้ (Dashboard เดิม) -->
     <!-- ============================================== -->
     <div id="tab-dash" style="display: block;">
-      <!-- KPI Cards -->
       <!-- KPI Cards (แบ่ง 2 กล่องต่อแถวในมือถือ) -->
       <div class="row g-2 g-md-4 mb-4">
         <div class="col-6 col-md-6 col-xl-3">
@@ -506,23 +488,23 @@
         </select>
       </div>
 
-      <!-- KPI Cards สำหรับ DF (แบ่ง 3 กล่องเท่ากันในมือถือ) -->
+      <!-- KPI Cards สำหรับ DF (แบ่ง 3 กล่องเท่ากันในมือถือ และใน PC) -->
       <div class="row g-1 g-md-4 mb-3 mb-md-4 rep-df-kpis">
-        <div class="col-4 col-md-6">
+        <div class="col-4 col-md-4">
           <div class="report-kpi-card border-success glass-panel">
             <i class="fa-solid fa-hand-holding-dollar kpi-icon" style="color: #10b981;"></i>
             <h6 class="text-muted fw-bold mb-1">ยอดรวมค่ามือ (DF)</h6>
             <h3 class="text-success fw-bold m-0" id="df_kpi_total">฿ 0</h3>
           </div>
         </div>
-        <div class="col-4 col-md-3">
+        <div class="col-4 col-md-4">
           <div class="report-kpi-card border-secondary glass-panel">
             <i class="fa-solid fa-syringe kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">จำนวนเคส</h6>
             <h3 class="text-secondary fw-bold m-0" id="df_kpi_cases">0 <span class="fs-6">ครั้ง</span></h3>
           </div>
         </div>
-        <div class="col-4 col-md-3">
+        <div class="col-4 col-md-4">
           <div class="report-kpi-card border-info glass-panel">
             <i class="fa-solid fa-users kpi-icon"></i>
             <h6 class="text-muted fw-bold mb-1">คนไข้ทั้งหมด</h6>
@@ -740,9 +722,6 @@
   // ==========================================
   // 💰 ฟังก์ชันจำลองการโหลดข้อมูล DF (Mock Data)
   // ==========================================
-  // หมายเหตุ: โค้ดส่วนนี้เป็นการจำลองแสดงผลหน้าตา UI ไปก่อน เมื่อคุณอัปเดต server.js และ API เสร็จ 
-  // ให้ปรับ URL fetch ตรงนี้ให้ดึงข้อมูลจริงจากฐานข้อมูลได้เลยครับ
-  
   async function loadDfReportData() {
     const start = document.getElementById('rep_start').value;
     const end = document.getElementById('rep_end').value;
@@ -758,10 +737,8 @@
       if (data.status === 'success') {
         let realDfLogs = data.data;
 
-        // กรองข้อมูลตามที่เลือก (ALL หรือ ชื่อพนักงาน)
+        // กรองข้อมูลตามที่เลือก
         if (userFilter !== 'ALL') {
-          // 🌟 สลับฝั่ง .includes() ให้ถูกต้อง
-          // ชื่อใน log (เช่น "หมอมิ้น (แพทย์)") ต้องเช็คว่ามีคำที่เลือก (เช่น "หมอมิ้น") ซ่อนอยู่หรือไม่
           realDfLogs = realDfLogs.filter(log => log.user_name.includes(userFilter));
         }
 
@@ -805,7 +782,13 @@
     }
   }
 
-  setTimeout(() => { setDateFilter('week'); }, 50);
+  // โหลดเริ่มต้น และบังคับโชว์แนวโน้มตอนเข้ามือถือครั้งแรก
+  setTimeout(() => { 
+    setDateFilter('week'); 
+    if (window.innerWidth <= 768) {
+      switchDashSubTab('chart');
+    }
+  }, 50);
 </script>
 </body>
 </html>
