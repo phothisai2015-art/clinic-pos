@@ -705,32 +705,41 @@
           
           <div class="col-md-7 ps-4" id="patientInfoArea">
             <div id="patientInfoDisplay" style="display: none;">
-              <!-- สั่ง justify-content-between และ w-100 เพื่อดันชื่อไปซ้ายสุด และดันปุ่มไปขวาสุด -->
-              <div class="d-flex justify-content-between align-items-center mb-2 pt-2 w-100">
-                <div class="pe-3 overflow-hidden">
-                  <h5 class="fw-bold text-dark m-0 text-truncate" id="disp_name">-</h5>
-                  <div class="text-muted patient-details-row">
-                    <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
-                    <span class="divider">|</span> 
-                    <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
-                    <span class="divider">|</span> 
-                    <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
+              <!-- กล่องคลุมทั้งหมด -->
+              <div class="d-flex justify-content-between align-items-start mb-2 pt-2 w-100 flex-wrap gap-2">
+                
+                <!-- ฝั่งซ้าย: ข้อมูล + แพ้ยา ให้อยู่แถวเดียวกัน -->
+                <div class="d-flex flex-wrap align-items-center gap-3 pe-3 overflow-hidden flex-grow-1">
+                  
+                  <!-- ข้อมูลคนไข้ -->
+                  <div>
+                    <h5 class="fw-bold text-dark m-0 text-truncate" id="disp_name">-</h5>
+                    <div class="text-muted patient-details-row m-0 mt-1">
+                      <span><i class="fa-solid fa-address-card text-primary me-1"></i><span id="disp_hn" class="fw-bold">-</span></span>
+                      <span class="divider">|</span> 
+                      <span><i class="fa-solid fa-id-card text-primary me-1"></i><span id="disp_idcard">-</span></span>
+                      <span class="divider">|</span> 
+                      <span><i class="fa-solid fa-calendar-days text-primary me-1"></i><span id="disp_age" class="fw-bold">-</span></span>
+                    </div>
                   </div>
+
+                  <!-- ข้อมูลแพ้ยา (ย้ายมาไว้ข้างข้อมูลคนไข้) -->
+                  <div id="allergyAlert" class="allergy-alert align-items-center m-0 shadow-sm py-2 px-3" style="display: none;">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="fa-solid fa-triangle-exclamation fs-5 text-danger"></i>
+                      <div>
+                        <div class="fw-bold" style="font-size: 0.8rem;">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
+                        <div class="fw-semibold" style="font-size: 0.75rem;" id="allergyDetails"></div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
                 
-                <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-mobile" onclick="openPackageModal()">
+                <!-- ฝั่งขวา: ปุ่มแพคเกจ -->
+                <button id="btnBuyPackage" class="btn btn-info text-white rounded-pill fw-bold shadow-sm btn-pkg-mobile flex-shrink-0" onclick="openPackageModal()">
                   <i class="fa-solid fa-hand-holding-medical me-1"></i> <span>เลือกแพคเกจ / บริการใหม่</span>
                 </button>
-              </div>
-              
-              <div id="allergyAlert" class="allergy-alert align-items-center justify-content-between mt-3 shadow-sm">
-                <div class="d-flex align-items-center">
-                  <i class="fa-solid fa-triangle-exclamation fa-2x me-3 text-danger"></i>
-                  <div>
-                    <div class="fw-bold fs-6">⚠️ ข้อมูลแพ้ยา & โรคประจำตัว</div>
-                    <div class="small fw-semibold" id="allergyDetails"></div>
-                  </div>
-                </div>
               </div>
             </div>
             
