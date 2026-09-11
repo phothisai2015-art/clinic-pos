@@ -95,7 +95,7 @@ db.serialize(() => {
     type TEXT,
     price REAL,
     stock INTEGER,
-    min_stock INTEGER DEFAULT 5, /* 🌟 เพิ่มบรรทัดนี้ */
+    min_stock INTEGER DEFAULT 5,
     unit TEXT,
     lot_number TEXT DEFAULT '-',
     expiry_date TEXT,
@@ -147,13 +147,15 @@ db.serialize(() => {
     status TEXT DEFAULT 'UNPAID',
     stock_deducted BOOLEAN DEFAULT 0,
     payment_method TEXT DEFAULT 'CASH',
-    payment_history TEXT DEFAULT '[]'
+    payment_history TEXT DEFAULT '[]',
+    discount REAL DEFAULT 0,
+    discount_type TEXT DEFAULT 'THB'
   )`);
   
-  // อัปเดตตารางเดิมให้มีคอลัมน์เก็บส่วนลด
+  // อัปเดตตารางเดิมของคุณให้มีคอลัมน์เก็บส่วนลดและประเภทส่วนลด
   db.run(`ALTER TABLE patient_bills ADD COLUMN discount REAL DEFAULT 0`, (err) => {});
   db.run(`ALTER TABLE patient_bills ADD COLUMN discount_type TEXT DEFAULT 'THB'`, (err) => {});
-  
+
   // สร้างข้อมูลคลินิกเริ่มต้น หากยังไม่มี
   db.get("SELECT count(*) as count FROM clinics", (err, row) => {
     if (row && row.count === 0) {

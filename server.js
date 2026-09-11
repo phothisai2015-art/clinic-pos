@@ -322,7 +322,6 @@ app.delete('/api/appointments/:id', async (req, res) => {
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-// 🌟 [เพิ่มโค้ดนี้ลงไป] API สำหรับกดโทรคอนเฟิร์มนัดหมายพรุ่งนี้
 app.put('/api/appointments/:id/confirm', async (req, res) => {
   try {
     await dbRun(`UPDATE appointments SET status = 'CONFIRMED' WHERE id = ?`, [req.params.id]);
@@ -372,25 +371,6 @@ app.get('/api/pos/bill/:hn', async (req, res) => {
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
 
-app.get('/api/pos/bill/:hn', async (req, res) => {
-  try {
-    const rows = await dbAll(`SELECT * FROM patient_bills WHERE patient_id = ?`, [req.params.hn]);
-    res.json({ status: 'success', data: rows || [] });
-  } catch(err) { res.status(500).json({ status: 'error' }); }
-});
-
-// 🌟 เพิ่มโค้ด API นี้ เพื่อรับบันทึกราคาและส่วนลดจากหน้า POS
-app.put('/api/pos/bill/:id', async (req, res) => {
-  try {
-    const { total_price, discount, discount_type } = req.body;
-    await dbRun(`UPDATE patient_bills SET total_price = ?, discount = ?, discount_type = ? WHERE id = ?`, 
-      [total_price, discount, discount_type, req.params.id]);
-    res.json({ status: 'success' });
-  } catch(err) { 
-    res.status(500).json({ status: 'error', message: err.message }); 
-  }
-});
-
 app.put('/api/pos/send/:hn', async (req, res) => {
   try {
     const row = await dbGet(`SELECT id FROM appointments WHERE patient_id = ? AND status IN ('CHECKED_IN', 'COMPLETED') ORDER BY id DESC LIMIT 1`, [req.params.hn]);
@@ -426,11 +406,16 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
       for (let p of payments) {
         let bill = await dbGet(`SELECT * FROM patient_bills WHERE id = ?`, [p.bill_id]);
         if (bill) {
-          let balance = bill.total_price - bill.paid_amount;
+          // 🌟 ดึงราคาและส่วนลดที่อัปเดตมาจากหน้า POS มาเซฟทับของเก่า
+          let currentTotal = p.updated_total_price !== undefined ? p.updated_total_price : bill.total_price;
+          let currentDiscount = p.discount !== undefined ? p.discount : (bill.discount || 0);
+          let currentDiscountType = p.discount_type !== undefined ? p.discount_type : (bill.discount_type || 'THB');
+
+          let balance = currentTotal - bill.paid_amount;
           let safePayAmount = p.pay_amount > balance ? balance : p.pay_amount;
 
           let newPaid = bill.paid_amount + safePayAmount;
-          let newStatus = newPaid >= bill.total_price ? 'PAID' : 'PARTIAL';
+          let newStatus = newPaid >= currentTotal ? 'PAID' : 'PARTIAL';
           
           let history = [];
           try { history = JSON.parse(bill.payment_history || '[]'); } catch(e){}
@@ -438,8 +423,9 @@ app.put('/api/pos/pay/:hn', async (req, res) => {
             history.push({ date: new Date().toISOString(), amount: safePayAmount, method: p.payment_method || currentPayMethod });
           }
 
-          await dbRun(`UPDATE patient_bills SET paid_amount = ?, status = ?, payment_method = ?, payment_history = ? WHERE id = ?`, 
-            [newPaid, newStatus, p.payment_method || currentPayMethod, JSON.stringify(history), p.bill_id]);
+          // 🌟 บันทึกราคาที่อัปเดตลง Database ด้วย
+          await dbRun(`UPDATE patient_bills SET total_price = ?, discount = ?, discount_type = ?, paid_amount = ?, status = ?, payment_method = ?, payment_history = ? WHERE id = ?`, 
+            [currentTotal, currentDiscount, currentDiscountType, newPaid, newStatus, p.payment_method || currentPayMethod, JSON.stringify(history), p.bill_id]);
 
           if ((bill.type === 'MEDICINE' || bill.type === 'SKINCARE') && bill.stock_deducted === 0 && safePayAmount > 0) {
             await dbRun(`UPDATE products SET stock = stock - ? WHERE id = ?`, [bill.qty, bill.product_id]);
@@ -533,7 +519,6 @@ app.delete('/api/inventory/:id', async (req, res) => {
 // ==========================================
 // ⚙️ API ระบบตั้งค่า (Settings - Users, Clinic, Hours)
 // ==========================================
-// 🌟 API ดึงเวลาเปิด-ปิดร้าน (แก้บั๊กตามที่คุณแจ้ง)
 app.get('/api/settings', async (req, res) => {
   try {
     const row = await dbGet(`SELECT open_time, close_time FROM clinics ORDER BY id ASC LIMIT 1`);
@@ -544,7 +529,6 @@ app.get('/api/settings', async (req, res) => {
 app.post('/api/settings', async (req, res) => {
   try {
     const { open_time, close_time } = req.body;
-    // เอา WHERE id=1 ออก เพื่อป้องกันบั๊กกรณี ID เลื่อน
     await dbRun(`UPDATE clinics SET open_time=?, close_time=?`, [open_time, close_time]);
     res.json({ status: 'success' });
   } catch(err) { res.status(500).json({ status: 'error', message: err.message }); }
@@ -718,15 +702,12 @@ app.get('/api/reports/dashboard', async (req, res) => {
     });
   } catch(err) { res.status(500).json({ status: 'error' }); }
 });
-// ==========================================
-// 💰 API สำหรับหน้ารายงานค่ามือแพทย์ (DF Report)
-// ==========================================
+
 app.get('/api/reports/df', async (req, res) => {
   try {
     const startDate = req.query.start_date;
     const endDate = req.query.end_date;
 
-    // 1. ดึงข้อมูลสินค้า (เพื่อดูราคา) และผู้ใช้งาน (เพื่อดูกฎ DF)
     const products = await dbAll(`SELECT * FROM products`);
     const users = await dbAll(`SELECT * FROM users`);
     
@@ -737,7 +718,6 @@ app.get('/api/reports/df', async (req, res) => {
         userMap[u.name] = { ...u, rules };
     });
 
-    // 2. ดึงข้อมูล EMR
     const logs = await dbAll(`
       SELECT e.*, p.full_name as patient_name, u.name as doctor_name 
       FROM emr_logs e 
@@ -749,7 +729,6 @@ app.get('/api/reports/df', async (req, res) => {
 
     let dfLogs = [];
 
-    // ฟังก์ชันช่วยคำนวณ DF (รับพารามิเตอร์ count เพิ่มเติม)
     const calculateDf = (userNameRaw, roleKey, courseName, totalPeopleInRole = 1) => {
         let cleanName = userNameRaw.replace(/\s*\(.*?\)\s*/g, '').trim();
         let user = userMap[cleanName];
@@ -762,7 +741,6 @@ app.get('/api/reports/df', async (req, res) => {
         let productId = matchedProduct ? matchedProduct.id : null;
         let productPrice = matchedProduct ? matchedProduct.price : 0;
 
-        // เช็กกฎข้อยกเว้นเฉพาะคอร์ส
         let customRule = null;
         if (rules.custom_rules && productId) {
             customRule = rules.custom_rules.find(r => r.product_id === productId && r.role === roleKey);
@@ -772,7 +750,6 @@ app.get('/api/reports/df', async (req, res) => {
             if (customRule.type === 'BAHT') dfAmount = customRule.val;
             else if (customRule.type === 'PERCENT') dfAmount = (productPrice * customRule.val) / 100;
         } else {
-            // ใช้กฎพื้นฐาน
             let type = roleKey === 'DOCTOR' ? rules.doc_type : rules.asst_type;
             let val = roleKey === 'DOCTOR' ? rules.doc_val : rules.asst_val;
 
@@ -780,10 +757,8 @@ app.get('/api/reports/df', async (req, res) => {
             else if (type === 'PERCENT') dfAmount = (productPrice * (val || 0)) / 100;
         }
 
-        // 🌟 ตรวจสอบเงื่อนไขการหารรายบุคคล
         let splitSetting = roleKey === 'DOCTOR' ? (rules.doc_split || 'FULL') : (rules.asst_split || 'SPLIT');
         
-        // ถ้าพนักงานคนนี้ตั้งค่าเป็น "SPLIT" (หาร) และในเคสมีมากกว่า 1 คน จะนำยอดมาหารตามจำนวนคน
         if (splitSetting === 'SPLIT' && totalPeopleInRole > 1) {
             dfAmount = dfAmount / totalPeopleInRole;
         }
@@ -796,7 +771,6 @@ app.get('/api/reports/df', async (req, res) => {
        if (courseName.includes('เข้ารับบริการ:')) courseName = courseName.replace('เข้ารับบริการ:', '').trim();
        if (courseName.includes('ติดตามผล:')) courseName = courseName.replace('ติดตามผล:', '').trim();
 
-       // 1. คิดยอดของแพทย์
        let docName = log.doctor_name || 'ไม่ระบุแพทย์';
        dfLogs.push({
            date: log.visit_date,
@@ -807,7 +781,6 @@ app.get('/api/reports/df', async (req, res) => {
            df_amount: calculateDf(docName, 'DOCTOR', courseName)
        });
 
-       // 2. คิดยอดของผู้ช่วย
        if (log.treatment_details && log.treatment_details.includes('[ผู้ให้บริการ/ผู้ช่วย]')) {
            let lines = log.treatment_details.split('\n');
            let isAsstSection = false;
@@ -830,7 +803,7 @@ app.get('/api/reports/df', async (req, res) => {
                    role: 'ผู้ช่วย',
                    course: courseName,
                    patient: log.patient_name || 'ไม่ระบุชื่อ',
-                   df_amount: calculateDf(asstNameRaw, 'ASST', courseName, asstCount) // ส่งจำนวนผู้ช่วยทั้งหมดเข้าไปคำนวณ
+                   df_amount: calculateDf(asstNameRaw, 'ASST', courseName, asstCount) 
                });
            });
        }
