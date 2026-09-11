@@ -322,7 +322,7 @@
     </button>
   </div>
 
-  <<ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
+  <ul class="nav nav-pills nav-pills-custom mb-4" id="mainNavTabs">
     <li class="nav-item">
       <button class="nav-link active" id="tabbtn-new" onclick="switchMainTab('new')">
         <i class="fa-solid fa-user-plus me-2"></i> ลงทะเบียนคนไข้ใหม่
@@ -1111,7 +1111,10 @@
     
     document.getElementById('searchBoxArea').style.display = 'none';
     const mainNav = document.getElementById('mainNavTabs');
-    if (mainNav) mainNav.classList.add('hide-emr-mobile');
+    if (mainNav) {
+        mainNav.classList.add('hide-emr-mobile');
+        mainNav.style.display = 'none'; // ซ่อนแท็บเมื่อเข้าหน้าคอร์ส
+    }
 
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg) btnPkg.classList.add('d-none');
@@ -1202,7 +1205,10 @@
     document.getElementById('searchBoxArea').style.display = 'block';
     
     const mainNav = document.getElementById('mainNavTabs');
-    if (mainNav) mainNav.classList.remove('hide-emr-mobile');
+    if (mainNav) {
+        mainNav.classList.remove('hide-emr-mobile');
+        mainNav.style.display = ''; // แสดงแท็บกลับมาเหมือนเดิม
+    }
 
     const btnPkg = document.getElementById('btnBuyPackage');
     if (btnPkg && currentHN) btnPkg.classList.remove('d-none');
