@@ -1298,7 +1298,7 @@
          }
          if (matchedPhotos.length > 0) {
            photoHtml = '<div class="row g-2 mt-2">';
-           matchedPhotos.forEach(p => { photoHtml += `<div class="col-md-6 col-12"><img src="${p.image_path}" class="img-fluid rounded border shadow-sm" style="height: 180px; object-fit: cover; width: 100%; cursor: pointer;" onclick="window.open('${p.image_path}', '_blank')"></div>`; });
+           matchedPhotos.forEach(p => { photoHtml += `<div class="col-md-6 col-12"><img src="${p.image_path}" class="img-fluid rounded border shadow-sm" style="height: 180px; object-fit: cover; width: 100%; cursor: pointer;" onclick="viewLargePhoto('${p.image_path}')"></div>`; });
            photoHtml += '</div>';
          }
       }
@@ -1700,7 +1700,7 @@
           <div class="col-md-6 col-12">
             <div class="bg-light p-2 text-center rounded-3 position-relative">
               <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle" onclick="deletePhoto(${p.id})"><i class="fa-solid fa-trash fa-xs"></i></button>
-              <img src="${p.image_path}" class="img-fluid rounded-3 mb-2 border" style="height:120px; object-fit:contain; width:100%; cursor:pointer; background:#fff;" onclick="window.open('${p.image_path}')">
+              <img src="${p.image_path}" class="img-fluid rounded-3 mb-2 border" style="height:120px; object-fit:contain; width:100%; cursor:pointer; background:#fff;" onclick="viewLargePhoto('${p.image_path}')">
               <div class="small">${typeBadge}</div>
               <div class="text-muted" style="font-size: 0.7rem;">${dateStr}</div>
             </div>
@@ -1736,18 +1736,18 @@
     
     Swal.fire({
       title: '<h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-code-compare me-2"></i>เปรียบเทียบภาพการรักษา</h4>',
-      width: '80%',
+      width: '98%', // ขยายความกว้างป๊อปอัพ
       html: `
         <div class="row mt-3">
           <div class="col-6 border-end">
             <span class="badge bg-secondary mb-2 fs-6">Before / รูปอดีต</span>
             <select id="imgBefore" class="form-select mb-3 shadow-sm border-secondary" onchange="document.getElementById('previewBefore').src=this.value">${options}</select>
-            <img id="previewBefore" src="${photos[photos.length-1].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
+            <img id="previewBefore" src="${photos[photos.length-1].image_path}" class="img-fluid rounded border shadow-sm" style="height: 75vh; object-fit:contain; width:100%; background:#f8fafc;">
           </div>
           <div class="col-6">
             <span class="badge bg-success mb-2 fs-6">After / รูปปัจจุบัน</span>
             <select id="imgAfter" class="form-select mb-3 shadow-sm border-success" onchange="document.getElementById('previewAfter').src=this.value">${options}</select>
-            <img id="previewAfter" src="${photos[0].image_path}" class="img-fluid rounded border shadow-sm" style="height:400px; object-fit:contain; width:100%; background:#f8fafc;">
+            <img id="previewAfter" src="${photos[0].image_path}" class="img-fluid rounded border shadow-sm" style="height: 75vh; object-fit:contain; width:100%; background:#f8fafc;">
           </div>
         </div>`,
       showCloseButton: true, showConfirmButton: false
@@ -2031,6 +2031,18 @@
       box.classList.remove('d-flex');
       box.classList.add('d-none');
     }
+  }
+  
+  // ฟังก์ชันสำหรับดูรูปภาพขนาดใหญ่
+  function viewLargePhoto(url) {
+    Swal.fire({
+      html: `<img src="${url}" style="max-width: 100%; max-height: 85vh; border-radius: 12px; object-fit: contain;">`,
+      width: '95%',
+      padding: '1rem',
+      showCloseButton: true,
+      showConfirmButton: false,
+      background: 'rgba(255, 255, 255, 0.95)'
+    });
   }
 
   loadAssistants();
