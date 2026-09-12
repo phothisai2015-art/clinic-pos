@@ -2033,15 +2033,22 @@
     }
   }
   
-  // ฟังก์ชันสำหรับดูรูปภาพขนาดใหญ่
+  // ฟังก์ชันสำหรับดูรูปภาพขนาดใหญ่ (ขยายเต็มแนวตั้งและแนวนอน)
   function viewLargePhoto(url) {
     Swal.fire({
-      html: `<img src="${url}" style="max-width: 100%; max-height: 85vh; border-radius: 12px; object-fit: contain;">`,
-      width: '95%',
+      html: `
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+          <img src="${url}" style="max-width: 100%; max-height: 82vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+        </div>
+      `,
+      width: 'auto',
       padding: '1rem',
       showCloseButton: true,
       showConfirmButton: false,
-      background: 'rgba(255, 255, 255, 0.95)'
+      background: 'rgba(255, 255, 255, 0.98)',
+      customClass: {
+        popup: 'rounded-4'
+      }
     });
   }
 
